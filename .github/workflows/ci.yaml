@@ -35,7 +35,7 @@ jobs:
         uses: snok/install-poetry@v1
 
       - name: Install dependencies
-        run: poetry install --with dev
+        run: poetry install --sync
 
       - run: poetry run invoke ${{ matrix.task }} --check
 
@@ -68,7 +68,7 @@ jobs:
         uses: snok/install-poetry@v1
 
       - name: Install dependencies
-        run: poetry install --with dev
+        run: poetry install --sync
 
       - name: Run tests
         run: poetry run pytest

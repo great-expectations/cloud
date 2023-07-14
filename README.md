@@ -8,6 +8,6 @@
     * https://python-poetry.org/docs/#installation
         * https://python-poetry.org/docs/#installing-with-pipx :point-left:
 2. Setup virtual environment and install dependencies.
-    * `poetry install --with dev`
+    * `poetry install --sync`
 3. Activate your virtual environment.
     * `poetry shell`
