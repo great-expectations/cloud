@@ -9,6 +9,16 @@ readme = "README.md"
 python = "^3.8"
 great-expectations = "^0.17.5"
 
+[tool.poetry.group.dev.dependencies]
+black = "^23.7.0"
+invoke = "^2.2.0"
+mypy = "^1.4.1"
+pre-commit = "^3.3.3"
+pytest = "^7.4.0"
+responses = "^0.23.1"
+ruff = "==0.0.278"
+tomli = "^2.0.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
