@@ -1,0 +1,31 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-ast
+      - id: check-json
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: no-commit-to-branch
+        args: [--branch, develop, --branch, main]
+  - repo: https://github.com/psf/black
+    rev: 23.7.0
+    hooks:
+      - id: black-jupyter
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "v0.0.278"
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+# https://pre-commit.ci/
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: false
+  autoupdate_branch: "develop"
+  autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
+  autoupdate_schedule: monthly
+  submodules: false
