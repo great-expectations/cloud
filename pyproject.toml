@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "great_expectations_cloud"
+version = "0.0.1"
+description = "Great Expectations Cloud"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+great-expectations = "^0.17.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
