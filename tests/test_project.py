@@ -1,7 +1,8 @@
-import tomli
-import pytest
-from typing import Final
 import pathlib
+from typing import Final
+
+import pytest
+import tomli
 from packaging.version import Version
 
 PROJECT_ROOT: Final = pathlib.Path(__file__).parent.parent
