@@ -22,3 +22,65 @@ tomli = "^2.0.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+target-version = "py38"
+line-length = 88
+select = [
+    # https://beta.ruff.rs/docs/rules/#pyflakes-f
+    "F", # Pyflakes
+    # https://beta.ruff.rs/docs/rules/#pycodestyle-e-w
+    "E", # pycodestyle
+    "W", # Warning
+    # https://beta.ruff.rs/docs/rules/#flake8-comprehensions-c4
+    # https://beta.ruff.rs/docs/rules/#mccabe-c90
+    "C", # Complexity (mccabe+) & comprehensions
+    # https://beta.ruff.rs/docs/rules/#pyupgrade-up
+    "UP", # pyupgrade
+    # https://beta.ruff.rs/docs/rules/#isort-i
+    "I", # isort
+    # https://beta.ruff.rs/docs/rules/#flake8-type-checking-tch
+    "TCH", # flake8-type-checking-tch
+    # https://beta.ruff.rs/docs/rules/#flake8-tidy-imports-tid
+    "TID", # flake8-tidy-imports
+    # https://beta.ruff.rs/docs/rules/#flake8-pyi-pyi
+    "PYI", # flake8-pyi - type stub files
+    # https://beta.ruff.rs/docs/rules/#flake8-use-pathlib-pth
+    "PTH", # use-pathlib - use pathlib for os.path and glob operations
+    # https://beta.ruff.rs/docs/rules/#flake8-bugbear-b
+    "B", # bugbear - common python bugs & design issues
+    # https://beta.ruff.rs/docs/rules/#flake8-datetimez-dtz
+    "DTZ", # flake8-datetimez-dtz - prevent use of tz naive datetimes
+    # https://beta.ruff.rs/docs/rules/#pylint-pl
+    "PL", # pylint
+    # https://beta.ruff.rs/docs/rules/unused-noqa/
+    "RUF100", # unused-noqa
+]
+ignore = [
+    # https://beta.ruff.rs/docs/rules/#flake8-type-checking-tch
+    # minimal cost for standard lib imports; keep this disabled
+    "TCH003", # typing-only-standard-library-import
+    # gives false positives if we use try imports and type-checking import
+    "TCH004", # runtime-import-in-type-checking-block
+    "TID252",  # Relative imports from parent modules are banned
+    # https://beta.ruff.rs/docs/rules/#flake8-use-pathlib-pth
+    "PTH123", # pathlib-open - this would force pathlib usage anytime open or with open was used.
+]
+
+
+
+[tool.ruff.flake8-type-checking]
+# pydantic models use annotations at runtime
+runtime-evaluated-base-classes = [
+    # NOTE: ruff is unable to detect that these are subclasses of pydantic.BaseModel
+    "pydantic.BaseModel",
+    "great_expectations.datasource.fluent.fluent_base_model.FluentBaseModel",
+    "great_expectations.datasource.fluent.interfaces.Datasource",
+    "great_expectations.datasource.fluent.sql_datasource.SQLDatasource",
+    ]
+runtime-evaluated-decorators = [
+    "pydantic.dataclasses.dataclass",
+    ]
+
+[tool.ruff.mccabe]
+max-complexity = 10
