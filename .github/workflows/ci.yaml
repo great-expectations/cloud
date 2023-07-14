@@ -37,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: poetry install --with dev
 
-      - run: invoke ${{ matrix.task }} --check
+      - run: poetry run invoke ${{ matrix.task }} --check
 
   tests:
     strategy:
@@ -71,4 +71,4 @@ jobs:
         run: poetry install --with dev
 
       - name: Run tests
-        run: pytest
+        run: poetry run pytest
