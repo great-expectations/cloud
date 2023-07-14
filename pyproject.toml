@@ -23,6 +23,26 @@ tomli = "^2.0.1"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.mypy]
+python_version = "3.8"
+plugins = ["pydantic.mypy"]
+files = ["**/*.py"]
+warn_unused_configs = true
+ignore_missing_imports = true
+follow_imports = 'normal'
+warn_redundant_casts = true
+show_error_codes = true
+enable_error_code = [
+    'ignore-without-code'
+    ]
+# The following list of codes are globally ignored, do not add to this list
+disable_error_code = [
+    # annotation-unchecked are 'warning notes', not errors and won't cause mypy to fail
+    # but it does create a lot of noise in the CI mypy step.
+    # https://mypy-lang.blogspot.com/2022/11/mypy-0990-released.html
+    'annotation-unchecked'
+    ]
+
 [tool.ruff]
 target-version = "py38"
 line-length = 88
@@ -66,8 +86,6 @@ ignore = [
     # https://beta.ruff.rs/docs/rules/#flake8-use-pathlib-pth
     "PTH123", # pathlib-open - this would force pathlib usage anytime open or with open was used.
 ]
-
-
 
 [tool.ruff.flake8-type-checking]
 # pydantic models use annotations at runtime
