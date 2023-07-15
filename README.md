@@ -5,10 +5,15 @@
 
 ## Dev Setup
 
-1. Install `poetry`.
-    * https://python-poetry.org/docs/#installation
-        * https://python-poetry.org/docs/#installing-with-pipx :point-left:
+1. [Install `poetry`](https://python-poetry.org/docs/#installation)
+    * [`pipx install poetry`](https://python-poetry.org/docs/#installing-with-pipx)
 2. Setup virtual environment and install dependencies.
     * `poetry install --sync`
 3. Activate your virtual environment.
     * `poetry shell`
+
+### Developer Tasks
+
+Common developer tasks are available via `invoke` (defined in `tasks.py`)
+
+`invoke --list` to see available tasks.
