@@ -32,8 +32,10 @@ def lint(ctx: Context, check: bool = False):
 def type_check(ctx: Context, install_types: bool = False, check: bool = False):
     """Type check code with mypy"""
     cmds = ["mypy"]
-    if install_types or check:
+    if install_types:
         cmds.append("--install-types")
+    if check:
+        cmds.append("--pretty")
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
