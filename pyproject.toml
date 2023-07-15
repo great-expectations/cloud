@@ -27,7 +27,11 @@ build-backend = "poetry.core.masonry.api"
 [tool.mypy]
 python_version = "3.8"
 plugins = ["pydantic.mypy"]
-files = ["**/*.py"]
+files = [
+    "great_expectations_cloud/",
+    "tests/",
+    "tasks.py",
+    ]
 warn_unused_configs = true
 ignore_missing_imports = true
 follow_imports = 'normal'
