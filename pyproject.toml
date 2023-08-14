@@ -20,6 +20,9 @@ responses = "^0.23.1"
 ruff = "==0.0.278"
 tomli = "^2.0.1"
 
+[tool.poetry.scripts]
+gx-agent='great_expectations_cloud.agent:run_agent'
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
