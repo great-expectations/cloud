@@ -22,9 +22,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
                 "DraftDatasourceConfigAction received an unknown datasource type."
             ) from exc
         datasource = datasource_cls(**draft_config)
-        datasource.test_connection(
-            test_assets=True
-        )  # raises `TestConnectionError` on failure
+        datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
         return ActionResult(id=id, type=event.type, created_resources=[])
 
     def get_draft_config(self, config_id: UUID) -> dict:
