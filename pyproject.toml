@@ -51,9 +51,14 @@ disable_error_code = [
     'annotation-unchecked'
     ]
 
+[tool.black]
+target-version = ["py38", "py39", "py310", "py311"]
+line-length = 100
+
 [tool.ruff]
 target-version = "py38"
-line-length = 88
+# TODO: change this back to black default of 88 if desired
+line-length = 100
 select = [
     # https://beta.ruff.rs/docs/rules/#pyflakes-f
     "F", # Pyflakes
