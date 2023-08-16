@@ -76,9 +76,7 @@ class Subscriber:
             except (AMQPError, ChannelError):
                 self.client.stop()
                 reconnect_delay = self._get_reconnect_delay()
-                time.sleep(
-                    reconnect_delay
-                )  # todo: update this blocking call to asyncio.sleep
+                time.sleep(reconnect_delay)  # todo: update this blocking call to asyncio.sleep
             except KeyboardInterrupt as e:
                 self.client.stop()
                 raise KeyboardInterrupt from e
@@ -108,9 +106,7 @@ class Subscriber:
 
         # Allow the caller to determine whether to ack/nack this message,
         # even if the processing occurs in another thread.
-        ack_callback = self.client.get_threadsafe_ack_callback(
-            delivery_tag=payload.delivery_tag
-        )
+        ack_callback = self.client.get_threadsafe_ack_callback(delivery_tag=payload.delivery_tag)
         nack_callback = self.client.get_threadsafe_nack_callback(
             delivery_tag=payload.delivery_tag, requeue=False
         )
