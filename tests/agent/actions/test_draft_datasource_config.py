@@ -64,8 +64,9 @@ def test_test_draft_datasource_config_success(context, mocker, set_required_env_
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url: str = (
         f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
-        + f"/datasources/drafts/{config_id}"
+        f"/datasources/drafts/{config_id}"
     )
+
     action_result = action.run(event=event, id=str(job_id))
 
     assert action_result.id == str(job_id)
