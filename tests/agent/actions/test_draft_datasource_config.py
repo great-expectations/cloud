@@ -2,15 +2,15 @@ from unittest.mock import MagicMock
 from uuid import UUID
 
 import pytest
+from great_expectations.data_context import CloudDataContext
+from great_expectations.datasource.fluent import SQLDatasource
+from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
 from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
     DraftDatasourceConfigAction,
 )
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
-from great_expectations.data_context import CloudDataContext
-from great_expectations.datasource.fluent import SQLDatasource
-from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
 
 @pytest.fixture(scope="function")
@@ -102,9 +102,7 @@ def test_test_draft_datasource_config_failure(context, mocker, set_required_env_
     session.get.assert_called_with(expected_url)
 
 
-def test_test_draft_datasource_config_raises_for_non_fds(
-    context, mocker, set_required_env_vars
-):
+def test_test_draft_datasource_config_raises_for_non_fds(context, mocker, set_required_env_vars):
     datasource_config = {"name": "test-1-2-3", "connection_string": ""}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
     create_session = mocker.patch(
@@ -143,7 +141,7 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url = f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}/datasources/drafts/{config_id}"
-    context.sources.type_lookup = dict()
+    context.sources.type_lookup = {}
 
     with pytest.raises(ValueError, match="unknown datasource type"):
         action.run(event=event, id=str(job_id))

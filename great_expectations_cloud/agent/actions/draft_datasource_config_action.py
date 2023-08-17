@@ -1,10 +1,11 @@
 from uuid import UUID
 
 import pydantic
+from great_expectations.core.http import create_session
+
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
-from great_expectations.core.http import create_session
 
 
 class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):

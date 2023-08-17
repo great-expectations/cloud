@@ -111,9 +111,7 @@ def test_gx_agent_initializes_cloud_context(get_context, gx_agent_config):
     get_context.assert_called_with(cloud_mode=True)
 
 
-def test_gx_agent_run_starts_subscriber(
-    get_context, subscriber, client, gx_agent_config
-):
+def test_gx_agent_run_starts_subscriber(get_context, subscriber, client, gx_agent_config):
     """Expect GXAgent.run to invoke the Subscriber class with the correct arguments."""
     agent = GXAgent()
     agent.run()
@@ -132,9 +130,7 @@ def test_gx_agent_run_invokes_consume(get_context, subscriber, client, gx_agent_
     )
 
 
-def test_gx_agent_run_closes_subscriber(
-    get_context, subscriber, client, gx_agent_config
-):
+def test_gx_agent_run_closes_subscriber(get_context, subscriber, client, gx_agent_config):
     """Expect GXAgent.run to invoke subscriber.close."""
     agent = GXAgent()
     agent.run()
@@ -186,9 +182,7 @@ def test_gx_agent_updates_cloud_on_job_status(
     async def redeliver_message():
         return None
 
-    event = RunOnboardingDataAssistantEvent(
-        datasource_name="test-ds", data_asset_name="test-da"
-    )
+    event = RunOnboardingDataAssistantEvent(datasource_name="test-ds", data_asset_name="test-da")
 
     end_test = False
 

@@ -1,14 +1,15 @@
-from great_expectations_cloud.agent.actions import ActionResult, AgentAction
-from great_expectations_cloud.agent.models import (
-    CreatedResource,
-    RunColumnDescriptiveMetricsEvent,
-)
 from great_expectations.data_context import CloudDataContext
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
 )
 from great_expectations.experimental.metric_repository.metric_repository import (
     MetricRepository,
+)
+
+from great_expectations_cloud.agent.actions import ActionResult, AgentAction
+from great_expectations_cloud.agent.models import (
+    CreatedResource,
+    RunColumnDescriptiveMetricsEvent,
 )
 
 
