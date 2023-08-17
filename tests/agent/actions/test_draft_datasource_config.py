@@ -38,9 +38,6 @@ def set_required_env_vars(monkeypatch, org_id, token):
         monkeypatch.setenv(name=key, value=val)
 
 
-pytestmark = pytest.mark.cloud
-
-
 def build_payload(config: dict, id: UUID) -> dict:
     return {
         "data": {
@@ -65,9 +62,9 @@ def test_test_draft_datasource_config_success(context, mocker, set_required_env_
     action = DraftDatasourceConfigAction(context=context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
-    expected_url = (
+    expected_url: str = (
         f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/datasources/drafts/{config_id}"
+        + f"/datasources/drafts/{config_id}"
     )
     action_result = action.run(event=event, id=str(job_id))
 

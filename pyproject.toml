@@ -17,12 +17,13 @@ invoke = "^2.2.0"
 mypy = "~1.4.1"
 pre-commit = "^3.3.3"
 pytest = "^7.4.0"
+pytest-mock = "*"
 responses = "^0.23.1"
 ruff = "==0.0.284"
 tomli = "^2.0.1"
 
 [tool.poetry.scripts]
-gx-agent='great_expectations_cloud.agent:run_agent'
+gx-agent = 'great_expectations_cloud.agent:run_agent'
 
 [build-system]
 requires = ["poetry-core"]
@@ -31,26 +32,20 @@ build-backend = "poetry.core.masonry.api"
 [tool.mypy]
 python_version = "3.8"
 plugins = ["pydantic.mypy"]
-files = [
-    "great_expectations_cloud/",
-    "tests/",
-    "tasks.py",
-    ]
+files = ["great_expectations_cloud/", "tests/", "tasks.py"]
 warn_unused_configs = true
 ignore_missing_imports = true
 follow_imports = 'normal'
 warn_redundant_casts = true
 show_error_codes = true
-enable_error_code = [
-    'ignore-without-code'
-    ]
+enable_error_code = ['ignore-without-code']
 # The following list of codes are globally ignored, do not add to this list
 disable_error_code = [
     # annotation-unchecked are 'warning notes', not errors and won't cause mypy to fail
     # but it does create a lot of noise in the CI mypy step.
     # https://mypy-lang.blogspot.com/2022/11/mypy-0990-released.html
-    'annotation-unchecked'
-    ]
+    'annotation-unchecked',
+]
 
 [tool.black]
 target-version = ["py38", "py39", "py310", "py311"]
@@ -96,7 +91,7 @@ ignore = [
     "TCH003", # typing-only-standard-library-import
     # gives false positives if we use try imports and type-checking import
     "TCH004", # runtime-import-in-type-checking-block
-    "TID252",  # Relative imports from parent modules are banned
+    "TID252", # Relative imports from parent modules are banned
     # https://beta.ruff.rs/docs/rules/#flake8-use-pathlib-pth
     "PTH123", # pathlib-open - this would force pathlib usage anytime open or with open was used.
 ]
@@ -109,10 +104,8 @@ runtime-evaluated-base-classes = [
     "great_expectations.datasource.fluent.fluent_base_model.FluentBaseModel",
     "great_expectations.datasource.fluent.interfaces.Datasource",
     "great_expectations.datasource.fluent.sql_datasource.SQLDatasource",
-    ]
-runtime-evaluated-decorators = [
-    "pydantic.dataclasses.dataclass",
-    ]
+]
+runtime-evaluated-decorators = ["pydantic.dataclasses.dataclass"]
 
 [tool.ruff.mccabe]
 max-complexity = 10

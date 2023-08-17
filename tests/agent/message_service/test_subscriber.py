@@ -11,8 +11,6 @@ from great_expectations_cloud.agent.message_service.subscriber import (
 )
 from tests.agent.message_service.amqp_errors import get_amqp_errors
 
-pytestmark = pytest.mark.cloud
-
 
 def test_subscriber_consume_calls_run():
     client = Mock(autospec=AsyncRabbitMQClient)

@@ -20,8 +20,6 @@ from great_expectations_cloud.agent.models import (
     RunOnboardingDataAssistantEvent,
 )
 
-pytestmark = pytest.mark.cloud
-
 
 @pytest.fixture(autouse=True)
 def set_required_env_vars(monkeypatch, org_id, token):

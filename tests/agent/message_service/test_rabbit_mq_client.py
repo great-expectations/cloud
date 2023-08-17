@@ -4,8 +4,6 @@ from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client imp
     AsyncRabbitMQClient,
 )
 
-pytestmark = pytest.mark.cloud
-
 
 @pytest.fixture
 def pika(mocker):
