@@ -7,8 +7,6 @@ from functools import partial
 from typing import TYPE_CHECKING, Dict, Optional
 
 import pydantic
-from pydantic import AmqpDsn, AnyUrl
-
 from great_expectations import get_context
 from great_expectations.agent.actions.agent_action import ActionResult
 from great_expectations.agent.config import GxAgentEnvVars
@@ -34,6 +32,7 @@ from great_expectations.agent.models import (
 )
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
+from pydantic import AmqpDsn, AnyUrl
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext

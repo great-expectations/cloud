@@ -1,7 +1,6 @@
 from uuid import UUID
 
 import pydantic
-
 from great_expectations.agent.actions import ActionResult, AgentAction
 from great_expectations.agent.config import GxAgentEnvVars
 from great_expectations.agent.models import DraftDatasourceConfigEvent

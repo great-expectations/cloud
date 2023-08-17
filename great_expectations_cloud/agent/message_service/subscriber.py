@@ -6,13 +6,12 @@ from json import JSONDecodeError
 from typing import Callable, Coroutine, Union
 
 import pydantic
-from pika.exceptions import AMQPError, ChannelError
-
 from great_expectations.agent.message_service.asyncio_rabbit_mq_client import (
     AsyncRabbitMQClient,
     OnMessagePayload,
 )
 from great_expectations.agent.models import Event, UnknownEvent
+from pika.exceptions import AMQPError, ChannelError
 
 
 @dataclass(frozen=True)
