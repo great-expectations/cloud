@@ -1,6 +1,9 @@
 from unittest.mock import MagicMock
 
 import pytest
+from great_expectations.data_context import CloudDataContext
+from great_expectations.datasource.fluent import Datasource
+from great_expectations.exceptions import StoreBackendError
 
 from great_expectations_cloud.agent.actions import (
     CreatedResource,
@@ -9,9 +12,6 @@ from great_expectations_cloud.agent.actions import (
 from great_expectations_cloud.agent.models import (
     RunMissingnessDataAssistantEvent,
 )
-from great_expectations.data_context import CloudDataContext
-from great_expectations.datasource.fluent import Datasource
-from great_expectations.exceptions import StoreBackendError
 
 pytestmark = pytest.mark.unit
 

@@ -1,13 +1,13 @@
 from unittest.mock import MagicMock
 
 import pytest
+from great_expectations.data_context import CloudDataContext
 
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunCheckpointEvent,
 )
-from great_expectations.data_context import CloudDataContext
 
 pytestmark = pytest.mark.unit
 
@@ -34,9 +34,7 @@ def test_run_checkpoint_action_returns_action_result(context, checkpoint_event):
     checkpoint.run_results = {
         "GXCloudIdentifier::validation_result::78ebf58e-bdb5-4d79-88d5-79bae19bf7d0": {
             "actions_results": {
-                "store_validation_result": {
-                    "id": "78ebf58e-bdb5-4d79-88d5-79bae19bf7d0"
-                }
+                "store_validation_result": {"id": "78ebf58e-bdb5-4d79-88d5-79bae19bf7d0"}
             }
         }
     }

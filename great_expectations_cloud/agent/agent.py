@@ -8,6 +8,10 @@ from typing import TYPE_CHECKING, Dict, Optional
 
 import pydantic
 from great_expectations import get_context
+from great_expectations.core.http import create_session
+from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
+from pydantic import AmqpDsn, AnyUrl
+
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.event_handler import (
@@ -30,9 +34,6 @@ from great_expectations_cloud.agent.models import (
     JobStatus,
     UnknownEvent,
 )
-from great_expectations.core.http import create_session
-from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
-from pydantic import AmqpDsn, AnyUrl
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext

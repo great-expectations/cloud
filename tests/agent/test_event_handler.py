@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
+from great_expectations.data_context import CloudDataContext
 
 from great_expectations_cloud.agent.event_handler import EventHandler, UnknownEventError
 from great_expectations_cloud.agent.models import (
@@ -11,7 +12,6 @@ from great_expectations_cloud.agent.models import (
     RunOnboardingDataAssistantEvent,
     UnknownEvent,
 )
-from great_expectations.data_context import CloudDataContext
 
 pytestmark = pytest.mark.unit
 

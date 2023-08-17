@@ -5,18 +5,18 @@ from unittest.mock import MagicMock
 
 import pytest
 import responses
-from sqlalchemy.engine import Inspector
-
-from great_expectations_cloud.agent.actions import (
-    ListTableNamesAction,
-)
-from great_expectations_cloud.agent.models import ListTableNamesEvent
 from great_expectations.data_context import CloudDataContext
 from great_expectations.datasource.fluent import (
     PandasDatasource,
     SQLDatasource,
 )
 from great_expectations.exceptions import StoreBackendError
+from sqlalchemy.engine import Inspector
+
+from great_expectations_cloud.agent.actions import (
+    ListTableNamesAction,
+)
+from great_expectations_cloud.agent.models import ListTableNamesEvent
 
 pytestmark = pytest.mark.unit
 
@@ -40,9 +40,7 @@ def dummy_access_token() -> str:
 
 
 @pytest.fixture
-def set_required_env_vars(
-    monkeypatch, dummy_org_id, dummy_base_url, dummy_access_token
-):
+def set_required_env_vars(monkeypatch, dummy_org_id, dummy_base_url, dummy_access_token):
     env_vars = {
         "GX_CLOUD_ORGANIZATION_ID": dummy_org_id,
         "GX_CLOUD_ACCESS_TOKEN": dummy_access_token,
@@ -74,9 +72,7 @@ def test_list_table_names_event_raises_for_non_sql_datasource(context, event):
     datasource = MagicMock(spec=PandasDatasource)
     context.get_datasource.return_value = datasource
 
-    with pytest.raises(
-        TypeError, match=r"This operation requires a SQL Datasource but got"
-    ):
+    with pytest.raises(TypeError, match=r"This operation requires a SQL Datasource but got"):
         action.run(event=event, id=id)
 
 
@@ -96,9 +92,7 @@ def test_run_list_table_names_action_returns_action_result(
         context.get_datasource.return_value = datasource
 
         responses.patch(
-            re.compile(
-                rf"{dummy_base_url}/organizations/{dummy_org_id}/datasources/.*"
-            ),
+            re.compile(rf"{dummy_base_url}/organizations/{dummy_org_id}/datasources/.*"),
             status=204,
         )
 
