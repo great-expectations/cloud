@@ -1,12 +1,12 @@
 from typing import TYPE_CHECKING, List
 
 import pydantic
-from great_expectations.agent.actions.agent_action import (
+from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
-from great_expectations.agent.config import GxAgentEnvVars
-from great_expectations.agent.models import (
+from great_expectations_cloud.agent.config import GxAgentEnvVars
+from great_expectations_cloud.agent.models import (
     ListTableNamesEvent,
 )
 from great_expectations.compatibility.sqlalchemy import inspect
@@ -56,7 +56,8 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
         )
         if response.status_code != 204:  # noqa: PLR2004
             raise GXCloudError(
-                message=f"ListTableNamesAction encountered an error while connecting to GX Cloud. Unable to update "
+                message=f"ListTableNamesAction encountered an error while connecting to GX Cloud. "
+                f"Unable to update "
                 f"table_names for Datasource with id"
                 f"={datasource_id}.",
                 response=response,

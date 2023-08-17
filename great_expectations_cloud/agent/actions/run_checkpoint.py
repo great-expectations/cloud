@@ -1,8 +1,8 @@
-from great_expectations.agent.actions.agent_action import (
+from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
-from great_expectations.agent.models import (
+from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunCheckpointEvent,
 )

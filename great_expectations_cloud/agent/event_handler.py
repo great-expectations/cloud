@@ -2,19 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from great_expectations.agent.actions import (
+from great_expectations_cloud.agent.actions import (
     ColumnDescriptiveMetricsAction,
     ListTableNamesAction,
 )
-from great_expectations.agent.actions.data_assistants import (
+from great_expectations_cloud.agent.actions.data_assistants import (
     RunMissingnessDataAssistantAction,
     RunOnboardingDataAssistantAction,
 )
-from great_expectations.agent.actions.draft_datasource_config_action import (
+from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
     DraftDatasourceConfigAction,
 )
-from great_expectations.agent.actions.run_checkpoint import RunCheckpointAction
-from great_expectations.agent.models import (
+from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
+from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
     Event,
     ListTableNamesEvent,
@@ -29,7 +29,7 @@ from great_expectations.experimental.metric_repository.batch_inspector import (
 from great_expectations.experimental.metric_repository.cloud_data_store import (
     CloudDataStore,
 )
-from great_expectations.experimental.metric_repository.column_descriptive_metrics_metric_retriever import (
+from great_expectations.experimental.metric_repository.column_descriptive_metrics_metric_retriever import (  # noqa: E501
     ColumnDescriptiveMetricsMetricRetriever,
 )
 from great_expectations.experimental.metric_repository.metric_repository import (
@@ -37,7 +37,7 @@ from great_expectations.experimental.metric_repository.metric_repository import 
 )
 
 if TYPE_CHECKING:
-    from great_expectations.agent.actions.agent_action import ActionResult, AgentAction
+    from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
     from great_expectations.data_context import CloudDataContext
     from great_expectations.experimental.metric_repository.metric_retriever import (
         MetricRetriever,

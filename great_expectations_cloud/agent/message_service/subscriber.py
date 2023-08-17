@@ -6,11 +6,11 @@ from json import JSONDecodeError
 from typing import Callable, Coroutine, Union
 
 import pydantic
-from great_expectations.agent.message_service.asyncio_rabbit_mq_client import (
+from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     AsyncRabbitMQClient,
     OnMessagePayload,
 )
-from great_expectations.agent.models import Event, UnknownEvent
+from great_expectations_cloud.agent.models import Event, UnknownEvent
 from pika.exceptions import AMQPError, ChannelError
 
 
@@ -128,7 +128,7 @@ class Subscriber:
         return on_message(event_context)
 
     async def _redeliver_message(
-        self, delivery_tag: int, requeue: bool = True, delay: Union[float, int] = 3
+        self, delivery_tag: int, requeue: bool = True, delay: Union[float, int] = 3  # noqa: PYI041
     ):
         """Coroutine to request a redelivery with delay."""
         # not threadsafe
