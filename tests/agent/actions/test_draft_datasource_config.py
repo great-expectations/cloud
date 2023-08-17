@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 from uuid import UUID
 
@@ -11,6 +14,9 @@ from great_expectations_cloud.agent.actions.draft_datasource_config_action impor
 )
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
+
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
 
 
 @pytest.fixture(scope="function")
@@ -29,7 +35,7 @@ def token():
 
 
 @pytest.fixture
-def set_required_env_vars(monkeypatch, org_id, token):
+def set_required_env_vars(monkeypatch, org_id, token) -> None:
     env_vars = {
         "GX_CLOUD_ORGANIZATION_ID": org_id,
         "GX_CLOUD_ACCESS_TOKEN": token,
@@ -48,7 +54,9 @@ def build_payload(config: dict, id: UUID) -> dict:
     }
 
 
-def test_test_draft_datasource_config_success(context, mocker, set_required_env_vars):
+def test_test_draft_datasource_config_success(
+    context, mocker: MockerFixture, set_required_env_vars: None
+):
     datasource_config = {"type": "pandas", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
     create_session = mocker.patch(
@@ -76,7 +84,9 @@ def test_test_draft_datasource_config_success(context, mocker, set_required_env_
     session.get.assert_called_with(expected_url)
 
 
-def test_test_draft_datasource_config_failure(context, mocker, set_required_env_vars):
+def test_test_draft_datasource_config_failure(
+    context, mocker: MockerFixture, set_required_env_vars: None
+):
     ds_type = "sql"
     datasource_config = {"type": ds_type, "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
@@ -105,7 +115,9 @@ def test_test_draft_datasource_config_failure(context, mocker, set_required_env_
     session.get.assert_called_with(expected_url)
 
 
-def test_test_draft_datasource_config_raises_for_non_fds(context, mocker, set_required_env_vars):
+def test_test_draft_datasource_config_raises_for_non_fds(
+    context, mocker: MockerFixture, set_required_env_vars: None
+):
     datasource_config = {"name": "test-1-2-3", "connection_string": ""}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
     create_session = mocker.patch(
@@ -130,7 +142,7 @@ def test_test_draft_datasource_config_raises_for_non_fds(context, mocker, set_re
 
 
 def test_test_draft_datasource_config_raises_for_unknown_type(
-    context, mocker, set_required_env_vars
+    context, mocker: MockerFixture, set_required_env_vars: None
 ):
     datasource_config = {"type": "not a datasource", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
@@ -159,7 +171,7 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
 
 
 def test_test_draft_datasource_config_raises_for_cloud_backend_error(
-    context, mocker, set_required_env_vars
+    context, mocker: MockerFixture, set_required_env_vars: None
 ):
     datasource_config = {"type": "not a datasource", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
