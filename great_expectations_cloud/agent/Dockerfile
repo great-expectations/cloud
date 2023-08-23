@@ -1,8 +1,12 @@
 FROM --platform=linux/amd64 python:3.10.12-slim as base
 WORKDIR /app/
-COPY . .
+
+RUN mkdir -p great_expectations_cloud/agent
+COPY great_expectations_cloud/agent great_expectations_cloud/agent
+COPY pyproject.toml pyproject.toml
+COPY README.md README.md
 
 RUN pip install poetry
 RUN poetry install --sync
 
-CMD ["gx-agent"]
+CMD ["poetry", "run", "gx-agent"]
