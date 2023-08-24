@@ -44,3 +44,19 @@ def deps(ctx: Context):
     """Sync dependencies with poetry lock file"""
     cmds = ["poetry", "install", "--sync"]
     ctx.run(" ".join(cmds), echo=True, pty=True)
+
+
+@invoke.task
+def build(ctx: Context):
+    """Build GX Agent Image"""
+    cmds = [
+        "docker",
+        "buildx",
+        "build",
+        "-t",
+        "gx/agent",
+        "-f",
+        "great_expectations_cloud/agent/Dockerfile",
+        ".",
+    ]
+    ctx.run(" ".join(cmds), echo=True, pty=True)
