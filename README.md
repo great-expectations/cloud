@@ -20,3 +20,19 @@
 Common developer tasks are available via `invoke` (defined in `tasks.py`)
 
 `invoke --list` to see available tasks.
+
+### Building and Running the GX Agent Image
+
+In order to to build the GX Agent docker image run the following in the root dir:
+
+```
+docker build -t gx/agent -f great_expectations_cloud/agent/Dockerfile .
+```
+
+Running the agent:
+
+```
+docker run --env GX_CLOUD_ACCESS_TOKEN="<GX_TOKEN>" --env GX_CLOUD_ORGANIZATION_ID="<GX_ORG_ID>" gx/agent
+```
+
+Now go into GX Cloud and issue commands for the agent to run such as generating an Expectation Suite for a DataSource.
