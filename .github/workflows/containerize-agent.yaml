@@ -3,8 +3,7 @@ name: containerize-agent
 on:
   push:
     branches:
-      # - main
-      - configure-docker-build-and-publish
+      - main
 
 jobs:
   containerize-agent:
