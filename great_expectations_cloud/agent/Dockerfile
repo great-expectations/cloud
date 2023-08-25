@@ -7,6 +7,6 @@ COPY pyproject.toml pyproject.toml
 COPY README.md README.md
 
 RUN pip install poetry
-RUN poetry install --sync
+RUN poetry install --without dev --sync
 
 CMD ["poetry", "run", "gx-agent"]
