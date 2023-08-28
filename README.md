@@ -36,3 +36,5 @@ docker run --env GX_CLOUD_ACCESS_TOKEN="<GX_TOKEN>" --env GX_CLOUD_ORGANIZATION_
 ```
 
 Now go into GX Cloud and issue commands for the agent to run such as generating an Expectation Suite for a DataSource.
+
+> Note if you are pushing out a new image update the image tag version in `containerize-agent.yaml`. The image will be built and pushed out via GitHub Actions.
