@@ -54,7 +54,7 @@ def build(ctx: Context):
         "buildx",
         "build",
         "-t",
-        "gx/agent",
+        "greatexpectations/agent",
         "-f",
         "great_expectations_cloud/agent/Dockerfile",
         ".",
