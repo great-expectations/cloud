@@ -54,7 +54,6 @@ def build_payload(config: dict, id: UUID) -> dict:
     }
 
 
-@pytest.mark.xfail(reason="Mock needs to be fixed")
 def test_test_draft_datasource_config_success(
     context, mocker: MockerFixture, set_required_env_vars: None
 ):
@@ -72,7 +71,7 @@ def test_test_draft_datasource_config_success(
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url: str = (
-        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
+        f"{env_vars.gx_cloud_base_url}organizations/{env_vars.gx_cloud_organization_id}"
         f"/datasources/drafts/{config_id}"
     )
 
@@ -85,7 +84,6 @@ def test_test_draft_datasource_config_success(
     session.get.assert_called_with(expected_url)
 
 
-@pytest.mark.xfail(reason="Mock needs to be fixed")
 def test_test_draft_datasource_config_failure(
     context, mocker: MockerFixture, set_required_env_vars: None
 ):
@@ -104,7 +102,7 @@ def test_test_draft_datasource_config_failure(
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url = (
-        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
+        f"{env_vars.gx_cloud_base_url}organizations/{env_vars.gx_cloud_organization_id}"
         f"/datasources/drafts/{config_id}"
     )
     datasource_cls = MagicMock(autospec=SQLDatasource)
@@ -117,7 +115,6 @@ def test_test_draft_datasource_config_failure(
     session.get.assert_called_with(expected_url)
 
 
-@pytest.mark.xfail(reason="Mock needs to be fixed")
 def test_test_draft_datasource_config_raises_for_non_fds(
     context, mocker: MockerFixture, set_required_env_vars: None
 ):
@@ -135,7 +132,7 @@ def test_test_draft_datasource_config_raises_for_non_fds(
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url = (
-        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
+        f"{env_vars.gx_cloud_base_url}organizations/{env_vars.gx_cloud_organization_id}"
         f"/datasources/drafts/{config_id}"
     )
     with pytest.raises(ValueError, match="fluent-style datasource"):
@@ -144,7 +141,6 @@ def test_test_draft_datasource_config_raises_for_non_fds(
     session.get.assert_called_with(expected_url)
 
 
-@pytest.mark.xfail(reason="Mock needs to be fixed")
 def test_test_draft_datasource_config_raises_for_unknown_type(
     context, mocker: MockerFixture, set_required_env_vars: None
 ):
@@ -162,7 +158,7 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url = (
-        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
+        f"{env_vars.gx_cloud_base_url}organizations/{env_vars.gx_cloud_organization_id}"
         f"/datasources/drafts/{config_id}"
     )
 
@@ -174,7 +170,6 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
     session.get.assert_called_with(expected_url)
 
 
-@pytest.mark.xfail(reason="Mock needs to be fixed")
 def test_test_draft_datasource_config_raises_for_cloud_backend_error(
     context, mocker: MockerFixture, set_required_env_vars: None
 ):
@@ -192,7 +187,7 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url = (
-        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
+        f"{env_vars.gx_cloud_base_url}organizations/{env_vars.gx_cloud_organization_id}"
         f"/datasources/drafts/{config_id}"
     )
 
