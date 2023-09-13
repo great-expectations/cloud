@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "0.0.1"
+version = "0.0.0"
 description = "Great Expectations Cloud"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
@@ -25,6 +25,11 @@ tomli = "^2.0.1"
 
 [tool.poetry.scripts]
 gx-agent = 'great_expectations_cloud.agent:run_agent'
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "semver"
 
 [build-system]
 requires = ["poetry-core"]
