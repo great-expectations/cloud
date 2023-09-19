@@ -6,36 +6,36 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from typing import TYPE_CHECKING, Dict, Optional
 
-from great_expectations import get_context
-from great_expectations.agent.actions.agent_action import ActionResult
-from great_expectations.agent.config import GxAgentEnvVars
-from great_expectations.agent.event_handler import (
+from great_expectations_cloud import get_context
+from great_expectations_cloud.agent.actions.agent_action import ActionResult
+from great_expectations_cloud.agent.config import GxAgentEnvVars
+from great_expectations_cloud.agent.event_handler import (
     EventHandler,
 )
-from great_expectations.agent.message_service.asyncio_rabbit_mq_client import (
+from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     AsyncRabbitMQClient,
     ClientError,
 )
-from great_expectations.agent.message_service.subscriber import (
+from great_expectations_cloud.agent.message_service.subscriber import (
     EventContext,
     OnMessageCallback,
     Subscriber,
     SubscriberError,
 )
-from great_expectations.agent.models import (
+from great_expectations_cloud.agent.models import (
     AgentBaseModel,
     JobCompleted,
     JobStarted,
     JobStatus,
     UnknownEvent,
 )
-from great_expectations.compatibility import pydantic
-from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
-from great_expectations.core.http import create_session
-from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
+from great_expectations_cloud.compatibility import pydantic
+from great_expectations_cloud.compatibility.pydantic import AmqpDsn, AnyUrl
+from great_expectations_cloud.core.http import create_session
+from great_expectations_cloud.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 
 if TYPE_CHECKING:
-    from great_expectations.data_context import CloudDataContext
+    from great_expectations_cloud.data_context import CloudDataContext
 
 HandlerMap = Dict[str, OnMessageCallback]
 

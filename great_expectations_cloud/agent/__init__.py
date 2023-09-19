@@ -1,2 +1,2 @@
-from great_expectations.agent.agent import GXAgent
-from great_expectations.agent.run import run_agent
+from great_expectations_cloud.agent.agent import GXAgent
+from great_expectations_cloud.agent.run import run_agent

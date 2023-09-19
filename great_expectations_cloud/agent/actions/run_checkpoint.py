@@ -1,12 +1,12 @@
-from great_expectations.agent.actions.agent_action import (
+from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
-from great_expectations.agent.models import (
+from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunCheckpointEvent,
 )
-from great_expectations.compatibility.typing_extensions import override
+from great_expectations_cloud.compatibility.typing_extensions import override
 
 
 class RunCheckpointAction(AgentAction[RunCheckpointEvent]):

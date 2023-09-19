@@ -1,23 +1,23 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from great_expectations.agent.actions.agent_action import (
+from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
 )
-from great_expectations.agent.models import (
+from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunDataAssistantEvent,
 )
-from great_expectations.core.batch import BatchRequest
-from great_expectations.data_context.data_context import CloudDataContext
-from great_expectations.datasource.fluent import Datasource as FluentDatasource
-from great_expectations.exceptions.exceptions import DataContextError
-from great_expectations.rule_based_profiler.data_assistant_result.data_assistant_result import (
+from great_expectations_cloud.core.batch import BatchRequest
+from great_expectations_cloud.data_context.data_context import CloudDataContext
+from great_expectations_cloud.datasource.fluent import Datasource as FluentDatasource
+from great_expectations_cloud.exceptions.exceptions import DataContextError
+from great_expectations_cloud.rule_based_profiler.data_assistant_result.data_assistant_result import (
     DataAssistantResult,
 )
 
 if TYPE_CHECKING:
-    from great_expectations.core import ExpectationSuite
+    from great_expectations_cloud.core import ExpectationSuite
 
 
 def build_batch_request(

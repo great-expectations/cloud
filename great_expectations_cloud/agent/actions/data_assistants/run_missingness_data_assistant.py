@@ -1,10 +1,10 @@
-from great_expectations.agent.actions.agent_action import ActionResult, AgentAction
-from great_expectations.agent.actions.data_assistants.utils import (
+from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
+from great_expectations_cloud.agent.actions.data_assistants.utils import (
     build_action_result,
     build_batch_request,
 )
-from great_expectations.agent.models import RunMissingnessDataAssistantEvent
-from great_expectations.compatibility.typing_extensions import override
+from great_expectations_cloud.agent.models import RunMissingnessDataAssistantEvent
+from great_expectations_cloud.compatibility.typing_extensions import override
 
 
 class RunMissingnessDataAssistantAction(AgentAction[RunMissingnessDataAssistantEvent]):

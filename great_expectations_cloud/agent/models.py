@@ -4,7 +4,7 @@ from uuid import UUID
 
 from typing_extensions import Annotated
 
-from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
+from great_expectations_cloud.compatibility.pydantic import BaseModel, Extra, Field
 
 
 class AgentBaseModel(BaseModel):

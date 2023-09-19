@@ -1,22 +1,22 @@
 from typing import TYPE_CHECKING, List
 
-from great_expectations.agent.actions.agent_action import (
+from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
-from great_expectations.agent.config import GxAgentEnvVars
-from great_expectations.agent.models import (
+from great_expectations_cloud.agent.config import GxAgentEnvVars
+from great_expectations_cloud.agent.models import (
     ListTableNamesEvent,
 )
-from great_expectations.compatibility import pydantic
-from great_expectations.compatibility.sqlalchemy import inspect
-from great_expectations.compatibility.typing_extensions import override
-from great_expectations.core.http import create_session
-from great_expectations.datasource.fluent import SQLDatasource
-from great_expectations.exceptions import GXCloudError
+from great_expectations_cloud.compatibility import pydantic
+from great_expectations_cloud.compatibility.sqlalchemy import inspect
+from great_expectations_cloud.compatibility.typing_extensions import override
+from great_expectations_cloud.core.http import create_session
+from great_expectations_cloud.datasource.fluent import SQLDatasource
+from great_expectations_cloud.exceptions import GXCloudError
 
 if TYPE_CHECKING:
-    from great_expectations.compatibility.sqlalchemy.engine import Inspector
+    from great_expectations_cloud.compatibility.sqlalchemy.engine import Inspector
 
 
 class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
