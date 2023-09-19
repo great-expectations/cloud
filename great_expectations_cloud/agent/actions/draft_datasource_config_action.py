@@ -2,6 +2,7 @@ from uuid import UUID
 
 import pydantic
 from great_expectations.core.http import create_session
+from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.config import GxAgentEnvVars
@@ -9,6 +10,7 @@ from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 
 class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
+    @override
     def run(self, event: DraftDatasourceConfigEvent, id: str) -> ActionResult:
         draft_config = self.get_draft_config(config_id=event.config_id)
         datasource_type = draft_config.get("type", None)
