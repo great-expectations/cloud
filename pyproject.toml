@@ -44,13 +44,6 @@ enable_error_code = [
     'ignore-without-code',
     'explicit-override',
     ]
-# The following list of codes are globally ignored, do not add to this list
-disable_error_code = [
-    # annotation-unchecked are 'warning notes', not errors and won't cause mypy to fail
-    # but it does create a lot of noise in the CI mypy step.
-    # https://mypy-lang.blogspot.com/2022/11/mypy-0990-released.html
-    'annotation-unchecked',
-]
 
 [tool.black]
 target-version = ["py38", "py39", "py310", "py311"]

@@ -11,6 +11,7 @@ from great_expectations import get_context
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from pydantic import AmqpDsn, AnyUrl
+from typing_extensions import Self
 
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.config import GxAgentEnvVars
@@ -65,7 +66,7 @@ class GXAgent:
     user events triggered from the UI.
     """
 
-    def __init__(self):
+    def __init__(self: Self):
         print("Initializing GX-Agent")
         self._config = self._get_config()
         print("Loading a DataContext - this might take a moment.")
@@ -78,7 +79,7 @@ class GXAgent:
         # it isn't safe to increase the number of workers running GX jobs.
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._current_task: Optional[Future] = None
-        self._correlation_ids = defaultdict(lambda: 0)
+        self._correlation_ids: defaultdict = defaultdict(lambda: 0)
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
@@ -91,7 +92,7 @@ class GXAgent:
         """Manage connection lifecycle."""
         subscriber = None
         try:
-            client = AsyncRabbitMQClient(url=self._config.connection_string)
+            client = AsyncRabbitMQClient(url=str(self._config.connection_string))
             subscriber = Subscriber(client=client)
             print("GX-Agent is ready.")
             # Open a connection until encountering a shutdown event
