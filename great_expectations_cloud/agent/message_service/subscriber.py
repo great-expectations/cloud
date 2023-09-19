@@ -5,6 +5,7 @@ from functools import partial
 from json import JSONDecodeError
 from typing import Callable, Coroutine, Union
 
+from great_expectations.compatibility import pydantic
 from pika.exceptions import AMQPError, ChannelError
 
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
@@ -12,7 +13,6 @@ from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client imp
     OnMessagePayload,
 )
 from great_expectations_cloud.agent.models import Event, UnknownEvent
-from great_expectations.compatibility import pydantic
 
 
 @dataclass(frozen=True)
