@@ -4,7 +4,7 @@ from uuid import UUID
 
 from typing_extensions import Annotated
 
-from great_expectations_cloud.compatibility.pydantic import BaseModel, Extra, Field
+from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
 
 
 class AgentBaseModel(BaseModel):
@@ -48,9 +48,7 @@ class RunColumnDescriptiveMetricsEvent(EventBase):
 
 
 class ListTableNamesEvent(EventBase):
-    type: Literal[
-        "list_table_names_request.received"
-    ] = "list_table_names_request.received"
+    type: Literal["list_table_names_request.received"] = "list_table_names_request.received"
     datasource_name: str
 
 
