@@ -5,14 +5,13 @@ from functools import partial
 from json import JSONDecodeError
 from typing import Callable, Coroutine, Union
 
-from pika.exceptions import AMQPError, ChannelError
-
 from great_expectations.agent.message_service.asyncio_rabbit_mq_client import (
     AsyncRabbitMQClient,
     OnMessagePayload,
 )
 from great_expectations.agent.models import Event, UnknownEvent
 from great_expectations.compatibility import pydantic
+from pika.exceptions import AMQPError, ChannelError
 
 
 @dataclass(frozen=True)
@@ -76,9 +75,7 @@ class Subscriber:
             except (AMQPError, ChannelError):
                 self.client.stop()
                 reconnect_delay = self._get_reconnect_delay()
-                time.sleep(
-                    reconnect_delay
-                )  # todo: update this blocking call to asyncio.sleep
+                time.sleep(reconnect_delay)  # todo: update this blocking call to asyncio.sleep
             except KeyboardInterrupt as e:
                 self.client.stop()
                 raise KeyboardInterrupt from e
@@ -108,9 +105,7 @@ class Subscriber:
 
         # Allow the caller to determine whether to ack/nack this message,
         # even if the processing occurs in another thread.
-        ack_callback = self.client.get_threadsafe_ack_callback(
-            delivery_tag=payload.delivery_tag
-        )
+        ack_callback = self.client.get_threadsafe_ack_callback(delivery_tag=payload.delivery_tag)
         nack_callback = self.client.get_threadsafe_nack_callback(
             delivery_tag=payload.delivery_tag, requeue=False
         )
@@ -136,7 +131,7 @@ class Subscriber:
         self,
         delivery_tag: int,
         requeue: bool = True,
-        delay: Union[float, int] = 3,  # noqa: PYI041
+        delay: Union[float, int] = 3,
     ):
         """Coroutine to request a redelivery with delay."""
         # not threadsafe
