@@ -2,9 +2,8 @@ import uuid
 from typing import Literal, Sequence, Union
 from uuid import UUID
 
-from typing_extensions import Annotated
-
 from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
+from typing_extensions import Annotated
 
 
 class AgentBaseModel(BaseModel):
