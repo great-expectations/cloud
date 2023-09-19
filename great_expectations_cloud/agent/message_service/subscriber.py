@@ -5,8 +5,8 @@ from functools import partial
 from json import JSONDecodeError
 from typing import Callable, Coroutine
 
-import pydantic
 from pika.exceptions import AMQPError, ChannelError
+from pydantic import v1 as pydantic_v1
 
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     AsyncRabbitMQClient,
@@ -100,8 +100,8 @@ class Subscriber:
         """
         event: Event
         try:
-            event = pydantic.parse_raw_as(Event, payload.body)  # type: ignore[arg-type]
-        except (pydantic.ValidationError, JSONDecodeError):
+            event = pydantic_v1.parse_raw_as(Event, payload.body)  # type: ignore[arg-type]
+        except (pydantic_v1.ValidationError, JSONDecodeError):
             event = UnknownEvent()
 
         # Allow the caller to determine whether to ack/nack this message,

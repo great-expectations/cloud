@@ -66,7 +66,7 @@ def test_test_draft_datasource_config_success(
     response = session.get.return_value
     response.ok = True
     response.json.return_value = build_payload(config=datasource_config, id=config_id)
-    env_vars = GxAgentEnvVars()
+    env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # pulled from env vars
     action = DraftDatasourceConfigAction(context=context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
@@ -97,7 +97,7 @@ def test_test_draft_datasource_config_failure(
     response = session.get.return_value
     response.ok = True
     response.json.return_value = build_payload(config=datasource_config, id=config_id)
-    env_vars = GxAgentEnvVars()
+    env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # pulled from env vars
     action = DraftDatasourceConfigAction(context=context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
@@ -127,7 +127,7 @@ def test_test_draft_datasource_config_raises_for_non_fds(
     response = session.get.return_value
     response.ok = True
     response.json.return_value = build_payload(config=datasource_config, id=config_id)
-    env_vars = GxAgentEnvVars()
+    env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # pulled from env vars
     action = DraftDatasourceConfigAction(context=context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
@@ -153,7 +153,7 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
     response = session.get.return_value
     response.ok = True
     response.json.return_value = build_payload(config=datasource_config, id=config_id)
-    env_vars = GxAgentEnvVars()
+    env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # pulled from env vars
     action = DraftDatasourceConfigAction(context=context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
@@ -182,7 +182,7 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
     response = session.get.return_value
     response.ok = False
     response.json.return_value = build_payload(config=datasource_config, id=config_id)
-    env_vars = GxAgentEnvVars()
+    env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # pulled from env vars
     action = DraftDatasourceConfigAction(context=context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
