@@ -1,4 +1,4 @@
-from great_expectations_cloud.agent import GXAgent
+from great_expectations.agent import GXAgent
 
 
 def run_agent():

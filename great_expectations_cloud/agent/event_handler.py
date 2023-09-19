@@ -2,32 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from great_expectations.experimental.metric_repository.batch_inspector import (
-    BatchInspector,
-)
-from great_expectations.experimental.metric_repository.cloud_data_store import (
-    CloudDataStore,
-)
-from great_expectations.experimental.metric_repository.column_descriptive_metrics_metric_retriever import (  # noqa: E501
-    ColumnDescriptiveMetricsMetricRetriever,
-)
-from great_expectations.experimental.metric_repository.metric_repository import (
-    MetricRepository,
-)
-
-from great_expectations_cloud.agent.actions import (
+from great_expectations.agent.actions import (
     ColumnDescriptiveMetricsAction,
     ListTableNamesAction,
 )
-from great_expectations_cloud.agent.actions.data_assistants import (
+from great_expectations.agent.actions.data_assistants import (
     RunMissingnessDataAssistantAction,
     RunOnboardingDataAssistantAction,
 )
-from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
+from great_expectations.agent.actions.draft_datasource_config_action import (
     DraftDatasourceConfigAction,
 )
-from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
-from great_expectations_cloud.agent.models import (
+from great_expectations.agent.actions.run_checkpoint import RunCheckpointAction
+from great_expectations.agent.models import (
     DraftDatasourceConfigEvent,
     Event,
     ListTableNamesEvent,
@@ -36,14 +23,25 @@ from great_expectations_cloud.agent.models import (
     RunMissingnessDataAssistantEvent,
     RunOnboardingDataAssistantEvent,
 )
+from great_expectations.experimental.metric_repository.batch_inspector import (
+    BatchInspector,
+)
+from great_expectations.experimental.metric_repository.cloud_data_store import (
+    CloudDataStore,
+)
+from great_expectations.experimental.metric_repository.column_descriptive_metrics_metric_retriever import (
+    ColumnDescriptiveMetricsMetricRetriever,
+)
+from great_expectations.experimental.metric_repository.metric_repository import (
+    MetricRepository,
+)
 
 if TYPE_CHECKING:
+    from great_expectations.agent.actions.agent_action import ActionResult, AgentAction
     from great_expectations.data_context import CloudDataContext
     from great_expectations.experimental.metric_repository.metric_retriever import (
         MetricRetriever,
     )
-
-    from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
 
 
 class EventHandler:
@@ -74,7 +72,9 @@ class EventHandler:
             ]
             batch_inspector = BatchInspector(self._context, metric_retrievers)
             cloud_data_store = CloudDataStore(self._context)
-            column_descriptive_metrics_repository = MetricRepository(data_store=cloud_data_store)
+            column_descriptive_metrics_repository = MetricRepository(
+                data_store=cloud_data_store
+            )
             return ColumnDescriptiveMetricsAction(
                 context=self._context,
                 batch_inspector=batch_inspector,
