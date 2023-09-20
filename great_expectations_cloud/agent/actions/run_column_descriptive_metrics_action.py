@@ -5,6 +5,7 @@ from great_expectations.experimental.metric_repository.batch_inspector import (
 from great_expectations.experimental.metric_repository.metric_repository import (
     MetricRepository,
 )
+from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.models import (
@@ -24,9 +25,10 @@ class ColumnDescriptiveMetricsAction(AgentAction[RunColumnDescriptiveMetricsEven
         self._metric_repository = metric_repository
         self._batch_inspector = batch_inspector
 
+    @override
     def run(self, event: RunColumnDescriptiveMetricsEvent, id: str) -> ActionResult:
         datasource = self._context.get_datasource(event.datasource_name)
-        data_asset = datasource.get_asset(event.data_asset_name)  # type: ignore[union-attr]
+        data_asset = datasource.get_asset(event.data_asset_name)
         # Non fluent datasources BaseDatasource, LegacyDatasource does not have get_asset
         batch_request = data_asset.build_batch_request()
 

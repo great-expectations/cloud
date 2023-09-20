@@ -42,7 +42,7 @@ def type_check(ctx: Context, install_types: bool = False, check: bool = False):
     if install_types:
         cmds.append("--install-types")
     if check:
-        cmds.append("--pretty")
+        cmds.extend(["--pretty", "--warn-unused-ignores"])
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
