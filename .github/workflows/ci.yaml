@@ -9,7 +9,7 @@ jobs:
   static-analysis:
     strategy:
       matrix:
-        task: ["lint", "fmt", "type-check"]
+        task: ["lint", "fmt", "type-check", "python-build"]
       fail-fast: false
     runs-on: ubuntu-latest
 
@@ -28,7 +28,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.local # the path depends on the OS
-          key: poetry-0 # increment to reset cache
+          key: poetry-3.8 # increment to reset cache
 
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.local # the path depends on the OS
-          key: poetry-0 # increment to reset cache
+          key: poetry-${{ matrix.python-version  }} # increment to reset cache
 
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'

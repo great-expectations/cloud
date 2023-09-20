@@ -5,7 +5,7 @@ from functools import partial
 from json import JSONDecodeError
 from typing import Callable, Coroutine
 
-import pydantic
+from great_expectations.compatibility import pydantic
 from pika.exceptions import AMQPError, ChannelError
 
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
@@ -100,7 +100,7 @@ class Subscriber:
         """
         event: Event
         try:
-            event = pydantic.parse_raw_as(Event, payload.body)  # type: ignore[arg-type]
+            event = pydantic.parse_raw_as(Event, payload.body)
         except (pydantic.ValidationError, JSONDecodeError):
             event = UnknownEvent()
 
