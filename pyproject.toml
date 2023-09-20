@@ -115,6 +115,7 @@ max-complexity = 10
 "os.environ".msg = """Please do not use os.environ, instead use a pydantic.BaseSettings model"""
 # TODO: remove pydantic once our min version is pydantic v2
 "pydantic".msg = "Please do not import pydantic directly, import from great_expectations.compatibility.pydantic instead."
+"sqlalchemy".msg = "Please do not import sqlalchemy directly, import from great_expectations.compatibility.sqlalchemy instead."
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = [
