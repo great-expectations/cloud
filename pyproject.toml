@@ -24,6 +24,7 @@ pytest-mock = "*"
 responses = "^0.23.1"
 ruff = "==0.0.290"
 tomli = "^2.0.1"
+typing_extensions = ">=4.4.0"
 
 [tool.poetry.scripts]
 gx-agent = 'great_expectations_cloud.agent:run_agent'
@@ -112,7 +113,6 @@ max-complexity = 10
 [tool.ruff.flake8-tidy-imports]
 [tool.ruff.flake8-tidy-imports.banned-api]
 "os.environ".msg = """Please do not use os.environ, instead use a pydantic.BaseSettings model"""
-"typing_extensions.override".msg = "Do not import typing_extensions.override directly, import `override` from great_expectations.compatibility.typing_extensions instead."
 # TODO: remove pydantic once our min version is pydantic v2
 "pydantic".msg = "Please do not import pydantic directly, import from great_expectations.compatibility.pydantic instead."
 

@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, List
 
 from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.sqlalchemy import inspect
-from great_expectations.compatibility.typing_extensions import override
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.exceptions import GXCloudError
+from typing_extensions import override
 
 from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
