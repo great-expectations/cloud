@@ -1,18 +1,16 @@
 name: publish-to-pypi
 
+# TODO: Set this to manually trigger once we cutover and go live
 on:
   push:
     branches:
-      - pypi-publishing-poetry
+      - main
 
 jobs:
   pypi-test-publish:
     name: upload release to PyPI
     runs-on: ubuntu-latest
-    # Specifying a GitHub environment is optional, but strongly encouraged
-    # environment: release
     permissions:
-      # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
     steps:
       - name: Checkout
@@ -45,5 +43,6 @@ jobs:
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          # repository-url: https://test.pypi.org/legacy/
+          # TODO: remove this one we are publishing to pypy
+          repository-url: https://test.pypi.org/legacy/
           skip-existing: true # prevent against pushing duplicate versions
