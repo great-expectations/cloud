@@ -80,8 +80,8 @@ select = [
     "DTZ", # flake8-datetimez-dtz - prevent use of tz naive datetimes
     # https://beta.ruff.rs/docs/rules/#pylint-pl
     "PL", # pylint
-    # https://beta.ruff.rs/docs/rules/unused-noqa/
-    "RUF100", # unused-noqa
+    # https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "RUF",
 ]
 ignore = [
     # https://beta.ruff.rs/docs/rules/#flake8-type-checking-tch
