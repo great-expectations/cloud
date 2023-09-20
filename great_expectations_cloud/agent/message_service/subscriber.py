@@ -3,7 +3,7 @@ import time
 from dataclasses import dataclass
 from functools import partial
 from json import JSONDecodeError
-from typing import Callable, Coroutine
+from typing import Callable, Coroutine, Union
 
 from great_expectations.compatibility import pydantic
 from pika.exceptions import AMQPError, ChannelError
