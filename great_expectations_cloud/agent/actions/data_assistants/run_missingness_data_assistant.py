@@ -4,7 +4,6 @@ from great_expectations_cloud.agent.actions.data_assistants.utils import (
     build_batch_request,
 )
 from great_expectations_cloud.agent.models import RunMissingnessDataAssistantEvent
-from great_expectations_cloud.compatibility.typing_extensions import override
 
 
 class RunMissingnessDataAssistantAction(AgentAction[RunMissingnessDataAssistantEvent]):
@@ -12,7 +11,6 @@ class RunMissingnessDataAssistantAction(AgentAction[RunMissingnessDataAssistantE
         super().__init__(context=context)
         self._data_assistant = self._context.assistants.missingness
 
-    @override
     def run(
         self,
         event: RunMissingnessDataAssistantEvent,

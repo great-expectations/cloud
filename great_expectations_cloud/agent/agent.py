@@ -6,7 +6,12 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from typing import TYPE_CHECKING, Dict, Optional
 
-from great_expectations_cloud import get_context
+import pydantic
+from great_expectations import get_context
+from great_expectations.core.http import create_session
+from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
+from pydantic import AmqpDsn, AnyUrl
+
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.event_handler import (
@@ -29,13 +34,9 @@ from great_expectations_cloud.agent.models import (
     JobStatus,
     UnknownEvent,
 )
-from great_expectations_cloud.compatibility import pydantic
-from great_expectations_cloud.compatibility.pydantic import AmqpDsn, AnyUrl
-from great_expectations_cloud.core.http import create_session
-from great_expectations_cloud.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 
 if TYPE_CHECKING:
-    from great_expectations_cloud.data_context import CloudDataContext
+    from great_expectations.data_context import CloudDataContext
 
 HandlerMap = Dict[str, OnMessageCallback]
 
@@ -177,7 +178,8 @@ class GXAgent:
             status = JobCompleted(success=False, error_stack_trace=str(error))
             print(traceback.format_exc())
             print(
-                f"Failed to complete job {event_context.event.type} ({event_context.correlation_id})"
+                f"Failed to complete job {event_context.event.type} "
+                f"({event_context.correlation_id})"
             )
         self._update_status(job_id=event_context.correlation_id, status=status)
 
@@ -211,7 +213,7 @@ class GXAgent:
         # ensure we have all required env variables, and provide a useful error if not
 
         try:
-            env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # args pulled from env vars
+            env_vars = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:
             raise GXAgentError(
                 f"Missing or badly formed environment variable\n{validation_err.errors()}"
@@ -219,7 +221,10 @@ class GXAgent:
 
         # obtain the broker url and queue name from Cloud
 
-        agent_sessions_url = f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}/agent-sessions"
+        agent_sessions_url = (
+            f"{env_vars.gx_cloud_base_url}/organizations/"
+            f"{env_vars.gx_cloud_organization_id}/agent-sessions"
+        )
 
         session = create_session(access_token=env_vars.gx_cloud_access_token)
 

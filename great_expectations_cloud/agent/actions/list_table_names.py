@@ -1,5 +1,11 @@
 from typing import TYPE_CHECKING, List
 
+import pydantic
+from great_expectations.compatibility.sqlalchemy import inspect
+from great_expectations.core.http import create_session
+from great_expectations.datasource.fluent import SQLDatasource
+from great_expectations.exceptions import GXCloudError
+
 from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
@@ -8,19 +14,12 @@ from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.models import (
     ListTableNamesEvent,
 )
-from great_expectations_cloud.compatibility import pydantic
-from great_expectations_cloud.compatibility.sqlalchemy import inspect
-from great_expectations_cloud.compatibility.typing_extensions import override
-from great_expectations_cloud.core.http import create_session
-from great_expectations_cloud.datasource.fluent import SQLDatasource
-from great_expectations_cloud.exceptions import GXCloudError
 
 if TYPE_CHECKING:
-    from great_expectations_cloud.compatibility.sqlalchemy.engine import Inspector
+    from great_expectations.compatibility.sqlalchemy.engine import Inspector
 
 
 class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
-    @override
     def run(self, event: ListTableNamesEvent, id: str) -> ActionResult:
         datasource_name: str = event.datasource_name
         datasource = self._context.get_datasource(datasource_name=datasource_name)
@@ -44,7 +43,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
 
     def _add_or_update_table_names_list(self, datasource_id: str, table_names: List[str]) -> None:
         try:
-            cloud_config = GxAgentEnvVars()  # type: ignore[call-arg] # args pulled from env vars
+            cloud_config = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:
             raise RuntimeError(
                 f"Missing or badly formed environment variable\n{validation_err.errors()}"
@@ -58,7 +57,8 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
         )
         if response.status_code != 204:  # noqa: PLR2004
             raise GXCloudError(
-                message=f"ListTableNamesAction encountered an error while connecting to GX Cloud. Unable to update "
+                message=f"ListTableNamesAction encountered an error while connecting to GX Cloud. "
+                f"Unable to update "
                 f"table_names for Datasource with id"
                 f"={datasource_id}.",
                 response=response,

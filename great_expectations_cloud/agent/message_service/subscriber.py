@@ -3,9 +3,9 @@ import time
 from dataclasses import dataclass
 from functools import partial
 from json import JSONDecodeError
-from typing import Callable, Coroutine, Union
+from typing import Callable, Coroutine
 
-from great_expectations.compatibility import pydantic
+import pydantic
 from pika.exceptions import AMQPError, ChannelError
 
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
@@ -128,12 +128,7 @@ class Subscriber:
 
         return on_message(event_context)
 
-    async def _redeliver_message(
-        self,
-        delivery_tag: int,
-        requeue: bool = True,
-        delay: Union[float, int] = 3,
-    ):
+    async def _redeliver_message(self, delivery_tag: int, requeue: bool = True, delay: float = 3):
         """Coroutine to request a redelivery with delay."""
         # not threadsafe
         await asyncio.sleep(delay)
