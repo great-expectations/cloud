@@ -9,6 +9,13 @@ if TYPE_CHECKING:
 
 
 @invoke.task
+def python_build(ctx: Context, check: bool = False):
+    """Build Python distibution files"""
+    cmds = ["poetry", "build"]
+    ctx.run(" ".join(cmds), echo=True, pty=True)
+
+
+@invoke.task
 def fmt(ctx: Context, check: bool = False):
     """Format code with black"""
     cmds = ["black", "."]
