@@ -168,7 +168,7 @@ def test_gx_agent_run_handles_subscriber_error_on_close(
     agent.run()
 
 
-def test_gx_agent_updates_cloud_on_job_status(  # noqa: PLR0913
+def test_gx_agent_updates_cloud_on_job_status(
     subscriber, create_session, get_context, client, gx_agent_config, event_handler
 ):
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"

@@ -8,7 +8,8 @@ license = "Apache-2.0"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
-great-expectations = "^0.17.10"
+great-expectations = "^0.17.17"
+pydantic = "<3"
 pika = "^1.3.1"
 sqlalchemy = ">=1.4.49"
 
@@ -18,10 +19,12 @@ invoke = "^2.2.0"
 mypy = "~1.5.1"
 pre-commit = "^3.3.3"
 pytest = "^7.4.0"
+pytest-icdiff = "*"
 pytest-mock = "*"
 responses = "^0.23.1"
-ruff = "==0.0.284"
+ruff = "==0.0.290"
 tomli = "^2.0.1"
+typing_extensions = ">=4.4.0"
 
 [tool.poetry.scripts]
 gx-agent = 'great_expectations_cloud.agent:run_agent'
@@ -39,14 +42,10 @@ ignore_missing_imports = true
 follow_imports = 'normal'
 warn_redundant_casts = true
 show_error_codes = true
-enable_error_code = ['ignore-without-code']
-# The following list of codes are globally ignored, do not add to this list
-disable_error_code = [
-    # annotation-unchecked are 'warning notes', not errors and won't cause mypy to fail
-    # but it does create a lot of noise in the CI mypy step.
-    # https://mypy-lang.blogspot.com/2022/11/mypy-0990-released.html
-    'annotation-unchecked',
-]
+enable_error_code = [
+    'ignore-without-code',
+    'explicit-override',
+    ]
 
 [tool.black]
 target-version = ["py38", "py39", "py310", "py311"]
@@ -83,8 +82,8 @@ select = [
     "DTZ", # flake8-datetimez-dtz - prevent use of tz naive datetimes
     # https://beta.ruff.rs/docs/rules/#pylint-pl
     "PL", # pylint
-    # https://beta.ruff.rs/docs/rules/unused-noqa/
-    "RUF100", # unused-noqa
+    # https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "RUF",
 ]
 ignore = [
     # https://beta.ruff.rs/docs/rules/#flake8-type-checking-tch
@@ -110,6 +109,13 @@ runtime-evaluated-decorators = ["pydantic.dataclasses.dataclass"]
 
 [tool.ruff.mccabe]
 max-complexity = 10
+
+[tool.ruff.flake8-tidy-imports]
+[tool.ruff.flake8-tidy-imports.banned-api]
+"os.environ".msg = """Please do not use os.environ, instead use a pydantic.BaseSettings model"""
+# TODO: remove pydantic once our min version is pydantic v2
+"pydantic".msg = "Please do not import pydantic directly, import from great_expectations.compatibility.pydantic instead."
+"sqlalchemy".msg = "Please do not import sqlalchemy directly, import from great_expectations.compatibility.sqlalchemy instead."
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = [

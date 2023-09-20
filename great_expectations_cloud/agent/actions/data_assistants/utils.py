@@ -94,7 +94,7 @@ def build_action_result(
         "class_name": "Checkpoint",
     }
 
-    checkpoint = context.add_checkpoint(**checkpoint_config)  # type: ignore[arg-type]
+    checkpoint = context.add_checkpoint(**checkpoint_config)
 
     expectation_suite_id = expectation_suite.ge_cloud_id
     checkpoint_id = checkpoint.ge_cloud_id
