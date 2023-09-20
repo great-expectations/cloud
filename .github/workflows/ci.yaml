@@ -39,10 +39,6 @@ jobs:
 
       - run: poetry run invoke ${{ matrix.task }} --check
 
-      - name: Build distributions
-        run: poetry build
-
-
   tests:
     strategy:
       matrix:

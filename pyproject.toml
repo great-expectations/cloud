@@ -26,11 +26,6 @@ tomli = "^2.0.1"
 [tool.poetry.scripts]
 gx-agent = 'great_expectations_cloud.agent:run_agent'
 
-[tool.poetry-dynamic-versioning]
-enable = true
-vcs = "git"
-style = "semver"
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
