@@ -32,7 +32,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
 
     def get_draft_config(self, config_id: UUID) -> dict:
         try:
-            config = GxAgentEnvVars()  # type: ignore[call-arg] # pulled from env vars
+            config = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:
             raise RuntimeError(
                 f"Missing or badly formed environment variable\n" f"{validation_err.errors()}"

@@ -100,7 +100,7 @@ class Subscriber:
         """
         event: Event
         try:
-            event = pydantic.parse_raw_as(Event, payload.body)  # type: ignore[arg-type]
+            event = pydantic.parse_raw_as(Event, payload.body)
         except (pydantic.ValidationError, JSONDecodeError):
             event = UnknownEvent()
 
