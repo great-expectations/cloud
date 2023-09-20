@@ -1,8 +1,8 @@
 from uuid import UUID
 
-import pydantic
+from great_expectations.compatibility import pydantic
+from great_expectations.compatibility.typing_extensions import override
 from great_expectations.core.http import create_session
-from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.config import GxAgentEnvVars

@@ -1,4 +1,4 @@
-from typing_extensions import override
+from great_expectations.compatibility.typing_extensions import override
 
 from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,

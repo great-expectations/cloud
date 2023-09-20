@@ -1,5 +1,5 @@
+from great_expectations.compatibility.pydantic import AnyUrl, BaseSettings
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
-from pydantic.v1 import AnyUrl, BaseSettings
 
 
 class GxAgentEnvVars(BaseSettings):
