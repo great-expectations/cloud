@@ -1,3 +1,5 @@
+from great_expectations.compatibility.typing_extensions import override
+
 from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
@@ -9,6 +11,7 @@ from great_expectations_cloud.agent.models import (
 
 
 class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
+    @override
     def run(self, event: RunCheckpointEvent, id: str) -> ActionResult:
         checkpoint_run_result = self._context.run_checkpoint(ge_cloud_id=event.checkpoint_id)
         validation_results = checkpoint_run_result.run_results
