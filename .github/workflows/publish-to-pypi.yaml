@@ -1,0 +1,48 @@
+name: publish-to-pypi
+
+# TODO: Set this to manually trigger once we cutover and go live
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  pypi-test-publish:
+    name: upload release to PyPI
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+          cache-dependency-path: poetry.lock
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v3
+        with:
+          path: ~/.local # the path depends on the OS
+          key: poetry-0 # increment to reset cache
+
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: poetry install --sync
+
+      - name: Build distributions
+        run: poetry build
+
+      # retrieve your distributions here
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # TODO: remove this one we are publishing to pypy
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true # prevent against pushing duplicate versions
