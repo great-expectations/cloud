@@ -52,7 +52,7 @@ class GXAgentConfig(AgentBaseModel):
     queue: str
     connection_string: AmqpDsn
     # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL  # type: ignore[assignment]
+    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
 
@@ -79,7 +79,7 @@ class GXAgent:
         # it isn't safe to increase the number of workers running GX jobs.
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._current_task: Optional[Future] = None
-        self._correlation_ids = defaultdict(lambda: 0)
+        self._correlation_ids: defaultdict = defaultdict(lambda: 0)
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
@@ -92,7 +92,7 @@ class GXAgent:
         """Manage connection lifecycle."""
         subscriber = None
         try:
-            client = AsyncRabbitMQClient(url=self._config.connection_string)
+            client = AsyncRabbitMQClient(url=str(self._config.connection_string))
             subscriber = Subscriber(client=client)
             print("GX-Agent is ready.")
             # Open a connection until encountering a shutdown event
@@ -179,7 +179,8 @@ class GXAgent:
             status = JobCompleted(success=False, error_stack_trace=str(error))
             print(traceback.format_exc())
             print(
-                f"Failed to complete job {event_context.event.type} ({event_context.correlation_id})"
+                f"Failed to complete job {event_context.event.type} "
+                f"({event_context.correlation_id})"
             )
         self._update_status(job_id=event_context.correlation_id, status=status)
 
@@ -213,7 +214,7 @@ class GXAgent:
         # ensure we have all required env variables, and provide a useful error if not
 
         try:
-            env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # args pulled from env vars
+            env_vars = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:
             raise GXAgentError(
                 f"Missing or badly formed environment variable\n{validation_err.errors()}"
@@ -221,7 +222,10 @@ class GXAgent:
 
         # obtain the broker url and queue name from Cloud
 
-        agent_sessions_url = f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}/agent-sessions"
+        agent_sessions_url = (
+            f"{env_vars.gx_cloud_base_url}/organizations/"
+            f"{env_vars.gx_cloud_organization_id}/agent-sessions"
+        )
 
         session = create_session(access_token=env_vars.gx_cloud_access_token)
 

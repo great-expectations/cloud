@@ -16,7 +16,8 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         datasource_type = draft_config.get("type", None)
         if datasource_type is None:
             raise ValueError(
-                "The DraftDatasourceConfigAction can only be used with a fluent-style datasource."
+                "The DraftDatasourceConfigAction can only be used with a "
+                "fluent-style datasource."
             )
         try:
             datasource_cls = self._context.sources.type_lookup[datasource_type]
@@ -31,20 +32,23 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
 
     def get_draft_config(self, config_id: UUID) -> dict:
         try:
-            config = GxAgentEnvVars()  # type: ignore[call-arg] # args pulled from env vars
+            config = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:
             raise RuntimeError(
-                f"Missing or badly formed environment variable\n{validation_err.errors()}"
+                f"Missing or badly formed environment variable\n" f"{validation_err.errors()}"
             ) from validation_err
-        resource_url = f"{config.gx_cloud_base_url}/organizations/{config.gx_cloud_organization_id}/datasources/drafts/{config_id}"
+        resource_url = (
+            f"{config.gx_cloud_base_url}organizations/"
+            f"{config.gx_cloud_organization_id}/datasources/drafts/{config_id}"
+        )
         session = create_session(access_token=config.gx_cloud_access_token)
         response = session.get(resource_url)
         if not response.ok:
             raise RuntimeError(
-                "DraftDatasourceConfigAction encountered an error while connecting to GX-Cloud"
+                "DraftDatasourceConfigAction encountered an error while " "connecting to GX-Cloud"
             )
         data = response.json()
         try:
             return data["data"]["attributes"]["draft_config"]
-        except KeyError:
-            raise RuntimeError("Malformed response received from GX-Cloud")
+        except KeyError as e:
+            raise RuntimeError("Malformed response received from GX-Cloud") from e

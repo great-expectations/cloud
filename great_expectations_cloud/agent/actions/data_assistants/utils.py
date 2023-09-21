@@ -36,7 +36,8 @@ def build_batch_request(
         batch_request = asset.build_batch_request()
     except ValueError as e:
         raise ValueError(
-            "The RunDataAssistant Action for data assistant cannot be used with an in-memory dataframe asset."
+            "The RunDataAssistant Action for data assistant cannot be used with an "
+            "in-memory dataframe asset."
         ) from e
 
     return batch_request
@@ -93,7 +94,7 @@ def build_action_result(
         "class_name": "Checkpoint",
     }
 
-    checkpoint = context.add_checkpoint(**checkpoint_config)  # type: ignore[arg-type]
+    checkpoint = context.add_checkpoint(**checkpoint_config)
 
     expectation_suite_id = expectation_suite.ge_cloud_id
     checkpoint_id = checkpoint.ge_cloud_id
