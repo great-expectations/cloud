@@ -10,9 +10,8 @@ from pika.adapters.asyncio_connection import AsyncioConnection
 from pika.channel import Channel
 from pika.spec import Basic, BasicProperties
 
-dataclass(frozen=True)
 
-
+@dataclass(frozen=True)
 class OnMessagePayload:
     correlation_id: str
     delivery_tag: int
