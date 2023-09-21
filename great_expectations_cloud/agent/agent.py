@@ -11,7 +11,6 @@ from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
-from typing_extensions import Self
 
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.config import GxAgentEnvVars
@@ -131,9 +130,7 @@ class GXAgent:
             return
 
         # send this message to a thread for processing
-        self._current_task = self._executor.submit(
-            self._handle_event, event_context=event_context
-        )
+        self._current_task = self._executor.submit(self._handle_event, event_context=event_context)
 
         if self._current_task is not None:
             # add a callback for when the thread exits and pass it the event context
@@ -153,19 +150,13 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
         self._update_status(job_id=event_context.correlation_id, status=JobStarted())
-        print(
-            f"Starting job {event_context.event.type} ({event_context.correlation_id}) "
-        )
+        print(f"Starting job {event_context.event.type} ({event_context.correlation_id}) ")
         handler = EventHandler(context=self._context)
         # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
-        result = handler.handle_event(
-            event=event_context.event, id=event_context.correlation_id
-        )
+        result = handler.handle_event(event=event_context.event, id=event_context.correlation_id)
         return result
 
-    def _handle_event_as_thread_exit(
-        self, future: Future, event_context: EventContext
-    ) -> None:
+    def _handle_event_as_thread_exit(self, future: Future, event_context: EventContext) -> None:
         """Callback invoked when the thread running GX exits.
 
         Args:
@@ -182,9 +173,7 @@ class GXAgent:
                 success=True,
                 created_resources=result.created_resources,
             )
-            print(
-                f"Completed job {event_context.event.type} ({event_context.correlation_id})"
-            )
+            print(f"Completed job {event_context.event.type} ({event_context.correlation_id})")
         else:
             status = JobCompleted(success=False, error_stack_trace=str(error))
             print(traceback.format_exc())

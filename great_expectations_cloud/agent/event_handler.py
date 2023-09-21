@@ -74,9 +74,7 @@ class EventHandler:
             ]
             batch_inspector = BatchInspector(self._context, metric_retrievers)
             cloud_data_store = CloudDataStore(self._context)
-            column_descriptive_metrics_repository = MetricRepository(
-                data_store=cloud_data_store
-            )
+            column_descriptive_metrics_repository = MetricRepository(data_store=cloud_data_store)
             return ColumnDescriptiveMetricsAction(
                 context=self._context,
                 batch_inspector=batch_inspector,

@@ -2,12 +2,6 @@ import uuid
 from unittest.mock import Mock
 
 import pytest
-
-from great_expectations_cloud.agent.actions import ColumnDescriptiveMetricsAction
-from great_expectations_cloud.agent.models import (
-    CreatedResource,
-    RunColumnDescriptiveMetricsEvent,
-)
 from great_expectations.data_context import CloudDataContext
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
@@ -16,6 +10,12 @@ from great_expectations.experimental.metric_repository.metric_repository import 
     MetricRepository,
 )
 from great_expectations.experimental.metric_repository.metrics import MetricRun
+
+from great_expectations_cloud.agent.actions import ColumnDescriptiveMetricsAction
+from great_expectations_cloud.agent.models import (
+    CreatedResource,
+    RunColumnDescriptiveMetricsEvent,
+)
 
 pytestmark = pytest.mark.unit
 
