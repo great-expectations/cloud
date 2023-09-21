@@ -52,7 +52,7 @@ class GXAgentConfig(AgentBaseModel):
     queue: str
     connection_string: AmqpDsn
     # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
+    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL  # type: ignore[assignment]
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
 
@@ -66,7 +66,7 @@ class GXAgent:
     user events triggered from the UI.
     """
 
-    def __init__(self: Self):
+    def __init__(self):
         print("Initializing GX-Agent")
         self._config = self._get_config()
         print("Loading a DataContext - this might take a moment.")
@@ -79,7 +79,7 @@ class GXAgent:
         # it isn't safe to increase the number of workers running GX jobs.
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._current_task: Optional[Future] = None
-        self._correlation_ids: defaultdict = defaultdict(lambda: 0)
+        self._correlation_ids = defaultdict(lambda: 0)
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
@@ -92,7 +92,7 @@ class GXAgent:
         """Manage connection lifecycle."""
         subscriber = None
         try:
-            client = AsyncRabbitMQClient(url=str(self._config.connection_string))
+            client = AsyncRabbitMQClient(url=self._config.connection_string)
             subscriber = Subscriber(client=client)
             print("GX-Agent is ready.")
             # Open a connection until encountering a shutdown event
@@ -131,7 +131,9 @@ class GXAgent:
             return
 
         # send this message to a thread for processing
-        self._current_task = self._executor.submit(self._handle_event, event_context=event_context)
+        self._current_task = self._executor.submit(
+            self._handle_event, event_context=event_context
+        )
 
         if self._current_task is not None:
             # add a callback for when the thread exits and pass it the event context
@@ -151,13 +153,19 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
         self._update_status(job_id=event_context.correlation_id, status=JobStarted())
-        print(f"Starting job {event_context.event.type} ({event_context.correlation_id}) ")
+        print(
+            f"Starting job {event_context.event.type} ({event_context.correlation_id}) "
+        )
         handler = EventHandler(context=self._context)
         # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
-        result = handler.handle_event(event=event_context.event, id=event_context.correlation_id)
+        result = handler.handle_event(
+            event=event_context.event, id=event_context.correlation_id
+        )
         return result
 
-    def _handle_event_as_thread_exit(self, future: Future, event_context: EventContext) -> None:
+    def _handle_event_as_thread_exit(
+        self, future: Future, event_context: EventContext
+    ) -> None:
         """Callback invoked when the thread running GX exits.
 
         Args:
@@ -174,13 +182,14 @@ class GXAgent:
                 success=True,
                 created_resources=result.created_resources,
             )
-            print(f"Completed job {event_context.event.type} ({event_context.correlation_id})")
+            print(
+                f"Completed job {event_context.event.type} ({event_context.correlation_id})"
+            )
         else:
             status = JobCompleted(success=False, error_stack_trace=str(error))
             print(traceback.format_exc())
             print(
-                f"Failed to complete job {event_context.event.type} "
-                f"({event_context.correlation_id})"
+                f"Failed to complete job {event_context.event.type} ({event_context.correlation_id})"
             )
         self._update_status(job_id=event_context.correlation_id, status=status)
 
@@ -214,7 +223,7 @@ class GXAgent:
         # ensure we have all required env variables, and provide a useful error if not
 
         try:
-            env_vars = GxAgentEnvVars()
+            env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # args pulled from env vars
         except pydantic.ValidationError as validation_err:
             raise GXAgentError(
                 f"Missing or badly formed environment variable\n{validation_err.errors()}"
@@ -222,10 +231,7 @@ class GXAgent:
 
         # obtain the broker url and queue name from Cloud
 
-        agent_sessions_url = (
-            f"{env_vars.gx_cloud_base_url}/organizations/"
-            f"{env_vars.gx_cloud_organization_id}/agent-sessions"
-        )
+        agent_sessions_url = f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}/agent-sessions"
 
         session = create_session(access_token=env_vars.gx_cloud_access_token)
 

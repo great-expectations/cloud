@@ -3,7 +3,7 @@ import time
 from dataclasses import dataclass
 from functools import partial
 from json import JSONDecodeError
-from typing import Callable, Coroutine
+from typing import Callable, Coroutine, Union
 
 from great_expectations.compatibility import pydantic
 from pika.exceptions import AMQPError, ChannelError
@@ -76,7 +76,9 @@ class Subscriber:
             except (AMQPError, ChannelError):
                 self.client.stop()
                 reconnect_delay = self._get_reconnect_delay()
-                time.sleep(reconnect_delay)  # todo: update this blocking call to asyncio.sleep
+                time.sleep(
+                    reconnect_delay
+                )  # todo: update this blocking call to asyncio.sleep
             except KeyboardInterrupt as e:
                 self.client.stop()
                 raise KeyboardInterrupt from e
@@ -100,13 +102,15 @@ class Subscriber:
         """
         event: Event
         try:
-            event = pydantic.parse_raw_as(Event, payload.body)
+            event = pydantic.parse_raw_as(Event, payload.body)  # type: ignore[arg-type]
         except (pydantic.ValidationError, JSONDecodeError):
             event = UnknownEvent()
 
         # Allow the caller to determine whether to ack/nack this message,
         # even if the processing occurs in another thread.
-        ack_callback = self.client.get_threadsafe_ack_callback(delivery_tag=payload.delivery_tag)
+        ack_callback = self.client.get_threadsafe_ack_callback(
+            delivery_tag=payload.delivery_tag
+        )
         nack_callback = self.client.get_threadsafe_nack_callback(
             delivery_tag=payload.delivery_tag, requeue=False
         )
@@ -128,7 +132,12 @@ class Subscriber:
 
         return on_message(event_context)
 
-    async def _redeliver_message(self, delivery_tag: int, requeue: bool = True, delay: float = 3):
+    async def _redeliver_message(
+        self,
+        delivery_tag: int,
+        requeue: bool = True,
+        delay: Union[float, int] = 3,  # noqa: PYI041
+    ):
         """Coroutine to request a redelivery with delay."""
         # not threadsafe
         await asyncio.sleep(delay)
