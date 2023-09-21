@@ -3,7 +3,7 @@ import time
 from dataclasses import dataclass
 from functools import partial
 from json import JSONDecodeError
-from typing import Callable, Coroutine
+from typing import Callable, Coroutine, Union
 
 from great_expectations.compatibility import pydantic
 from pika.exceptions import AMQPError, ChannelError
@@ -128,7 +128,12 @@ class Subscriber:
 
         return on_message(event_context)
 
-    async def _redeliver_message(self, delivery_tag: int, requeue: bool = True, delay: float = 3):
+    async def _redeliver_message(
+        self,
+        delivery_tag: int,
+        requeue: bool = True,
+        delay: Union[float, int] = 3,  # noqa: PYI041
+    ):
         """Coroutine to request a redelivery with delay."""
         # not threadsafe
         await asyncio.sleep(delay)
