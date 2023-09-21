@@ -6,11 +6,11 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from typing import TYPE_CHECKING, Dict, Optional
 
+import pydantic
 from great_expectations import get_context
-from great_expectations.compatibility import pydantic
-from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
+from pydantic import AmqpDsn, AnyUrl
 
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.config import GxAgentEnvVars
@@ -213,7 +213,7 @@ class GXAgent:
         # ensure we have all required env variables, and provide a useful error if not
 
         try:
-            env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # args pulled from env vars
+            env_vars = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:
             raise GXAgentError(
                 f"Missing or badly formed environment variable\n{validation_err.errors()}"
