@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 python:3.10.12-slim as base
+FROM python:3.10.12-slim as base
 WORKDIR /app/
 
 RUN mkdir -p great_expectations_cloud/agent
