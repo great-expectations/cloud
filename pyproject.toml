@@ -12,6 +12,15 @@ great-expectations = "^0.17.17"
 pydantic = "<3"
 pika = "^1.3.1"
 sqlalchemy = ">=1.4.49"
+snowflake-connector-python = [
+    {version = ">=2.5.0", python = "<3.11", optional = true},
+    {version = ">2.9.0", python = ">=3.11", optional = true}
+]
+snowflake-sqlalchemy = { version = ">=1.2.3", optional = true }
+
+# Tracks gx's reqs/requirements-dev-snowflake.
+[tool.poetry.extras]
+snowflake = ["snowflake-connector-python", "snowflake-sqlalchemy"]
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"
