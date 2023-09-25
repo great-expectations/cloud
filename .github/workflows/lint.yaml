@@ -1,1 +1,9 @@
-# docker run -v --rm -i hadolint/hadolint:v2.12.0-alpine hadolint --failure-threshold warning --ignore DL3008 --ignore DL3042 --ignore DL3029 - < services/ge_cloud/Dockerfile
+name: GitHub Actions Demo
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on: [pull_request]
+jobs:
+  # Can look up error with https://github.com/hadolint/hadolint/wiki/DL3029
+  docker-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run -v --rm -i hadolint/hadolint hadolint --failure-threshold warning - < great_expectations_cloud/agent/Dockerfile
