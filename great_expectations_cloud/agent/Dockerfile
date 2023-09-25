@@ -6,7 +6,7 @@ COPY great_expectations_cloud/agent great_expectations_cloud/agent
 COPY pyproject.toml pyproject.toml
 COPY README.md README.md
 
-RUN pip install poetry==1.6.1
+RUN pip --no-cache-dir install poetry==1.6.1
 RUN poetry install --without dev --sync
 
 CMD ["poetry", "run", "gx-agent"]
