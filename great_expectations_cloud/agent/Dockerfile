@@ -1,4 +1,4 @@
-FROM python:3.10.12-slim as base
+FROM python:3.10.12-slim
 WORKDIR /app/
 
 RUN mkdir -p great_expectations_cloud/agent
