@@ -7,6 +7,6 @@ COPY pyproject.toml pyproject.toml
 COPY README.md README.md
 
 RUN pip --no-cache-dir install poetry==1.6.1
-RUN poetry install --without dev --sync
+RUN poetry install --with sql --without dev --sync
 
 CMD ["poetry", "run", "gx-agent"]
