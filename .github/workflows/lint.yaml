@@ -1,5 +1,4 @@
 name: docker-lint
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on: [pull_request]
 jobs:
   # Can look up error with https://github.com/hadolint/hadolint/wiki/DL3029
