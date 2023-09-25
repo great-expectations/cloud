@@ -6,4 +6,7 @@ jobs:
   docker-lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repo
+      - uses: actions/checkout@v3
+
       - run: docker run -v --rm -i hadolint/hadolint hadolint --failure-threshold warning - < great_expectations_cloud/agent/Dockerfile
