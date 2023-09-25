@@ -2,12 +2,12 @@
 
 # This is utilizing a multi-stage build:
 #
-# +------------------+----------------------+--------------+
-# |      Stage       |         Deps         | Src Included |
-# +------------------+----------------------+--------------+
-# | base             | apt, reqs            | No           |
-# | snowflake        | apt, reqs[-dev]      | No           |
-# +------------------+----------------------+--------------+
+# +------------------+----------------------+
+# |      Stage       |         Desc         |
+# +------------------+----------------------+
+# | base             | just poetry install  |
+# | snowflake        | extra: snowflake     |
+# +------------------+----------------------+
 # https://docs.docker.com/build/building/multi-stage/
 FROM --platform=linux/amd64 python:3.10.12-slim as base
 WORKDIR /app/
