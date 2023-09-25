@@ -8,7 +8,7 @@
 # | base             | apt, reqs            | No           |
 # | snowflake        | apt, reqs[-dev]      | No           |
 # +------------------+----------------------+--------------+
-# https://docs.docker.com/build/building/multi-stage/ 
+# https://docs.docker.com/build/building/multi-stage/
 FROM --platform=linux/amd64 python:3.10.12-slim as base
 WORKDIR /app/
 
