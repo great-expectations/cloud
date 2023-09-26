@@ -50,7 +50,10 @@ ignore_missing_imports = true
 follow_imports = 'normal'
 warn_redundant_casts = true
 show_error_codes = true
-enable_error_code = ['ignore-without-code', 'explicit-override']
+enable_error_code = [
+    'ignore-without-code',
+    'explicit-override',
+    ]
 
 [tool.black]
 target-version = ["py38", "py39", "py310", "py311"]
