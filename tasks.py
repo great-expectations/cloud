@@ -7,10 +7,12 @@ import invoke
 if TYPE_CHECKING:
     from invoke import Context
 
+DOCKERFILE_PATH = "great_expectations_cloud/agent/Dockerfile"
 
 @invoke.task
 def python_build(ctx: Context, check: bool = False):
     """Build Python distibution files"""
+
     cmds = ["poetry", "build"]
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
@@ -31,6 +33,16 @@ def lint(ctx: Context, check: bool = False):
     if not check:
         cmds.append("--fix")
     ctx.run(" ".join(cmds), echo=True, pty=True)
+
+@invoke.task
+def docker(ctx: Context, check: bool = False, tag:str="greatexpectations/agent:develop"):
+    """Lint Dockerfile using hadolint tool"""
+    if check:
+        cmds = ["docker","run", "--rm", "-i hadolint/hadolint hadolint" ,
+                "--failure-threshold","warning", "-", "<", DOCKERFILE_PATH]
+    else:
+        cmds = ["docker", "build", "-f", DOCKERFILE_PATH, "-t",tag, "."]
+    ctx.run(' '.join(cmds), echo=True, pty=True)
 
 
 @invoke.task(
@@ -63,7 +75,7 @@ def build(ctx: Context):
         "-t",
         "greatexpectations/agent",
         "-f",
-        "great_expectations_cloud/agent/Dockerfile",
+        DOCKERFILE_PATH,
         ".",
     ]
     ctx.run(" ".join(cmds), echo=True, pty=True)
