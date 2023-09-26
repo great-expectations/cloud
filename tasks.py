@@ -50,7 +50,7 @@ def docker(ctx: Context, check: bool = False, tag: str = "greatexpectations/agen
             "--failure-threshold",
             "warning",
             "--ignore",
-            "DL3029", # Revisit support for arm platform builds https://github.com/hadolint/hadolint/wiki/DL3029
+            "DL3029",  # Revisit support for arm platform builds https://github.com/hadolint/hadolint/wiki/DL3029
             "-",
             "<",
             DOCKERFILE_PATH,
