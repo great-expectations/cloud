@@ -9,7 +9,7 @@ jobs:
   static-analysis:
     strategy:
       matrix:
-        task: ["lint", "fmt", "type-check", "python-build"]
+        task: ["lint", "fmt", "type-check", "python-build", "docker --check"]
       fail-fast: false
     runs-on: ubuntu-latest
 
