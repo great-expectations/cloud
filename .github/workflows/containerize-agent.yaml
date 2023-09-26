@@ -29,5 +29,6 @@ jobs:
           context: .
           file: great_expectations_cloud/agent/Dockerfile
           push: true
-          tags: greatexpectations/agent:0.0.1
+          tags: greatexpectations/agent:0.1.0
           platforms: linux/amd64,linux/arm64
+>>>>>>> cf287acf8b989b255c1636ec1866ee9eb7ab7952
