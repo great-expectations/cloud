@@ -16,8 +16,9 @@ snowflake-sqlalchemy = ">=1.5.0"
 [tool.poetry.group.sql.dependencies]
 great-expectations = { version = "^0.17.19", extras = [
     "databricks",
-    # includes redshift, postgres, etc.
-    "sqlalchemy1"
+    "sqlalchemy1",
+    "postgres",
+    "redshift",
 ] }
 
 [tool.poetry.group.dev.dependencies]
