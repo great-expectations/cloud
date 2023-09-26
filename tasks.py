@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 DOCKERFILE_PATH = "great_expectations_cloud/agent/Dockerfile"
 
+
 @invoke.task
 def python_build(ctx: Context, check: bool = False):
     """Build Python distibution files"""
@@ -34,15 +35,25 @@ def lint(ctx: Context, check: bool = False):
         cmds.append("--fix")
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
+
 @invoke.task
-def docker(ctx: Context, check: bool = False, tag:str="greatexpectations/agent:develop"):
+def docker(ctx: Context, check: bool = False, tag: str = "greatexpectations/agent:develop"):
     """Lint Dockerfile using hadolint tool"""
     if check:
-        cmds = ["docker","run", "--rm", "-i hadolint/hadolint hadolint" ,
-                "--failure-threshold","warning", "-", "<", DOCKERFILE_PATH]
+        cmds = [
+            "docker",
+            "run",
+            "--rm",
+            "-i hadolint/hadolint hadolint",
+            "--failure-threshold",
+            "warning",
+            "-",
+            "<",
+            DOCKERFILE_PATH,
+        ]
     else:
-        cmds = ["docker", "build", "-f", DOCKERFILE_PATH, "-t",tag, "."]
-    ctx.run(' '.join(cmds), echo=True, pty=True)
+        cmds = ["docker", "build", "-f", DOCKERFILE_PATH, "-t", tag, "."]
+    ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
 @invoke.task(
