@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - f/add_arm_support # todo remove
 
 jobs:
   containerize-agent:
