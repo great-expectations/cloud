@@ -28,4 +28,4 @@ jobs:
           context: .
           file: great_expectations_cloud/agent/Dockerfile
           push: true
-          tags: greatexpectations/agent:0.1.0
+          tags: greatexpectations/agent:0.1.1,greatexpectations/agent:latest
