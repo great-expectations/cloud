@@ -2,7 +2,8 @@ import pathlib
 from typing import Final
 
 import pytest
-import tomli
+
+# import tomli
 from packaging.version import Version
 
 PROJECT_ROOT: Final = pathlib.Path(__file__).parent.parent
@@ -11,11 +12,13 @@ PYPROJECT_TOML: Final = PROJECT_ROOT / "pyproject.toml"
 
 @pytest.fixture
 def min_gx_version() -> Version:
-    pyproject_dict = tomli.loads(PYPROJECT_TOML.read_text())
-    gx_version: str = pyproject_dict["tool"]["poetry"]["dependencies"][
-        "great-expectations"
-    ].replace("^", "")
-    return Version(gx_version)
+    # TODO: add this back once gx is pinned again
+    # pyproject_dict = tomli.loads(PYPROJECT_TOML.read_text())
+    # gx_version: str = pyproject_dict["tool"]["poetry"]["dependencies"][
+    #     "great-expectations"
+    # ].replace("^", "")
+    # return Version(gx_version)
+    return Version("0.17.19")
 
 
 def test_great_expectations_is_installed(min_gx_version):
