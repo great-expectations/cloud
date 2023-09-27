@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "0.0.2dev"
+version = "0.0.3dev"
 description = "Great Expectations Cloud"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"

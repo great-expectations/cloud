@@ -44,5 +44,5 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           # TODO: remove this one we are publishing to pypy
-          repository-url: https://test.pypi.org/legacy/
+          # repository-url: https://test.pypi.org/legacy/
           skip-existing: true # prevent against pushing duplicate versions
