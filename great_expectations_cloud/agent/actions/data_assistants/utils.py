@@ -51,7 +51,7 @@ def build_batch_request(
 
 def build_action_result(
     context: CloudDataContext,
-    data_assistant_name: str,
+    data_assistant_name: DataAssistantType,
     event: RunDataAssistantEvent,
     data_assistant_result: DataAssistantResult,
     id: str,
