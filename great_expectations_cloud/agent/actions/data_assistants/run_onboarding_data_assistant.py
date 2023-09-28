@@ -2,6 +2,7 @@ from typing_extensions import override
 
 from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
 from great_expectations_cloud.agent.actions.data_assistants.utils import (
+    DataAssistantType,
     build_action_result,
     build_batch_request,
 )
@@ -26,7 +27,7 @@ class RunOnboardingDataAssistantAction(AgentAction[RunOnboardingDataAssistantEve
         )
         return build_action_result(
             context=self._context,
-            data_assistant_name="Onboarding",
+            data_assistant_name=DataAssistantType.ONBOARDING,
             event=event,
             data_assistant_result=data_assistant_result,
             id=id,

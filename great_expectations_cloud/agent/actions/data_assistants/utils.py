@@ -1,3 +1,4 @@
+import enum
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -19,6 +20,11 @@ from great_expectations_cloud.agent.models import (
 
 if TYPE_CHECKING:
     from great_expectations.core import ExpectationSuite
+
+
+class DataAssistantType(str, enum.Enum):
+    MISSINGNESS = "Missingness"
+    ONBOARDING = "Onboarding"
 
 
 def build_batch_request(
