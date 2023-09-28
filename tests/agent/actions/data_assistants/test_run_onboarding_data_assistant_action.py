@@ -45,9 +45,7 @@ def test_run_onboarding_data_assistant_event_raises_for_legacy_datasource(
         action.run(event=onboarding_event, id=id)
 
 
-def test_run_onboarding_data_assistant_event_creates_expectation_suite(
-    context, onboarding_event
-):
+def test_run_onboarding_data_assistant_event_creates_expectation_suite(context, onboarding_event):
     action = RunOnboardingDataAssistantAction(context=context)
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     context.get_expectation_suite.side_effect = DataContextError("test-message")
@@ -63,14 +61,10 @@ def test_run_onboarding_data_assistant_event_creates_expectation_suite(
 
     action.run(event=onboarding_event, id=id)
 
-    context.add_expectation_suite.assert_called_once_with(
-        expectation_suite=expectation_suite
-    )
+    context.add_expectation_suite.assert_called_once_with(expectation_suite=expectation_suite)
 
 
-def test_run_onboarding_data_assistant_event_creates_checkpoint(
-    context, onboarding_event
-):
+def test_run_onboarding_data_assistant_event_creates_checkpoint(context, onboarding_event):
     action = RunOnboardingDataAssistantAction(context=context)
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     context.get_expectation_suite.side_effect = DataContextError("test-message")
@@ -107,9 +101,7 @@ def test_run_onboarding_data_assistant_event_creates_checkpoint(
     context.add_checkpoint.assert_called_once_with(**expected_checkpoint_config)
 
 
-def test_run_onboarding_data_assistant_action_returns_action_result(
-    context, onboarding_event
-):
+def test_run_onboarding_data_assistant_action_returns_action_result(context, onboarding_event):
     action = RunOnboardingDataAssistantAction(context=context)
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     context.get_expectation_suite.side_effect = StoreBackendError("test-message")

@@ -1,5 +1,5 @@
 import uuid
-from typing import Literal, Sequence, Union, Optional
+from typing import Literal, Optional, Sequence, Union
 from uuid import UUID
 
 from great_expectations.compatibility.pydantic import BaseModel, Extra, Field

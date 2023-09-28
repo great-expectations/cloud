@@ -231,9 +231,7 @@ class GXAgent:
 
         response = session.post(agent_sessions_url)
         if response.ok is not True:
-            raise GXAgentError(
-                "Unable to authenticate to Cloud. Please check your credentials."
-            )
+            raise GXAgentError("Unable to authenticate to Cloud. Please check your credentials.")
 
         json_response = response.json()
         queue = json_response["queue"]

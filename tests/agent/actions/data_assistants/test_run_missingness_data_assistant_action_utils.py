@@ -56,9 +56,7 @@ def test_run_missingness_data_assistant_action_without_expectation_suite_name(
     datasource = MagicMock(spec=Datasource)
     context.get_datasource.return_value = datasource
 
-    action_result = action.run(
-        event=missingness_event_without_expectation_suite_name, id=id
-    )
+    action_result = action.run(event=missingness_event_without_expectation_suite_name, id=id)
 
     assert action_result.type == missingness_event_without_expectation_suite_name.type
     assert action_result.id == id
@@ -82,9 +80,7 @@ def test_run_missingness_data_assistant_action_with_expectation_suite_name(
     datasource = MagicMock(spec=Datasource)
     context.get_datasource.return_value = datasource
 
-    action_result = action.run(
-        event=missingness_event_with_expectation_suite_name, id=id
-    )
+    action_result = action.run(event=missingness_event_with_expectation_suite_name, id=id)
 
     assert action_result.type == missingness_event_with_expectation_suite_name.type
     assert action_result.id == id
