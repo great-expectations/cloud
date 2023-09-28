@@ -1,5 +1,5 @@
 import uuid
-from typing import Literal, Sequence, Union
+from typing import Literal, Sequence, Union, Optional
 from uuid import UUID
 
 from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
@@ -19,6 +19,7 @@ class RunDataAssistantEvent(EventBase):
     type: str
     datasource_name: str
     data_asset_name: str
+    expectation_suite_name: Optional[str] = None
 
 
 class RunOnboardingDataAssistantEvent(RunDataAssistantEvent):

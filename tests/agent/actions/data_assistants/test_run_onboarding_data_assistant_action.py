@@ -45,7 +45,9 @@ def test_run_onboarding_data_assistant_event_raises_for_legacy_datasource(
         action.run(event=onboarding_event, id=id)
 
 
-def test_run_onboarding_data_assistant_event_creates_expectation_suite(context, onboarding_event):
+def test_run_onboarding_data_assistant_event_creates_expectation_suite(
+    context, onboarding_event
+):
     action = RunOnboardingDataAssistantAction(context=context)
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     context.get_expectation_suite.side_effect = DataContextError("test-message")
@@ -61,21 +63,21 @@ def test_run_onboarding_data_assistant_event_creates_expectation_suite(context, 
 
     action.run(event=onboarding_event, id=id)
 
-    context.add_expectation_suite.assert_called_once_with(expectation_suite=expectation_suite)
+    context.add_expectation_suite.assert_called_once_with(
+        expectation_suite=expectation_suite
+    )
 
 
-def test_run_onboarding_data_assistant_event_creates_checkpoint(context, onboarding_event):
+def test_run_onboarding_data_assistant_event_creates_checkpoint(
+    context, onboarding_event
+):
     action = RunOnboardingDataAssistantAction(context=context)
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     context.get_expectation_suite.side_effect = DataContextError("test-message")
     context.get_checkpoint.side_effect = DataContextError("test-message")
     expectation_suite_id = "084a6e0f-c014-4e40-b6b7-b2f57cb9e176"
-    expectation_suite_name = (
-        f"{onboarding_event.type} {onboarding_event.data_asset_name} assistant suite"
-    )
-    checkpoint_name = (
-        f"{onboarding_event.type} {onboarding_event.data_asset_name} assistant checkpoint"
-    )
+    expectation_suite_name = f"{onboarding_event.data_asset_name} Onboarding Suite"
+    checkpoint_name = f"{onboarding_event.data_asset_name} Onboarding Checkpoint"
     checkpoint_id = "f5d32bbf-1392-4248-bc40-a3966fab2e0e"
     expectation_suite = context.assistants.onboarding.run().get_expectation_suite()
     expectation_suite.ge_cloud_id = expectation_suite_id
@@ -105,7 +107,9 @@ def test_run_onboarding_data_assistant_event_creates_checkpoint(context, onboard
     context.add_checkpoint.assert_called_once_with(**expected_checkpoint_config)
 
 
-def test_run_onboarding_data_assistant_action_returns_action_result(context, onboarding_event):
+def test_run_onboarding_data_assistant_action_returns_action_result(
+    context, onboarding_event
+):
     action = RunOnboardingDataAssistantAction(context=context)
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     context.get_expectation_suite.side_effect = StoreBackendError("test-message")
