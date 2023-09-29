@@ -59,9 +59,9 @@ def build_action_result(
     if event.expectation_suite_name is not None:
         expectation_suite_name = event.expectation_suite_name
     else:
-        expectation_suite_name = f"{event.data_asset_name} {str(data_assistant_name)} Suite"
+        expectation_suite_name = f"{event.data_asset_name} {data_assistant_name.value} Suite"
 
-    checkpoint_name = f"{event.data_asset_name} {str(data_assistant_name)} Checkpoint"
+    checkpoint_name = f"{event.data_asset_name} {data_assistant_name.value} Checkpoint"
 
     # build tz aware timestamp
     tz = datetime.now().astimezone().tzinfo
