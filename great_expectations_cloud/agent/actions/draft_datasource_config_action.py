@@ -26,9 +26,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             ) from exc
         datasource = datasource_cls(**draft_config)
         datasource._data_context = self._context
-        datasource.test_connection(
-            test_assets=True
-        )  # raises `TestConnectionError` on failure
+        datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
         return ActionResult(id=id, type=event.type, created_resources=[])
 
     def get_draft_config(self, config_id: UUID) -> dict:
@@ -38,7 +36,10 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             raise RuntimeError(
                 f"Missing or badly formed environment variable\n{validation_err.errors()}"
             ) from validation_err
-        resource_url = f"{config.gx_cloud_base_url}/organizations/{config.gx_cloud_organization_id}/datasources/drafts/{config_id}"
+        resource_url = (
+            f"{config.gx_cloud_base_url}/organizations/{config.gx_cloud_organization_id}"
+            f"/datasources/drafts/{config_id}"
+        )
         session = create_session(access_token=config.gx_cloud_access_token)
         response = session.get(resource_url)
         if not response.ok:
@@ -48,5 +49,5 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         data = response.json()
         try:
             return data["data"]["attributes"]["draft_config"]
-        except KeyError:
-            raise RuntimeError("Malformed response received from GX-Cloud")
+        except KeyError as e:
+            raise RuntimeError("Malformed response received from GX-Cloud") from e
