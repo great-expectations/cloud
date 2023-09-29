@@ -62,8 +62,6 @@ def build_action_result(
         expectation_suite_name = f"{event.data_asset_name} {data_assistant_name} Suite"
 
     checkpoint_name = f"{event.data_asset_name} {data_assistant_name} Checkpoint"
-    expectation_suite_name = f"{event.type} {event.data_asset_name} assistant suite"
-    checkpoint_name = f"{event.type} {event.data_asset_name} assistant checkpoint"
 
     # build tz aware timestamp
     tz = datetime.now().astimezone().tzinfo
