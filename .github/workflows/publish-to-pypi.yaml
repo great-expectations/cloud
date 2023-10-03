@@ -4,7 +4,7 @@ name: publish-to-pypi
 on:
   push:
     branches:
-      - gx-cloud-pypi
+      - main
 
 jobs:
   pypi-test-publish:
