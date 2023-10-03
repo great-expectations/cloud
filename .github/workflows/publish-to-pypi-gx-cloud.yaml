@@ -1,4 +1,4 @@
-name: publish-to-pypi
+name: publish-to-pypi-gx-cloud
 
 # TODO: Set this to manually trigger once we cutover and go live
 on:
