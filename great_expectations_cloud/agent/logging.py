@@ -14,7 +14,9 @@ class LogLevel(str, enum.Enum):
     CRITICAL = "CRITICAL"
 
     @classmethod
-    def _missing_(cls, value: str) -> LogLevel | None:
+    def _missing_(cls, value: object) -> LogLevel | None:
+        if not isinstance(value, str):
+            return None
         value = value.upper()
         for member in cls:
             if member.value == value:
