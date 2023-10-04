@@ -18,10 +18,7 @@ class LogLevel(str, enum.Enum):
         if not isinstance(value, str):
             return None
         value = value.upper()
-        for member in cls:
-            if member.value == value:
-                return member
-        return None
+        return {m.value: m for m in cls}.get(value)
 
     @property
     def numeric_level(self) -> int:
