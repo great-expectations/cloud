@@ -16,7 +16,7 @@ class Arguments:
 
 def _parse_args() -> Arguments:
     """
-    Parse arguments from the command line and return them as an type aware
+    Parse arguments from the command line and return them as a type aware
     `Arguments` dataclass.
     """
     parser = argparse.ArgumentParser()
