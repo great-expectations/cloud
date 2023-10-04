@@ -3,6 +3,8 @@ from __future__ import annotations
 import enum
 import logging
 
+from typing_extensions import override
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -13,6 +15,7 @@ class LogLevel(str, enum.Enum):
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
 
+    @override
     @classmethod
     def _missing_(cls, value: object) -> LogLevel | None:
         if not isinstance(value, str):
