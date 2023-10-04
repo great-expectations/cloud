@@ -15,7 +15,7 @@ import pytest
 def test_command_retuns_zero_exit_code(cmd: str):
     cli_cmds = ["gx-agent", cmd]
     print(f"Testing command:\n  {' '.join(cli_cmds)}\n")
-    cmplt_process = subprocess.run(cli_cmds, check=False, timeout=5)
+    cmplt_process = subprocess.run(cli_cmds, check=False, timeout=3.5)
     print(cmplt_process.stdout)
     assert cmplt_process.returncode == 0
 

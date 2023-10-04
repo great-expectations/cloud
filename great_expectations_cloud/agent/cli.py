@@ -4,7 +4,7 @@ import argparse
 import dataclasses as dc
 import logging
 
-from great_expectations_cloud.agent.logging_cfg import LogLevel, configure_logger
+from great_expectations_cloud.logging_cfg import LogLevel, configure_logger
 
 LOGGER = logging.getLogger(__name__)
 
