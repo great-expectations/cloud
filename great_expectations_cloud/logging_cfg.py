@@ -35,9 +35,7 @@ class LogLevel(str, enum.Enum):
         return logging.getLevelName(self)
 
 
-def configure_logger(
-    log_level: LogLevel, log_cfg_file: pathlib.Path | None, **logger_config_kwargs
-) -> None:
+def configure_logger(log_level: LogLevel, log_cfg_file: pathlib.Path | None) -> None:
     """
     Configure the root logger for the application.
     If a log configuration file is provided, other arguments are ignored.
@@ -52,5 +50,5 @@ def configure_logger(
         logging.config.dictConfig(dict_config)
         LOGGER.info(f"Configured logging from file {log_cfg_file}")
     else:
-        logging.basicConfig(level=log_level.numeric_level, **logger_config_kwargs)
+        logging.basicConfig(level=log_level.numeric_level)
         LOGGER.info(f"Configured logging at level {log_level}")
