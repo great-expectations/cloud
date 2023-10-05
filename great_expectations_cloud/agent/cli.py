@@ -30,7 +30,7 @@ def _parse_args() -> Arguments:
     )
     parser.add_argument(
         "--log-cfg-file",
-        help="Path to a logging configuration json file.",
+        help="Path to a logging configuration json file. Supercedes --log-level.",
         type=pathlib.Path,
     )
     args = parser.parse_args()
