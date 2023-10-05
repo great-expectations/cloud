@@ -42,6 +42,8 @@ def configure_logger(log_level: LogLevel, log_cfg_file: pathlib.Path | None) -> 
 
     See the documentation for the logging.config.dictConfig method for details.
     https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
+
+    Note: this method should only be called once in the lifecycle of the application.
     """
     if log_cfg_file:
         if not log_cfg_file.exists():
