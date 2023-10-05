@@ -46,6 +46,8 @@ def configure_logger(
     https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
     """
     if log_cfg_file:
+        if not log_cfg_file.exists():
+            raise FileNotFoundError(f"Logging config file not found: {log_cfg_file.absolute()}")
         dict_config = json.loads(log_cfg_file.read_text())
         logging.config.dictConfig(dict_config)
         LOGGER.info(f"Configured logging from file {log_cfg_file}")
