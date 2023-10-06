@@ -27,5 +27,6 @@ jobs:
         with:
           context: .
           file: great_expectations_cloud/agent/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
-          tags: greatexpectations/agent:0.1.1,greatexpectations/agent:latest
+          tags: greatexpectations/agent:0.1.2,greatexpectations/agent:latest
