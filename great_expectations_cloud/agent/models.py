@@ -6,7 +6,7 @@ from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
 from typing_extensions import Annotated
 
 
-class AgentBaseModel(BaseModel):
+class AgentBaseModel(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
     class Config:
         extra: str = Extra.forbid
 

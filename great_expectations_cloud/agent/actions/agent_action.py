@@ -7,7 +7,7 @@ from great_expectations.data_context import CloudDataContext
 from great_expectations_cloud.agent.models import CreatedResource, Event
 
 
-class ActionResult(BaseModel):
+class ActionResult(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
     id: str
     type: str
     created_resources: Sequence[CreatedResource]
