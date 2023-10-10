@@ -1,4 +1,4 @@
-from great_expectations_cloud import run_agent
+from great_expectations_cloud.agent import run_agent
 
 
 def test_run_calls_gx_agent(mocker):

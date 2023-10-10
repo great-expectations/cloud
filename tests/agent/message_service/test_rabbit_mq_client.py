@@ -30,6 +30,6 @@ def test_rabbit_mq_client_calls_run_forever(pika, asyncio_connection):
 
     client = AsyncRabbitMQClient(url=url)
 
-    client.run(queue=queue, on_message=on_message)
+    client.run(queue=queue, on_message=on_message)  # type: ignore[arg-type] # test double
 
     asyncio_connection().ioloop.run_forever.assert_called_with()

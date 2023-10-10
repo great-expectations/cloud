@@ -49,6 +49,6 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             )
         data = response.json()
         try:
-            return data["data"]["attributes"]["draft_config"]
+            return data["data"]["attributes"]["draft_config"]  # type: ignore[no-any-return]
         except KeyError as e:
             raise RuntimeError("Malformed response received from GX-Cloud") from e

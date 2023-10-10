@@ -192,7 +192,7 @@ class GXAgent:
         """Are we currently processing a task, or are we free to take a new one?"""
         return self._current_task is None or self._current_task.done()
 
-    def _reject_correlation_id(self, id: str):
+    def _reject_correlation_id(self, id: str) -> bool:
         """Has this correlation ID been seen too many times?"""
         MAX_REDELIVERY = 10
         MAX_KEYS = 100000

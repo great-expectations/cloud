@@ -32,7 +32,9 @@ class LogLevel(str, enum.Enum):
         Returns the numeric level for the log level.
         https://docs.python.org/3/library/logging.html#logging.getLevelName
         """
-        return logging.getLevelName(self)
+        return logging.getLevelName(  # type: ignore[no-any-return] # will return int if given str
+            self
+        )
 
 
 def configure_logger(log_level: LogLevel, log_cfg_file: pathlib.Path | None) -> None:

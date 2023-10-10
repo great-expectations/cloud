@@ -50,15 +50,25 @@ build-backend = "poetry.core.masonry.api"
 python_version = "3.8"
 plugins = ["pydantic.mypy"]
 files = ["great_expectations_cloud/", "tests/", "tasks.py"]
+strict = true
 warn_unused_configs = true
 ignore_missing_imports = true
 follow_imports = 'normal'
 warn_redundant_casts = true
 show_error_codes = true
+implicit_reexport = true  # enabled due to strict mode
+disallow_any_generics = false  # consider enabling
 enable_error_code = [
     'ignore-without-code',
     'explicit-override',
     ]
+
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disable_error_code = [
+    'no-untyped-def',
+]
 
 [tool.black]
 target-version = ["py38", "py39", "py310", "py311"]
