@@ -1,4 +1,7 @@
-def get_amqp_errors():
+from __future__ import annotations
+
+
+def get_amqp_errors() -> list[type[Exception]]:
     # We want to define a list of all amqp errors we should handle in order
     # to parametrize them in tests. However, we don't want to block
     # the test suite from running in case a user hasn't installed Pika.

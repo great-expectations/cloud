@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
@@ -8,9 +12,12 @@ from great_expectations_cloud.agent.actions.data_assistants.utils import (
 )
 from great_expectations_cloud.agent.models import RunOnboardingDataAssistantEvent
 
+if TYPE_CHECKING:
+    from great_expectations.data_context import CloudDataContext
+
 
 class RunOnboardingDataAssistantAction(AgentAction[RunOnboardingDataAssistantEvent]):
-    def __init__(self, context):
+    def __init__(self, context: CloudDataContext):
         super().__init__(context=context)
         self._data_assistant = self._context.assistants.onboarding
 

@@ -11,7 +11,7 @@ DOCKERFILE_PATH = "great_expectations_cloud/agent/Dockerfile"
 
 
 @invoke.task
-def python_build(ctx: Context, check: bool = False):
+def python_build(ctx: Context, check: bool = False) -> None:
     """Build Python distibution files"""
 
     cmds = ["poetry", "build"]
@@ -19,7 +19,7 @@ def python_build(ctx: Context, check: bool = False):
 
 
 @invoke.task
-def fmt(ctx: Context, check: bool = False):
+def fmt(ctx: Context, check: bool = False) -> None:
     """Format code with black"""
     cmds = ["black", "."]
     if check:
@@ -28,7 +28,7 @@ def fmt(ctx: Context, check: bool = False):
 
 
 @invoke.task
-def lint(ctx: Context, check: bool = False):
+def lint(ctx: Context, check: bool = False) -> None:
     """Lint and fix code with ruff"""
     cmds = ["ruff", "."]
     if not check:
@@ -37,7 +37,7 @@ def lint(ctx: Context, check: bool = False):
 
 
 @invoke.task
-def docker(ctx: Context, check: bool = False, tag: str = "greatexpectations/agent:develop"):
+def docker(ctx: Context, check: bool = False, tag: str = "greatexpectations/agent:develop") -> None:
     """Lint Dockerfile using hadolint tool"""
     if check:
         cmds = [
@@ -63,7 +63,7 @@ def docker(ctx: Context, check: bool = False, tag: str = "greatexpectations/agen
 @invoke.task(
     aliases=["types"],
 )
-def type_check(ctx: Context, install_types: bool = False, check: bool = False):
+def type_check(ctx: Context, install_types: bool = False, check: bool = False) -> None:
     """Type check code with mypy"""
     cmds = ["mypy"]
     if install_types:
@@ -74,14 +74,14 @@ def type_check(ctx: Context, install_types: bool = False, check: bool = False):
 
 
 @invoke.task
-def deps(ctx: Context):
+def deps(ctx: Context) -> None:
     """Sync dependencies with poetry lock file"""
     cmds = ["poetry", "install", "--sync"]
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
 @invoke.task
-def build(ctx: Context):
+def build(ctx: Context) -> None:
     """Build GX Agent Image"""
     cmds = [
         "docker",

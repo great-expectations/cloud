@@ -133,13 +133,13 @@ class Subscriber:
         delivery_tag: int,
         requeue: bool = True,
         delay: Union[float, int] = 3,  # noqa: PYI041
-    ):
+    ) -> None:
         """Coroutine to request a redelivery with delay."""
         # not threadsafe
         await asyncio.sleep(delay)
         return self.client.nack(delivery_tag=delivery_tag, requeue=requeue)
 
-    def _get_reconnect_delay(self):
+    def _get_reconnect_delay(self) -> int:
         """Get a timeout delay with a 1 second backoff for each attempt."""
         if self.client.was_consuming:
             self._reconnect_delay = 0

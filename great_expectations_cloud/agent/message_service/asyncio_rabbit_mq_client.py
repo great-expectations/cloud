@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 import asyncio
 import ssl
 from asyncio import AbstractEventLoop
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 import pika
 from pika.adapters.asyncio_connection import AsyncioConnection
-from pika.channel import Channel
-from pika.spec import Basic, BasicProperties
+
+if TYPE_CHECKING:
+    from pika.channel import Channel
+    from pika.spec import Basic, BasicProperties
 
 
 @dataclass(frozen=True)
@@ -117,7 +121,7 @@ class AsyncRabbitMQClient:
         )
         return nack
 
-    def _ack_threadsafe(self, channel: Channel, delivery_tag: int, loop: AbstractEventLoop):
+    def _ack_threadsafe(self, channel: Channel, delivery_tag: int, loop: AbstractEventLoop) -> None:
         """Ack a message in a threadsafe manner."""
         if channel.is_closed is not True:
             ack = partial(channel.basic_ack, delivery_tag=delivery_tag)
@@ -129,7 +133,7 @@ class AsyncRabbitMQClient:
         delivery_tag: int,
         loop: AbstractEventLoop,
         requeue: bool,
-    ):
+    ) -> None:
         """Nack a message in a threadsafe manner."""
         if channel.is_closed is not True:
             nack = partial(channel.basic_nack, delivery_tag=delivery_tag, requeue=requeue)
@@ -152,42 +156,44 @@ class AsyncRabbitMQClient:
         )
         return on_message(payload)
 
-    def _start_consuming(self, queue: str, on_message: Callable, channel: Channel):
+    def _start_consuming(self, queue: str, on_message: Callable, channel: Channel) -> None:
         """Consume from a channel with the on_message callback."""
         channel.add_on_cancel_callback(self._on_consumer_canceled)
         self._consumer_tag = channel.basic_consume(queue=queue, on_message_callback=on_message)
 
-    def _on_consumer_canceled(self, method_frame: Basic.Cancel):
+    def _on_consumer_canceled(self, method_frame: Basic.Cancel) -> None:
         """Callback invoked when the broker cancels the client's connection."""
         if self._channel is not None:
             self._channel.close()
 
-    def _reconnect(self):
+    def _reconnect(self) -> None:
         """Prepare the client to reconnect."""
         self.should_reconnect = True
         self.stop()
 
-    def _stop_consuming(self):
+    def _stop_consuming(self) -> None:
         """Cancel the channel, if it exists."""
         if self._channel is not None:
             self._channel.basic_cancel(self._consumer_tag, callback=self._on_cancel_ok)
 
-    def _on_cancel_ok(self, method_frame: Basic.CancelOk):
+    def _on_cancel_ok(self, method_frame: Basic.CancelOk) -> None:
         """Callback invoked after broker confirms cancel."""
         self._consuming = False
         if self._channel is not None:
             self._channel.close()
 
-    def _on_connection_open(self, connection: AsyncioConnection, queue: str, on_message: Callable):
+    def _on_connection_open(
+        self, connection: AsyncioConnection, queue: str, on_message: Callable
+    ) -> None:
         """Callback invoked after the broker opens the connection."""
         on_channel_open = partial(self._on_channel_open, queue=queue, on_message=on_message)
         connection.channel(on_open_callback=on_channel_open)
 
-    def _on_connection_open_error(self, connection, reason):
+    def _on_connection_open_error(self, connection: AsyncioConnection, reason: str) -> None:
         """Callback invoked when there is an error while opening connection."""
         self._reconnect()
 
-    def _on_connection_closed(self, connection, reason):
+    def _on_connection_closed(self, connection: AsyncioConnection, reason: str) -> None:
         """Callback invoked after the broker closes the connection"""
         self._channel = None
         if self._closing:
@@ -195,7 +201,7 @@ class AsyncRabbitMQClient:
         else:
             self._reconnect()
 
-    def _close_connection(self):
+    def _close_connection(self) -> None:
         """Close the connection to the broker."""
         self._consuming = False
         if self._connection is None or self._connection.is_closing or self._connection.is_closed:
@@ -203,17 +209,17 @@ class AsyncRabbitMQClient:
         else:
             self._connection.close()
 
-    def _on_channel_open(self, channel: Channel, queue: str, on_message: Callable):
+    def _on_channel_open(self, channel: Channel, queue: str, on_message: Callable) -> None:
         """Callback invoked after the broker opens the channel."""
         self._channel = channel
         channel.add_on_close_callback(self._on_channel_closed)
         self._start_consuming(queue=queue, on_message=on_message, channel=channel)
 
-    def _on_channel_closed(self, channel, reason):
+    def _on_channel_closed(self, channel: Channel, reason: str) -> None:
         """Callback invoked after the broker closes the channel."""
         self._close_connection()
 
-    def _build_client_parameters(self, url: str):
+    def _build_client_parameters(self, url: str) -> pika.URLParameters:
         """Configure parameters used to connect to the broker."""
         parameters = pika.URLParameters(url)
         # only enable SSL if connection string calls for it
