@@ -1,6 +1,10 @@
 FROM --platform=linux/amd64 python:3.10.12-slim
 WORKDIR /app/
 
+# Disable in-memory buffering of application logs
+# https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUNBUFFERED
+ENV PYTHONUNBUFFERED=1
+
 RUN mkdir -p great_expectations_cloud/agent
 COPY great_expectations_cloud great_expectations_cloud
 COPY pyproject.toml pyproject.toml
