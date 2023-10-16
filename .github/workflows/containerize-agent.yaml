@@ -3,7 +3,8 @@ name: containerize-agent
 on:
   push:
     branches:
-      - main
+      # - main
+      - add-docker-compose-and-agent-job-test
 
 jobs:
   containerize-agent:
@@ -22,11 +23,25 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build Test Image
         uses: docker/build-push-action@v4
         with:
           context: .
           file: great_expectations_cloud/agent/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: true
-          tags: greatexpectations/agent:0.1.2,greatexpectations/agent:latest
+          load: true
+          tags: greatexpectations/agent:latest
+
+      - name: Test New Agent Image
+        run: |
+          docker compose up -d
+          pytest /test/agent/jobs/test_job_processing.py
+
+      # - name: Build and push
+      #   uses: docker/build-push-action@v4
+      #   with:
+      #     context: .
+      #     file: great_expectations_cloud/agent/Dockerfile
+      #     platforms: linux/amd64,linux/arm64
+      #     push: true
+      #     tags: greatexpectations/agent:0.1.2,greatexpectations/agent:latest

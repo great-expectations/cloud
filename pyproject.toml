@@ -29,7 +29,7 @@ snowflake-sqlalchemy = ">=1.5.0"
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"
 invoke = "^2.2.0"
-mypy = "~1.5.1"
+mypy = "~1.6"
 pre-commit = "^3.3.3"
 pytest = "^7.4.0"
 pytest-icdiff = "*"
