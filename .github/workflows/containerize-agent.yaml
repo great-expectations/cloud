@@ -30,7 +30,7 @@ jobs:
           file: great_expectations_cloud/agent/Dockerfile
           platforms: linux/amd64
           load: true
-          tags: greatexpectations/agent:latest
+          tags: greatexpectations/agent:test
 
       - name: Test New Agent Image
         run: |
