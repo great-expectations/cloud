@@ -35,7 +35,7 @@ pytest = "^7.4.0"
 pytest-icdiff = "*"
 pytest-mock = "*"
 responses = "^0.23.1"
-ruff = "==0.0.290"
+ruff = "^0.1.0"
 tomli = "^2.0.1"
 typing_extensions = ">=4.4.0"
 
