@@ -67,6 +67,7 @@ jobs:
 
       - name: Test New Agent Image
         run: |
+          poetry shell
           pip list
           pytest /test/agent/jobs/test_job_processing.py
         # run: |
