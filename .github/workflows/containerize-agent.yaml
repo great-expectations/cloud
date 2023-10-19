@@ -69,7 +69,7 @@ jobs:
         run: |
           poetry run python -m pytest /tests/agent/jobs/test_job_processing.py
         # run: |
-        #   docker compose up -d
+          # docker compose up -d
         #   pytest /test/agent/jobs/test_job_processing.py
 
       # - name: Build and push
