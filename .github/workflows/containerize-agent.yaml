@@ -67,7 +67,7 @@ jobs:
       - name: Test New Agent Image
         run: |
           docker compose up -d
-          poetry run python -m pytest tests/agent/jobs/test_job_processing.py
+          poetry run pytest tests/agent/jobs/test_job_processing.py
         env:
           GX_CLOUD_BASE_URL: ${{ vars.GX_CLOUD_BASE_URL }}
           GX_CLOUD_ORGANIZATION_ID: ${{ secrets.GX_CLOUD_ORGANIZATION_ID }}

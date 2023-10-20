@@ -38,8 +38,8 @@ responses = "^0.23.1"
 ruff = "^0.1.0"
 tenacity = "^8.2.3"
 tomli = "^2.0.1"
-types-requests="^2.31.0.10"
 typing_extensions = ">=4.4.0"
+types-requests = "^2.31.0.10"
 
 [tool.poetry.scripts]
 gx-agent = 'great_expectations_cloud.agent.cli:main'
