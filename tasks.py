@@ -193,7 +193,8 @@ def version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> Non
         # if not explicitly set to standard release, default to pre-release
         pre = True
 
-    print("\n  bumping version", end=" ")
+    print("\n  bumping version ...", end=" ")
     new_version = _bump_version(local_version, pre_release=pre)
     _update_version(new_version)
     print(f"\nnew version: \t{new_version}")
+    print(f"\n✅ {new_version} will be published to pypi on next merge to main")
