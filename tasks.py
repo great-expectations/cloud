@@ -19,7 +19,7 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
 PROJECT_ROOT: Final[pathlib.Path] = pathlib.Path(__file__).parent
 PYPROJECT_TOML: Final[pathlib.Path] = PROJECT_ROOT / "pyproject.toml"
-DOCKERFILE_PATH: Final[pathlib.Path] = PROJECT_ROOT / "agent" / " Dockerfile"
+DOCKERFILE_PATH: Final[str] = "great_expectations_cloud/agent/Dockerfile"
 
 
 @functools.lru_cache(maxsize=8)
@@ -83,10 +83,10 @@ def docker(ctx: Context, check: bool = False, tag: str = "greatexpectations/agen
             "DL3029",  # Revisit support for arm platform builds https://github.com/hadolint/hadolint/wiki/DL3029
             "-",
             "<",
-            str(DOCKERFILE_PATH),
+            DOCKERFILE_PATH,
         ]
     else:
-        cmds = ["docker", "build", "-f", str(DOCKERFILE_PATH), "-t", tag, "."]
+        cmds = ["docker", "build", "-f", DOCKERFILE_PATH, "-t", tag, "."]
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
