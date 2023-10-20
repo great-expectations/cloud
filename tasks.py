@@ -8,9 +8,10 @@ from typing import TYPE_CHECKING, Final, Literal
 
 import invoke
 import requests
-import tomli
-import tomli_w
+import tomlkit
 from packaging.version import Version
+from tomlkit import TOMLDocument
+from tomlkit.container import Container as TOMLContainer
 
 if TYPE_CHECKING:
     from invoke.context import Context
@@ -25,18 +26,19 @@ DOCKERFILE_PATH: Final[pathlib.Path] = PROJECT_ROOT / "agent" / " Dockerfile"
 @functools.lru_cache(maxsize=8)
 def _get_pyproject_tool_dict(
     tool_key: Literal["poetry", "black", "ruff", "mypy"] | None = None
-) -> dict:
+) -> TOMLContainer:
     """
     Load the pyproject.toml file as a dict. Optional return the config of a specific tool.
     Caches each tool's config for faster access.
     """
     assert PYPROJECT_TOML.exists()
-    pyproject_dict = tomli.loads(PYPROJECT_TOML.read_text())
-    LOGGER.debug(f"pyproject.toml ->\n {pf(pyproject_dict, depth=2)}")
-    tool_dict = pyproject_dict["tool"]
+    pyproject_doc: TOMLDocument = tomlkit.loads(PYPROJECT_TOML.read_text())
+    LOGGER.debug(f"pyproject.toml ->\n {pf(pyproject_doc, depth=2)}")
+    tool_doc = pyproject_doc["tool"]
+    assert isinstance(tool_doc, TOMLContainer)
     if tool_key:
-        return tool_dict[tool_key]
-    return tool_dict
+        return tool_doc[tool_key]  # type: ignore[return-value] # always a TOMLContainer
+    return tool_doc
 
 
 @invoke.task
@@ -119,14 +121,16 @@ def build(ctx: Context) -> None:
         "-t",
         "greatexpectations/agent",
         "-f",
-        DOCKERFILE_PATH,
+        str(DOCKERFILE_PATH),
         ".",
     ]
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
 def _get_local_version() -> Version:
-    return Version(_get_pyproject_tool_dict("poetry")["version"])
+    return Version(
+        _get_pyproject_tool_dict("poetry")["version"]  # type: ignore[arg-type] # always a str
+    )
 
 
 @functools.lru_cache(maxsize=1)
@@ -166,10 +170,10 @@ def _update_version(version_: Version | str) -> None:
     # TODO: open file once
     # TODO: use tomlkit to preserve comments and formatting
     with open(PYPROJECT_TOML, "rb") as f_in:
-        full_toml_dict = tomli.load(f_in)
-    with open(PYPROJECT_TOML, "wb") as f_out:
-        full_toml_dict["tool"]["poetry"]["version"] = str(version_)
-        tomli_w.dump(full_toml_dict, f_out)
+        toml_doc = tomlkit.load(f_in)
+    with open(PYPROJECT_TOML, "w") as f_out:
+        toml_doc["tool"]["poetry"]["version"] = str(version_)  # type: ignore[index] # always a str
+        tomlkit.dump(toml_doc, f_out)
 
 
 @invoke.task(
