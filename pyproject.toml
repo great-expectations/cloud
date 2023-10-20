@@ -2,7 +2,7 @@
 name = "great_expectations_cloud"
 version = "0.0.3dev5"
 description = "Great Expectations Cloud"
-authors = ["Your Name <you@example.com>"]
+authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 readme = "README.md"
 license = "Apache-2.0"
 
