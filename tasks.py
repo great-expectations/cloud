@@ -127,9 +127,7 @@ def build(ctx: Context) -> None:
 
 
 def _get_local_version() -> Version:
-    return Version(
-        _get_pyproject_tool_dict("poetry")["version"]  # type: ignore[arg-type] # always a str
-    )
+    return Version(_get_pyproject_tool_dict("poetry")["version"])
 
 
 @functools.lru_cache(maxsize=1)
@@ -181,7 +179,7 @@ def _update_version(version_: Version | str) -> None:
     }
 )
 def version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> None:
-    """Bump project the version."""
+    """Bump project version."""
     local_version = _get_local_version()
     print(f"local: \t\t{local_version}")
     latest_version = _get_latest_version()
