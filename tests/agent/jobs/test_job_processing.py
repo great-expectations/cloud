@@ -1,12 +1,8 @@
-import time
-
 import pytest
 import requests
 from tenacity import retry, stop_after_delay
 
 from great_expectations_cloud.agent.config import GxAgentEnvVars
-
-AGENT_ENV_VARS = GxAgentEnvVars()
 
 
 @pytest.fixture(scope="session")
@@ -75,32 +71,34 @@ def test_job_processing(wait_for_docker_compose, local_gql_url: str, gx_agent_va
     response.raise_for_status()
     jobId = response.json()["data"]["createRunCheckpointJob"]["jobId"]
 
-    for i in range(10):
-        get_job_by_id_body = """
-          query getJobs {
-            jobs {
-              id
-              status
-              errorMessage
-              __typename
-            }
-          }
-        """
+    check_job_status(jobId, local_gql_url, gx_agent_vars)
 
-        get_job_by_id_variables = f'{{"jobId": "{jobId}"}}'
 
-        response = requests.post(
-            url=local_gql_url,
-            json={"query": get_job_by_id_body, "variables": get_job_by_id_variables},
-            headers={"Authorization": f"Bearer {gx_agent_vars.gx_cloud_access_token}"},
-        )
-        response.raise_for_status()
+@retry(stop=stop_after_delay(30))
+def check_job_status(jobId: str, local_gql_url: str, gx_agent_vars: GxAgentEnvVars):
+    get_job_by_id_body = """
+        query getJobs {
+        jobs {
+            id
+            status
+            errorMessage
+            __typename
+        }
+        }
+    """
 
-        for job in response.json()["data"]["jobs"]:
-            if job["id"] == jobId:
-                # Check to ensure job completed and was error free
-                if job["status"] == "complete":
-                    assert job["errorMessage"] is None
-                    return
+    get_job_by_id_variables = f'{{"jobId": "{jobId}"}}'
 
-        time.sleep(i * 2)
+    response = requests.post(
+        url=local_gql_url,
+        json={"query": get_job_by_id_body, "variables": get_job_by_id_variables},
+        headers={"Authorization": f"Bearer {gx_agent_vars.gx_cloud_access_token}"},
+    )
+    response.raise_for_status()
+
+    for job in response.json()["data"]["jobs"]:
+        if job["id"] == jobId:
+            # Check to ensure job completed and was error free
+            if job["status"] == "complete":
+                assert job["errorMessage"] is None
+                break
