@@ -149,8 +149,9 @@ max-complexity = 10
 ]
 
 [tool.pytest.ini_options]
-addopts = "--strict-markers"
+addopts = "-m not 'agent-jobs'"
 markers =[
-    "jobs",
+    "agent-jobs",
     "unit",
 ]
+strict-markers = true
