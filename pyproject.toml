@@ -147,3 +147,10 @@ max-complexity = 10
     "F401", # unused import
     "F403", # star imports
 ]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers"
+markers =[
+    "jobs",
+    "unit",
+]
