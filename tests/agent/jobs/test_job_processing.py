@@ -1,18 +1,32 @@
-import os
 import time
 
 import pytest
 import requests
+from tenacity import retry, stop_after_delay
 
-org_id = os.getenv("GX_CLOUD_ORGANIZATION_ID")
-token = os.getenv("GX_CLOUD_ACCESS_TOKEN")
-gql_url = url = f"http://localhost:5000/organizations/{org_id}/graphql"
+from great_expectations_cloud.agent.config import GxAgentEnvVars
+
+AGENT_ENV_VARS = GxAgentEnvVars()
 
 
 @pytest.fixture(scope="session")
-def wait_for_docker_compose():
-    # pretest setup
-    get_agent_status_body = """
+def gx_agent_vars() -> GxAgentEnvVars:
+    return GxAgentEnvVars()
+
+
+@pytest.fixture(scope="session")
+def local_gql_url(gx_agent_vars: GxAgentEnvVars) -> str:
+    gql_url = (
+        f"http://localhost:5000/organizations/{gx_agent_vars.gx_cloud_organization_id}/graphql"
+    )
+    return gql_url
+
+
+# Retry for 3 minutes, if agent is not ready then assume something went wrong
+@retry(stop=stop_after_delay(180))
+def ensure_agent_is_ready(local_gql_url: str, token: str):
+    """Throw an HTTP or ConnectionError exception if the agent is not ready"""
+    body = """
         query agent_status {
             agentStatus {
             active
@@ -21,25 +35,25 @@ def wait_for_docker_compose():
         }
     """
     response = requests.post(
-        url=url,
-        json={"query": get_agent_status_body},
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {token}",
-        },
+        url=local_gql_url,
+        json={"query": body},
+        headers={"Authorization": f"Bearer {token}"},
     )
     response.raise_for_status()
 
     if not response.json()["data"]["agentStatus"]["active"]:
-        return
-    ## check here to see if the agent is online
+        raise ConnectionError("Agent is not ready")
 
+
+@pytest.fixture(scope="session")
+def wait_for_docker_compose(local_gql_url: str, gx_agent_vars: GxAgentEnvVars):
+    # pretest setup
+    ensure_agent_is_ready(local_gql_url, gx_agent_vars.gx_cloud_access_token)
     yield
     print("Post pytest test_job_processing teardown")
-    # posttest teardown
 
 
-def test_job_processing(wait_for_docker_compose):
+def test_job_processing(wait_for_docker_compose, local_gql_url: str, gx_agent_vars: GxAgentEnvVars):
     body = """
       mutation createRunCheckpointJob($checkpointId: UUID!) {
         createRunCheckpointJob(checkpointId: $checkpointId) {
@@ -54,9 +68,9 @@ def test_job_processing(wait_for_docker_compose):
       """
 
     response = requests.post(
-        url=gql_url,
+        url=local_gql_url,
         json={"query": body, "variables": variables},
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"},
+        headers={"Authorization": f"Bearer {gx_agent_vars.gx_cloud_access_token}"},
     )
     response.raise_for_status()
     jobId = response.json()["data"]["createRunCheckpointJob"]["jobId"]
@@ -76,21 +90,17 @@ def test_job_processing(wait_for_docker_compose):
         get_job_by_id_variables = f'{{"jobId": "{jobId}"}}'
 
         response = requests.post(
-            url=url,
+            url=local_gql_url,
             json={"query": get_job_by_id_body, "variables": get_job_by_id_variables},
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {token}",
-            },
+            headers={"Authorization": f"Bearer {gx_agent_vars.gx_cloud_access_token}"},
         )
         response.raise_for_status()
 
         for job in response.json()["data"]["jobs"]:
             if job["id"] == jobId:
                 # Check to ensure job completed and was error free
-                if job["status"] == "complete" and job["errorMessage"] is None:
+                if job["status"] == "complete":
+                    assert job["errorMessage"] is None
                     return
 
         time.sleep(i * 2)
-
-    raise Exception("Job failed")
