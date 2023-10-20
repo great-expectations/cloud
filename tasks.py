@@ -120,7 +120,7 @@ def build(ctx: Context) -> None:
         "-t",
         "greatexpectations/agent",
         "-f",
-        str(DOCKERFILE_PATH),
+        DOCKERFILE_PATH,
         ".",
     ]
     ctx.run(" ".join(cmds), echo=True, pty=True)
