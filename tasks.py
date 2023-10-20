@@ -4,14 +4,13 @@ import functools
 import logging
 import pathlib
 from pprint import pformat as pf
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Final, Literal, MutableMapping
 
 import invoke
 import requests
 import tomlkit
 from packaging.version import Version
 from tomlkit import TOMLDocument
-from tomlkit.container import Container as TOMLContainer
 
 if TYPE_CHECKING:
     from invoke.context import Context
@@ -26,7 +25,7 @@ DOCKERFILE_PATH: Final[pathlib.Path] = PROJECT_ROOT / "agent" / " Dockerfile"
 @functools.lru_cache(maxsize=8)
 def _get_pyproject_tool_dict(
     tool_key: Literal["poetry", "black", "ruff", "mypy"] | None = None
-) -> TOMLContainer:
+) -> MutableMapping:
     """
     Load the pyproject.toml file as a dict. Optional return the config of a specific tool.
     Caches each tool's config for faster access.
@@ -35,9 +34,9 @@ def _get_pyproject_tool_dict(
     pyproject_doc: TOMLDocument = tomlkit.loads(PYPROJECT_TOML.read_text())
     LOGGER.debug(f"pyproject.toml ->\n {pf(pyproject_doc, depth=2)}")
     tool_doc = pyproject_doc["tool"]
-    assert isinstance(tool_doc, TOMLContainer)
+    assert isinstance(tool_doc, MutableMapping), f"got {type(tool_doc)}"
     if tool_key:
-        return tool_doc[tool_key]  # type: ignore[return-value] # always a TOMLContainer
+        return tool_doc[tool_key]  # type: ignore[return-value] # always Mapping type
     return tool_doc
 
 
@@ -168,7 +167,6 @@ def _update_version(version_: Version | str) -> None:
     if not isinstance(version_, Version):
         version_ = Version(version_)
     # TODO: open file once
-    # TODO: use tomlkit to preserve comments and formatting
     with open(PYPROJECT_TOML, "rb") as f_in:
         toml_doc = tomlkit.load(f_in)
     with open(PYPROJECT_TOML, "w") as f_out:
