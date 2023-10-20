@@ -129,6 +129,7 @@ def _get_local_version() -> Version:
     return Version(_get_pyproject_tool_dict("poetry")["version"])
 
 
+@functools.lru_cache(maxsize=1)
 def _get_latest_version() -> Version:
     r = requests.get("https://pypi.org/pypi/great-expectations-cloud/json")
     r.raise_for_status()
@@ -136,15 +137,23 @@ def _get_latest_version() -> Version:
     return version
 
 
-def _bump_version(version_: Version, full_release: bool = False) -> Version:
-    if full_release:
+def _bump_version(version_: Version, pre_release: bool) -> Version:
+    if not pre_release:
+        # standard release
         new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro + 1}")
     elif version_.dev:
         new_version = Version(
-            f"{version_.major}.{version_.minor}.{version_.micro}dev{version_.dev + 1}"
+            f"{version_.major}.{version_.minor}.{version_.micro}.dev{version_.dev + 1}"
         )
     else:
-        raise NotImplementedError
+        new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro}.dev1")
+
+    # check that the number of components is correct
+    expected_components: int = 4 if new_version.is_prerelease else 3
+    components = str(new_version).split(".")
+    assert (
+        len(components) == expected_components
+    ), f"expected {expected_components} components; got {components}"
     return new_version
 
 
@@ -163,16 +172,26 @@ def _update_version(version_: Version | str) -> None:
         tomli_w.dump(full_toml_dict, f_out)
 
 
-@invoke.task
-def version(ctx: Context, bump: bool = False, full_release: bool = False) -> None:
-    """Bump the version of the project."""
+@invoke.task(
+    help={
+        "pre": "Bump the pre-release version (Default)",
+        "standard": "Bump the non pre-release micro version",
+    }
+)
+def version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> None:
+    """Bump project the version."""
     local_version = _get_local_version()
     print(f"local: \t\t{local_version}")
     latest_version = _get_latest_version()
     print(f"pypi latest: \t{latest_version}")
 
-    if bump:
-        print("\n  bumping version", end=" ")
-        new_version = _bump_version(local_version, full_release=full_release)
-        _update_version(new_version)
-        print(f"\nnew version: \t{new_version}")
+    if standard:
+        pre = False
+    elif not pre:
+        # if not explicitly set to standard release, default to pre-release
+        pre = True
+
+    print("\n  bumping version", end=" ")
+    new_version = _bump_version(local_version, pre_release=pre)
+    _update_version(new_version)
+    print(f"\nnew version: \t{new_version}")
