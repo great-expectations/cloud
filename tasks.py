@@ -32,7 +32,7 @@ def _get_pyproject_tool_dict(
     """
     assert PYPROJECT_TOML.exists()
     pyproject_dict = tomli.loads(PYPROJECT_TOML.read_text())
-    LOGGER.warning(f"pyproject.toml ->\n {pf(pyproject_dict, depth=2)}")
+    LOGGER.debug(f"pyproject.toml ->\n {pf(pyproject_dict, depth=2)}")
     tool_dict = pyproject_dict["tool"]
     if tool_key:
         return tool_dict[tool_key]
