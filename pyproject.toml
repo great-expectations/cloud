@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "0.0.3dev5"
+version = "0.0.3.dev6"
 description = "Great Expectations Cloud"
-authors = ["Your Name <you@example.com>"]
+authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 readme = "README.md"
 license = "Apache-2.0"
 
@@ -36,8 +36,9 @@ pytest-icdiff = "*"
 pytest-mock = "*"
 responses = "^0.23.1"
 ruff = "^0.1.0"
-tomli = "^2.0.1"
+tomlkit = "^0.12.1"
 typing_extensions = ">=4.4.0"
+types-requests = "^2.31"
 
 [tool.poetry.scripts]
 gx-agent = 'great_expectations_cloud.agent.cli:main'

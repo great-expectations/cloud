@@ -22,7 +22,15 @@ Common developer tasks are available via `invoke` (defined in `tasks.py`)
 
 `invoke --list` to see available tasks.
 
-### Building and Running the GX Agent Image
+#### Release to Pypi
+
+To release a new version to pypi the version must be incremented.
+New versions are automatically published to pypi when merging to `main`.
+```console
+invoke version-bump
+```
+
+#### Building and Running the GX Agent Image
 
 In order to to build the GX Agent docker image run the following in the root dir:
 
