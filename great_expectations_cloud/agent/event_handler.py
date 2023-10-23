@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import logging
+from typing import TYPE_CHECKING, Final
 
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
@@ -44,6 +45,9 @@ if TYPE_CHECKING:
     )
 
     from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
+
+
+LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
 
 class EventHandler:
@@ -90,6 +94,7 @@ class EventHandler:
     def handle_event(self, event: Event, id: str) -> ActionResult:
         """Transform an Event into an ActionResult."""
         action = self.get_event_action(event=event)
+        LOGGER.info(f"Handling event: {event.type} -> {action.__class__.__name__}")
         action_result = action.run(event=event, id=id)
         return action_result
 
