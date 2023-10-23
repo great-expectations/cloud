@@ -1,10 +1,11 @@
 import asyncio
+import logging
 import traceback
 from collections import defaultdict
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Dict, Final, Optional
 
 from great_expectations import get_context
 from great_expectations.compatibility import pydantic
@@ -38,6 +39,8 @@ from great_expectations_cloud.agent.models import (
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
+
+LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
 HandlerMap = Dict[str, OnMessageCallback]
 
@@ -258,6 +261,7 @@ class GXAgent:
             job_id: job identifier, also known as correlation_id
             status: pydantic model encapsulating the current status
         """
+        LOGGER.info(f"Updating status: {job_id} - {status}")
         agent_sessions_url = (
             f"{self._config.gx_cloud_base_url}/organizations/{self._config.gx_cloud_organization_id}"
             + f"/agent-jobs/{job_id}"
