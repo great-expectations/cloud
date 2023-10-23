@@ -8,10 +8,33 @@ on:
 jobs:
   containerize-agent:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+          cache-dependency-path: poetry.lock
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v3
+        with:
+          path: ~/.local # the path depends on the OS
+          key: poetry-0 # increment to reset cache
+
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: poetry install --with dev,sql --sync
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -21,6 +44,39 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Configure ECR AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::258143015559:role/github-amazonec2containerregistryreadonly
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Test Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: great_expectations_cloud/agent/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: greatexpectations/agent:latest
+
+      - name: Test New Agent Image
+        run: |
+          docker compose up -d
+          poetry run pytest -m "agentjobs"
+        env:
+          GX_CLOUD_BASE_URL: ${{ vars.GX_CLOUD_BASE_URL }}
+          GX_CLOUD_ORGANIZATION_ID: ${{ secrets.GX_CLOUD_ORGANIZATION_ID }}
+          GX_CLOUD_ACCESS_TOKEN: ${{ secrets.GX_CLOUD_ACCESS_TOKEN }}
+          AUTH0_API_AUDIENCE: ${{ secrets.AUTH0_API_AUDIENCE }}
+          AUTH0_MERCURY_API_CLIENT_ID: ${{ secrets.AUTH0_MERCURY_API_CLIENT_ID }}
+          AUTH0_MERCURY_API_CLIENT_SECRET: ${{ secrets.AUTH0_MERCURY_API_CLIENT_SECRET }}
+          AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+          GE_USAGE_STATISTICS_URL: ${{ secrets.GE_USAGE_STATISTICS_URL }}
 
       - name: Build and push
         uses: docker/build-push-action@v4

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "0.0.3.dev6"
+version = "0.0.3.dev7"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 readme = "README.md"
@@ -36,6 +36,7 @@ pytest-icdiff = "*"
 pytest-mock = "*"
 responses = "^0.23.1"
 ruff = "^0.1.0"
+tenacity = "^8.2.3"
 tomlkit = "^0.12.1"
 typing_extensions = ">=4.4.0"
 types-requests = "^2.31"
@@ -145,4 +146,10 @@ max-complexity = 10
 "__init__.py" = [
     "F401", # unused import
     "F403", # star imports
+]
+
+[tool.pytest.ini_options]
+markers =[
+    "agentjobs",
+    "unit",
 ]

@@ -71,4 +71,4 @@ jobs:
         run: poetry install --sync
 
       - name: Run tests
-        run: poetry run pytest
+        run: poetry run pytest -m "not agentjobs"
