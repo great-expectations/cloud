@@ -49,7 +49,7 @@ def wait_for_docker_compose(local_gql_url: str, gx_agent_vars: GxAgentEnvVars):
     print("Post pytest test_job_processing teardown")
 
 
-@pytest.mark.agent_jobs
+@pytest.mark.agentjobs
 def test_job_processing(wait_for_docker_compose, local_gql_url: str, gx_agent_vars: GxAgentEnvVars):
     body = """
       mutation createRunCheckpointJob($checkpointId: UUID!) {

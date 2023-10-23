@@ -150,6 +150,6 @@ max-complexity = 10
 
 [tool.pytest.ini_options]
 markers =[
-    "agent-jobs",
+    "agentjobs",
     "unit",
 ]
