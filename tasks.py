@@ -141,13 +141,18 @@ def _get_latest_version() -> Version:
 
 def _bump_version(version_: Version, pre_release: bool) -> Version:
     if not pre_release:
-        # standard release
-        new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro + 1}")
+        # standard release - remove the dev component if it exists
+        if version_.dev:
+            new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro}")
+        else:
+            new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro + 1}")
     elif version_.dev:
+        # bump an existing pre-release version
         new_version = Version(
             f"{version_.major}.{version_.minor}.{version_.micro}.dev{version_.dev + 1}"
         )
     else:
+        # create the first pre-release version
         new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro}.dev1")
 
     # check that the number of components is correct
