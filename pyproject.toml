@@ -2,6 +2,8 @@
 name = "great_expectations_cloud"
 version = "0.0.3"
 description = "Great Expectations Cloud"
+repository = "https://github.com/great-expectations/cloud"
+homepage = "https://greatexpectations.io"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 readme = "README.md"
 license = "Apache-2.0"
