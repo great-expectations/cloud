@@ -147,7 +147,7 @@ def _bump_version(version_: Version, pre_release: bool) -> Version:
         else:
             new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro + 1}")
     elif version_.dev:
-        # bump and existing pre-release version
+        # bump an existing pre-release version
         new_version = Version(
             f"{version_.major}.{version_.minor}.{version_.micro}.dev{version_.dev + 1}"
         )
