@@ -7,6 +7,15 @@ homepage = "https://greatexpectations.io"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 readme = "README.md"
 license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
