@@ -129,6 +129,7 @@ ignore = [
     "E111", # indentation-with-invalid-multiple
     "E114", # indentation-with-invalid-multiple-comment
     "E117", # over-idented
+    "E501", # line-too-long
     # https://beta.ruff.rs/docs/rules/#flake8-type-checking-tch
     # minimal cost for standard lib imports; keep this disabled
     "TCH003", # typing-only-standard-library-import
