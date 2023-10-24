@@ -9,7 +9,7 @@ from great_expectations.experimental.metric_repository.batch_inspector import (
 from great_expectations.experimental.metric_repository.cloud_data_store import (
     CloudDataStore,
 )
-from great_expectations.experimental.metric_repository.column_descriptive_metrics_metric_retriever import (  # noqa: E501
+from great_expectations.experimental.metric_repository.column_descriptive_metrics_metric_retriever import (
     ColumnDescriptiveMetricsMetricRetriever,
 )
 from great_expectations.experimental.metric_repository.metric_repository import (
