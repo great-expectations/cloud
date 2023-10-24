@@ -123,6 +123,12 @@ select = [
     "RUF",
 ]
 ignore = [
+    # formatting related ignores
+    # https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    "W191", # tab-identation
+    "E111", # indentation-with-invalid-multiple
+    "E114", # indentation-with-invalid-multiple-comment
+    "E117", # over-idented
     # https://beta.ruff.rs/docs/rules/#flake8-type-checking-tch
     # minimal cost for standard lib imports; keep this disabled
     "TCH003", # typing-only-standard-library-import
