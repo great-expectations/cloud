@@ -166,3 +166,4 @@ markers =[
     "agentjobs",
     "unit",
 ]
+log_level = "info"
