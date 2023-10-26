@@ -7,12 +7,10 @@ from typing import Final, Mapping
 
 import pytest
 import tomlkit
-
-# import tomli
 from packaging.version import Version
 from pytest import param
 from ruamel.yaml import YAML
-from tasks import bump_version
+from tasks import bump_version  # local invoke tasks.py module
 
 yaml = YAML(typ="safe")
 
