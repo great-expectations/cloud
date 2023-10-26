@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import pathlib
 from pprint import pformat as pf
@@ -52,7 +54,7 @@ def poetry_lock_packages() -> Mapping[str, dict]:
     poetry_lock = PROJECT_ROOT / "poetry.lock"
     toml_doc = tomlkit.loads(poetry_lock.read_text())
     LOGGER.info(f"poetry.lock ->\n {pf(toml_doc, depth=1)[:1000]}...")
-    packages = toml_doc["package"].unwrap()
+    packages: list[dict] = toml_doc["package"].unwrap()  # type: ignore[assignment] # values are always list[dict]
     return {pkg.pop("name"): pkg for pkg in packages}
 
 
