@@ -10,7 +10,9 @@ import tomlkit
 
 # import tomli
 from packaging.version import Version
+from pytest import param
 from ruamel.yaml import YAML
+from tasks import bump_version
 
 yaml = YAML(typ="safe")
 
@@ -73,6 +75,29 @@ def test_pre_commit_versions_are_in_sync(
             f"{package} Version mismatch."
             " Make sure the .pre-commit config and poetry versions are in sync."
         )
+
+
+@pytest.mark.parametrize(
+    ["version_initial", "expected_version", "pre_release"],
+    [
+        param(Version("0.0.1"), Version("0.0.2.dev0"), True, id="pre-release 0.0.1 -> 0.0.2.dev0"),
+        param(Version("0.0.1"), Version("0.0.1"), True, id="pre-release 0.0.1 -> 0.0.2.dev0"),
+        param(
+            Version("0.0.1.dev1"),
+            Version("0.0.1.dev2"),
+            True,
+            id="pre-release 0.0.1.dev1 -> 0.0.1.dev2",
+        ),
+        param(Version("0.0.1.dev1"), Version("0.0.1"), False, id="standard 0.0.1.dev1 -> 0.0.1"),
+        param(Version("0.0.1"), Version("0.0.2"), False, id="standard 0.0.1 -> 0.0.2"),
+    ],
+)
+def test_bump_version(version_initial: Version, expected_version: Version, pre_release: bool):
+    bumped_version = bump_version(version_initial, pre_release)
+    assert (
+        bumped_version > version_initial
+    ), "bumped version should be greater than the initial version"
+    assert bumped_version == expected_version
 
 
 if __name__ == "__main__":

@@ -139,7 +139,7 @@ def _get_latest_version() -> Version:
     return version
 
 
-def _bump_version(version_: Version, pre_release: bool) -> Version:
+def bump_version(version_: Version, pre_release: bool) -> Version:
     if not pre_release:
         # standard release - remove the dev component if it exists
         if version_.dev:
@@ -198,7 +198,7 @@ def version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> Non
         pre = True
 
     print("\n  bumping version ...", end=" ")
-    new_version = _bump_version(local_version, pre_release=pre)
+    new_version = bump_version(local_version, pre_release=pre)
     _update_version(new_version)
     print(f"\nnew version: \t{new_version}")
     print(f"\n✅ {new_version} will be published to pypi on next merge to main")
