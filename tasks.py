@@ -153,7 +153,7 @@ def bump_version(version_: Version, pre_release: bool) -> Version:
         )
     else:
         # create the first pre-release version
-        new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro}.dev1")
+        new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro + 1}.dev0")
 
     # check that the number of components is correct
     expected_components: int = 4 if new_version.is_prerelease else 3

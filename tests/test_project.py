@@ -79,7 +79,6 @@ def test_pre_commit_versions_are_in_sync(
     ["version_initial", "expected_version", "pre_release"],
     [
         param(Version("0.0.1"), Version("0.0.2.dev0"), True, id="pre-release 0.0.1 -> 0.0.2.dev0"),
-        param(Version("0.0.1"), Version("0.0.1"), True, id="pre-release 0.0.1 -> 0.0.2.dev0"),
         param(
             Version("0.0.1.dev1"),
             Version("0.0.1.dev2"),
@@ -95,7 +94,7 @@ def test_bump_version(version_initial: Version, expected_version: Version, pre_r
     assert (
         bumped_version > version_initial
     ), "bumped version should be greater than the initial version"
-    assert bumped_version == expected_version
+    assert bumped_version == expected_version, f"Expected {expected_version}, got {bumped_version}"
 
 
 if __name__ == "__main__":
