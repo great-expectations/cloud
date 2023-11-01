@@ -131,6 +131,12 @@ def _get_local_version() -> Version:
     return Version(_get_pyproject_tool_dict("poetry")["version"])
 
 
+@invoke.task(aliases=["version"])
+def get_version(ctx: Context) -> None:
+    """Print the current package version and exit."""
+    print(_get_local_version())
+
+
 @functools.lru_cache(maxsize=1)
 def _get_latest_version() -> Version:
     r = requests.get("https://pypi.org/pypi/great-expectations-cloud/json")
