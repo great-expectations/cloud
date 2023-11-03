@@ -169,5 +169,9 @@ markers =[
 log_level = "info"
 filterwarnings = [
     "error",  # Turn all warnings not explicitly filtered below into errors
+
     # Add any warnings to globally ignore here:
+
+    # Full warning: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
 ]
