@@ -170,8 +170,10 @@ log_level = "info"
 filterwarnings = [
     "error",  # Turn all warnings not explicitly filtered below into errors
 
-    # Add any warnings to globally ignore here:
+    # Add any warnings to globally ignore here (this should be used sparingly, it is better to handle warnings
+    # upstream e.g. in GX Core or explicitly where they are raised):
 
+    # This ignore should be removed once we handle this warning in GX Core
     # Full warning: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
 ]
