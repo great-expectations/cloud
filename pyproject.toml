@@ -167,3 +167,7 @@ markers =[
     "unit",
 ]
 log_level = "info"
+filterwarnings = [
+    "error",  # Turn all warnings not explicitly filtered below into errors
+    # Add any warnings to globally ignore here:
+]
