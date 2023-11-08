@@ -19,7 +19,7 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
 PROJECT_ROOT: Final[pathlib.Path] = pathlib.Path(__file__).parent
 PYPROJECT_TOML: Final[pathlib.Path] = PROJECT_ROOT / "pyproject.toml"
-DOCKERFILE_PATH: Final[str] = "great_expectations_cloud/agent/Dockerfile"
+DOCKERFILE_PATH: Final[str] = "./Dockerfile"
 
 
 @functools.lru_cache(maxsize=8)
