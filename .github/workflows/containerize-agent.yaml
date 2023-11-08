@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - m/fix_dockerfile_pathing
 
 jobs:
   containerize-agent:
