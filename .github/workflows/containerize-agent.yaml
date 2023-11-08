@@ -67,10 +67,14 @@ jobs:
       - name: Smoke Test the Image
         run: docker run --rm greatexpectations/agent:latest poetry run gx-agent -h
 
+      # curl maybe not needed
       - name: Integration Test the Image
         run: |
-          docker compose up -d
-          docker compose run --build db-provisioner
+          docker compose up db mq -d
+          docker compose run db-provisioner
+          docker compose up mercury-service-api -d
+          curl -iv -u gx_prod:password -X PUT http://mq:15672/api/exchanges/%2f/agent-exchange
+          docker compose up gx-agent -d
           poetry run pytest -m "agentjobs"
         env:
           GX_CLOUD_BASE_URL: ${{ vars.GX_CLOUD_BASE_URL }}

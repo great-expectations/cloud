@@ -73,7 +73,6 @@ services:
         python -m tests.utils.dev_db_seed_script
         gunicorn mercury.api:get_app\(\) --config ./gunicorn.conf.py --workers=1
     depends_on:
-      - db-provisioner
       - mq
   gx-agent:
     image: greatexpectations/agent:latest
@@ -84,11 +83,3 @@ services:
       GX_CLOUD_BASE_URL: ${GX_CLOUD_BASE_URL}
     depends_on:
       - mercury-service-api
-    command:
-      - /bin/bash
-      - -c
-      - |
-        apt update
-        apt -y install curl
-        curl -iv -u gx_prod:password -X PUT http://mq:15672/api/exchanges/%2f/agent-exchange
-        poetry run gx-agent
