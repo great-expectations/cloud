@@ -24,7 +24,7 @@ COPY pyproject.toml poetry.lock .
 RUN poetry install --with sql --without dev --no-root --no-directory
 
 COPY README.md README.md
-COPY great_expectations_cloud .
+COPY great_expectations_cloud ./
 
 RUN poetry install --with sql --without dev --sync && rm -rf POETRY_CACHE_DIR
 
