@@ -1,7 +1,8 @@
 FROM --platform=linux/amd64 python:3.10.12-slim
 WORKDIR /app/
 
-# File Structure
+# File Structure:
+#
 # /app
 # ├── great_expectations_cloud/
 # │         ├── agent/
@@ -24,8 +25,8 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --with sql --without dev --no-root --no-directory
 
 COPY README.md README.md
-COPY great_expectations_cloud .
+COPY great_expectations_cloud great_expectations_cloud
 
 RUN poetry install --only-root && rm -rf POETRY_CACHE_DIR
-RUN poetry shell
+
 CMD ["poetry", "run", "gx-agent"]
