@@ -64,7 +64,10 @@ jobs:
           load: true
           tags: greatexpectations/agent:latest
 
-      - name: Test New Agent Image
+      - name: Smoke Test the Image
+        run: docker run --rm greatexpectations/agent:latest poetry run gx-agent -h
+
+      - name: Integration Test the Image
         run: |
           docker compose up -d
           poetry run pytest -m "agentjobs"
