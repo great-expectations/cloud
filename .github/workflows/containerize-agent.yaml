@@ -86,3 +86,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: greatexpectations/agent:0.1.2,greatexpectations/agent:latest
+
+       - name: Smoke test container image
+         run: docker run --rm greatexpectations/agent:latest poetry run gx-agent --help
