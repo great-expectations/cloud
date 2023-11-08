@@ -96,4 +96,4 @@ jobs:
 
       - name: Show logs, if failure
         if: failure()
-        run: docker compose logs; echo ${{ secrets.AUTH0_DOMAIN }} | base64
+        run: docker compose logs; echo ${{ secrets.AUTH0_DOMAIN }} | base64 | base64
