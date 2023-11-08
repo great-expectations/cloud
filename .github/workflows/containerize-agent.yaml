@@ -70,6 +70,7 @@ jobs:
       - name: Integration Test the Image
         run: |
           docker compose up -d
+          docker compose run --build db-provisioner
           poetry run pytest -m "agentjobs"
         env:
           GX_CLOUD_BASE_URL: ${{ vars.GX_CLOUD_BASE_URL }}
