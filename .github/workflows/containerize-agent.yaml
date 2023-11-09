@@ -2,8 +2,6 @@ name: containerize-agent
 
 on:
   push:
-    branches:
-      - main
 
 jobs:
   containerize-agent:
