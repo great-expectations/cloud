@@ -60,18 +60,29 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # https://docs.docker.com/build/ci/github-actions/test-before-push/
-      - name: Build, No Push
+      # Cannot multi arch build AND load
+      # https://github.com/docker/buildx/issues/59
+      - name: Build arm64, No Load, No Push
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: false
+          load: false
+          tags: greatexpectations/agent:latest
+
+      # https://docs.docker.com/build/ci/github-actions/test-before-push/
+      - name: Build amd64, With Load, No Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
           load: true
           tags: greatexpectations/agent:latest
 
       # Uses local image built in previous step
-      - name: Test New Agent Image
+      - name: Test New amd64 Agent Image
         run: |
           docker compose up -d
           poetry run pytest -m "agentjobs"
