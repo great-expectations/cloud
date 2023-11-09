@@ -1,5 +1,7 @@
 name: containerize-agent
-on: push
+
+on:
+  push:
 
 jobs:
   containerize-agent:
