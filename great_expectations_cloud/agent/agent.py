@@ -72,7 +72,7 @@ class GXAgent:
     def __init__(self: Self):
         print("Initializing GX-Agent")
         self._config = self._get_config()
-        print("Loading a DataContext - this might take a moment.")
+        print("Loading a DataContext - this might take a moment")
         self._context: CloudDataContext = get_context(cloud_mode=True)
         print("DataContext is ready.")
 
