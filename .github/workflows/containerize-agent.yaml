@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - m/native_support_mac_arm64
   schedule:
     # Nightly build, midnight ET
     # https://crontab.guru/#0_5_*_*_*
