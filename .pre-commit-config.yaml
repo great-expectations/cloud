@@ -10,7 +10,7 @@ repos:
       - id: no-commit-to-branch
         args: [--branch, develop, --branch, main]
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.1.2"
+    rev: "v0.1.5"
     hooks:
       - id: ruff
         args: ["--fix"]
