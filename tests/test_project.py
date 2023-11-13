@@ -62,7 +62,7 @@ def test_pre_commit_versions_are_in_sync(
     pre_commit_config_repos: Mapping, poetry_lock_packages: Mapping
 ):
     repo_package_lookup = {
-        "https://github.com/charliermarsh/ruff-pre-commit": "ruff",
+        "https://github.com/astral-sh/ruff-pre-commit": "ruff",
     }
     for repo, package in repo_package_lookup.items():
         pre_commit_version = Version(pre_commit_config_repos[repo]["rev"])
