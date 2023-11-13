@@ -19,7 +19,7 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
 PROJECT_ROOT: Final[pathlib.Path] = pathlib.Path(__file__).parent
 PYPROJECT_TOML: Final[pathlib.Path] = PROJECT_ROOT / "pyproject.toml"
-DOCKERFILE_PATH: Final[str] = "great_expectations_cloud/agent/Dockerfile"
+DOCKERFILE_PATH: Final[str] = "./Dockerfile"
 
 
 @functools.lru_cache(maxsize=8)
@@ -131,6 +131,12 @@ def _get_local_version() -> Version:
     return Version(_get_pyproject_tool_dict("poetry")["version"])
 
 
+@invoke.task(aliases=["version"])
+def get_version(ctx: Context) -> None:
+    """Print the current package version and exit."""
+    print(_get_local_version())
+
+
 @functools.lru_cache(maxsize=1)
 def _get_latest_version() -> Version:
     r = requests.get("https://pypi.org/pypi/great-expectations-cloud/json")
@@ -139,7 +145,7 @@ def _get_latest_version() -> Version:
     return version
 
 
-def _bump_version(version_: Version, pre_release: bool) -> Version:
+def bump_version(version_: Version, pre_release: bool) -> Version:
     if not pre_release:
         # standard release - remove the dev component if it exists
         if version_.dev:
@@ -153,7 +159,7 @@ def _bump_version(version_: Version, pre_release: bool) -> Version:
         )
     else:
         # create the first pre-release version
-        new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro}.dev1")
+        new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro + 1}.dev0")
 
     # check that the number of components is correct
     expected_components: int = 4 if new_version.is_prerelease else 3
@@ -198,7 +204,7 @@ def version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> Non
         pre = True
 
     print("\n  bumping version ...", end=" ")
-    new_version = _bump_version(local_version, pre_release=pre)
+    new_version = bump_version(local_version, pre_release=pre)
     _update_version(new_version)
     print(f"\nnew version: \t{new_version}")
     print(f"\n✅ {new_version} will be published to pypi on next merge to main")
