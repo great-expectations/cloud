@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - main
-      - m/fix_container_failure
+  schedule:
+    # Nightly build, midnight ET
+    # https://crontab.guru/#0_5_*_*_*
+    - cron:  '0 5 * * *'
 
 jobs:
   containerize-agent:
@@ -56,19 +59,32 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Test Image
-        uses: docker/build-push-action@v4
+      # Cannot multi arch build AND load
+      # https://github.com/docker/buildx/issues/59
+      - name: Build arm64, No Load, No Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/arm64
+          push: false
+          load: false
+          tags: greatexpectations/agent:latest
+
+      # https://docs.docker.com/build/ci/github-actions/test-before-push/
+      - name: Build amd64, With Load, No Push
+        uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64
+          push: false
           load: true
           tags: greatexpectations/agent:latest
 
       - name: Smoke Test the Image
         run: docker run --rm greatexpectations/agent:latest poetry run gx-agent -h
 
-      # curl maybe not needed
-      - name: Integration Test the Image
+      # Uses local image built in previous step
+      - name: Test New amd64 Agent Image
         run: |
           docker compose up db mq -d
           docker compose run db-provisioner
@@ -86,7 +102,7 @@ jobs:
           AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
           GE_USAGE_STATISTICS_URL: ${{ secrets.GE_USAGE_STATISTICS_URL }}
 
-      - name: Build and push
+      - name: Push to Docker Hub
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -96,4 +112,4 @@ jobs:
 
       - name: Show logs, if failure
         if: failure()
-        run: docker compose logs; echo ${{ secrets.AUTH0_DOMAIN }} | base64 | base64
+        run: docker compose logs
