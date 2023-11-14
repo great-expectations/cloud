@@ -42,7 +42,7 @@ services:
     # Note: We are overwriting the existing command, just adding a retry
     #       In Cloud environment, we connect to RDS so no need to worry about starting up
     #       In local, the DB needs a few seconds to boot up and listen
-    command: 'bash -c "curl -iv -u gx_prod:password -X PUT http://mq:15672/api/exchanges/%2f/agent-exchange;"'
+    command: 'bash -c "apt update; apt install curl -y; curl -iv -u gx_prod:password -X PUT http://mq:15672/api/exchanges/%2f/agent-exchange;"'
     depends_on:
       - mq
 
@@ -76,17 +76,18 @@ services:
   db-seeder:
     image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api
     restart: always
+    # For using localhost as db target
+    network_mode: "host"
     volumes:
       - ./services/ge_cloud/:/code
-    ports:
-      - 5000:5000
     environment:
       LOGGING_LEVEL: ${LOGGING_LEVEL}
       ENVIRONMENT: ${ENVIRONMENT}
       MERCURY_DIALECT: postgresql
       MERCURY_USER: gx_mercury_user
       MERCURY_PASSWORD: postgres
-      MERCURY_HOST: db
+      # Set to localhost since network_mode: host
+      MERCURY_HOST: localhost
       MERCURY_DATABASE: mercury
       GE_USAGE_STATISTICS_URL: ${GE_USAGE_STATISTICS_URL}
       AMQP_CONNECTION_STRING: amqp://gx_prod:password@mq:5672
@@ -101,8 +102,8 @@ services:
       SLACK_CLIENT_ID: ${SLACK_CLIENT_ID}
       SENDGRID_API_KEY: ${SENDGRID_API_KEY}
       LD_SDK_KEY: ${LD_SDK_KEY}
+    entrypoint: /bin/bash
     command:
-      - /bin/bash
       - -c
       - |
         cd /app/services/ge_cloud/mercury
