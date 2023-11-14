@@ -61,16 +61,17 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Cannot multi arch build AND load
-      # https://github.com/docker/buildx/issues/59
-      - name: Build arm64, No Load, No Push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/arm64
-          push: false
-          load: false
-          tags: greatexpectations/agent:latest
+# Re enable once triaging done
+#      # Cannot multi arch build AND load
+#      # https://github.com/docker/buildx/issues/59
+#      - name: Build arm64, No Load, No Push
+#        uses: docker/build-push-action@v5
+#        with:
+#          context: .
+#          platforms: linux/arm64
+#          push: false
+#          load: false
+#          tags: greatexpectations/agent:latest
 
       # https://docs.docker.com/build/ci/github-actions/test-before-push/
       - name: Build amd64, With Load, No Push
