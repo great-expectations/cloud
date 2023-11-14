@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 python:3.10.12-slim
+FROM python:3.10.12-slim
 WORKDIR /app/
 
 # File Structure:
@@ -16,7 +16,11 @@ WORKDIR /app/
 ENV PYTHONUNBUFFERED=1
 ENV POETRY_CACHE_DIR=/tmp/pypoetry
 
+# Required for arm64, for building psutil
+RUN apt-get update && apt-get install --no-install-recommends gcc=4:12.2.0-3 -y && rm -rf /var/lib/apt/lists/*
+
 RUN pip --no-cache-dir install poetry==1.6.1
+
 COPY pyproject.toml poetry.lock ./
 
 # Recommended approach for caching build layers with poetry
