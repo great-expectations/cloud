@@ -34,15 +34,11 @@ services:
       - db
 
   mq-wait:
-    image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/provisioner:0.4.1
-    environment:
-      PGPASSWORD: postgres
-      APP_DB_API_USER_PASSWORD: postgres
-      APP_DB_ADDR: db
+    image: debian
     # Note: We are overwriting the existing command, just adding a retry
     #       In Cloud environment, we connect to RDS so no need to worry about starting up
     #       In local, the DB needs a few seconds to boot up and listen
-    command: 'bash -c "apt update; apt install curl -y; curl -iv -u gx_prod:password -X PUT http://mq:15672/api/exchanges/%2f/agent-exchange;"'
+    command: 'bash -c "apt-get update; apt-get install curl -y; curl -iv -u gx_prod:password -X PUT http://mq:15672/api/exchanges/%2f/agent-exchange;"'
     depends_on:
       - mq
 
