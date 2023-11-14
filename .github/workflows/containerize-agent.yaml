@@ -90,6 +90,7 @@ jobs:
         run: |
           docker compose up db mq -d
           docker compose run db-provisioner
+          docker compose run db-seed
           docker compose up mercury-service-api -d
           curl -iv -u gx_prod:password -X PUT http://mq:15672/api/exchanges/%2f/agent-exchange
           docker compose up gx-agent -d
