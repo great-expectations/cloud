@@ -80,10 +80,18 @@ jobs:
           load: true
           tags: greatexpectations/agent:latest
 
+      - name: Smoke Test the Image
+        run: docker run --rm greatexpectations/agent:latest poetry run gx-agent -h
+
       # Uses local image built in previous step
       - name: Test New amd64 Agent Image
         run: |
-          docker compose up -d
+          docker compose up db mq -d
+          docker compose run db-provisioner
+          docker compose run db-seeder
+          docker compose run mq-wait
+          docker compose up mercury-service-api -d
+          docker compose up gx-agent -d
           poetry run pytest -m "agentjobs"
         env:
           GX_CLOUD_BASE_URL: ${{ vars.GX_CLOUD_BASE_URL }}
