@@ -33,7 +33,7 @@ services:
     depends_on:
       - db
 
-  db-provisioner:
+  mq-wait:
     image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/provisioner:0.4.1
     environment:
       PGPASSWORD: postgres

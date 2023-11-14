@@ -91,8 +91,8 @@ jobs:
           docker compose up db mq -d
           docker compose run db-provisioner
           docker compose run db-seed
+          docker compose run mq-wait
           docker compose up mercury-service-api -d
-          curl -iv -u gx_prod:password -X PUT http://mq:15672/api/exchanges/%2f/agent-exchange
           docker compose up gx-agent -d
           poetry run pytest -m "agentjobs"
         env:
