@@ -102,3 +102,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: greatexpectations/agent:0.1.2,greatexpectations/agent:latest
+
+      - name: Show logs, if failure
+        if: failure()
+        run: docker compose logs
