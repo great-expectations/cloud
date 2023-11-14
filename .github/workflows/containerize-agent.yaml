@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      # Remove
+      - m/fix_container_failure
   schedule:
     # Nightly build, midnight ET
     # https://crontab.guru/#0_5_*_*_*
