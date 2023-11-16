@@ -50,8 +50,8 @@ def python_build(ctx: Context, check: bool = False) -> None:
 
 @invoke.task
 def fmt(ctx: Context, check: bool = False) -> None:
-    """Format code with ruff format"""
-    cmds = ["ruff", "format", "."]
+    """Format code with black"""
+    cmds = ["black", "."]
     if check:
         cmds.append("--check")
     ctx.run(" ".join(cmds), echo=True, pty=True)

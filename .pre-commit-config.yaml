@@ -9,12 +9,15 @@ repos:
       - id: trailing-whitespace
       - id: no-commit-to-branch
         args: [--branch, develop, --branch, main]
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.1.5"
+  - repo: https://github.com/psf/black
+    rev: 23.10.1
+    hooks:
+      - id: black-jupyter
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "v0.1.2"
     hooks:
       - id: ruff
         args: ["--fix"]
-      - id: ruff-format
 # https://pre-commit.ci/
 ci:
   autofix_commit_msg: |
