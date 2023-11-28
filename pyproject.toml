@@ -183,7 +183,7 @@ filterwarnings = [
     # These ignores should be removed once we handle this warning in GX Core
     # Full warning:
     # DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
-    #"ignore:pkg_resources is deprecated as an API:DeprecationWarning",
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
     # Full warning:
     # DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('ruamel')`.
     # Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
