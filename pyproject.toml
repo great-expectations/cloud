@@ -180,7 +180,6 @@ filterwarnings = [
     # Add any warnings to globally ignore here (this should be used sparingly, it is better to handle warnings
     # upstream e.g. in GX Core or explicitly where they are raised):
     # this is from azure dependency
-    "ignore:SyntaxError: invalid escape sequence \-",
     # These ignores should be removed once we handle this warning in GX Core
     # Full warning:
     # DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
