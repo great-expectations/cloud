@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  TaskSecurityGroup:
+    Type: String
+    Description: Enter the security group id you want associated with the GXAgent task.
+  TaskSubnetGroup:
+    Type: String
+    Description: Enter the security group id you want the GXAgent to run in.
+  GXAgentSecretARN:
+    Type: String
+    Description: Enter the arn of the AWS managed secret you created for your agent.
+Resources:
+  ECSCluster:
+    Type: 'AWS::ECS::Cluster'
+    Properties:
+      ClusterName: GXAgentCluster
+  ECSTaskDefinition:
+    Type: 'AWS::ECS::TaskDefinition'
+    Properties:
+      ContainerDefinitions:
+        - Essential: true
+          Image: 'greatexpectations/agent:latest'
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/gx-agent-task
+              awslogs-region: us-east-1
+              awslogs-stream-prefix: ecs
+          Name: gx-agent
+          PortMappings:
+            - ContainerPort: 80
+              HostPort: 80
+              Protocol: tcp
+          Secrets:
+            - Name: GX_CLOUD_ACCESS_TOKEN
+              ValueFrom: !Sub "${GXAgentSecretARN}:GX_CLOUD_ACCESS_TOKEN::"
+            - Name: GX_CLOUD_ORGANIZATION_ID
+              ValueFrom: !Sub "${GXAgentSecretARN}:GX_CLOUD_ORGANIZATION_ID::"
+      Cpu: 1024
+      ExecutionRoleArn: !Ref GXAgentTaskExecutionRole
+      Family: gx-agent
+      Memory: 2048
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      RuntimePlatform:
+        OperatingSystemFamily: LINUX
+  ECSService:
+    Type: 'AWS::ECS::Service'
+    Properties:
+      ServiceName: gx-agent-service
+      Cluster: !Ref ECSCluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Ref: "TaskSecurityGroup"
+          Subnets:
+            - Ref: "TaskSubnetGroup"
+      TaskDefinition: !Ref ECSTaskDefinition
+  GXAgentLogGroupDescription:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/gx-agent-task
+      RetentionInDays: 30
+  GXAgentTaskExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs.amazonaws.com
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+      Policies:
+        - PolicyName: gx-agent-managed-secret-policy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'secretsmanager:GetResourcePolicy'
+                  - 'secretsmanager:GetSecretValue'
+                  - 'secretsmanager:DescribeSecret'
+                  - 'secretsmanager:ListSecretVersionId'
+                Resource: !Sub "${GXAgentSecretARN}"

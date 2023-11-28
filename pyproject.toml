@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "0.0.6"
+version = "0.0.8.dev0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -31,16 +31,16 @@ snowflake = [
 ]
 
 [tool.poetry.group.sql.dependencies]
-great-expectations = { version = "^0.17.19", extras = [
+great-expectations = { version = "^0.18.1", extras = [
     "databricks",
     "sqlalchemy1",
     "postgres",
     "redshift",
 ] }
 snowflake-sqlalchemy = ">=1.5.0"
+snowflake-connector-python = ">=3.3.1"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.10"
 invoke = "^2.2.0"
 mypy = "~1.6"
 pre-commit = "^3.3.3"
@@ -48,7 +48,7 @@ pytest = "^7.4.0"
 pytest-icdiff = "*"
 pytest-mock = "*"
 responses = "^0.23.1"
-ruff = "^0.1.2"
+ruff = "^0.1.5"
 tenacity = "^8.2.3"
 tomlkit = "^0.12.1"
 typing_extensions = ">=4.4.0"
@@ -124,6 +124,13 @@ select = [
     "RUF",
 ]
 ignore = [
+    # formatting related ignores
+    # https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    "W191", # tab-identation
+    "E111", # indentation-with-invalid-multiple
+    "E114", # indentation-with-invalid-multiple-comment
+    "E117", # over-idented
+    "E501", # line-too-long
     # https://beta.ruff.rs/docs/rules/#flake8-type-checking-tch
     # minimal cost for standard lib imports; keep this disabled
     "TCH003", # typing-only-standard-library-import
