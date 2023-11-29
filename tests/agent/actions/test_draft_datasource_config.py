@@ -19,6 +19,11 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
 
+import re
+
+IAM_ROLE_NAME_RE = re.compile("[A-Za-z0-9+=,.@\-_]{1,64}")  # noqa
+
+
 @pytest.fixture(scope="function")
 def context():
     return MagicMock(autospec=CloudDataContext)
