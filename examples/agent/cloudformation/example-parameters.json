@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "TaskSecurityGroup",
+    "ParameterValue": "sg-abcd1234"
+  },
+  {
+    "ParameterKey": "TaskSubnetGroup",
+    "ParameterValue": "subnet-abcd1234"
+  },
+  {
+    "ParameterKey": "GXAgentSecretARN",
+    "ParameterValue": "arn:aws:secretsmanager:us-east-1:012345678910:secret:/ecs/gx-agent-credentials-abc123"
+  }
+]
