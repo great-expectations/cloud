@@ -191,4 +191,5 @@ filterwarnings = [
     "ignore:cannot collect test class 'TestConnectionError':pytest.PytestCollectionWarning",
     "ignore:module 'sre_constants' is deprecated:DeprecationWarning",
     "ignore:module 'sre_parse' is deprecated:DeprecationWarning",
+    "ignore:invalid escape sequence:SyntaxWarning",
 ]
