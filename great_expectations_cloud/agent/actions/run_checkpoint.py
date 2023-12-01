@@ -15,7 +15,7 @@ class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
     def run(self, event: RunCheckpointEvent, id: str) -> ActionResult:
         checkpoint_run_result = self._context.run_checkpoint(
             ge_cloud_id=event.checkpoint_id,
-            batch_request={"options": event.splitter_options} if event.splitter_options else None
+            batch_request={"options": event.splitter_options} if event.splitter_options else None,
         )
         validation_results = checkpoint_run_result.run_results
         created_resources = []
