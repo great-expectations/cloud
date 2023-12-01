@@ -37,7 +37,7 @@ class RunMissingnessDataAssistantEvent(RunDataAssistantEvent):
 class RunCheckpointEvent(EventBase):
     type: Literal["run_checkpoint_request"] = "run_checkpoint_request"
     checkpoint_id: uuid.UUID
-    splitter_options: dict | None = None
+    splitter_options: Optional[dict] = None
 
 
 class RunColumnDescriptiveMetricsEvent(EventBase):
