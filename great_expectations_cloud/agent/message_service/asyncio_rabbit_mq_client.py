@@ -225,7 +225,8 @@ class AsyncRabbitMQClient:
         # only enable SSL if connection string calls for it
         if url.startswith("amqps://"):
             # SSL Context for TLS configuration of Amazon MQ for RabbitMQ
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            ssl_context.load_default_certs()
             ssl_context.set_ciphers("ECDHE+AESGCM:!ECDSA")
             parameters.ssl_options = pika.SSLOptions(context=ssl_context)
         return parameters
