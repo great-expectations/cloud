@@ -188,8 +188,8 @@ filterwarnings = [
     # DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('ruamel')`.
     # Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
     "ignore:Deprecated call to:DeprecationWarning",
-    "ignore:cannot collect test class 'TestConnectionError':pytest.PytestCollectionWarning",
-    "ignore:module 'sre_constants' is deprecated:DeprecationWarning",
-    "ignore:module 'sre_parse' is deprecated:DeprecationWarning",
-    "ignore:invalid escape sequence:SyntaxWarning",
+    #"ignore:cannot collect test class 'TestConnectionError':pytest.PytestCollectionWarning",
+    #"ignore:module 'sre_constants' is deprecated:DeprecationWarning",
+    #"ignore:module 'sre_parse' is deprecated:DeprecationWarning",
+    #"ignore:invalid escape sequence:SyntaxWarning",
 ]
