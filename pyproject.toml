@@ -35,11 +35,10 @@ great-expectations = { version = "^0.18.1", extras = [
     "databricks",
     "sqlalchemy1",
     "postgres",
-    "redshift",
 ] }
 snowflake-sqlalchemy = ">=1.5.0"
 snowflake-connector-python = ">=3.3.1"
-
+sqlalchemy-redshift = {version = "^0.8.8", python = "<3.6"}
 [tool.poetry.group.dev.dependencies]
 invoke = "^2.2.0"
 mypy = "~1.7.1"
