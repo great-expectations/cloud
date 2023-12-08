@@ -197,4 +197,8 @@ filterwarnings = [
     # Full warning:
     # DeprecationWarning: module 'sre_parse' is deprecated
     "ignore:module 'sre_parse' is deprecated:DeprecationWarning",
+    # Full warning:
+    # IAM_ROLE_NAME_RE = re.compile('[A-Za-z0-9+=,.@\-_]{1,64}')  # noqa
+    # SyntaxError: invalid escape sequence \-
+    "ignore:"SyntaxWarning: invalid escape sequence \-
 ]
