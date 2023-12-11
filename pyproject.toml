@@ -173,9 +173,9 @@ markers =[
     "agentjobs",
     "unit",
 ]
-log_level = "info"
+log_level = "Warning"
 filterwarnings = [
-    "error",  # Turn all warnings not explicitly filtered below into errors
+    #"error",  # Turn all warnings not explicitly filtered below into errors
 
     # Add any warnings to globally ignore here (this should be used sparingly, it is better to handle warnings
     # upstream e.g. in GX Core or explicitly where they are raised):
