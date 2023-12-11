@@ -173,7 +173,7 @@ markers =[
     "agentjobs",
     "unit",
 ]
-log_level = "Warning"
+log_level = "error"
 filterwarnings = [
     #"error",  # Turn all warnings not explicitly filtered below into errors
 
@@ -199,6 +199,6 @@ filterwarnings = [
     "ignore:module 'sre_parse' is deprecated:DeprecationWarning",
     # Full warning:
     # IAM_ROLE_NAME_RE = re.compile('[A-Za-z0-9+=,.@\-_]{1,64}')"
-    # SyntaxError: invalid escape sequence \-
+    # DeprecationWarning: invalid escape sequence \-
     "ignore:invalid escape sequence \\-"
 ]
