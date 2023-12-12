@@ -35,10 +35,11 @@ great-expectations = { version = "^0.18.4", extras = [
     "databricks",
     "sqlalchemy1",
     "postgres",
-    "redshift",
 ] }
 snowflake-sqlalchemy = ">=1.5.0"
 snowflake-connector-python = ">=3.3.1"
+# TODO: Remove the python constraint once this PR is merged - https://github.com/sqlalchemy-redshift/sqlalchemy-redshift/pull/288
+sqlalchemy-redshift = {version = "^0.8.8", python = "<3.11"}
 
 [tool.poetry.group.dev.dependencies]
 invoke = "^2.2.0"
@@ -174,3 +175,31 @@ markers =[
     "unit",
 ]
 log_level = "info"
+filterwarnings = [
+    #"error",  # Turn all warnings not explicitly filtered below into errors
+
+    # Add any warnings to globally ignore here (this should be used sparingly, it is better to handle warnings
+    # upstream e.g. in GX Core or explicitly where they are raised):
+    # this is from azure dependency
+    # These ignores should be removed once we handle this warning in GX Core
+    # Full warning:
+    # DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
+    # Full warning:
+    # DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('ruamel')`.
+    # Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    "ignore:Deprecated call to:DeprecationWarning",
+    # Full warning:
+    # pytest.PytestCollectionWarning: cannot collect test class 'TestConnectionError' because it has a __init__ constructor (from: tests/agent/actions/test_draft_datasource_config.py)
+    "ignore:cannot collect test class 'TestConnectionError':pytest.PytestCollectionWarning",
+    # Full warning:
+    # DeprecationWarning: module 'sre_constants' is deprecated
+    "ignore:module 'sre_constants' is deprecated:DeprecationWarning",
+    # Full warning:
+    # DeprecationWarning: module 'sre_parse' is deprecated
+    "ignore:module 'sre_parse' is deprecated:DeprecationWarning",
+    # Full warning:
+    # IAM_ROLE_NAME_RE = re.compile('[A-Za-z0-9+=,.@\-_]{1,64}')"
+    # DeprecationWarning: invalid escape sequence \-
+    "ignore:invalid escape sequence \\-"
+]
