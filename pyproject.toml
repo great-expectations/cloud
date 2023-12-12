@@ -173,7 +173,7 @@ markers =[
     "agentjobs",
     "unit",
 ]
-log_level = "error"
+log_level = "info"
 filterwarnings = [
     #"error",  # Turn all warnings not explicitly filtered below into errors
 
