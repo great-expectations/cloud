@@ -113,7 +113,7 @@ def deps(ctx: Context) -> None:
 
 @invoke.task
 def build(ctx: Context) -> None:
-    """Build GX Agent Image"""
+    """Build the GX Agent Image"""
     cmds = [
         "docker",
         "buildx",
