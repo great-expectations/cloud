@@ -54,5 +54,27 @@ def configure_logger(log_level: LogLevel, log_cfg_file: pathlib.Path | None) -> 
         logging.config.dictConfig(dict_config)
         LOGGER.info(f"Configured logging from file {log_cfg_file}")
     else:
-        logging.basicConfig(level=log_level.numeric_level)
-        LOGGER.info(f"Configured logging at level {log_level}")
+        logDirectory = pathlib.Path("logs")
+        if not logDirectory.exists():
+            pathlib.Path(logDirectory).mkdir()
+
+        logger = logging.getLogger()
+        formatter = logging.Formatter(
+            "%(asctime)s | %(name)s | %(lineno)d | %(levelname)s: %(message)s"
+        )
+        logger.setLevel(logging.DEBUG)
+
+        # The StreamHandler writes logs to stderr based on the provided log level
+        stream_handler = logging.StreamHandler()
+        stream_handler.setLevel(log_level.numeric_level)
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
+
+        # The FileHandler writes all logs to a local file
+        file_handler = logging.handlers.TimedRotatingFileHandler(
+            filename=logDirectory / "logfile", when="midnight", backupCount=30
+        )  # creates a new file every day; keeps 30 days of logs at most
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.namer = lambda name: name + ".log"  # append file extension to name
+        logger.addHandler(file_handler)
