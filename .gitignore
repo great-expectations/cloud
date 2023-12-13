@@ -152,6 +152,9 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# Agent-generated log files
+logs/
+
 # IDEs
 
 # PyCharm
