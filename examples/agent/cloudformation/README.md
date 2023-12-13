@@ -34,9 +34,9 @@
 aws cloudformation create-stack --stack-name gx-agent --template-url https://gx-agent-cloudformation.s3.amazonaws.com/agent-stack.yaml --parameters file://parameters.json --capabilities CAPABILITY_IAM
 ```
 
-1. Go into the AWS Management Console under the CloudFormation page to see that the GX Agent has been spun up. Then go to ECS to see your task running--in the logs you should see that the GX Agent has been spun up.
+6. Go into the AWS Management Console under the CloudFormation page to see that the GX Agent has been spun up. Then go to ECS to see your task running--in the logs you should see that the GX Agent has been spun up.
 
-2. In a browser, go to GX Cloud to start running Checkpoints and fetching metrics.
+7. In a browser, go to GX Cloud to start running Checkpoints and fetching metrics.
 
 # For Devs
 
