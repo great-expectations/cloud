@@ -64,13 +64,13 @@ class GXAgent:
     """
     Run GX in any environment from GX Cloud.
 
-    To start the GX Agent, install Python and great_expectations and run `gx-agent`.
-    The GX Agent loads a DataContext configuration from GX Cloud, and listens for
+    To start the agent, install Python and great_expectations and run `gx-agent`.
+    The agent loads a DataContext configuration from GX Cloud, and listens for
     user events triggered from the UI.
     """
 
     def __init__(self: Self):
-        print("Initializing the GX Agent")
+        print("Initializing GX-Agent")
         self._config = self._get_config()
         print("Loading a DataContext - this might take a moment.")
         self._context: CloudDataContext = get_context(cloud_mode=True)
@@ -97,7 +97,7 @@ class GXAgent:
         try:
             client = AsyncRabbitMQClient(url=str(self._config.connection_string))
             subscriber = Subscriber(client=client)
-            print("The GX Agent is ready.")
+            print("GX-Agent is ready.")
             # Open a connection until encountering a shutdown event
             subscriber.consume(
                 queue=self._config.queue,

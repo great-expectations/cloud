@@ -21,7 +21,7 @@ def local_gql_url(gx_agent_vars: GxAgentEnvVars) -> str:
 # Retry for 3 minutes, if agent is not ready then assume something went wrong
 @retry(stop=stop_after_delay(180))
 def ensure_agent_is_ready(local_gql_url: str, token: str):
-    """Throw an HTTP or ConnectionError exception if the GX Agent is not ready"""
+    """Throw an HTTP or ConnectionError exception if the agent is not ready"""
     body = """
         query agent_status {
             agentStatus {

@@ -10,11 +10,11 @@
 
 1. [Install `poetry`](https://python-poetry.org/docs/#installation)
    - [`pipx install poetry`](https://python-poetry.org/docs/#installing-with-pipx)
-2. Set up virtual environment and install dependencies.
+2. Setup virtual environment and install dependencies.
    - `poetry install --sync`
 3. Activate your virtual environment.
    - `poetry shell`
-4. Set up precommit hooks
+4. Setup precommit hooks
    - `pre-commit install`
 
 ### Developer Tasks
@@ -31,28 +31,28 @@ Also available as an invoke task.
 invoke deps
 ```
 
-#### Release to PyPI
+#### Release to Pypi
 
-To release a new version to PyPI the version must be incremented.
-New versions are automatically published to PyPI when merging to `main`.
+To release a new version to pypi the version must be incremented.
+New versions are automatically published to pypi when merging to `main`.
 ```console
 invoke version-bump
 ```
 
 #### Building and Running the GX Agent Image
 
-To build the GX Agent Docker image, run the following in the root dir:
+In order to to build the GX Agent docker image run the following in the root dir:
 
 ```
 invoke build
 ```
 
-Running the GX Agent:
+Running the agent:
 
 ```
 docker run --env GX_CLOUD_ACCESS_TOKEN="<GX_TOKEN>" --env GX_CLOUD_ORGANIZATION_ID="<GX_ORG_ID>" gx/agent
 ```
 
-Now go into GX Cloud and issue commands for the GX Agent to run, such as generating an Expectation Suite for a Data Source.
+Now go into GX Cloud and issue commands for the agent to run such as generating an Expectation Suite for a DataSource.
 
 > Note if you are pushing out a new image update the image tag version in `containerize-agent.yaml`. The image will be built and pushed out via GitHub Actions.
