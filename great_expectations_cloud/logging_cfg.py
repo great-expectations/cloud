@@ -61,7 +61,7 @@ def configure_logger(log_level: LogLevel, log_cfg_file: pathlib.Path | None) -> 
 
         logger = logging.getLogger()
         formatter = logging.Formatter(
-            "%(asctime)s | %(name)s | %(lineno)d | %(levelname)s: %(message)s"
+            "%(asctime)s | %(name)s | line: %(lineno)d | %(levelname)s: %(message)s"
         )
         logger.setLevel(logging.DEBUG)
 
