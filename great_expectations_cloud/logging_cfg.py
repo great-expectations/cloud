@@ -63,7 +63,6 @@ def configure_logger(log_level: LogLevel, log_cfg_file: pathlib.Path | None) -> 
         formatter = logging.Formatter(
             "%(asctime)s | %(name)s | line: %(lineno)d | %(levelname)s: %(message)s"
         )
-        logger.setLevel(logging.DEBUG)
 
         # The StreamHandler writes logs to stderr based on the provided log level
         stream_handler = logging.StreamHandler()
