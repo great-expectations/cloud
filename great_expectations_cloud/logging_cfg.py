@@ -69,6 +69,9 @@ def configure_logger(log_level: LogLevel, log_cfg_file: pathlib.Path | None) -> 
         stream_handler.setLevel(log_level.numeric_level)
         stream_handler.setFormatter(formatter)
         logger.addHandler(stream_handler)
+        logger.setLevel(
+            logging.DEBUG
+        )  # set root logger to lowest-possible level - otherwise it will block levels set for file handler and stream handler
 
         # The FileHandler writes all logs to a local file
         file_handler = logging.handlers.TimedRotatingFileHandler(
