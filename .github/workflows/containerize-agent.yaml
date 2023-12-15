@@ -46,7 +46,7 @@ jobs:
 
       - name: Display Version using vars from pyproject.toml
         id: display_version_from_vars
-        run: echo greatexpectations/agent:${{ steps.get_version.outputs }},greatexpectations/agent:latest
+        run: echo greatexpectations/agent:${{ join(steps.run_tests.outputs.*,'') }},greatexpectations/agent:latest
 
 
 
