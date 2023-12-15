@@ -32,9 +32,6 @@ jobs:
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
 
-      - name: Install dependencies
-        run: poetry install --sync
-
       - name: Get version from pyproject.toml for PR
         id: pr_version
         run: echo "VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
@@ -49,7 +46,9 @@ jobs:
         run: echo "VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
 
       - name: Check version in PR is not the same as in main
-        run: ${{ steps.pr_version.outputs.VERSION }} != ${{ steps.main_version.outputs.VERSION }}
+        if: ${{ steps.pr_version.outputs.VERSION == steps.main_version.outputs.VERSION }}
+        run: exit 1
+
 #
 #  static-analysis:
 #    strategy:
