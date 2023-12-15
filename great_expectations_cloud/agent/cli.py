@@ -13,6 +13,7 @@ LOGGER = logging.getLogger(__name__)
 @dc.dataclass(frozen=True)
 class Arguments:
     log_level: LogLevel
+    skip_log_file: bool
     log_cfg_file: pathlib.Path | None
 
 
@@ -29,22 +30,26 @@ def _parse_args() -> Arguments:
         type=LogLevel,
     )
     parser.add_argument(
+        "--skip-log-file",
+        help="Skip writing debug logs to a file. Defaults to False. Does not affect logging to stdout/stderr.",
+        default=False,
+        type=pathlib.Path,
+    )
+    parser.add_argument(
         "--log-cfg-file",
-        help="Path to a logging configuration json file. Supercedes --log-level.",
+        help="Path to a logging configuration json file. Supercedes --log-level and --skip-log-file.",
         type=pathlib.Path,
     )
     args = parser.parse_args()
     return Arguments(
-        log_level=args.log_level,
-        log_cfg_file=args.log_cfg_file,
+        log_level=args.log_level, skip_log_file=args.skip_log_file, log_cfg_file=args.log_cfg_file
     )
 
 
 def main() -> None:
     args: Arguments = _parse_args()
     configure_logger(
-        log_level=args.log_level,
-        log_cfg_file=args.log_cfg_file,
+        log_level=args.log_level, skip_log_file=args.skip_log_file, log_cfg_file=args.log_cfg_file
     )
 
     # lazy import to ensure our cli is fast and responsive

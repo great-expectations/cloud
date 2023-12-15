@@ -38,7 +38,9 @@ class LogLevel(str, enum.Enum):
         )
 
 
-def configure_logger(log_level: LogLevel, log_cfg_file: pathlib.Path | None) -> None:
+def configure_logger(
+    log_level: LogLevel, skip_log_file: bool, log_cfg_file: pathlib.Path | None
+) -> None:
     """
     Configure the root logger for the application.
     If a log configuration file is provided, other arguments are ignored.
@@ -72,6 +74,9 @@ def configure_logger(log_level: LogLevel, log_cfg_file: pathlib.Path | None) -> 
         logger.setLevel(
             logging.DEBUG
         )  # set root logger to lowest-possible level - otherwise it will block levels set for file handler and stream handler
+
+        if skip_log_file:
+            return
 
         # The FileHandler writes all logs to a local file
         file_handler = logging.handlers.TimedRotatingFileHandler(
