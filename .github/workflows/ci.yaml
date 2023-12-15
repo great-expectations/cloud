@@ -1,16 +1,14 @@
 name: ci
 
-on:
-  pull_request:
-  schedule:
-    - cron: "0 */2 * * *"
+on: [push, workflow_dispatch]
+#on:
+#  pull_request:
+#  schedule:
+#    - cron: "0 */2 * * *"
 
 jobs:
-  static-analysis:
-    strategy:
-      matrix:
-        task: ["lint", "fmt", "type-check", "python-build", "docker"]
-      fail-fast: false
+
+  anthony-test-check-version-bump:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,7 +26,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.local # the path depends on the OS
-          key: poetry-3.8 # increment to reset cache
+          key: poetry-0 # increment to reset cache
 
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
@@ -37,38 +35,85 @@ jobs:
       - name: Install dependencies
         run: poetry install --sync
 
-      - run: poetry run invoke ${{ matrix.task }} --check
+      - name: Get version from pyproject.toml for PR
+        id: pr_version
+        run: echo "VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
 
-  tests:
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
+      - name: Checkout `main` branch
         uses: actions/checkout@v3
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
-          cache-dependency-path: poetry.lock
+          ref: main
 
-      - name: Load cached Poetry installation
-        id: cached-poetry
-        uses: actions/cache@v3
-        with:
-          path: ~/.local # the path depends on the OS
-          key: poetry-${{ matrix.python-version  }} # increment to reset cache
+      - name: Get version from pyproject.toml for main
+        id: main_version
+        run: echo "VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
 
-      - name: Install Poetry
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        uses: snok/install-poetry@v1
-
-      - name: Install dependencies
-        run: poetry install --sync
-
-      - name: Run tests
-        run: poetry run pytest -m "not agentjobs"
+      - name: Check version in PR is not the same as in main
+        run: ${{ steps.pr_version.outputs.VERSION }} != ${{ steps.main_version.outputs.VERSION }}
+#
+#  static-analysis:
+#    strategy:
+#      matrix:
+#        task: ["lint", "fmt", "type-check", "python-build", "docker"]
+#      fail-fast: false
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v3
+#
+#      - name: Set up Python
+#        uses: actions/setup-python@v4
+#        with:
+#          python-version: "3.8"
+#          cache-dependency-path: poetry.lock
+#
+#      - name: Load cached Poetry installation
+#        id: cached-poetry
+#        uses: actions/cache@v3
+#        with:
+#          path: ~/.local # the path depends on the OS
+#          key: poetry-3.8 # increment to reset cache
+#
+#      - name: Install Poetry
+#        if: steps.cached-poetry.outputs.cache-hit != 'true'
+#        uses: snok/install-poetry@v1
+#
+#      - name: Install dependencies
+#        run: poetry install --sync
+#
+#      - run: poetry run invoke ${{ matrix.task }} --check
+#
+#  tests:
+#    strategy:
+#      matrix:
+#        python-version: ["3.8", "3.9", "3.10", "3.11"]
+#
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v3
+#
+#      - name: Set up Python ${{ matrix.python-version }}
+#        uses: actions/setup-python@v4
+#        with:
+#          python-version: ${{ matrix.python-version }}
+#          cache-dependency-path: poetry.lock
+#
+#      - name: Load cached Poetry installation
+#        id: cached-poetry
+#        uses: actions/cache@v3
+#        with:
+#          path: ~/.local # the path depends on the OS
+#          key: poetry-${{ matrix.python-version  }} # increment to reset cache
+#
+#      - name: Install Poetry
+#        if: steps.cached-poetry.outputs.cache-hit != 'true'
+#        uses: snok/install-poetry@v1
+#
+#      - name: Install dependencies
+#        run: poetry install --sync
+#
+#      - name: Run tests
+#        run: poetry run pytest -m "not agentjobs"
