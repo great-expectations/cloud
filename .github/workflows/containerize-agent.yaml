@@ -36,13 +36,17 @@ jobs:
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
 
+      - name: Print Version from pyproject.toml
+        id: print_version
+        run: echo $(poetry version -s)
+
       - name: Get Version from pyproject.toml
         id: get_version
         run: echo "{name}={$(poetry version -s)}" >> $GITHUB_OUTPUT
 
-      - name: Display Version from pyproject.toml
-        id: display_version
-        run: echo greatexpectations/agent:${{ steps.vars.outputs.get_version }},greatexpectations/agent:latest
+      - name: Display Version using vars from pyproject.toml
+        id: display_version_from_vars
+        run: echo greatexpectations/agent:${{ steps.get_version.outputs }},greatexpectations/agent:latest
 
 
 
