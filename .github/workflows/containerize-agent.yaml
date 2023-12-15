@@ -21,7 +21,7 @@ jobs:
 
       - name: Get Version from pyproject.toml
         id: get_version
-        run: echo ::set-output name=version::$(poetry version -s)
+        run: echo "{name}={$(poetry version -s)}" >> $GITHUB_OUTPUT
 
       - name: Display Version from pyproject.toml
         id: display_version
