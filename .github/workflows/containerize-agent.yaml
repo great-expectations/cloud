@@ -42,11 +42,11 @@ jobs:
 
       - name: Get Version from pyproject.toml
         id: get_version
-        run: echo "POETRY_VERSION={$(poetry version -s)}" >> $GITHUB_OUTPUT
+        run: echo "POETRY_VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
 
       - name: Display Version using vars from pyproject.toml
         id: display_version_from_vars
-        run: echo greatexpectations/agent:${ steps.get_version.outputs.POETRY_VERSION },greatexpectations/agent:latest
+        run: echo greatexpectations/agent:${{ steps.get_version.outputs.POETRY_VERSION }},greatexpectations/agent:latest
 
 
 
