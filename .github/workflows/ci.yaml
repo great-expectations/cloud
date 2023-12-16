@@ -64,7 +64,9 @@ jobs:
 
       - name: Check version in PR is not the same as in main
         if: ${{ steps.pr_version.outputs.VERSION == steps.main_version.outputs.VERSION }}
-        run: exit 1
+        run: |
+          echo "Version in PR is the same as in main. Please bump the version in pyproject.toml."
+          exit 1
 
   static-analysis:
     strategy:
