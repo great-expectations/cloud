@@ -1,10 +1,9 @@
 name: ci
 
-on: [push, workflow_dispatch]
-#on:
-#  pull_request:
-#  schedule:
-#    - cron: "0 */2 * * *"
+on:
+  pull_request:
+  schedule:
+    - cron: "0 */2 * * *"
 
 jobs:
 
@@ -23,7 +22,8 @@ jobs:
               - 'great_expectations_cloud/agent/*'
 
 
-  anthony-test-check-version-is-bumped:
+  check-version-is-bumped:
+    # This job checks that the version in the PR is different than the version in main if the agent has changed.
     needs: check-if-agent-changed
     runs-on: ubuntu-latest
     if: ${{ needs.check-if-agent-changed.outputs.agent_changed == 'true' }}
@@ -66,70 +66,69 @@ jobs:
         if: ${{ steps.pr_version.outputs.VERSION == steps.main_version.outputs.VERSION }}
         run: exit 1
 
-#
-#  static-analysis:
-#    strategy:
-#      matrix:
-#        task: ["lint", "fmt", "type-check", "python-build", "docker"]
-#      fail-fast: false
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v3
-#
-#      - name: Set up Python
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: "3.8"
-#          cache-dependency-path: poetry.lock
-#
-#      - name: Load cached Poetry installation
-#        id: cached-poetry
-#        uses: actions/cache@v3
-#        with:
-#          path: ~/.local # the path depends on the OS
-#          key: poetry-3.8 # increment to reset cache
-#
-#      - name: Install Poetry
-#        if: steps.cached-poetry.outputs.cache-hit != 'true'
-#        uses: snok/install-poetry@v1
-#
-#      - name: Install dependencies
-#        run: poetry install --sync
-#
-#      - run: poetry run invoke ${{ matrix.task }} --check
-#
-#  tests:
-#    strategy:
-#      matrix:
-#        python-version: ["3.8", "3.9", "3.10", "3.11"]
-#
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v3
-#
-#      - name: Set up Python ${{ matrix.python-version }}
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: ${{ matrix.python-version }}
-#          cache-dependency-path: poetry.lock
-#
-#      - name: Load cached Poetry installation
-#        id: cached-poetry
-#        uses: actions/cache@v3
-#        with:
-#          path: ~/.local # the path depends on the OS
-#          key: poetry-${{ matrix.python-version  }} # increment to reset cache
-#
-#      - name: Install Poetry
-#        if: steps.cached-poetry.outputs.cache-hit != 'true'
-#        uses: snok/install-poetry@v1
-#
-#      - name: Install dependencies
-#        run: poetry install --sync
-#
-#      - name: Run tests
-#        run: poetry run pytest -m "not agentjobs"
+  static-analysis:
+    strategy:
+      matrix:
+        task: ["lint", "fmt", "type-check", "python-build", "docker"]
+      fail-fast: false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+          cache-dependency-path: poetry.lock
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v3
+        with:
+          path: ~/.local # the path depends on the OS
+          key: poetry-3.8 # increment to reset cache
+
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: poetry install --sync
+
+      - run: poetry run invoke ${{ matrix.task }} --check
+
+  tests:
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache-dependency-path: poetry.lock
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v3
+        with:
+          path: ~/.local # the path depends on the OS
+          key: poetry-${{ matrix.python-version  }} # increment to reset cache
+
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: poetry install --sync
+
+      - name: Run tests
+        run: poetry run pytest -m "not agentjobs"
