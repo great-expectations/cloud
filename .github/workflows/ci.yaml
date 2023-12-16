@@ -8,8 +8,25 @@ on: [push, workflow_dispatch]
 
 jobs:
 
-  anthony-test-check-version-bump:
+  check-if-agent-changed:
     runs-on: ubuntu-latest
+    outputs:
+      agent_changed: ${{ steps.check_agent.outputs.agent_changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            agent:
+              - 'great_expectations_cloud/agent/*'
+
+
+  anthony-test-check-version-is-bumped:
+    needs: check-if-agent-changed
+    runs-on: ubuntu-latest
+    if: ${{ needs.check-if-agent-changed.outputs.agent_changed == 'true' }}
 
     steps:
       - name: Checkout
