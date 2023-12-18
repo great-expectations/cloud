@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from great_expectations_cloud.logging_cfg import LogLevel
+from great_expectations_cloud.logging.logging_cfg import LogLevel
 
 
 class TestLogLevel:
