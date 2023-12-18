@@ -9,7 +9,7 @@ jobs:
 
   check-if-agent-changed:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: ${{ github.event_name != 'schedule' }}
     outputs:
       agent_changed: ${{ steps.check_agent.outputs.agent_changed }}
     steps:
@@ -27,7 +27,7 @@ jobs:
     # This job checks that the version in the PR is different than the version in main if the agent has changed.
     needs: check-if-agent-changed
     runs-on: ubuntu-latest
-    if: needs.check-if-agent-changed.outputs.agent_changed == 'true' && github.event_name == 'pull_request'
+    if: ${{ needs.check-if-agent-changed.outputs.agent_changed == 'true' && github.event_name != 'schedule' }}
 
     steps:
       - name: Checkout
