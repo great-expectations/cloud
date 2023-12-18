@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - main
-  schedule:
-    # Nightly build, midnight ET
-    # https://crontab.guru/#0_5_*_*_*
-    - cron:  '0 5 * * *'
 
 jobs:
   containerize-agent:
