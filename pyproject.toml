@@ -204,5 +204,5 @@ filterwarnings = [
     "ignore:invalid escape sequence \\-",
     # Full warning:
     # PoetryVersionOutdated: The latest version of poetry is latest_poetry_version: 1.8.0 but the poetry.lock file was generated using 1.7.1.
-    "once:PoetryVersionOutdated",
+    "once:.*:tests.test_project.PoetryVersionOutdated",
 ]
