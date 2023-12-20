@@ -124,7 +124,7 @@ def latest_poetry_version(lock_file_poetry_version: Version) -> Version:
         # warning instead of error because we don't want to break the build whenever a new version of poetry is released
         # but we do want to know about it.
         warnings.warn(
-            f"The latest version of poetry is latest_poetry_version: {latest_version} but the poetry.lock file was generated using {lock_file_poetry_version}."
+            f"The latest version of poetry is {latest_version} but the poetry.lock file was generated using {lock_file_poetry_version}."
             " Consider upgrading poetry and regenerating the lockfile.",
             category=PoetryVersionOutdated,
             stacklevel=1,
