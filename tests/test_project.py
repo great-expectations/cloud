@@ -132,13 +132,13 @@ def latest_poetry_version(lock_file_poetry_version: Version) -> Version:
     return latest_version
 
 
-def test_lockfile_was_generated_using_latest_poetry(
-    lock_file_poetry_version: Version, latest_poetry_version: Version
-):
+def test_lockfile_poetry_version(lock_file_poetry_version: Version, latest_poetry_version: Version):
     """
     This test ensures that the poetry.lock file was generated using a recent version of poetry.
     This is important because the lockfile format or dependency resolving strategery could change between versions.
     """
+    print(f"{lock_file_poetry_version=}")
+    print(f"{latest_poetry_version=}")
     assert lock_file_poetry_version >= Version(
         "1.7.1"
     ), "poetry.lock was generated using an older version of poetry"
