@@ -136,7 +136,7 @@ def test_lockfile_was_generated_using_latest_poetry(
     lock_file_poetry_version: Version, latest_poetry_version: Version
 ):
     """
-    This test ensures that the poetry.lock file was generated using the latest version of poetry.
+    This test ensures that the poetry.lock file was generated using a recent version of poetry.
     This is important because the lockfile format or dependency resolving strategery could change between versions.
     """
     assert lock_file_poetry_version >= Version(
