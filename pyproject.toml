@@ -200,5 +200,8 @@ filterwarnings = [
     # Full warning:
     # IAM_ROLE_NAME_RE = re.compile('[A-Za-z0-9+=,.@\-_]{1,64}')"
     # DeprecationWarning: invalid escape sequence \-
-    "ignore:invalid escape sequence"
+    "ignore:invalid escape sequence",
+    # Full warning:
+    # PoetryVersionOutdated: The latest version of poetry is latest_poetry_version: 1.8.0 but the poetry.lock file was generated using 1.7.1.
+    "once:.*:tests.test_project.PoetryVersionOutdated",
 ]
