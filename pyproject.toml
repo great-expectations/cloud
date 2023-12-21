@@ -176,8 +176,7 @@ markers =[
 ]
 log_level = "info"
 filterwarnings = [
-    #"error",  # Turn all warnings not explicitly filtered below into errors
-
+    "error",  # Turn all warnings not explicitly filtered below into errors
     # Add any warnings to globally ignore here (this should be used sparingly, it is better to handle warnings
     # upstream e.g. in GX Core or explicitly where they are raised):
     # this is from azure dependency
@@ -201,7 +200,7 @@ filterwarnings = [
     # Full warning:
     # IAM_ROLE_NAME_RE = re.compile('[A-Za-z0-9+=,.@\-_]{1,64}')"
     # DeprecationWarning: invalid escape sequence \-
-    "ignore:invalid escape sequence \\-",
+    "ignore:invalid escape sequence",
     # Full warning:
     # PoetryVersionOutdated: The latest version of poetry is latest_poetry_version: 1.8.0 but the poetry.lock file was generated using 1.7.1.
     "once:.*:tests.test_project.PoetryVersionOutdated",
