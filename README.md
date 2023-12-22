@@ -31,6 +31,23 @@ Also available as an invoke task.
 invoke deps
 ```
 
+#### Updating `poetry.lock` dependencies
+
+The dependencies installed in our CI and the docker build step are determined by the [poetry.lock file](https://python-poetry.org/docs/basic-usage/#installing-with-poetrylock).
+
+[To update only a specific dependency](https://python-poetry.org/docs/cli/#update) (such as `great_expectations`) ...
+```console
+poetry update great_expectations
+```
+
+[To resolve and update all dependencies ...](https://python-poetry.org/docs/cli/#lock)
+```console
+poetry lock
+```
+
+In either case, the updated `poetry.lock` file must be committed and merged to main.
+
+
 #### Release to PyPI and Docker
 
 To release a new version to PyPI the version must be incremented.
