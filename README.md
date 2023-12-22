@@ -31,13 +31,15 @@ Also available as an invoke task.
 invoke deps
 ```
 
-#### Release to PyPI
+#### Release to PyPI and Docker
 
 To release a new version to PyPI the version must be incremented.
 New versions are automatically published to PyPI when merging to `main`.
 ```console
 invoke version-bump
 ```
+
+A new docker tag will also be generated and pushed to [dockerhub](https://hub.docker.com/r/greatexpectations/agent).
 
 #### Building and Running the GX Agent Image
 
