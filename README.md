@@ -56,7 +56,7 @@ New versions are automatically published to PyPI when merging to `main`.
 invoke version-bump
 ```
 
-A new docker tag will also be generated and pushed to [dockerhub](https://hub.docker.com/r/greatexpectations/agent).
+A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent).
 
 #### Building and Running the GX Agent Image
 
