@@ -20,7 +20,7 @@ jobs:
         with:
           filters: |
             agent:
-              - 'great_expectations_cloud/agent/*'
+              - 'great_expectations_cloud/agent/**'
 
 
   check-version-is-bumped:
