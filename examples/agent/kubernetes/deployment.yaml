@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gx-agent
+  labels:
+    app: gx-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gx-agent
+  template:
+    metadata:
+      labels:
+        app: gx-agent
+    spec:
+      containers:
+      - name: gx-agent
+        image: greatexpectations/agent:latest
+        envFrom:
+        - secretRef:
+            name: gx-agent-secret
