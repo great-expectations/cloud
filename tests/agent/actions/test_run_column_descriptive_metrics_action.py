@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 from great_expectations.data_context import CloudDataContext
+from great_expectations.datasource.fluent.interfaces import TestConnectionError
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
 )
@@ -97,3 +98,31 @@ def test_run_column_descriptive_metrics_returns_action_result():
     assert action_result.created_resources == [
         CreatedResource(resource_id=str(metric_run_id), type="MetricRun"),
     ]
+
+
+def test_run_column_descriptive_metrics_raises_on_test_connection_failure():
+    mock_context = Mock(spec=CloudDataContext)
+    mock_metric_repository = Mock(spec=MetricRepository)
+    mock_batch_inspector = Mock(spec=BatchInspector)
+
+    mock_datasource = Mock()
+    mock_context.get_datasource.return_value = mock_datasource
+    mock_datasource.test_connection.side_effect = TestConnectionError()
+
+    action = ColumnDescriptiveMetricsAction(
+        context=mock_context,
+        metric_repository=mock_metric_repository,
+        batch_inspector=mock_batch_inspector,
+    )
+
+    with pytest.raises(TestConnectionError):
+        action.run(
+            event=RunColumnDescriptiveMetricsEvent(
+                type="column_descriptive_metrics_request.received",
+                datasource_name="test-datasource",
+                data_asset_name="test-data-asset",
+            ),
+            id="test-id",
+        )
+
+    mock_batch_inspector.compute_metric_run.assert_not_called()
