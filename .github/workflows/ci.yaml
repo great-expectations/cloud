@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'schedule' }}
     outputs:
-      agent_changed: ${{ steps.check_agent.outputs.agent_changed }}
+      agent_changed: ${{ steps.filter.outputs.agent }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -20,11 +20,11 @@ jobs:
         with:
           filters: |
             agent:
-              - 'great_expectations_cloud/agent/*'
+              - 'great_expectations_cloud/agent/**'
 
 
   check-version-is-bumped:
-    # This job checks that the version in the PR is different than the version in main if the agent has changed.
+    # This job checks that the version in the PR is different from the version in main if the agent has changed.
     needs: check-if-agent-changed
     runs-on: ubuntu-latest
     if: ${{ needs.check-if-agent-changed.outputs.agent_changed == 'true' && github.event_name != 'schedule' }}
