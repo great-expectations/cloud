@@ -1,4 +1,4 @@
-# Deploy agent in kubernetes
+# How to deploy agent in kubernetes
 
 ## Create kubernetes secret
 
