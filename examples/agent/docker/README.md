@@ -1,4 +1,4 @@
-# Deploy agent with docker
+# How to deploy agent with Docker
 
 ## Prepare your secrets
 
