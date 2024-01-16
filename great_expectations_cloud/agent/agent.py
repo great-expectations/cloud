@@ -6,13 +6,14 @@ from collections import defaultdict
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
-from typing import TYPE_CHECKING, ClassVar, Dict, Final, Optional
+from typing import TYPE_CHECKING, Dict, Final, Optional
 
 import pkg_resources
 from great_expectations import get_context
 from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
 from great_expectations.core.http import create_session
+from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from typing_extensions import Self
 
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
@@ -43,7 +44,6 @@ if TYPE_CHECKING:
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
-
 HandlerMap = Dict[str, OnMessageCallback]
 
 
@@ -57,7 +57,7 @@ class GXAgentConfig(AgentBaseModel):
     queue: str
     connection_string: AmqpDsn
     # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = "http://localhost:5000/"
+    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
 
@@ -71,8 +71,6 @@ class GXAgent:
     user events triggered from the UI.
     """
 
-    _BASE_PYPI_URL: ClassVar[str] = "https://pypi.org/pypi"
-    _PYPI_GX_ENDPOINT: ClassVar[str] = f"{_BASE_PYPI_URL}/great_expectations/json"
     _PYPI_GX_AGENT_PACKAGE_NAME = "great_expectations_cloud"
 
     def __init__(self: Self):
@@ -238,6 +236,7 @@ class GXAgent:
             ) from validation_err
 
         # obtain the broker url and queue name from Cloud
+
         agent_sessions_url = (
             f"{env_vars.gx_cloud_base_url}/organizations/"
             f"{env_vars.gx_cloud_organization_id}/agent-sessions"
