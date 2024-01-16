@@ -8,7 +8,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from typing import TYPE_CHECKING, Dict, Final, Optional
 
-import pkg_resources
+import pkg_resources  # type: ignore
 from great_expectations import get_context
 from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
