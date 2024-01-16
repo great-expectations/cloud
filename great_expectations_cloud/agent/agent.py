@@ -8,6 +8,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from typing import TYPE_CHECKING, ClassVar, Dict, Final, Optional
 
+import pkg_resources
 from great_expectations import get_context
 from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
@@ -37,12 +38,11 @@ from great_expectations_cloud.agent.models import (
     UnknownEvent,
 )
 
-from ._version_checker import _VersionChecker
-
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
+
 
 HandlerMap = Dict[str, OnMessageCallback]
 
@@ -73,12 +73,14 @@ class GXAgent:
 
     _BASE_PYPI_URL: ClassVar[str] = "https://pypi.org/pypi"
     _PYPI_GX_ENDPOINT: ClassVar[str] = f"{_BASE_PYPI_URL}/great_expectations/json"
+    _PYPI_GX_AGENT_PACKAGE_NAME = "great_expectations_cloud"
 
     def __init__(self: Self):
-        self._check_if_latest_version()
-        print("Initializing the GX Agent")
+        agent_version: str = self._get_current_gx_agent_version()
+        print(f"Initializing the GX Agent version: {agent_version}.")
         self._config = self._get_config()
         print("Loading a DataContext - this might take a moment.")
+
         # suppress warnings about GX version
         with warnings.catch_warnings(record=True):
             self._context: CloudDataContext = get_context(cloud_mode=True)
@@ -119,9 +121,9 @@ class GXAgent:
             if subscriber is not None:
                 subscriber.close()
 
-    def _check_if_latest_version(self) -> None:
-        checker = _VersionChecker()
-        checker.check_if_using_latest_gx_agent()
+    def _get_current_gx_agent_version(self) -> str:
+        version: str = pkg_resources.get_distribution(self._PYPI_GX_AGENT_PACKAGE_NAME).version
+        return version
 
     def _handle_event_as_thread_enter(self, event_context: EventContext) -> None:
         """Schedule _handle_event to run in a thread.
