@@ -43,7 +43,6 @@ if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
-
 HandlerMap = Dict[str, OnMessageCallback]
 
 
@@ -79,9 +78,11 @@ class GXAgent:
         self._config = self._get_config()
         print("Loading a DataContext - this might take a moment.")
 
-        # suppress warnings about GX version
-        with warnings.catch_warnings(record=True):
+        with warnings.catch_warnings():
+            # suppress warnings about GX version
+            warnings.filterwarnings("ignore", message="You are using great_expectations version")
             self._context: CloudDataContext = get_context(cloud_mode=True)
+
         print("DataContext is ready.")
 
         # Create a thread pool with a single worker, so we can run long-lived
