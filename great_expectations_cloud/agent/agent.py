@@ -18,6 +18,7 @@ from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 
 from great_expectations_cloud.agent.config import GxAgentEnvVars
+from great_expectations_cloud.agent.constants import USER_AGENT_HEADER
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
 )
@@ -40,6 +41,7 @@ from great_expectations_cloud.agent.models import (
 )
 
 if TYPE_CHECKING:
+    import requests
     from great_expectations.data_context import CloudDataContext
     from typing_extensions import Self
 
@@ -79,6 +81,7 @@ class GXAgent:
         agent_version: str = self._get_current_gx_agent_version()
         print(f"Initializing the GX Agent version: {agent_version}.")
         self._config = self._get_config()
+        self._set_user_agent_header()
         print("Loading a DataContext - this might take a moment.")
 
         with warnings.catch_warnings():
@@ -286,6 +289,26 @@ class GXAgent:
         session = create_session(access_token=self._config.gx_cloud_access_token)
         data = status.json()
         session.patch(agent_sessions_url, data=data)
+
+    @staticmethod
+    def _set_user_agent_header() -> None:
+        """Set the User-Agent header for requests to GX Cloud."""
+        from great_expectations import __version__
+        from great_expectations.core import http
+
+        def _update_headers_agent_patch(
+            session: requests.Session, access_token: str
+        ) -> requests.Session:
+            headers = {
+                "Content-Type": "application/vnd.api+json",
+                "Authorization": f"Bearer {access_token}",
+                "Gx-Version": __version__,
+                "User-Agent": USER_AGENT_HEADER,
+            }
+            session.headers.update(headers)
+            return session
+
+        http._update_headers = _update_headers_agent_patch
 
 
 class GXAgentError(Exception):
