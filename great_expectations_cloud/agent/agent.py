@@ -6,9 +6,9 @@ from collections import defaultdict
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
+from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Dict, Final, Optional
 
-import pkg_resources  # type: ignore
 from great_expectations import get_context
 from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
@@ -121,7 +121,8 @@ class GXAgent:
                 subscriber.close()
 
     def _get_current_gx_agent_version(self) -> str:
-        version: str = pkg_resources.get_distribution(self._PYPI_GX_AGENT_PACKAGE_NAME).version
+        version: str = metadata_version(self._PYPI_GX_AGENT_PACKAGE_NAME)
+        print(f"GX Agent version: {version}")
         return version
 
     def _handle_event_as_thread_enter(self, event_context: EventContext) -> None:
