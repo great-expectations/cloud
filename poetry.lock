@@ -3887,4 +3887,4 @@ snowflake = []
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "54a1a75b5df782b0ddaeddf6f4ef116597295b98d8a186885a860151f96af84d"
+content-hash = "8ad1f0d6c3b72770be45ad04e4d410a5f696c058e9b3013c8bf96c025d289552"
