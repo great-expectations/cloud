@@ -8,8 +8,8 @@ from collections import defaultdict
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
-from typing import TYPE_CHECKING, Dict, Final
 from importlib.metadata import version as metadata_version
+from typing import TYPE_CHECKING, Dict, Final
 
 from great_expectations import get_context
 from great_expectations.compatibility import pydantic
