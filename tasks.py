@@ -57,12 +57,22 @@ def fmt(ctx: Context, check: bool = False) -> None:
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
-@invoke.task
-def lint(ctx: Context, check: bool = False) -> None:
+@invoke.task(
+    help={
+        "check": "Check code without fixing it",
+        "safe": "Run safe fixes only. See https://docs.astral.sh/ruff/linter/#fix-safety",
+    }
+)
+def lint(ctx: Context, check: bool = False, safe: bool = False) -> None:
     """Lint and fix code with ruff"""
     cmds = ["ruff", "."]
     if not check:
         cmds.append("--fix")
+    if not safe:
+        # safe fixes are not enabled by default but generally if a developer is running
+        # this task they want to fix everything
+        cmds.append("--unsafe-fixes")
+        cmds.append("--show-fixes")
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
