@@ -16,6 +16,7 @@ from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
+from packaging.version import Version
 
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER
@@ -296,6 +297,13 @@ class GXAgent:
         from great_expectations import __version__
         from great_expectations.core import http
 
+        if Version(__version__) > Version(
+            "0.19"  # using 0.19 instead of 1.0 to account for pre-releases
+        ):
+            # TODO: public API should be available in v1
+            LOGGER.info("Unable to set User-Agent header for requests to GX Cloud")
+            return
+
         def _update_headers_agent_patch(
             session: requests.Session, access_token: str
         ) -> requests.Session:
@@ -308,6 +316,8 @@ class GXAgent:
             session.headers.update(headers)
             return session
 
+        # TODO: this is relying on a private implementation detail
+        # use a public API once it is available
         http._update_headers = _update_headers_agent_patch
 
 
