@@ -82,7 +82,7 @@ class GXAgent:
         agent_version: str = self._get_current_gx_agent_version()
         print(f"Initializing the GX Agent version: {agent_version}.")
         self._config = self._get_config()
-        self._set_user_agent_header()
+        self._set_http_session_headers()
         print("Loading a DataContext - this might take a moment.")
 
         with warnings.catch_warnings():
@@ -153,6 +153,9 @@ class GXAgent:
             loop = asyncio.get_event_loop()
             loop.create_task(event_context.redeliver_message())
             return
+
+        # ensusre that great_expectations.http requests to GX Cloud include the job_id/correlation_id
+        self._set_http_session_headers(correlation_id=event_context.correlation_id)
 
         # send this message to a thread for processing
         self._current_task = self._executor.submit(self._handle_event, event_context=event_context)
@@ -292,8 +295,11 @@ class GXAgent:
         session.patch(agent_sessions_url, data=data)
 
     @staticmethod
-    def _set_user_agent_header() -> None:
-        """Set the User-Agent header for requests to GX Cloud."""
+    def _set_http_session_headers(correlation_id: str | None = None) -> None:
+        """
+        Set the the session headers for requests to GX Cloud.
+        In particular, set the User-Agent header to identify the GX Agent and the correlation_id if provided.
+        """
         from great_expectations import __version__
         from great_expectations.core import http
 
@@ -313,6 +319,8 @@ class GXAgent:
                 "Gx-Version": __version__,
                 "User-Agent": USER_AGENT_HEADER,
             }
+            if correlation_id:
+                headers["Correlation-Id"] = correlation_id
             session.headers.update(headers)
             return session
 
