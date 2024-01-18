@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.sqlalchemy import inspect
@@ -31,7 +33,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
             )
 
         inspector: Inspector = inspect(datasource.get_engine())
-        table_names: List[str] = inspector.get_table_names()
+        table_names: list[str] = inspector.get_table_names()
 
         self._add_or_update_table_names_list(
             datasource_id=str(datasource.id), table_names=table_names
@@ -43,7 +45,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
             created_resources=[],
         )
 
-    def _add_or_update_table_names_list(self, datasource_id: str, table_names: List[str]) -> None:
+    def _add_or_update_table_names_list(self, datasource_id: str, table_names: list[str]) -> None:
         try:
             cloud_config = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:

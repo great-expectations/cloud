@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 import requests
 from tenacity import retry, stop_after_delay

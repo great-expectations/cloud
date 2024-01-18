@@ -1,18 +1,22 @@
+from __future__ import annotations
+
 import asyncio
 import time
 from dataclasses import dataclass
 from functools import partial
 from json import JSONDecodeError
-from typing import Callable, Coroutine, Union
+from typing import TYPE_CHECKING, Callable, Coroutine, Union
 
 from great_expectations.compatibility import pydantic
 from pika.exceptions import AMQPError, ChannelError
 
-from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
-    AsyncRabbitMQClient,
-    OnMessagePayload,
-)
 from great_expectations_cloud.agent.models import Event, UnknownEvent
+
+if TYPE_CHECKING:
+    from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
+        AsyncRabbitMQClient,
+        OnMessagePayload,
+    )
 
 
 @dataclass(frozen=True)
