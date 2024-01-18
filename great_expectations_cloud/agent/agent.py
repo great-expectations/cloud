@@ -3,11 +3,13 @@ from __future__ import annotations
 import asyncio
 import logging
 import traceback
+import warnings
 from collections import defaultdict
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from typing import TYPE_CHECKING, Dict, Final
+from importlib.metadata import version as metadata_version
 
 from great_expectations import get_context
 from great_expectations.compatibility import pydantic
@@ -44,7 +46,6 @@ if TYPE_CHECKING:
     from great_expectations_cloud.agent.actions.agent_action import ActionResult
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
-
 HandlerMap = Dict[str, OnMessageCallback]
 
 
@@ -72,11 +73,19 @@ class GXAgent:
     user events triggered from the UI.
     """
 
+    _PYPI_GX_AGENT_PACKAGE_NAME = "great_expectations_cloud"
+
     def __init__(self: Self):
-        print("Initializing the GX Agent")
+        agent_version: str = self._get_current_gx_agent_version()
+        print(f"Initializing the GX Agent version: {agent_version}.")
         self._config = self._get_config()
         print("Loading a DataContext - this might take a moment.")
-        self._context: CloudDataContext = get_context(cloud_mode=True)
+
+        with warnings.catch_warnings():
+            # suppress warnings about GX version
+            warnings.filterwarnings("ignore", message="You are using great_expectations version")
+            self._context: CloudDataContext = get_context(cloud_mode=True)
+
         print("DataContext is ready.")
 
         # Create a thread pool with a single worker, so we can run long-lived
@@ -113,6 +122,11 @@ class GXAgent:
         finally:
             if subscriber is not None:
                 subscriber.close()
+
+    def _get_current_gx_agent_version(self) -> str:
+        version: str = metadata_version(self._PYPI_GX_AGENT_PACKAGE_NAME)
+        print(f"GX Agent version: {version}")
+        return version
 
     def _handle_event_as_thread_enter(self, event_context: EventContext) -> None:
         """Schedule _handle_event to run in a thread.
