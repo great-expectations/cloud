@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import logging
-
 import pytest
 from great_expectations import __version__ as gx_version
 from packaging.version import Version
@@ -21,10 +19,3 @@ def mock_gx_version_check(
         _mock_get_lastest_version_from_pypi,
         raising=True,
     )
-
-
-@pytest.fixture
-def gx_logging_info(caplog: pytest.LogCaptureFixture) -> pytest.LogCaptureFixture:
-    """Set up logging for the gx package"""
-    with caplog.at_level(logging.INFO, logger="great_expectations"):
-        yield caplog

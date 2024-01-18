@@ -236,7 +236,6 @@ def test_gx_agent_updates_cloud_on_job_status(
 
 
 def test_custom_user_agent(
-    gx_logging_info,
     mock_gx_version_check: None,
     set_required_env_vars: None,
     gx_agent_config: GXAgentConfig,
