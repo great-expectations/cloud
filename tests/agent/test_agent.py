@@ -21,10 +21,12 @@ from great_expectations_cloud.agent.message_service.subscriber import (
     SubscriberError,
 )
 from great_expectations_cloud.agent.models import (
+    DraftDatasourceConfigEvent,
     JobCompleted,
     JobStarted,
     RunOnboardingDataAssistantEvent,
 )
+from tests.agent.conftest import FakeSubscriber
 
 
 @pytest.fixture(autouse=True)
@@ -265,9 +267,16 @@ def test_correlation_id_header(
     mock_gx_version_check: None,
     set_required_env_vars: None,
     gx_agent_config: GXAgentConfig,
-    fake_subscriber,
+    fake_subscriber: FakeSubscriber,
 ):
     """Ensure correlation-id header is set on GX Cloud api calls."""
+    agent_job_id = uuid.uuid4()
+    datasource_config_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
+    # seed the fake queue with an event that will be consumed by the agent
+    fake_subscriber.test_queue.append(
+        (DraftDatasourceConfigEvent(config_id=datasource_config_id), str(agent_job_id))
+    )
+
     base_url = gx_agent_config.gx_cloud_base_url
     org_id = gx_agent_config.gx_cloud_organization_id
     with responses.RequestsMock() as rsps:
@@ -283,6 +292,14 @@ def test_correlation_id_header(
                 "stores": {},
             },
         )
+        rsps.add(
+            responses.GET,
+            f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id}",
+            json={},
+            # match will fail if correlation-id header is not set
+            match=[
+                responses.matchers.header_matcher({HeaderName.CORRELATION_ID: str(agent_job_id)})
+            ],
+        )
         agent = GXAgent()
-        # TODO: mock subscriber.consume() to return an event context with a correlation id
         agent.run()

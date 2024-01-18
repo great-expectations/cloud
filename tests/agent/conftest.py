@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 import logging
+import time
 from collections import deque
-from typing import Any
+from typing import Any, NamedTuple
 
 import pytest
 from great_expectations import __version__ as gx_version
 from packaging.version import Version
 from typing_extensions import override
 
-from great_expectations_cloud.agent.message_service.subscriber import OnMessageCallback, Subscriber
+from great_expectations_cloud.agent.message_service.subscriber import (
+    EventContext,
+    OnMessageCallback,
+    Subscriber,
+)
 from great_expectations_cloud.agent.models import Event
 
 LOGGER = logging.getLogger(__name__)
@@ -31,10 +36,22 @@ def mock_gx_version_check(
     )
 
 
-class FakeSubscriber(Subscriber):
-    test_queue: deque[Event]
+class FakeMessagePayload(NamedTuple):
+    """
+    Fake message payload for testing purposes
+    The real payload is a JSON string which must be parsed into an Event
+    """
 
-    def __init__(self, client: Any, test_events: list[Event] | None = None):
+    event: Event
+    correlation_id: str
+
+
+class FakeSubscriber(Subscriber):
+    test_queue: deque[FakeMessagePayload | tuple[Event, str]]
+
+    def __init__(
+        self, client: Any, test_events: list[FakeMessagePayload | tuple[Event, str]] | None = None
+    ):
         self.client = client
         self.test_queue = deque()
         if test_events:
@@ -42,11 +59,21 @@ class FakeSubscriber(Subscriber):
 
     @override
     def consume(self, queue: str, on_message: OnMessageCallback) -> None:
-        print(on_message)
+        LOGGER.info(f"{on_message=}")
         while self.test_queue:
-            # TODO: parse and handle the event
-            msg = self.test_queue.pop()
-            LOGGER.info(f"FakeSubscriber.consume() received {msg}")
+            # TODO: correleation_id needs to be part of the queue message
+            event, correlation_id = self.test_queue.pop()
+            LOGGER.info(f"FakeSubscriber.consume() received -> {event!r}")
+            event_context = EventContext(
+                event=event,
+                correlation_id=correlation_id,
+                processed_successfully=lambda: None,
+                processed_with_failures=lambda: None,
+                redeliver_message=lambda: None,
+            )
+            on_message(event_context)
+            # allow time for thread to process the event
+            time.sleep(0.2)
 
     @override
     def close(self) -> None:
