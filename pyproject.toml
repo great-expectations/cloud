@@ -154,6 +154,7 @@ runtime-evaluated-base-classes = [
     "pydantic.BaseModel",
     "pydantic.v1.BaseModel",
     "great_expectations_cloud.agent.models.AgentBaseModel",
+    "great_expectations_cloud.agent.models.EventBase",
     "great_expectations.datasource.fluent.fluent_base_model.FluentBaseModel",
     "great_expectations.datasource.fluent.interfaces.Datasource",
     "great_expectations.datasource.fluent.sql_datasource.SQLDatasource",
