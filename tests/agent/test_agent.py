@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import os
+import uuid
 from time import sleep
 from typing import Callable
 from unittest.mock import call
 
 import pytest
+import responses
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
@@ -34,7 +36,7 @@ def set_required_env_vars(monkeypatch, org_id, token):
 
 
 @pytest.fixture
-def gx_agent_config(queue, connection_string, org_id, token):
+def gx_agent_config(queue, connection_string, org_id, token) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
@@ -230,3 +232,76 @@ def test_gx_agent_updates_cloud_on_job_status(
             call(url, data=job_completed_data),
         ],
     )
+
+
+def test_custom_user_agent(
+    gx_logging_info,
+    mock_gx_version_check: None,
+    set_required_env_vars: None,
+    gx_agent_config: GXAgentConfig,
+):
+    """Ensure custom User-Agent header is set on GX Cloud api calls."""
+    base_url = gx_agent_config.gx_cloud_base_url
+    org_id = gx_agent_config.gx_cloud_organization_id
+    with responses.RequestsMock() as rsps:
+        rsps.add(
+            responses.GET,
+            f"{base_url}/organizations/{org_id}/data-context-configuration",
+            # TODO: move the elsewhere (use VCR'ish yaml?)
+            json={
+                "anonymous_usage_statistics": {
+                    "data_context_id": str(uuid.uuid4()),
+                    "enabled": False,
+                },
+                "datasources": {},
+                "checkpoint_store_name": "default_checkpoint_store",
+                "expectations_store_name": "default_expectations_store",
+                "evaluation_parameter_store_name": "default_evaluation_parameter_store",
+                "validations_store_name": "default_validations_store",
+                "stores": {
+                    "default_evaluation_parameter_store": {
+                        "class_name": "EvaluationParameterStore"
+                    },
+                    "default_expectations_store": {
+                        "class_name": "ExpectationsStore",
+                        "store_backend": {
+                            "class_name": "GXCloudStoreBackend",
+                            "ge_cloud_base_url": r"${GX_CLOUD_BASE_URL}",
+                            "ge_cloud_credentials": {
+                                "access_token": r"${GX_CLOUD_ACCESS_TOKEN}",
+                                "organization_id": r"${GX_CLOUD_ORGANIZATION_ID}",
+                            },
+                            "ge_cloud_resource_type": "expectation_suite",
+                            "suppress_store_backend_id": True,
+                        },
+                    },
+                    "default_checkpoint_store": {
+                        "class_name": "CheckpointStore",
+                        "store_backend": {
+                            "class_name": "GXCloudStoreBackend",
+                            "ge_cloud_base_url": r"${GX_CLOUD_BASE_URL}",
+                            "ge_cloud_credentials": {
+                                "access_token": r"${GX_CLOUD_ACCESS_TOKEN}",
+                                "organization_id": r"${GX_CLOUD_ORGANIZATION_ID}",
+                            },
+                            "ge_cloud_resource_type": "checkpoint",
+                            "suppress_store_backend_id": True,
+                        },
+                    },
+                    "default_validations_store": {
+                        "class_name": "ValidationsStore",
+                        "store_backend": {
+                            "class_name": "GXCloudStoreBackend",
+                            "ge_cloud_base_url": r"${GX_CLOUD_BASE_URL}",
+                            "ge_cloud_credentials": {
+                                "access_token": r"${GX_CLOUD_ACCESS_TOKEN}",
+                                "organization_id": r"${GX_CLOUD_ORGANIZATION_ID}",
+                            },
+                            "ge_cloud_resource_type": "validation_result",
+                            "suppress_store_backend_id": True,
+                        },
+                    },
+                },
+            },
+        )
+        GXAgent()
