@@ -247,7 +247,6 @@ def test_custom_user_agent(
         rsps.add(
             responses.GET,
             f"{base_url}/organizations/{org_id}/data-context-configuration",
-            # TODO: move the elsewhere (use VCR'ish yaml?)
             json={
                 "anonymous_usage_statistics": {
                     "data_context_id": str(uuid.uuid4()),
