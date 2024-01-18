@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "0.0.18"
+version = "0.0.19.dev0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -49,7 +49,7 @@ pytest = "^7.4.0"
 pytest-icdiff = "*"
 pytest-mock = "*"
 responses = "^0.23.1"
-ruff = "~0.1"
+ruff = "~0.1.13"
 tenacity = "^8.2.3"
 tomlkit = "^0.12.1"
 typing_extensions = ">=4.4.0"
@@ -136,10 +136,15 @@ ignore = [
     # minimal cost for standard lib imports; keep this disabled
     "TCH003", # typing-only-standard-library-import
     # gives false positives if we use try imports and type-checking import
-    "TCH004", # runtime-import-in-type-checking-block
     "TID252", # Relative imports from parent modules are banned
     # https://beta.ruff.rs/docs/rules/#flake8-use-pathlib-pth
     "PTH123", # pathlib-open - this would force pathlib usage anytime open or with open was used.
+]
+# https://docs.astral.sh/ruff/linter/#fix-safety
+extend-safe-fixes = [
+    # pydantic models use annotations at runtime and need to be accounted for
+    # these are safe to apply automatically given settings for tool.ruff.flake8-type-checking
+    "TCH", # https://beta.ruff.rs/docs/rules/#flake8-type-checking-tch
 ]
 
 [tool.ruff.flake8-type-checking]
@@ -147,11 +152,17 @@ ignore = [
 runtime-evaluated-base-classes = [
     # NOTE: ruff is unable to detect that these are subclasses of pydantic.BaseModel
     "pydantic.BaseModel",
+    "pydantic.v1.BaseModel",
+    "great_expectations_cloud.agent.models.AgentBaseModel",
+    "great_expectations_cloud.agent.models.EventBase",
     "great_expectations.datasource.fluent.fluent_base_model.FluentBaseModel",
     "great_expectations.datasource.fluent.interfaces.Datasource",
     "great_expectations.datasource.fluent.sql_datasource.SQLDatasource",
 ]
 runtime-evaluated-decorators = ["pydantic.dataclasses.dataclass"]
+
+[tool.ruff.isort]
+required-imports = ["from __future__ import annotations"]
 
 [tool.ruff.mccabe]
 max-complexity = 10
@@ -167,6 +178,9 @@ max-complexity = 10
 "__init__.py" = [
     "F401", # unused import
     "F403", # star imports
+]
+"models.py" = [
+    "UP007", # non-pep604-annotation - pydantic models use annotations at runtime
 ]
 
 [tool.pytest.ini_options]

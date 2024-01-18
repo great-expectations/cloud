@@ -57,12 +57,19 @@ def fmt(ctx: Context, check: bool = False) -> None:
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
-@invoke.task
-def lint(ctx: Context, check: bool = False) -> None:
+@invoke.task(
+    help={
+        "check": "Check code without fixing it",
+        "unsafe-fixes": "Apply 'un-safe' fixes. See https://docs.astral.sh/ruff/linter/#fix-safety",
+    }
+)
+def lint(ctx: Context, check: bool = False, unsafe_fixes: bool = False) -> None:
     """Lint and fix code with ruff"""
     cmds = ["ruff", "."]
     if not check:
         cmds.append("--fix")
+    if unsafe_fixes:
+        cmds.extend(["--unsafe-fixes", "--show-fixes"])
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
