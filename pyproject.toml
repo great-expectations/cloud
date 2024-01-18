@@ -158,7 +158,6 @@ runtime-evaluated-base-classes = [
     "great_expectations.datasource.fluent.fluent_base_model.FluentBaseModel",
     "great_expectations.datasource.fluent.interfaces.Datasource",
     "great_expectations.datasource.fluent.sql_datasource.SQLDatasource",
-    "great_expectations_cloud.agent.models.AgentBaseModel",
 ]
 runtime-evaluated-decorators = ["pydantic.dataclasses.dataclass"]
 
