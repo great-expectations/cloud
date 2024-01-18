@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import traceback
@@ -5,16 +7,14 @@ from collections import defaultdict
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
-from typing import TYPE_CHECKING, Dict, Final, Optional
+from typing import TYPE_CHECKING, Dict, Final
 
 from great_expectations import get_context
 from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
-from typing_extensions import Self
 
-from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
@@ -39,6 +39,9 @@ from great_expectations_cloud.agent.models import (
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
+    from typing_extensions import Self
+
+    from great_expectations_cloud.agent.actions.agent_action import ActionResult
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -81,7 +84,7 @@ class GXAgent:
         # the CloudDataContext cached here is used by the worker, so
         # it isn't safe to increase the number of workers running GX jobs.
         self._executor = ThreadPoolExecutor(max_workers=1)
-        self._current_task: Optional[Future] = None
+        self._current_task: Future | None = None
         self._correlation_ids: defaultdict = defaultdict(lambda: 0)
 
     def run(self) -> None:
