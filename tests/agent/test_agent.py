@@ -254,54 +254,7 @@ def test_custom_user_agent(
                     "enabled": False,
                 },
                 "datasources": {},
-                "checkpoint_store_name": "default_checkpoint_store",
-                "expectations_store_name": "default_expectations_store",
-                "evaluation_parameter_store_name": "default_evaluation_parameter_store",
-                "validations_store_name": "default_validations_store",
-                "stores": {
-                    "default_evaluation_parameter_store": {
-                        "class_name": "EvaluationParameterStore"
-                    },
-                    "default_expectations_store": {
-                        "class_name": "ExpectationsStore",
-                        "store_backend": {
-                            "class_name": "GXCloudStoreBackend",
-                            "ge_cloud_base_url": r"${GX_CLOUD_BASE_URL}",
-                            "ge_cloud_credentials": {
-                                "access_token": r"${GX_CLOUD_ACCESS_TOKEN}",
-                                "organization_id": r"${GX_CLOUD_ORGANIZATION_ID}",
-                            },
-                            "ge_cloud_resource_type": "expectation_suite",
-                            "suppress_store_backend_id": True,
-                        },
-                    },
-                    "default_checkpoint_store": {
-                        "class_name": "CheckpointStore",
-                        "store_backend": {
-                            "class_name": "GXCloudStoreBackend",
-                            "ge_cloud_base_url": r"${GX_CLOUD_BASE_URL}",
-                            "ge_cloud_credentials": {
-                                "access_token": r"${GX_CLOUD_ACCESS_TOKEN}",
-                                "organization_id": r"${GX_CLOUD_ORGANIZATION_ID}",
-                            },
-                            "ge_cloud_resource_type": "checkpoint",
-                            "suppress_store_backend_id": True,
-                        },
-                    },
-                    "default_validations_store": {
-                        "class_name": "ValidationsStore",
-                        "store_backend": {
-                            "class_name": "GXCloudStoreBackend",
-                            "ge_cloud_base_url": r"${GX_CLOUD_BASE_URL}",
-                            "ge_cloud_credentials": {
-                                "access_token": r"${GX_CLOUD_ACCESS_TOKEN}",
-                                "organization_id": r"${GX_CLOUD_ORGANIZATION_ID}",
-                            },
-                            "ge_cloud_resource_type": "validation_result",
-                            "suppress_store_backend_id": True,
-                        },
-                    },
-                },
+                "stores": {},
             },
             # match will fail if the User-Agent header is not set
             match=[responses.matchers.header_matcher({"User-Agent": USER_AGENT_HEADER})],
