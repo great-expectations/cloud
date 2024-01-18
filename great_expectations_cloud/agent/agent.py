@@ -19,7 +19,7 @@ from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_U
 from packaging.version import Version
 
 from great_expectations_cloud.agent.config import GxAgentEnvVars
-from great_expectations_cloud.agent.constants import USER_AGENT_HEADER
+from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
 )
@@ -317,10 +317,10 @@ class GXAgent:
                 "Content-Type": "application/vnd.api+json",
                 "Authorization": f"Bearer {access_token}",
                 "Gx-Version": __version__,
-                "User-Agent": USER_AGENT_HEADER,
+                HeaderName.USER_AGENT: USER_AGENT_HEADER,
             }
             if correlation_id:
-                headers["Correlation-Id"] = correlation_id
+                headers[HeaderName.CORRELATION_ID] = correlation_id
             session.headers.update(headers)
             return session
 
