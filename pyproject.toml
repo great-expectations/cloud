@@ -140,9 +140,12 @@ ignore = [
     # https://beta.ruff.rs/docs/rules/#flake8-use-pathlib-pth
     "PTH123", # pathlib-open - this would force pathlib usage anytime open or with open was used.
 ]
-
-[tool.ruff.isort]
-required-imports = ["from __future__ import annotations"]
+# https://docs.astral.sh/ruff/linter/#fix-safety
+extend-safe-fixes = [
+    # pydantic models use annotations at runtime and need to be accounted for
+    # these are safe to apply automatically given settings for tool.ruff.flake8-type-checking
+    "TCH", # https://beta.ruff.rs/docs/rules/#flake8-type-checking-tch
+]
 
 [tool.ruff.flake8-type-checking]
 # pydantic models use annotations at runtime
@@ -156,6 +159,9 @@ runtime-evaluated-base-classes = [
     "great_expectations_cloud.agent.models.AgentBaseModel",
 ]
 runtime-evaluated-decorators = ["pydantic.dataclasses.dataclass"]
+
+[tool.ruff.isort]
+required-imports = ["from __future__ import annotations"]
 
 [tool.ruff.mccabe]
 max-complexity = 10
