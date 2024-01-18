@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 from functools import partial
 from json import JSONDecodeError
-from typing import TYPE_CHECKING, Callable, Coroutine, Union
+from typing import TYPE_CHECKING, Callable, Coroutine
 
 from great_expectations.compatibility import pydantic
 from pika.exceptions import AMQPError, ChannelError
@@ -136,7 +136,7 @@ class Subscriber:
         self,
         delivery_tag: int,
         requeue: bool = True,
-        delay: Union[float, int] = 3,  # noqa: PYI041
+        delay: float | int = 3,  # noqa: PYI041
     ) -> None:
         """Coroutine to request a redelivery with delay."""
         # not threadsafe
