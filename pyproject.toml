@@ -179,6 +179,9 @@ max-complexity = 10
     "F401", # unused import
     "F403", # star imports
 ]
+"models.py" = [
+    "UP007", # non-pep604-annotation - pydantic models use annotations at runtime
+]
 
 [tool.pytest.ini_options]
 markers =[
