@@ -12,7 +12,7 @@ import responses
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.agent import GXAgentConfig
-from great_expectations_cloud.agent.constants import USER_AGENT_HEADER
+from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
 )
@@ -256,6 +256,33 @@ def test_custom_user_agent(
                 "stores": {},
             },
             # match will fail if the User-Agent header is not set
-            match=[responses.matchers.header_matcher({"User-Agent": USER_AGENT_HEADER})],
+            match=[responses.matchers.header_matcher({HeaderName.USER_AGENT: USER_AGENT_HEADER})],
         )
         GXAgent()
+
+
+def test_correlation_id_header(
+    mock_gx_version_check: None,
+    set_required_env_vars: None,
+    gx_agent_config: GXAgentConfig,
+    fake_subscriber,
+):
+    """Ensure correlation-id header is set on GX Cloud api calls."""
+    base_url = gx_agent_config.gx_cloud_base_url
+    org_id = gx_agent_config.gx_cloud_organization_id
+    with responses.RequestsMock() as rsps:
+        rsps.add(
+            responses.GET,
+            f"{base_url}/organizations/{org_id}/data-context-configuration",
+            json={
+                "anonymous_usage_statistics": {
+                    "data_context_id": str(uuid.uuid4()),
+                    "enabled": False,
+                },
+                "datasources": {},
+                "stores": {},
+            },
+        )
+        agent = GXAgent()
+        # TODO: mock subscriber.consume() to return an event context with a correlation id
+        agent.run()
