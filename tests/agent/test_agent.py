@@ -12,6 +12,7 @@ import responses
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.agent import GXAgentConfig
+from great_expectations_cloud.agent.constants import USER_AGENT_HEADER
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
 )
@@ -303,5 +304,7 @@ def test_custom_user_agent(
                     },
                 },
             },
+            # match will fail if the User-Agent header is not set
+            match=[responses.matchers.header_matcher({"User-Agent": USER_AGENT_HEADER})],
         )
         GXAgent()
