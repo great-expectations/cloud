@@ -141,6 +141,9 @@ ignore = [
     "PTH123", # pathlib-open - this would force pathlib usage anytime open or with open was used.
 ]
 
+[tool.ruff.isort]
+required-imports = ["from __future__ import annotations"]
+
 [tool.ruff.flake8-type-checking]
 # pydantic models use annotations at runtime
 runtime-evaluated-base-classes = [
