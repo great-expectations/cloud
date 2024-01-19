@@ -298,7 +298,11 @@ class GXAgent:
     def _set_http_session_headers(correlation_id: str | None = None) -> None:
         """
         Set the the session headers for requests to GX Cloud.
-        In particular, set the User-Agent header to identify the GX Agent and the correlation_id if provided.
+        In particular, set the User-Agent header to identify the GX Agent and the correlation_id as
+        Agent-Job-id if provided.
+
+        Note: the Agent-Job-Id header value will be set for all GX Cloud request until this method is
+        called again.
         """
         from great_expectations import __version__
         from great_expectations.core import http
@@ -307,7 +311,9 @@ class GXAgent:
             "0.19"  # using 0.19 instead of 1.0 to account for pre-releases
         ):
             # TODO: public API should be available in v1
-            LOGGER.info("Unable to set User-Agent header for requests to GX Cloud")
+            LOGGER.info(
+                f"Unable to set {HeaderName.USER_AGENT} or {HeaderName.AGENT_JOB_ID} header for requests to GX Cloud"
+            )
             return
 
         def _update_headers_agent_patch(
