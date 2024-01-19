@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 import os
+import uuid
 from time import sleep
 from typing import Callable
 from unittest.mock import call
 
 import pytest
+import responses
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.agent import GXAgentConfig
+from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
 )
@@ -18,10 +21,12 @@ from great_expectations_cloud.agent.message_service.subscriber import (
     SubscriberError,
 )
 from great_expectations_cloud.agent.models import (
+    DraftDatasourceConfigEvent,
     JobCompleted,
     JobStarted,
     RunOnboardingDataAssistantEvent,
 )
+from tests.agent.conftest import FakeSubscriber
 
 
 @pytest.fixture(autouse=True)
@@ -34,7 +39,7 @@ def set_required_env_vars(monkeypatch, org_id, token):
 
 
 @pytest.fixture
-def gx_agent_config(queue, connection_string, org_id, token):
+def gx_agent_config(queue, connection_string, org_id, token) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
@@ -230,3 +235,91 @@ def test_gx_agent_updates_cloud_on_job_status(
             call(url, data=job_completed_data),
         ],
     )
+
+
+def test_custom_user_agent(
+    mock_gx_version_check: None,
+    set_required_env_vars: None,
+    gx_agent_config: GXAgentConfig,
+):
+    """Ensure custom User-Agent header is set on GX Cloud api calls."""
+    base_url = gx_agent_config.gx_cloud_base_url
+    org_id = gx_agent_config.gx_cloud_organization_id
+    with responses.RequestsMock() as rsps:
+        rsps.add(
+            responses.GET,
+            f"{base_url}/organizations/{org_id}/data-context-configuration",
+            json={
+                "anonymous_usage_statistics": {
+                    "data_context_id": str(uuid.uuid4()),
+                    "enabled": False,
+                },
+                "datasources": {},
+                "stores": {},
+            },
+            # match will fail if the User-Agent header is not set
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{GXAgent._get_current_gx_agent_version()}"
+                    }
+                )
+            ],
+        )
+        GXAgent()
+
+
+def test_correlation_id_header(
+    mock_gx_version_check: None,
+    set_required_env_vars: None,
+    gx_agent_config: GXAgentConfig,
+    fake_subscriber: FakeSubscriber,
+):
+    """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
+    agent_job_id_1 = uuid.uuid4()
+    datasource_config_id_1 = uuid.UUID("00000000-0000-0000-0000-000000000001")
+    agent_job_id_2 = uuid.uuid4()
+    datasource_config_id_2 = uuid.UUID("00000000-0000-0000-0000-000000000002")
+    # seed the fake queue with an event that will be consumed by the agent
+    fake_subscriber.test_queue.extend(
+        [
+            (DraftDatasourceConfigEvent(config_id=datasource_config_id_1), str(agent_job_id_1)),
+            (DraftDatasourceConfigEvent(config_id=datasource_config_id_2), str(agent_job_id_2)),
+        ]
+    )
+
+    base_url = gx_agent_config.gx_cloud_base_url
+    org_id = gx_agent_config.gx_cloud_organization_id
+    with responses.RequestsMock() as rsps:
+        rsps.add(
+            responses.GET,
+            f"{base_url}/organizations/{org_id}/data-context-configuration",
+            json={
+                "anonymous_usage_statistics": {
+                    "data_context_id": str(uuid.uuid4()),
+                    "enabled": False,
+                },
+                "datasources": {},
+                "stores": {},
+            },
+        )
+        rsps.add(
+            responses.GET,
+            f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_1}",
+            json={},
+            # match will fail if correlation-id header is not set
+            match=[
+                responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: str(agent_job_id_1)})
+            ],
+        )
+        rsps.add(
+            responses.GET,
+            f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_2}",
+            json={},
+            # match will fail if correlation-id header is not set
+            match=[
+                responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: str(agent_job_id_2)})
+            ],
+        )
+        agent = GXAgent()
+        agent.run()
