@@ -303,7 +303,7 @@ def test_correlation_id_header(
             json={},
             # match will fail if correlation-id header is not set
             match=[
-                responses.matchers.header_matcher({HeaderName.CORRELATION_ID: str(agent_job_id_1)})
+                responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: str(agent_job_id_1)})
             ],
         )
         rsps.add(
@@ -312,7 +312,7 @@ def test_correlation_id_header(
             json={},
             # match will fail if correlation-id header is not set
             match=[
-                responses.matchers.header_matcher({HeaderName.CORRELATION_ID: str(agent_job_id_2)})
+                responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: str(agent_job_id_2)})
             ],
         )
         agent = GXAgent()

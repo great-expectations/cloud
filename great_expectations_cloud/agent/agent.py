@@ -320,7 +320,7 @@ class GXAgent:
                 HeaderName.USER_AGENT: USER_AGENT_HEADER,
             }
             if correlation_id:
-                headers[HeaderName.CORRELATION_ID] = correlation_id
+                headers[HeaderName.AGENT_JOB_ID] = correlation_id
             session.headers.update(headers)
             return session
 
