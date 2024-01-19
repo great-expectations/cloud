@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import time
 from collections import deque
-from typing import Any, NamedTuple
+from typing import Any, Iterable, NamedTuple
 
 import pytest
 from great_expectations import __version__ as gx_version
@@ -47,10 +47,19 @@ class FakeMessagePayload(NamedTuple):
 
 
 class FakeSubscriber(Subscriber):
+    """
+    Fake Subscriber that pulls from a `.test_queue` in-memory deque (double-ended queue).
+
+    The deque is populated with FakeMessagePayloads or tuples of (Event, correlation_id) rather than JSON strings/bytes.
+    The real Subscriber pulls from a RabbitMQ queue and receives JSON strings/bytes which must be parsed into an Event.
+    """
+
     test_queue: deque[FakeMessagePayload | tuple[Event, str]]
 
     def __init__(
-        self, client: Any, test_events: list[FakeMessagePayload | tuple[Event, str]] | None = None
+        self,
+        client: Any,
+        test_events: Iterable[FakeMessagePayload | tuple[Event, str]] | None = None,
     ):
         self.client = client
         self.test_queue = deque()
@@ -59,9 +68,8 @@ class FakeSubscriber(Subscriber):
 
     @override
     def consume(self, queue: str, on_message: OnMessageCallback) -> None:
-        LOGGER.info(f"{on_message=}")
+        LOGGER.info(f"{self.__class__.__name__}.consume() called")
         while self.test_queue:
-            # TODO: correleation_id needs to be part of the queue message
             event, correlation_id = self.test_queue.pop()
             LOGGER.info(f"FakeSubscriber.consume() received -> {event!r}")
             event_context = EventContext(
@@ -69,10 +77,11 @@ class FakeSubscriber(Subscriber):
                 correlation_id=correlation_id,
                 processed_successfully=lambda: None,
                 processed_with_failures=lambda: None,
-                redeliver_message=lambda: None,
+                redeliver_message=lambda: None,  # type: ignore[arg-type,return-value] # should be Coroutine
             )
             on_message(event_context)
             # allow time for thread to process the event
+            # TODO: better solution for this might be to make the FakeSubscriber not run in a separate thread at all
             time.sleep(0.2)
 
     @override
