@@ -269,12 +269,17 @@ def test_correlation_id_header(
     gx_agent_config: GXAgentConfig,
     fake_subscriber: FakeSubscriber,
 ):
-    """Ensure correlation-id header is set on GX Cloud api calls."""
-    agent_job_id = uuid.uuid4()
-    datasource_config_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
+    """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
+    agent_job_id_1 = uuid.uuid4()
+    datasource_config_id_1 = uuid.UUID("00000000-0000-0000-0000-000000000001")
+    agent_job_id_2 = uuid.uuid4()
+    datasource_config_id_2 = uuid.UUID("00000000-0000-0000-0000-000000000002")
     # seed the fake queue with an event that will be consumed by the agent
-    fake_subscriber.test_queue.append(
-        (DraftDatasourceConfigEvent(config_id=datasource_config_id), str(agent_job_id))
+    fake_subscriber.test_queue.extend(
+        [
+            (DraftDatasourceConfigEvent(config_id=datasource_config_id_1), str(agent_job_id_1)),
+            (DraftDatasourceConfigEvent(config_id=datasource_config_id_2), str(agent_job_id_2)),
+        ]
     )
 
     base_url = gx_agent_config.gx_cloud_base_url
@@ -294,11 +299,20 @@ def test_correlation_id_header(
         )
         rsps.add(
             responses.GET,
-            f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id}",
+            f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_1}",
             json={},
             # match will fail if correlation-id header is not set
             match=[
-                responses.matchers.header_matcher({HeaderName.CORRELATION_ID: str(agent_job_id)})
+                responses.matchers.header_matcher({HeaderName.CORRELATION_ID: str(agent_job_id_1)})
+            ],
+        )
+        rsps.add(
+            responses.GET,
+            f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_2}",
+            json={},
+            # match will fail if correlation-id header is not set
+            match=[
+                responses.matchers.header_matcher({HeaderName.CORRELATION_ID: str(agent_job_id_2)})
             ],
         )
         agent = GXAgent()
