@@ -80,6 +80,7 @@ class GXAgent:
 
     def __init__(self: Self):
         agent_version: str = self._get_current_gx_agent_version()
+        print(f"GX Agent version: {agent_version}")
         print(f"Initializing the GX Agent version: {agent_version}.")
         self._config = self._get_config()
         self._set_http_session_headers()
@@ -127,9 +128,9 @@ class GXAgent:
             if subscriber is not None:
                 subscriber.close()
 
-    def _get_current_gx_agent_version(self) -> str:
-        version: str = metadata_version(self._PYPI_GX_AGENT_PACKAGE_NAME)
-        print(f"GX Agent version: {version}")
+    @classmethod
+    def _get_current_gx_agent_version(cls) -> str:
+        version: str = metadata_version(cls._PYPI_GX_AGENT_PACKAGE_NAME)
         return version
 
     def _handle_event_as_thread_enter(self, event_context: EventContext) -> None:
