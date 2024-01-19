@@ -295,8 +295,8 @@ class GXAgent:
         data = status.json()
         session.patch(agent_sessions_url, data=data)
 
-    @staticmethod
-    def _set_http_session_headers(correlation_id: str | None = None) -> None:
+    @classmethod
+    def _set_http_session_headers(cls, correlation_id: str | None = None) -> None:
         """
         Set the the session headers for requests to GX Cloud.
         In particular, set the User-Agent header to identify the GX Agent and the correlation_id as
@@ -324,7 +324,7 @@ class GXAgent:
                 "Content-Type": "application/vnd.api+json",
                 "Authorization": f"Bearer {access_token}",
                 "Gx-Version": __version__,
-                HeaderName.USER_AGENT: USER_AGENT_HEADER,
+                HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{cls._get_current_gx_agent_version()}",
             }
             if correlation_id:
                 headers[HeaderName.AGENT_JOB_ID] = correlation_id
