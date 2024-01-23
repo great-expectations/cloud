@@ -107,7 +107,7 @@ class GXAgent:
     def run(self) -> None:
         """Open a connection to GX Cloud."""
 
-        print("Opening connection to GX Cloud")
+        print("Opening connection to GX Cloud.")
         self._listen()
         print("Connection to GX Cloud has been closed.")
 
