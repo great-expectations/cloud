@@ -16,8 +16,10 @@ from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
+from packaging.version import Version
 
 from great_expectations_cloud.agent.config import GxAgentEnvVars
+from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
 )
@@ -40,6 +42,7 @@ from great_expectations_cloud.agent.models import (
 )
 
 if TYPE_CHECKING:
+    import requests
     from great_expectations.data_context import CloudDataContext
     from typing_extensions import Self
 
@@ -77,8 +80,10 @@ class GXAgent:
 
     def __init__(self: Self):
         agent_version: str = self._get_current_gx_agent_version()
-        print(f"Initializing the GX Agent version: {agent_version}.")
+        print(f"GX Agent version: {agent_version}")
+        print("Initializing the GX Agent.")
         self._config = self._get_config()
+        self._set_http_session_headers()
         print("Loading a DataContext - this might take a moment.")
 
         with warnings.catch_warnings():
@@ -123,9 +128,9 @@ class GXAgent:
             if subscriber is not None:
                 subscriber.close()
 
-    def _get_current_gx_agent_version(self) -> str:
-        version: str = metadata_version(self._PYPI_GX_AGENT_PACKAGE_NAME)
-        print(f"GX Agent version: {version}")
+    @classmethod
+    def _get_current_gx_agent_version(cls) -> str:
+        version: str = metadata_version(cls._PYPI_GX_AGENT_PACKAGE_NAME)
         return version
 
     def _handle_event_as_thread_enter(self, event_context: EventContext) -> None:
@@ -149,6 +154,9 @@ class GXAgent:
             loop = asyncio.get_event_loop()
             loop.create_task(event_context.redeliver_message())
             return
+
+        # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
+        self._set_http_session_headers(correlation_id=event_context.correlation_id)
 
         # send this message to a thread for processing
         self._current_task = self._executor.submit(self._handle_event, event_context=event_context)
@@ -286,6 +294,46 @@ class GXAgent:
         session = create_session(access_token=self._config.gx_cloud_access_token)
         data = status.json()
         session.patch(agent_sessions_url, data=data)
+
+    @classmethod
+    def _set_http_session_headers(cls, correlation_id: str | None = None) -> None:
+        """
+        Set the the session headers for requests to GX Cloud.
+        In particular, set the User-Agent header to identify the GX Agent and the correlation_id as
+        Agent-Job-id if provided.
+
+        Note: the Agent-Job-Id header value will be set for all GX Cloud request until this method is
+        called again.
+        """
+        from great_expectations import __version__
+        from great_expectations.core import http
+
+        if Version(__version__) > Version(
+            "0.19"  # using 0.19 instead of 1.0 to account for pre-releases
+        ):
+            # TODO: public API should be available in v1
+            LOGGER.info(
+                f"Unable to set {HeaderName.USER_AGENT} or {HeaderName.AGENT_JOB_ID} header for requests to GX Cloud"
+            )
+            return
+
+        def _update_headers_agent_patch(
+            session: requests.Session, access_token: str
+        ) -> requests.Session:
+            headers = {
+                "Content-Type": "application/vnd.api+json",
+                "Authorization": f"Bearer {access_token}",
+                "Gx-Version": __version__,
+                HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{cls._get_current_gx_agent_version()}",
+            }
+            if correlation_id:
+                headers[HeaderName.AGENT_JOB_ID] = correlation_id
+            session.headers.update(headers)
+            return session
+
+        # TODO: this is relying on a private implementation detail
+        # use a public API once it is available
+        http._update_headers = _update_headers_agent_patch
 
 
 class GXAgentError(Exception):
