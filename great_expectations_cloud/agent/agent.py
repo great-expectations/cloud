@@ -210,13 +210,12 @@ class GXAgent:
                 success=True,
                 created_resources=result.created_resources,
             )
-            print(f"Completed job {event_context.event.type} ({event_context.correlation_id})")
+            print(f"Completed job: {event_context.event.type} ({event_context.correlation_id})")
         else:
             status = JobCompleted(success=False, error_stack_trace=str(error))
             print(traceback.format_exc())
             print(
-                f"Failed to complete job {event_context.event.type} "
-                f"({event_context.correlation_id})"
+                f"Job completed with error: {event_context.event.type} ({event_context.correlation_id})"
             )
         self._update_status(job_id=event_context.correlation_id, status=status)
 
