@@ -31,12 +31,15 @@ packaging = "^21.3"
 snowflake = [
     "snowflake-sqlalchemy",
 ]
+postgres = [
+    "sqlalchemy",
+    "psycopg2",
+]
 
 [tool.poetry.group.sql.dependencies]
 great-expectations = { version = "^0.18.4", extras = [
     "databricks",
     "sqlalchemy1",
-    "postgres",
 ] }
 snowflake-sqlalchemy = ">=1.5.0"
 snowflake-connector-python = ">=3.3.1"

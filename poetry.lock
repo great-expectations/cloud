@@ -3907,9 +3907,10 @@ docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.link
 testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy (>=0.9.1)", "pytest-ruff"]
 
 [extras]
+postgres = []
 snowflake = []
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "57e94cb91077f73b54db11a5f2c0771565b2e165e1303eafdcf255adafafe545"
+content-hash = "73c50ddfa23d9d249b94cf5d767b072b5c0d7828f9100dcbf579e5f4938a5fb0"
