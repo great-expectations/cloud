@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "0.0.21"
+version = "0.0.22"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -31,17 +31,21 @@ packaging = "^21.3"
 snowflake = [
     "snowflake-sqlalchemy",
 ]
+postgres = [
+    "sqlalchemy",
+    "psycopg2",
+]
 
 [tool.poetry.group.sql.dependencies]
 great-expectations = { version = "^0.18.4", extras = [
     "databricks",
     "sqlalchemy1",
-    "postgres",
 ] }
 snowflake-sqlalchemy = ">=1.5.0"
 snowflake-connector-python = ">=3.3.1"
 # TODO: Remove the python constraint once this PR is merged - https://github.com/sqlalchemy-redshift/sqlalchemy-redshift/pull/288
 sqlalchemy-redshift = {version = "^0.8.8", python = "<3.11"}
+pyscopg2 = "^66.0.2"
 
 [tool.poetry.group.dev.dependencies]
 invoke = "^2.2.0"
@@ -51,7 +55,7 @@ pytest = "^7.4.0"
 pytest-icdiff = "*"
 pytest-mock = "*"
 responses = "^0.23.1"
-ruff = "~0.1.13"
+ruff = "==0.1.13"
 tenacity = "^8.2.3"
 tomlkit = "^0.12.1"
 typing_extensions = ">=4.4.0"
