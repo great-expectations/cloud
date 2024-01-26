@@ -3,7 +3,7 @@
 
 version: 2
 updates:
-  - package-ecosystem: "poetry" # See documentation for possible values
+  - package-ecosystem: "pip" # Documentation: For package managers such as pipenv and poetry, you need to use the pip YAML value.
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
