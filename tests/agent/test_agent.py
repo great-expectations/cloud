@@ -284,7 +284,7 @@ def test_correlation_id_header(
     agent_job_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
     datasource_config_id_1 = uuid.UUID("00000000-0000-0000-0000-000000000001")
     datasource_config_id_2 = uuid.UUID("00000000-0000-0000-0000-000000000002")
-    checkpoint_id = uuid.UUID("00000000-0000-0000-0003-000000000000")
+    checkpoint_id = uuid.UUID("00000000-0000-0000-0000-000000000003")
     # seed the fake queue with an event that will be consumed by the agent
     fake_subscriber.test_queue.extendleft(
         [
@@ -325,7 +325,7 @@ def test_correlation_id_header(
                 responses.matchers.header_matcher(
                     {
                         HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{GXAgent._get_current_gx_agent_version()}",  # TODO: remove
-                        # HeaderName.AGENT_JOB_ID: agent_job_ids[2],  # TODO: uncomment
+                        HeaderName.AGENT_JOB_ID: agent_job_ids[2],
                     }
                 )
             ],
