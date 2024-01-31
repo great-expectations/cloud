@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import logging
 import time
+import uuid
 from collections import deque
-from typing import Any, Iterable, NamedTuple
+from typing import Any, Iterable, NamedTuple, TypedDict
 
 import pytest
 from great_expectations import __version__ as gx_version
@@ -95,3 +96,71 @@ def fake_subscriber(mocker) -> FakeSubscriber:
     subscriber = FakeSubscriber(client=object())
     mocker.patch("great_expectations_cloud.agent.agent.Subscriber", return_value=subscriber)
     return subscriber
+
+
+class DataContextConfigTD(TypedDict):
+    anonymous_usage_statistics: dict
+    checkpoint_store_name: str
+    datasources: dict
+    stores: dict
+
+
+@pytest.fixture
+def data_context_config() -> DataContextConfigTD:
+    """
+    Return a minimal DataContext config for testing.
+    This what GET /organizations/{id}/data-contexts/{id} should return.
+
+    See also:
+    https://github.com/great-expectations/great_expectations/blob/develop/tests/datasource/fluent/_fake_cloud_api.py
+    """
+    return {
+        "anonymous_usage_statistics": {
+            "data_context_id": str(uuid.uuid4()),
+            "enabled": False,
+        },
+        "checkpoint_store_name": "default_checkpoint_store",
+        "datasources": {},
+        "stores": {
+            "default_evaluation_parameter_store": {"class_name": "EvaluationParameterStore"},
+            "default_expectations_store": {
+                "class_name": "ExpectationsStore",
+                "store_backend": {
+                    "class_name": "GXCloudStoreBackend",
+                    "ge_cloud_base_url": r"${GX_CLOUD_BASE_URL}",
+                    "ge_cloud_credentials": {
+                        "access_token": r"${GX_CLOUD_ACCESS_TOKEN}",
+                        "organization_id": r"${GX_CLOUD_ORGANIZATION_ID}",
+                    },
+                    "ge_cloud_resource_type": "expectation_suite",
+                    "suppress_store_backend_id": True,
+                },
+            },
+            "default_checkpoint_store": {
+                "class_name": "CheckpointStore",
+                "store_backend": {
+                    "class_name": "GXCloudStoreBackend",
+                    "ge_cloud_base_url": r"${GX_CLOUD_BASE_URL}",
+                    "ge_cloud_credentials": {
+                        "access_token": r"${GX_CLOUD_ACCESS_TOKEN}",
+                        "organization_id": r"${GX_CLOUD_ORGANIZATION_ID}",
+                    },
+                    "ge_cloud_resource_type": "checkpoint",
+                    "suppress_store_backend_id": True,
+                },
+            },
+            "default_validations_store": {
+                "class_name": "ValidationsStore",
+                "store_backend": {
+                    "class_name": "GXCloudStoreBackend",
+                    "ge_cloud_base_url": r"${GX_CLOUD_BASE_URL}",
+                    "ge_cloud_credentials": {
+                        "access_token": r"${GX_CLOUD_ACCESS_TOKEN}",
+                        "organization_id": r"${GX_CLOUD_ORGANIZATION_ID}",
+                    },
+                    "ge_cloud_resource_type": "validation_result",
+                    "suppress_store_backend_id": True,
+                },
+            },
+        },
+    }
