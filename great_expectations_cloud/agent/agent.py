@@ -324,9 +324,15 @@ class GXAgent:
             )
             return
 
+        agent_version = cls._get_current_gx_agent_version()
+        LOGGER.info(
+            f"Setting session headers for GX Cloud. {HeaderName.USER_AGENT}:{agent_version} {HeaderName.AGENT_JOB_ID}:{correlation_id}"
+        )
+
         def _update_headers_agent_patch(
             session: requests.Session, access_token: str
         ) -> requests.Session:
+            LOGGER.debug("Updating headers for GX Cloud session")
             headers = {
                 "Content-Type": "application/vnd.api+json",
                 "Authorization": f"Bearer {access_token}",
