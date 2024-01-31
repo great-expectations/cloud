@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import logging
+from typing import Final
+
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.agent import GXAgentConfigError
+
+LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
 
 def run_agent() -> None:
@@ -10,4 +15,5 @@ def run_agent() -> None:
         agent = GXAgent()
         agent.run()
     except GXAgentConfigError as error:
-        print(error)
+        # catch error to avoid stacktrace printout
+        LOGGER.error(error)

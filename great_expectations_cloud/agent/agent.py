@@ -255,7 +255,7 @@ class GXAgent:
                 [f"{validation_error['loc'][0]}" for validation_error in validation_err.errors()]
             )
             raise GXAgentConfigError(
-                f"\nError: Missing or badly formed environment variable(s). Make sure to set the following environment variable(s): {missing_variables}\n"
+                f"Missing or badly formed environment variable(s). Make sure to set the following environment variable(s): {missing_variables}"
             ) from validation_err
 
         # obtain the broker url and queue name from Cloud
@@ -289,7 +289,7 @@ class GXAgent:
                 [f"{validation_error['loc'][0]}" for validation_error in validation_err.errors()]
             )
             raise GXAgentConfigError(
-                f"\nError: Missing or badly formed environment variable(s). Make sure to set the following environment variable(s): {missing_variables}\n"
+                f"Missing or badly formed environment variable(s). Make sure to set the following environment variable(s): {missing_variables}"
             ) from validation_err
 
     def _update_status(self, job_id: str, status: JobStatus) -> None:
