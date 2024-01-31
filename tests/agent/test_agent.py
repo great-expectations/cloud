@@ -281,7 +281,7 @@ def ds_config_factory() -> Callable[[str], dict[Literal["name", "type", "connect
     But will fail if trying to add a TableAsset because no tables exist for it.
     """
 
-    def _factory(name: str) -> dict[Literal["name", "type", "connection_string"], str]:
+    def _factory(name: str = "test-ds") -> dict[Literal["name", "type", "connection_string"], str]:
         return {
             "name": name,
             "type": "sqlite",
