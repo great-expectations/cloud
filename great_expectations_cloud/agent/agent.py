@@ -251,8 +251,11 @@ class GXAgent:
         try:
             env_vars = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:
-            raise GXAgentError(
-                f"Missing or badly formed environment variable\n{validation_err.errors()}"
+            missing_variables = ", ".join(
+                [f"{validation_error['loc'][0]}" for validation_error in validation_err.errors()]
+            )
+            raise GXAgentConfigError(
+                f"\nError: Missing or badly formed environment variable(s). Make sure to set the following environment variable(s): {missing_variables}\n"
             ) from validation_err
 
         # obtain the broker url and queue name from Cloud
@@ -266,7 +269,7 @@ class GXAgent:
 
         response = session.post(agent_sessions_url)
         if response.ok is not True:
-            raise GXAgentError("Unable to authenticate to Cloud. Please check your credentials.")
+            raise GXAgentError("Unable to authenticate to GX Cloud. Please check your credentials.")
 
         json_response = response.json()
         queue = json_response["queue"]
@@ -282,8 +285,11 @@ class GXAgent:
                 gx_cloud_access_token=env_vars.gx_cloud_access_token,
             )
         except pydantic.ValidationError as validation_err:
-            raise GXAgentError(
-                f"Missing or badly formed environment variable\n{validation_err.errors()}"
+            missing_variables = ", ".join(
+                [f"{validation_error['loc'][0]}" for validation_error in validation_err.errors()]
+            )
+            raise GXAgentConfigError(
+                f"\nError: Missing or badly formed environment variable(s). Make sure to set the following environment variable(s): {missing_variables}\n"
             ) from validation_err
 
     def _update_status(self, job_id: str, status: JobStatus) -> None:
@@ -307,7 +313,7 @@ class GXAgent:
         """
         Set the the session headers for requests to GX Cloud.
         In particular, set the User-Agent header to identify the GX Agent and the correlation_id as
-        Agent-Job-id if provided.
+        Agent-Job-Id if provided.
 
         Note: the Agent-Job-Id header value will be set for all GX Cloud request until this method is
         called again.
@@ -344,4 +350,8 @@ class GXAgent:
 
 
 class GXAgentError(Exception):
+    ...
+
+
+class GXAgentConfigError(GXAgentError):
     ...
