@@ -164,6 +164,7 @@ class GXAgent:
             return
 
         # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
+        assert event_context.correlation_id  # TODO: remove this
         self._set_http_session_headers(correlation_id=event_context.correlation_id)
 
         # send this message to a thread for processing
