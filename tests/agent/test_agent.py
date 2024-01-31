@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import uuid
 from time import sleep
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Literal
 from unittest.mock import call
 
 import pytest
@@ -273,10 +273,29 @@ def test_custom_user_agent(
         GXAgent()
 
 
+@pytest.fixture
+def ds_config_factory() -> Callable[[str], dict[Literal["name", "type", "connection_string"], str]]:
+    """
+    Return a factory that takes a `name` and creates valid datasource config dicts.
+    The datasource will always be an in-memory sqlite datasource that will pass `.test_connection()`
+    But will fail if trying to add a TableAsset because no tables exist for it.
+    """
+
+    def _factory(name: str) -> dict[Literal["name", "type", "connection_string"], str]:
+        return {
+            "name": name,
+            "type": "sqlite",
+            "connection_string": "sqlite:///",
+        }
+
+    return _factory
+
+
 def test_correlation_id_header(
     mock_gx_version_check: None,
     set_required_env_vars: None,
     data_context_config: DataContextConfigTD,
+    ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
     fake_subscriber: FakeSubscriber,
 ):
@@ -305,14 +324,14 @@ def test_correlation_id_header(
         rsps.add(
             responses.GET,
             f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_1}",
-            json={"data": {}},
+            json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-1")}}},
             # match will fail if correlation-id header is not set
             match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[0]})],
         )
         rsps.add(
             responses.GET,
             f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_2}",
-            json={"data": {}},
+            json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-2")}}},
             # match will fail if correlation-id header is not set
             match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[1]})],
         )
