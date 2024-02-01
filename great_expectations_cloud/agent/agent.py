@@ -329,10 +329,17 @@ class GXAgent:
             f"Setting session headers for GX Cloud. {HeaderName.USER_AGENT}:{agent_version} {HeaderName.AGENT_JOB_ID}:{correlation_id}"
         )
 
+        if correlation_id:
+            # OSS doesn't use the same session for all requests, so we need to set the header for each store
+            for store in self._context.stores.values():
+                store._store_backend._session.headers[HeaderName.AGENT_JOB_ID] = correlation_id
+
         def _update_headers_agent_patch(
             session: requests.Session, access_token: str
         ) -> requests.Session:
-            LOGGER.debug("Updating headers for GX Cloud session")
+            """
+            This accounts for direct agent requests to GX Cloud and OSS calls outside of a GXCloudStoreBackend
+            """
             headers = {
                 "Content-Type": "application/vnd.api+json",
                 "Authorization": f"Bearer {access_token}",
