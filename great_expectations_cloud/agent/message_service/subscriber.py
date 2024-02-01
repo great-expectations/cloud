@@ -8,7 +8,13 @@ from json import JSONDecodeError
 from typing import TYPE_CHECKING, Callable, Coroutine
 
 from great_expectations.compatibility import pydantic
-from pika.exceptions import AMQPError, ChannelError, StreamLostError
+from pika.exceptions import (
+    AMQPError,
+    AuthenticationError,
+    ChannelError,
+    ConnectionClosedByBroker,
+    StreamLostError,
+)
 
 from great_expectations_cloud.agent.models import Event, UnknownEvent
 
@@ -77,7 +83,10 @@ class Subscriber:
         while True:
             try:
                 self.client.run(queue=queue, on_message=callback)
-            except (AMQPError, ChannelError, StreamLostError):
+            except (StreamLostError, ConnectionClosedByBroker, AuthenticationError) as e:
+                # Do not try to reconnect if these issues occur
+                raise e
+            except (AMQPError, ChannelError):
                 self.client.stop()
                 reconnect_delay = self._get_reconnect_delay()
                 time.sleep(reconnect_delay)  # todo: update this blocking call to asyncio.sleep
