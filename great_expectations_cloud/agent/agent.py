@@ -325,7 +325,7 @@ class GXAgent:
             return
 
         agent_version = self._get_current_gx_agent_version()
-        LOGGER.info(
+        LOGGER.debug(
             f"Setting session headers for GX Cloud. {HeaderName.USER_AGENT}:{agent_version} {HeaderName.AGENT_JOB_ID}:{correlation_id}"
         )
 
