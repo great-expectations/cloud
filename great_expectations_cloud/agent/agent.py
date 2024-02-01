@@ -85,8 +85,8 @@ class GXAgent:
         print(f"GX Agent version: {agent_version}")
         print(f"Great Expectations version: {great_expectations_version}")
         print("Initializing the GX Agent.")
-        self._config = self._get_config()
         self._set_http_session_headers()
+        self._config = self._get_config()
         print("Loading a DataContext - this might take a moment.")
 
         with warnings.catch_warnings():
@@ -303,8 +303,7 @@ class GXAgent:
         data = status.json()
         session.patch(agent_sessions_url, data=data)
 
-    @classmethod
-    def _set_http_session_headers(cls, correlation_id: str | None = None) -> None:
+    def _set_http_session_headers(self, correlation_id: str | None = None) -> None:
         """
         Set the the session headers for requests to GX Cloud.
         In particular, set the User-Agent header to identify the GX Agent and the correlation_id as
@@ -325,7 +324,7 @@ class GXAgent:
             )
             return
 
-        agent_version = cls._get_current_gx_agent_version()
+        agent_version = self._get_current_gx_agent_version()
         LOGGER.info(
             f"Setting session headers for GX Cloud. {HeaderName.USER_AGENT}:{agent_version} {HeaderName.AGENT_JOB_ID}:{correlation_id}"
         )
@@ -338,7 +337,7 @@ class GXAgent:
                 "Content-Type": "application/vnd.api+json",
                 "Authorization": f"Bearer {access_token}",
                 "Gx-Version": __version__,
-                HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{cls._get_current_gx_agent_version()}",
+                HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{agent_version}",
             }
             if correlation_id:
                 headers[HeaderName.AGENT_JOB_ID] = correlation_id
