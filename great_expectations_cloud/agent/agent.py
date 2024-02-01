@@ -314,6 +314,7 @@ class GXAgent:
         """
         from great_expectations import __version__
         from great_expectations.core import http
+        from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend
 
         if Version(__version__) > Version(
             "0.19"  # using 0.19 instead of 1.0 to account for pre-releases
@@ -332,7 +333,9 @@ class GXAgent:
         if correlation_id:
             # OSS doesn't use the same session for all requests, so we need to set the header for each store
             for store in self._context.stores.values():
-                store._store_backend._session.headers[HeaderName.AGENT_JOB_ID] = correlation_id
+                backend = store._store_backend
+                if isinstance(backend, GXCloudStoreBackend):
+                    backend._session.headers[HeaderName.AGENT_JOB_ID] = correlation_id
 
         def _update_headers_agent_patch(
             session: requests.Session, access_token: str
