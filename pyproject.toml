@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "0.0.22"
+version = "0.0.23"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -28,13 +28,8 @@ orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue 
 packaging = "^21.3"
 
 [tool.poetry.extras]
-snowflake = [
-    "snowflake-sqlalchemy",
-]
-postgres = [
-    "sqlalchemy",
-    "psycopg2",
-]
+snowflake = ["snowflake-sqlalchemy"]
+postgres = ["sqlalchemy", "psycopg2"]
 
 [tool.poetry.group.sql.dependencies]
 great-expectations = { version = "^0.18.4", extras = [
@@ -44,7 +39,7 @@ great-expectations = { version = "^0.18.4", extras = [
 snowflake-sqlalchemy = ">=1.5.0"
 snowflake-connector-python = ">=3.3.1"
 # TODO: Remove the python constraint once this PR is merged - https://github.com/sqlalchemy-redshift/sqlalchemy-redshift/pull/288
-sqlalchemy-redshift = {version = "^0.8.8", python = "<3.11"}
+sqlalchemy-redshift = { version = "^0.8.8", python = "<3.11" }
 pyscopg2 = "^66.0.2"
 
 [tool.poetry.group.dev.dependencies]
@@ -78,19 +73,14 @@ ignore_missing_imports = true
 follow_imports = 'normal'
 warn_redundant_casts = true
 show_error_codes = true
-implicit_reexport = true  # enabled due to strict mode
-disallow_any_generics = false  # consider enabling
-enable_error_code = [
-    'ignore-without-code',
-    'explicit-override',
-    ]
+implicit_reexport = true                                         # enabled due to strict mode
+disallow_any_generics = false                                    # consider enabling
+enable_error_code = ['ignore-without-code', 'explicit-override']
 
 
 [[tool.mypy.overrides]]
 module = "tests.*"
-disable_error_code = [
-    'no-untyped-def',
-]
+disable_error_code = ['no-untyped-def']
 
 [tool.black]
 target-version = ["py38", "py39", "py310", "py311"]
@@ -190,13 +180,10 @@ max-complexity = 10
 ]
 
 [tool.pytest.ini_options]
-markers =[
-    "agentjobs",
-    "unit",
-]
+markers = ["agentjobs", "unit"]
 log_level = "info"
 filterwarnings = [
-    "error",  # Turn all warnings not explicitly filtered below into errors
+    "error", # Turn all warnings not explicitly filtered below into errors
     # Add any warnings to globally ignore here (this should be used sparingly, it is better to handle warnings
     # upstream e.g. in GX Core or explicitly where they are raised):
     # this is from azure dependency
