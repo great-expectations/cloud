@@ -340,14 +340,7 @@ def test_correlation_id_header(
             f"{base_url}organizations/{org_id}/checkpoints/{checkpoint_id}",
             json={"data": {}},
             # match will fail if correlation-id header is not set
-            match=[
-                responses.matchers.header_matcher(
-                    {
-                        HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{GXAgent._get_current_gx_agent_version()}",  # TODO: remove
-                        HeaderName.AGENT_JOB_ID: agent_job_ids[2],
-                    }
-                )
-            ],
+            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[2]})],
         )
         agent = GXAgent()
         agent.run()
