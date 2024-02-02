@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from great_expectations.compatibility import pydantic
 
 
-def generate_validation_error_text(validation_error: pydantic.ValidationError):
+def generate_validation_error_text(validation_error: pydantic.ValidationError) -> str:
     missing_variables = ", ".join(
         [validation_error["loc"][0] for validation_error in validation_error.errors()]
     )

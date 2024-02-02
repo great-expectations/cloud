@@ -9,7 +9,7 @@ from great_expectations.compatibility.pydantic import (
 from great_expectations_cloud.logging.logging_util import generate_validation_error_text
 
 
-class LoggingUtilTestModel(BaseModel):
+class LoggingUtilTestModel(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
     string_one: str
     string_two: str
 
