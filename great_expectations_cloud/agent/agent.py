@@ -18,7 +18,10 @@ from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from packaging.version import Version
 
-from great_expectations_cloud.agent.config import GxAgentEnvVars
+from great_expectations_cloud.agent.config import (
+    GxAgentEnvVars,
+    generate_config_validation_error_text,
+)
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
@@ -40,7 +43,6 @@ from great_expectations_cloud.agent.models import (
     JobStatus,
     UnknownEvent,
 )
-from great_expectations_cloud.logging.logging_util import generate_validation_error_text
 
 if TYPE_CHECKING:
     import requests
@@ -253,7 +255,7 @@ class GXAgent:
             env_vars = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:
             raise GXAgentConfigError(
-                generate_validation_error_text(validation_err)
+                generate_config_validation_error_text(validation_err)
             ) from validation_err
 
         # obtain the broker url and queue name from Cloud
@@ -284,7 +286,7 @@ class GXAgent:
             )
         except pydantic.ValidationError as validation_err:
             raise GXAgentConfigError(
-                generate_validation_error_text(validation_err)
+                generate_config_validation_error_text(validation_err)
             ) from validation_err
 
     def _update_status(self, job_id: str, status: JobStatus) -> None:

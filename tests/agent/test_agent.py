@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
@@ -35,29 +34,18 @@ if TYPE_CHECKING:
 
 @pytest.fixture
 def set_required_env_vars(monkeypatch, org_id, token):
-    env_vars = {
-        "GX_CLOUD_ORGANIZATION_ID": org_id,
-        "GX_CLOUD_ACCESS_TOKEN": token,
-    }
-    monkeypatch.setattr(os, "environ", env_vars)
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
 
 
 @pytest.fixture
 def set_required_env_vars_missing_token(monkeypatch, org_id):
-    env_vars = {
-        "GX_CLOUD_ORGANIZATION_ID": org_id,
-        "GX_CLOUD_ACCESS_TOKEN": None,
-    }
-    monkeypatch.setattr(os, "environ", env_vars)
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
 
 
 @pytest.fixture
 def set_required_env_vars_missing_org_id(monkeypatch, token):
-    env_vars = {
-        "GX_CLOUD_ORGANIZATION_ID": None,
-        "GX_CLOUD_ACCESS_TOKEN": token,
-    }
-    monkeypatch.setattr(os, "environ", env_vars)
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
 
 
 @pytest.fixture
