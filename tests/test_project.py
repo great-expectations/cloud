@@ -116,7 +116,9 @@ class PoetryVersionOutdated(UserWarning):
 def latest_poetry_version(lock_file_poetry_version: Version) -> Version:
     import requests
 
-    response = requests.get("https://api.github.com/repos/python-poetry/poetry/releases/latest")
+    response = requests.get(
+        "https://api.github.com/repos/python-poetry/poetry/releases/latest", timeout=5
+    )
     response.raise_for_status()
     latest_version = Version(response.json()["tag_name"])
 
