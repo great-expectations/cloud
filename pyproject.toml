@@ -33,7 +33,7 @@ snowflake = [
 ]
 postgres = [
     "sqlalchemy",
-    "psycopg2",
+    "psycopg2-binary",
 ]
 
 [tool.poetry.group.sql.dependencies]
