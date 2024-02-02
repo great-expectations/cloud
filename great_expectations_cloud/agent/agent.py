@@ -40,6 +40,7 @@ from great_expectations_cloud.agent.models import (
     JobStatus,
     UnknownEvent,
 )
+from great_expectations_cloud.logging.logging_util import generate_validation_error_text
 
 if TYPE_CHECKING:
     import requests
@@ -251,11 +252,8 @@ class GXAgent:
         try:
             env_vars = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:
-            missing_variables = ", ".join(
-                [f"{validation_error['loc'][0]}" for validation_error in validation_err.errors()]
-            )
             raise GXAgentConfigError(
-                f"Missing or badly formed environment variable(s). Make sure to set the following environment variable(s): {missing_variables}"
+                generate_validation_error_text(validation_err)
             ) from validation_err
 
         # obtain the broker url and queue name from Cloud
@@ -285,11 +283,8 @@ class GXAgent:
                 gx_cloud_access_token=env_vars.gx_cloud_access_token,
             )
         except pydantic.ValidationError as validation_err:
-            missing_variables = ", ".join(
-                [f"{validation_error['loc'][0]}" for validation_error in validation_err.errors()]
-            )
             raise GXAgentConfigError(
-                f"Missing or badly formed environment variable(s). Make sure to set the following environment variable(s): {missing_variables}"
+                generate_validation_error_text(validation_err)
             ) from validation_err
 
     def _update_status(self, job_id: str, status: JobStatus) -> None:
