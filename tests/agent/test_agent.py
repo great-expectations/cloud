@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import uuid
 from time import sleep
-from typing import Callable
+from typing import TYPE_CHECKING, Callable, Literal
 from unittest.mock import call
 
 import pytest
@@ -24,9 +24,13 @@ from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
     JobCompleted,
     JobStarted,
+    RunCheckpointEvent,
     RunOnboardingDataAssistantEvent,
 )
 from tests.agent.conftest import FakeSubscriber
+
+if TYPE_CHECKING:
+    from tests.agent.conftest import DataContextConfigTD
 
 
 @pytest.fixture
@@ -325,22 +329,43 @@ def test_custom_user_agent(
         GXAgent()
 
 
+@pytest.fixture
+def ds_config_factory() -> Callable[[str], dict[Literal["name", "type", "connection_string"], str]]:
+    """
+    Return a factory that takes a `name` and creates valid datasource config dicts.
+    The datasource will always be an in-memory sqlite datasource that will pass `.test_connection()`
+    But will fail if trying to add a TableAsset because no tables exist for it.
+    """
+
+    def _factory(name: str = "test-ds") -> dict[Literal["name", "type", "connection_string"], str]:
+        return {
+            "name": name,
+            "type": "sqlite",
+            "connection_string": "sqlite:///",
+        }
+
+    return _factory
+
+
 def test_correlation_id_header(
     mock_gx_version_check: None,
     set_required_env_vars: None,
+    data_context_config: DataContextConfigTD,
+    ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
     fake_subscriber: FakeSubscriber,
 ):
     """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
-    agent_job_id_1 = uuid.uuid4()
+    agent_job_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
     datasource_config_id_1 = uuid.UUID("00000000-0000-0000-0000-000000000001")
-    agent_job_id_2 = uuid.uuid4()
     datasource_config_id_2 = uuid.UUID("00000000-0000-0000-0000-000000000002")
+    checkpoint_id = uuid.UUID("00000000-0000-0000-0000-000000000003")
     # seed the fake queue with an event that will be consumed by the agent
-    fake_subscriber.test_queue.extend(
+    fake_subscriber.test_queue.extendleft(
         [
-            (DraftDatasourceConfigEvent(config_id=datasource_config_id_1), str(agent_job_id_1)),
-            (DraftDatasourceConfigEvent(config_id=datasource_config_id_2), str(agent_job_id_2)),
+            (DraftDatasourceConfigEvent(config_id=datasource_config_id_1), agent_job_ids[0]),
+            (DraftDatasourceConfigEvent(config_id=datasource_config_id_2), agent_job_ids[1]),
+            (RunCheckpointEvent(checkpoint_id=checkpoint_id), agent_job_ids[2]),
         ]
     )
 
@@ -350,32 +375,28 @@ def test_correlation_id_header(
         rsps.add(
             responses.GET,
             f"{base_url}/organizations/{org_id}/data-context-configuration",
-            json={
-                "anonymous_usage_statistics": {
-                    "data_context_id": str(uuid.uuid4()),
-                    "enabled": False,
-                },
-                "datasources": {},
-                "stores": {},
-            },
+            json=data_context_config,
         )
         rsps.add(
             responses.GET,
             f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_1}",
-            json={},
+            json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-1")}}},
             # match will fail if correlation-id header is not set
-            match=[
-                responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: str(agent_job_id_1)})
-            ],
+            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[0]})],
         )
         rsps.add(
             responses.GET,
             f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_2}",
-            json={},
+            json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-2")}}},
             # match will fail if correlation-id header is not set
-            match=[
-                responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: str(agent_job_id_2)})
-            ],
+            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[1]})],
+        )
+        rsps.add(
+            responses.GET,
+            f"{base_url}organizations/{org_id}/checkpoints/{checkpoint_id}",
+            json={"data": {}},
+            # match will fail if correlation-id header is not set
+            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[2]})],
         )
         agent = GXAgent()
         agent.run()
