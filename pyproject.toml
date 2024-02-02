@@ -193,14 +193,6 @@ max-complexity = 10
 "tasks.py" = [
     "S101", # https://docs.astral.sh/ruff/rules/assert/
 ]
-"tests/*" = [
-    # we don't need to enforce these security rules for tests
-    "S101", # https://docs.astral.sh/ruff/rules/assert/
-    "S105", # https://docs.astral.sh/ruff/rules/hardcoded-password-string/
-    "S106", # https://docs.astral.sh/ruff/rules/hardcoded-password-func-arg/
-    "S311", # https://docs.astral.sh/ruff/rules/suspicious-non-cryptographic-random-usage/
-    "S608", # https://docs.astral.sh/ruff/rules/hardcoded-sql-expression/
-]
 
 [tool.pytest.ini_options]
 markers =[
