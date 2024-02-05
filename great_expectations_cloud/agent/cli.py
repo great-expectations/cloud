@@ -15,7 +15,7 @@ class Arguments:
     log_level: LogLevel
     skip_log_file: bool
     log_cfg_file: pathlib.Path | None
-    version: bool | None
+    version: bool
 
 
 def _parse_args() -> Arguments:
