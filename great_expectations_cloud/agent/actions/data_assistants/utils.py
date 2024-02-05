@@ -36,7 +36,7 @@ def build_batch_request(
     datasource = context.get_datasource(datasource_name=event.datasource_name)
     if not isinstance(datasource, FluentDatasource):
         raise ValueError(
-            "The RunDataAssistant Action can only be used with a fluent-style datasource."
+            "The RunDataAssistant Action can only be used with a fluent-style Data Source."
         )
 
     asset = datasource.get_asset(asset_name=event.data_asset_name)
@@ -45,7 +45,7 @@ def build_batch_request(
     except ValueError as e:
         raise ValueError(
             "The RunDataAssistant Action for data assistant cannot be used with an "
-            "in-memory dataframe asset."
+            "in-memory Data Asset."
         ) from e
 
     return batch_request

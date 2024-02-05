@@ -74,7 +74,7 @@ def test_list_table_names_event_raises_for_non_sql_datasource(context, event):
     datasource = MagicMock(spec=PandasDatasource)
     context.get_datasource.return_value = datasource
 
-    with pytest.raises(TypeError, match=r"This operation requires a SQL Datasource but got"):
+    with pytest.raises(TypeError, match=r"This operation requires a SQL Data Source but got"):
         action.run(event=event, id=id)
 
 
