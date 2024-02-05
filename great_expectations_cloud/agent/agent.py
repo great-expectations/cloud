@@ -83,7 +83,7 @@ class GXAgent:
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
     def __init__(self: Self):
-        agent_version: str = self._get_current_gx_agent_version()
+        agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
         print(f"GX Agent version: {agent_version}")
         print(f"Great Expectations version: {great_expectations_version}")
@@ -135,7 +135,7 @@ class GXAgent:
                 subscriber.close()
 
     @classmethod
-    def _get_current_gx_agent_version(cls) -> str:
+    def get_current_gx_agent_version(cls) -> str:
         version: str = metadata_version(cls._PYPI_GX_AGENT_PACKAGE_NAME)
         return version
 
@@ -327,7 +327,7 @@ class GXAgent:
             )
             return
 
-        agent_version = self._get_current_gx_agent_version()
+        agent_version = self.get_current_gx_agent_version()
         LOGGER.debug(
             f"Setting session headers for GX Cloud. {HeaderName.USER_AGENT}:{agent_version} {HeaderName.AGENT_JOB_ID}:{correlation_id}"
         )

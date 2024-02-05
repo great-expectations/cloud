@@ -17,3 +17,7 @@ def run_agent() -> None:
     except GXAgentConfigError as error:
         # catch error to avoid stacktrace printout
         LOGGER.error(error)
+
+
+def get_version() -> str:
+    return GXAgent.get_current_gx_agent_version()
