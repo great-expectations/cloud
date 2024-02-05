@@ -146,7 +146,7 @@ def get_version(ctx: Context) -> None:
 
 @functools.lru_cache(maxsize=1)
 def _get_latest_version() -> Version:
-    r = requests.get("https://pypi.org/pypi/great-expectations-cloud/json")
+    r = requests.get("https://pypi.org/pypi/great-expectations-cloud/json", timeout=10)
     r.raise_for_status()
     version = Version(r.json()["info"]["version"])
     return version

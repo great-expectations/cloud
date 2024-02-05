@@ -36,6 +36,7 @@ def ensure_agent_is_ready(local_gql_url: str, token: str):
         url=local_gql_url,
         json={"query": body},
         headers={"Authorization": f"Bearer {token}"},
+        timeout=2,
     )
     response.raise_for_status()
 
@@ -70,6 +71,7 @@ def test_job_processing(wait_for_docker_compose, local_gql_url: str, gx_agent_va
         url=local_gql_url,
         json={"query": body, "variables": variables},
         headers={"Authorization": f"Bearer {gx_agent_vars.gx_cloud_access_token}"},
+        timeout=2,
     )
     response.raise_for_status()
     jobId = response.json()["data"]["createRunCheckpointJob"]["jobId"]
@@ -96,6 +98,7 @@ def check_job_status(jobId: str, local_gql_url: str, gx_agent_vars: GxAgentEnvVa
         url=local_gql_url,
         json={"query": get_job_by_id_body, "variables": get_job_by_id_variables},
         headers={"Authorization": f"Bearer {gx_agent_vars.gx_cloud_access_token}"},
+        timeout=2,
     )
     response.raise_for_status()
 

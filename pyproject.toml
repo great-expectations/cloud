@@ -51,11 +51,11 @@ pyscopg2 = "^66.0.2"
 invoke = "^2.2.0"
 mypy = "~1.7.1"
 pre-commit = "^3.3.3"
-pytest = "^7.4.0"
+pytest = ">=7.4,<9.0"
 pytest-icdiff = "*"
 pytest-mock = "*"
 responses = "^0.23.1"
-ruff = "==0.1.13"
+ruff = "^0.1.15"
 tenacity = "^8.2.3"
 tomlkit = "^0.12.1"
 typing_extensions = ">=4.4.0"
@@ -129,6 +129,8 @@ select = [
     "PL", # pylint
     # https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
     "RUF",
+    # https://docs.astral.sh/ruff/rules/#flake8-bandit-s
+    "S", # bandit - security
 ]
 ignore = [
     # formatting related ignores
@@ -187,6 +189,9 @@ max-complexity = 10
 ]
 "models.py" = [
     "UP007", # non-pep604-annotation - pydantic models use annotations at runtime
+]
+"tasks.py" = [
+    "S101", # https://docs.astral.sh/ruff/rules/assert/
 ]
 
 [tool.pytest.ini_options]
