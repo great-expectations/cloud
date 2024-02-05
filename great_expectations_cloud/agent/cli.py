@@ -41,14 +41,13 @@ def _parse_args() -> Arguments:
         help="Path to a logging configuration json file. Supersedes --log-level and --skip-log-file.",
         type=pathlib.Path,
     )
-    parser.add_argument(
-        "--version",
-        help="Show the gx agent version.",
-        action='store_true'
-    )
+    parser.add_argument("--version", help="Show the gx agent version.", action="store_true")
     args = parser.parse_args()
     return Arguments(
-        log_level=args.log_level, skip_log_file=args.skip_log_file, log_cfg_file=args.log_cfg_file, version=args.version
+        log_level=args.log_level,
+        skip_log_file=args.skip_log_file,
+        log_cfg_file=args.log_cfg_file,
+        version=args.version,
     )
 
 
@@ -61,6 +60,7 @@ def main() -> None:
 
     if args.version:
         from great_expectations_cloud.agent import get_version
+
         print(f"GX Agent version: {get_version()}")
         return
 
