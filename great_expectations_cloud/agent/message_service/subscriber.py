@@ -12,8 +12,6 @@ from pika.exceptions import (
     AMQPError,
     AuthenticationError,
     ChannelError,
-    ConnectionClosedByBroker,
-    StreamLostError,
 )
 
 from great_expectations_cloud.agent.models import Event, UnknownEvent
@@ -83,8 +81,10 @@ class Subscriber:
         while True:
             try:
                 self.client.run(queue=queue, on_message=callback)
-            except (StreamLostError, ConnectionClosedByBroker, AuthenticationError) as e:
-                # Do not try to reconnect if these issues occur
+            except AuthenticationError as e:
+                # If an authentication error happens when trying to connect to rabbitMQ,
+                # it means that the connection string is incorrect. Retrying would not
+                # enable us to reconnect.
                 raise e
             except (AMQPError, ChannelError):
                 self.client.stop()
