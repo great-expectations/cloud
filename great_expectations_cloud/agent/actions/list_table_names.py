@@ -66,7 +66,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
             raise GXCloudError(
                 message=f"ListTableNamesAction encountered an error while connecting to GX Cloud. "
                 f"Unable to update "
-                f"table_names for Data Source with id"
+                f"table_names for Data Source with ID"
                 f"={datasource_id}.",
                 response=response,
             )
