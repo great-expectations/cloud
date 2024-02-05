@@ -35,4 +35,3 @@ COPY examples/agent/data data
 RUN poetry install --only-root && rm -rf POETRY_CACHE_DIR
 
 ENTRYPOINT ["poetry", "run", "gx-agent"]
-CMD ["poetry", "run", "gx-agent"]
