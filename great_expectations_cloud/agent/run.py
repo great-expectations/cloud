@@ -7,3 +7,6 @@ def run_agent() -> None:
     """Run an instance of the GXAgent."""
     agent = GXAgent()
     agent.run()
+
+def get_version() -> str:
+    return GXAgent.get_current_gx_agent_version()

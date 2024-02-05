@@ -265,7 +265,7 @@ def test_custom_user_agent(
             match=[
                 responses.matchers.header_matcher(
                     {
-                        HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{GXAgent._get_current_gx_agent_version()}"
+                        HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{GXAgent.get_current_gx_agent_version()}"
                     }
                 )
             ],
