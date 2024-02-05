@@ -7,7 +7,10 @@ from great_expectations.core.http import create_session
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
-from great_expectations_cloud.agent.config import GxAgentEnvVars
+from great_expectations_cloud.agent.config import (
+    GxAgentEnvVars,
+    generate_config_validation_error_text,
+)
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 
@@ -19,13 +22,13 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         if datasource_type is None:
             raise ValueError(
                 "The DraftDatasourceConfigAction can only be used with a "
-                "fluent-style datasource."
+                "fluent-style Data Source."
             )
         try:
             datasource_cls = self._context.sources.type_lookup[datasource_type]
         except KeyError as exc:
             raise ValueError(
-                "DraftDatasourceConfigAction received an unknown datasource type."
+                "DraftDatasourceConfigAction received an unknown Data Source type."
             ) from exc
         datasource = datasource_cls(**draft_config)
         datasource._data_context = self._context
@@ -37,7 +40,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             config = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:
             raise RuntimeError(
-                f"Missing or badly formed environment variable\n" f"{validation_err.errors()}"
+                generate_config_validation_error_text(validation_err)
             ) from validation_err
         resource_url = (
             f"{config.gx_cloud_base_url}/organizations/"
@@ -47,10 +50,10 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         response = session.get(resource_url)
         if not response.ok:
             raise RuntimeError(
-                "DraftDatasourceConfigAction encountered an error while " "connecting to GX-Cloud"
+                "DraftDatasourceConfigAction encountered an error while " "connecting to GX Cloud"
             )
         data = response.json()
         try:
             return data["data"]["attributes"]["draft_config"]  # type: ignore[no-any-return]
         except KeyError as e:
-            raise RuntimeError("Malformed response received from GX-Cloud") from e
+            raise RuntimeError("Malformed response received from GX Cloud") from e

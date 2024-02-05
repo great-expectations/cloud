@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import os
 import uuid
 from time import sleep
-from typing import Callable
+from typing import TYPE_CHECKING, Callable, Literal
 from unittest.mock import call
 
 import pytest
@@ -11,7 +10,7 @@ import responses
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import GXAgentConfig
+from great_expectations_cloud.agent.agent import GXAgentConfig, GXAgentConfigError
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
@@ -24,22 +23,61 @@ from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
     JobCompleted,
     JobStarted,
+    RunCheckpointEvent,
     RunOnboardingDataAssistantEvent,
 )
 from tests.agent.conftest import FakeSubscriber
 
-
-@pytest.fixture(autouse=True)
-def set_required_env_vars(monkeypatch, org_id, token):
-    env_vars = {
-        "GX_CLOUD_ORGANIZATION_ID": org_id,
-        "GX_CLOUD_ACCESS_TOKEN": token,
-    }
-    monkeypatch.setattr(os, "environ", env_vars)
+if TYPE_CHECKING:
+    from tests.agent.conftest import DataContextConfigTD
 
 
 @pytest.fixture
-def gx_agent_config(queue, connection_string, org_id, token) -> GXAgentConfig:
+def set_required_env_vars(monkeypatch, org_id, token):
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
+
+
+@pytest.fixture
+def set_required_env_vars_missing_token(monkeypatch, org_id):
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
+
+
+@pytest.fixture
+def set_required_env_vars_missing_org_id(monkeypatch, token):
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
+
+
+@pytest.fixture
+def gx_agent_config(
+    set_required_env_vars, queue, connection_string, org_id, token
+) -> GXAgentConfig:
+    config = GXAgentConfig(
+        queue=queue,
+        connection_string=connection_string,
+        gx_cloud_access_token=token,
+        gx_cloud_organization_id=org_id,
+    )
+    return config
+
+
+@pytest.fixture
+def gx_agent_config_missing_token(
+    set_required_env_vars_missing_token, queue, connection_string, org_id, token
+) -> GXAgentConfig:
+    config = GXAgentConfig(
+        queue=queue,
+        connection_string=connection_string,
+        gx_cloud_access_token=token,
+        gx_cloud_organization_id=org_id,
+    )
+    return config
+
+
+@pytest.fixture
+def gx_agent_config_missing_org_id(
+    set_required_env_vars_missing_org_id, queue, connection_string, org_id, token
+) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
@@ -237,6 +275,16 @@ def test_gx_agent_updates_cloud_on_job_status(
     )
 
 
+def test_invalid_config_agent_missing_token(gx_agent_config_missing_token):
+    with pytest.raises(GXAgentConfigError):
+        GXAgent()
+
+
+def test_invalid_config_agent_missing_org_id(gx_agent_config_missing_org_id):
+    with pytest.raises(GXAgentConfigError):
+        GXAgent()
+
+
 def test_custom_user_agent(
     mock_gx_version_check: None,
     set_required_env_vars: None,
@@ -261,7 +309,7 @@ def test_custom_user_agent(
             match=[
                 responses.matchers.header_matcher(
                     {
-                        HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{GXAgent._get_current_gx_agent_version()}"
+                        HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{GXAgent.get_current_gx_agent_version()}"
                     }
                 )
             ],
@@ -269,22 +317,43 @@ def test_custom_user_agent(
         GXAgent()
 
 
+@pytest.fixture
+def ds_config_factory() -> Callable[[str], dict[Literal["name", "type", "connection_string"], str]]:
+    """
+    Return a factory that takes a `name` and creates valid datasource config dicts.
+    The datasource will always be an in-memory sqlite datasource that will pass `.test_connection()`
+    But will fail if trying to add a TableAsset because no tables exist for it.
+    """
+
+    def _factory(name: str = "test-ds") -> dict[Literal["name", "type", "connection_string"], str]:
+        return {
+            "name": name,
+            "type": "sqlite",
+            "connection_string": "sqlite:///",
+        }
+
+    return _factory
+
+
 def test_correlation_id_header(
     mock_gx_version_check: None,
     set_required_env_vars: None,
+    data_context_config: DataContextConfigTD,
+    ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
     fake_subscriber: FakeSubscriber,
 ):
     """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
-    agent_job_id_1 = uuid.uuid4()
+    agent_job_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
     datasource_config_id_1 = uuid.UUID("00000000-0000-0000-0000-000000000001")
-    agent_job_id_2 = uuid.uuid4()
     datasource_config_id_2 = uuid.UUID("00000000-0000-0000-0000-000000000002")
+    checkpoint_id = uuid.UUID("00000000-0000-0000-0000-000000000003")
     # seed the fake queue with an event that will be consumed by the agent
-    fake_subscriber.test_queue.extend(
+    fake_subscriber.test_queue.extendleft(
         [
-            (DraftDatasourceConfigEvent(config_id=datasource_config_id_1), str(agent_job_id_1)),
-            (DraftDatasourceConfigEvent(config_id=datasource_config_id_2), str(agent_job_id_2)),
+            (DraftDatasourceConfigEvent(config_id=datasource_config_id_1), agent_job_ids[0]),
+            (DraftDatasourceConfigEvent(config_id=datasource_config_id_2), agent_job_ids[1]),
+            (RunCheckpointEvent(checkpoint_id=checkpoint_id), agent_job_ids[2]),
         ]
     )
 
@@ -294,32 +363,28 @@ def test_correlation_id_header(
         rsps.add(
             responses.GET,
             f"{base_url}/organizations/{org_id}/data-context-configuration",
-            json={
-                "anonymous_usage_statistics": {
-                    "data_context_id": str(uuid.uuid4()),
-                    "enabled": False,
-                },
-                "datasources": {},
-                "stores": {},
-            },
+            json=data_context_config,
         )
         rsps.add(
             responses.GET,
             f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_1}",
-            json={},
+            json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-1")}}},
             # match will fail if correlation-id header is not set
-            match=[
-                responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: str(agent_job_id_1)})
-            ],
+            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[0]})],
         )
         rsps.add(
             responses.GET,
             f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_2}",
-            json={},
+            json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-2")}}},
             # match will fail if correlation-id header is not set
-            match=[
-                responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: str(agent_job_id_2)})
-            ],
+            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[1]})],
+        )
+        rsps.add(
+            responses.GET,
+            f"{base_url}organizations/{org_id}/checkpoints/{checkpoint_id}",
+            json={"data": {}},
+            # match will fail if correlation-id header is not set
+            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[2]})],
         )
         agent = GXAgent()
         agent.run()

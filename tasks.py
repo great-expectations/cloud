@@ -73,9 +73,24 @@ def lint(ctx: Context, check: bool = False, unsafe_fixes: bool = False) -> None:
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
-@invoke.task
-def docker(ctx: Context, check: bool = False, tag: str = "greatexpectations/agent:develop") -> None:
-    """Lint Dockerfile using hadolint tool"""
+@invoke.task(
+    aliases=["build"],
+    help={
+        "check": "Lint Dockerfile using hadolint tool",
+        "run": "Run the Docker container. Inject .env file",
+    },
+)
+def docker(
+    ctx: Context,
+    check: bool = False,
+    run: bool = False,
+    tag: str = "greatexpectations/agent:develop",
+) -> None:
+    """
+    Docker tasks
+
+    If no options are provided, the default behavior is to build the Docker image.
+    """
     if check:
         cmds = [
             "docker",
@@ -92,8 +107,11 @@ def docker(ctx: Context, check: bool = False, tag: str = "greatexpectations/agen
             "<",
             DOCKERFILE_PATH,
         ]
+    elif run:
+        cmds = ["docker", "run", "--env-file .env", "--rm", "-t", tag]
     else:
         cmds = ["docker", "build", "-f", DOCKERFILE_PATH, "-t", tag, "."]
+
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
@@ -118,22 +136,6 @@ def deps(ctx: Context) -> None:
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
-@invoke.task
-def build(ctx: Context) -> None:
-    """Build the GX Agent Image"""
-    cmds = [
-        "docker",
-        "buildx",
-        "build",
-        "-t",
-        "greatexpectations/agent",
-        "-f",
-        DOCKERFILE_PATH,
-        ".",
-    ]
-    ctx.run(" ".join(cmds), echo=True, pty=True)
-
-
 def _get_local_version() -> Version:
     return Version(_get_pyproject_tool_dict("poetry")["version"])
 
@@ -146,7 +148,7 @@ def get_version(ctx: Context) -> None:
 
 @functools.lru_cache(maxsize=1)
 def _get_latest_version() -> Version:
-    r = requests.get("https://pypi.org/pypi/great-expectations-cloud/json")
+    r = requests.get("https://pypi.org/pypi/great-expectations-cloud/json", timeout=10)
     r.raise_for_status()
     version = Version(r.json()["info"]["version"])
     return version

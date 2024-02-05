@@ -30,7 +30,9 @@ RUN poetry install --with sql --without dev --no-root --no-directory
 
 COPY README.md README.md
 COPY great_expectations_cloud great_expectations_cloud
+COPY examples/agent/data data
 
 RUN poetry install --only-root && rm -rf POETRY_CACHE_DIR
 
+ENTRYPOINT ["poetry", "run", "gx-agent"]
 CMD ["poetry", "run", "gx-agent"]
