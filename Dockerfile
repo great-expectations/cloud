@@ -7,6 +7,8 @@ WORKDIR /app/
 # ├── great_expectations_cloud/
 # │         ├── agent/
 # │         └── ...
+# ├── examples/
+# │         └── ...
 # ├── pyproject.toml
 # ├── poetry.lock
 # └── README.md
