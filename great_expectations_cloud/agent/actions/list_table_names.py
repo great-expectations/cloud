@@ -13,7 +13,10 @@ from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
-from great_expectations_cloud.agent.config import GxAgentEnvVars
+from great_expectations_cloud.agent.config import (
+    GxAgentEnvVars,
+    generate_config_validation_error_text,
+)
 from great_expectations_cloud.agent.models import (
     ListTableNamesEvent,
 )
@@ -29,7 +32,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
         datasource = self._context.get_datasource(datasource_name=datasource_name)
         if not isinstance(datasource, SQLDatasource):
             raise TypeError(
-                f"This operation requires a SQL Datasource but got {type(datasource).__name__}."
+                f"This operation requires a SQL Data Source but got {type(datasource).__name__}."
             )
 
         inspector: Inspector = inspect(datasource.get_engine())
@@ -50,7 +53,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
             cloud_config = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:
             raise RuntimeError(
-                f"Missing or badly formed environment variable\n{validation_err.errors()}"
+                generate_config_validation_error_text(validation_err)
             ) from validation_err
 
         session = create_session(access_token=cloud_config.gx_cloud_access_token)
@@ -63,7 +66,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
             raise GXCloudError(
                 message=f"ListTableNamesAction encountered an error while connecting to GX Cloud. "
                 f"Unable to update "
-                f"table_names for Datasource with id"
+                f"table_names for Data Source with id"
                 f"={datasource_id}.",
                 response=response,
             )
