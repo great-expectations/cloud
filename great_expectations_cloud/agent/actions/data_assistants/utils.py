@@ -45,7 +45,7 @@ def build_batch_request(
     except ValueError as e:
         raise ValueError(
             "The RunDataAssistant Action for data assistant cannot be used with an "
-            "in-memory dataframe Asset."
+            "in-memory Data Asset."
         ) from e
 
     return batch_request
