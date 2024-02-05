@@ -22,6 +22,7 @@ jobs:
           push: false
           load: true
           tags: local_agent
+          OUTPUT_OCI: true
 
       - name: Smoke test image
         run: docker run --rm local_agent --version
