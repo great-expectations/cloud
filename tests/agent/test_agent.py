@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
@@ -11,7 +10,7 @@ import responses
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import GXAgentConfig
+from great_expectations_cloud.agent.agent import GXAgentConfig, GXAgentConfigError
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
@@ -33,17 +32,52 @@ if TYPE_CHECKING:
     from tests.agent.conftest import DataContextConfigTD
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def set_required_env_vars(monkeypatch, org_id, token):
-    env_vars = {
-        "GX_CLOUD_ORGANIZATION_ID": org_id,
-        "GX_CLOUD_ACCESS_TOKEN": token,
-    }
-    monkeypatch.setattr(os, "environ", env_vars)
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
 
 
 @pytest.fixture
-def gx_agent_config(queue, connection_string, org_id, token) -> GXAgentConfig:
+def set_required_env_vars_missing_token(monkeypatch, org_id):
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
+
+
+@pytest.fixture
+def set_required_env_vars_missing_org_id(monkeypatch, token):
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
+
+
+@pytest.fixture
+def gx_agent_config(
+    set_required_env_vars, queue, connection_string, org_id, token
+) -> GXAgentConfig:
+    config = GXAgentConfig(
+        queue=queue,
+        connection_string=connection_string,
+        gx_cloud_access_token=token,
+        gx_cloud_organization_id=org_id,
+    )
+    return config
+
+
+@pytest.fixture
+def gx_agent_config_missing_token(
+    set_required_env_vars_missing_token, queue, connection_string, org_id, token
+) -> GXAgentConfig:
+    config = GXAgentConfig(
+        queue=queue,
+        connection_string=connection_string,
+        gx_cloud_access_token=token,
+        gx_cloud_organization_id=org_id,
+    )
+    return config
+
+
+@pytest.fixture
+def gx_agent_config_missing_org_id(
+    set_required_env_vars_missing_org_id, queue, connection_string, org_id, token
+) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
@@ -239,6 +273,16 @@ def test_gx_agent_updates_cloud_on_job_status(
             call(url, data=job_completed_data),
         ],
     )
+
+
+def test_invalid_config_agent_missing_token(gx_agent_config_missing_token):
+    with pytest.raises(GXAgentConfigError):
+        GXAgent()
+
+
+def test_invalid_config_agent_missing_org_id(gx_agent_config_missing_org_id):
+    with pytest.raises(GXAgentConfigError):
+        GXAgent()
 
 
 def test_custom_user_agent(

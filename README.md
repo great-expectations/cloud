@@ -63,11 +63,15 @@ A new docker tag will also be generated and pushed to [Docker Hub](https://hub.d
 To build the GX Agent Docker image, run the following in the root dir:
 
 ```
-invoke build
+invoke docker
 ```
 
 Running the GX Agent:
 
+```
+invoke docker --run
+```
+or
 ```
 docker run --env GX_CLOUD_ACCESS_TOKEN="<GX_TOKEN>" --env GX_CLOUD_ORGANIZATION_ID="<GX_ORG_ID>" gx/agent
 ```
