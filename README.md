@@ -6,7 +6,54 @@
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/great-expectations/cloud/main.svg)](https://results.pre-commit.ci/latest/github/great-expectations/cloud/main)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
+## Quick Start
+
+### Python
+
+#### Install
+```console
+pip install great_expectations_cloud
+```
+##### Optional Dependencies
+```console
+pip install 'great_expectations_cloud[sql]'
+```
+
+```console
+$ gx-agent --help
+usage: gx-agent [-h] [--log-level LOG_LEVEL] [--skip-log-file SKIP_LOG_FILE] [--log-cfg-file LOG_CFG_FILE] [--version]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --log-level LOG_LEVEL
+                        Level of logging to use. Defaults to WARNING.
+  --skip-log-file SKIP_LOG_FILE
+                        Skip writing debug logs to a file. Defaults to False. Does not affect logging to stdout/stderr.
+  --log-cfg-file LOG_CFG_FILE
+                        Path to a logging configuration json file. Supersedes --log-level and --skip-log-file.
+  --version             Show the gx agent version.
+```
+
+#### Set env variables
+
+`GX_CLOUD_ACCESS_TOKEN`
+`GX_CLOUD_ORGANIZATION_ID`
+
+### Start the Agent
+
+If you intend to run the agent against local services (Cloud backend or datasources) run the agent outside of the container.
+
+```
+gx-agent
+```
+
+### Docker
+
+[Building and running the Agent with Docker](#building-and-running-the-gx-agent-image)
+
 ## Dev Setup
+
+See also [CONTRIBUTING.md](/CONTRIBUTING.MD)
 
 1. [Install `poetry`](https://python-poetry.org/docs/#installation)
    - [`pipx install poetry`](https://python-poetry.org/docs/#installing-with-pipx)
