@@ -19,6 +19,10 @@ class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
             ge_cloud_id=event.checkpoint_id,
             batch_request={"options": event.splitter_options} if event.splitter_options else None,
         )
+        if event.datasource_name:
+            datasource = self._context.get_datasource(event.datasource_name)
+            datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
+
         validation_results = checkpoint_run_result.run_results
         created_resources = []
         for key in validation_results.keys():
