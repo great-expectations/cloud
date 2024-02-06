@@ -41,7 +41,7 @@ optional arguments:
 
 ### Start the Agent
 
-May want to run the agent outside docker if testing against a localhost backend or datasource.
+If you intend to run the agent against local services (Cloud backend or datasources) run the agent outside of the container.
 
 ```
 gx-agent
