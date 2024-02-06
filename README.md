@@ -26,6 +26,8 @@ pip install 'great_expectations_cloud[sql]'
 
 ### Start the Agent
 
+May want to run the agent outside docker if testing against a localhost backend or datasource.
+
 ```
 gx-agent
 ```
