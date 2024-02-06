@@ -11,12 +11,27 @@
 ### Python
 
 #### Install
-```
+```console
 pip install great_expectations_cloud
 ```
 ##### Optional Dependencies
-```
+```console
 pip install 'great_expectations_cloud[sql]'
+```
+
+```console
+$ gx-agent --help
+usage: gx-agent [-h] [--log-level LOG_LEVEL] [--skip-log-file SKIP_LOG_FILE] [--log-cfg-file LOG_CFG_FILE] [--version]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --log-level LOG_LEVEL
+                        Level of logging to use. Defaults to WARNING.
+  --skip-log-file SKIP_LOG_FILE
+                        Skip writing debug logs to a file. Defaults to False. Does not affect logging to stdout/stderr.
+  --log-cfg-file LOG_CFG_FILE
+                        Path to a logging configuration json file. Supersedes --log-level and --skip-log-file.
+  --version             Show the gx agent version.
 ```
 
 #### Set env variables
