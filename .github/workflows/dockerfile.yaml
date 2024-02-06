@@ -1,0 +1,30 @@
+name: test-dockerfile
+# Separate file bc trigger is specific
+
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile'
+
+jobs:
+  test-dockerfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # https://docs.docker.com/build/ci/github-actions/test-before-push/
+      #
+      # Cannot multi arch build AND load
+      # https://github.com/docker/buildx/issues/59
+      - name: Build, No Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: local_agent
+
+      - name: Smoke test image
+        run: docker run --rm local_agent --version
