@@ -6,6 +6,37 @@
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/great-expectations/cloud/main.svg)](https://results.pre-commit.ci/latest/github/great-expectations/cloud/main)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
+## Quick Start
+
+### Python
+
+#### Install
+```
+pip install great_expectations_cloud
+```
+##### Optional Dependencies
+```
+pip install 'great_expectations_cloud[sql]'
+```
+
+#### Set env variables
+
+`GX_CLOUD_ACCESS_TOKEN`
+`GX_CLOUD_ORGANIZATION_ID`
+
+### Start the Agent
+
+```
+gx-agent
+```
+
+### Docker
+
+[Building and running the Agent with Docker](#building-and-running-the-gx-agent-image)
+
+
+
+
 ## Dev Setup
 
 1. [Install `poetry`](https://python-poetry.org/docs/#installation)
