@@ -51,10 +51,9 @@ gx-agent
 
 [Building and running the Agent with Docker](#building-and-running-the-gx-agent-image)
 
-
-
-
 ## Dev Setup
+
+See also [CONTRIBUTING.md](/CONTRIBUTING.MD)
 
 1. [Install `poetry`](https://python-poetry.org/docs/#installation)
    - [`pipx install poetry`](https://python-poetry.org/docs/#installing-with-pipx)
