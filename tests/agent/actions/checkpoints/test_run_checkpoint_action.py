@@ -26,18 +26,25 @@ def checkpoint_id():
 
 
 @pytest.fixture
-def checkpoint_event_without_splitter_options(checkpoint_id):
+def datasource_names():
+    return ["Data Source name"]
+
+
+@pytest.fixture
+def checkpoint_event_without_splitter_options(checkpoint_id, datasource_names):
     return RunCheckpointEvent(
         type="run_checkpoint_request",
         checkpoint_id=checkpoint_id,
+        datasource_names=datasource_names,
     )
 
 
 @pytest.fixture
-def checkpoint_event_with_splitter_options(checkpoint_id):
+def checkpoint_event_with_splitter_options(checkpoint_id, datasource_names):
     return RunCheckpointEvent(
         type="run_checkpoint_request",
         checkpoint_id=checkpoint_id,
+        datasource_names=datasource_names,
         splitter_options={"year": 2023, "month": 11, "day": 30},
     )
 
