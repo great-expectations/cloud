@@ -19,8 +19,9 @@ class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
             ge_cloud_id=event.checkpoint_id,
             batch_request={"options": event.splitter_options} if event.splitter_options else None,
         )
-        if event.datasource_name:
-            datasource = self._context.get_datasource(event.datasource_name)
+        # TODO: move connection testing into OSS; there isn't really a reason it can't be done there
+        for datasource_name in event.datasource_names:
+            datasource = self._context.get_datasource(datasource_name)
             datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
 
         validation_results = checkpoint_run_result.run_results
