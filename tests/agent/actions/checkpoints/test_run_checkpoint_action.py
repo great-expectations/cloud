@@ -5,6 +5,7 @@ from uuid import UUID
 
 import pytest
 from great_expectations.data_context import CloudDataContext
+from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
 from great_expectations_cloud.agent.models import (
@@ -104,3 +105,23 @@ def test_run_checkpoint_action_with_splitter_options_returns_action_result(
             type="SuiteValidationResult",
         ),
     ]
+
+
+def test_run_checkpoint_action_raises_on_test_connection_failure(
+    context, checkpoint_id, datasource_names
+):
+    mock_datasource = MagicMock()
+    context.get_datasource.return_value = mock_datasource
+    mock_datasource.test_connection.side_effect = TestConnectionError()
+
+    action = RunCheckpointAction(context=context)
+
+    with pytest.raises(TestConnectionError):
+        action.run(
+            event=RunCheckpointEvent(
+                type="run_checkpoint_request",
+                datasource_names=datasource_names,
+                checkpoint_id=checkpoint_id,
+            ),
+            id="test-id",
+        )
