@@ -38,7 +38,7 @@ class RunMissingnessDataAssistantEvent(RunDataAssistantEvent):
 
 class RunCheckpointEvent(EventBase):
     type: Literal["run_checkpoint_request"] = "run_checkpoint_request"
-    datasource_names: list[str]
+    datasource_names: Sequence[str] = []
     checkpoint_id: uuid.UUID
     splitter_options: Optional[dict] = None
 

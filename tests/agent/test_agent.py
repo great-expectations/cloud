@@ -348,14 +348,13 @@ def test_correlation_id_header(
     datasource_config_id_1 = uuid.UUID("00000000-0000-0000-0000-000000000001")
     datasource_config_id_2 = uuid.UUID("00000000-0000-0000-0000-000000000002")
     checkpoint_id = uuid.UUID("00000000-0000-0000-0000-000000000003")
-    datasource_names = ["Data Source name"]
     # seed the fake queue with an event that will be consumed by the agent
     fake_subscriber.test_queue.extendleft(
         [
             (DraftDatasourceConfigEvent(config_id=datasource_config_id_1), agent_job_ids[0]),
             (DraftDatasourceConfigEvent(config_id=datasource_config_id_2), agent_job_ids[1]),
             (
-                RunCheckpointEvent(checkpoint_id=checkpoint_id, datasource_names=datasource_names),
+                RunCheckpointEvent(checkpoint_id=checkpoint_id),
                 agent_job_ids[2],
             ),
         ]
