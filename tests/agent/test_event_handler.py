@@ -66,7 +66,8 @@ def test_event_handler_handles_run_onboarding_data_assistant_event(mocker):
 def test_event_handler_handles_run_checkpoint_event(mocker):
     action = mocker.patch("great_expectations_cloud.agent.event_handler.RunCheckpointAction")
     event = RunCheckpointEvent(
-        checkpoint_id="3ecd140b-1dd5-41f4-bdb1-c8009d4f1940", datasource_names=["Data Source name"]
+        checkpoint_id="3ecd140b-1dd5-41f4-bdb1-c8009d4f1940",
+        datasource_names_to_asset_names={"Data Source name": {"Asset name"}},
     )
     correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
     context = MagicMock(autospec=CloudDataContext)
