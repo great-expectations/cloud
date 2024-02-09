@@ -147,6 +147,7 @@ def test_run_column_descriptive_metrics_creates_metric_run_then_raises_on_any_me
     # Using a real metric with a real exception in the metric run to test the exception handling
     mock_metric_run = MetricRun(
         metrics=[
+            # Metric with an exception within the MetricRun should cause the action to raise:
             ColumnMetric[int](
                 batch_id="batch_id",
                 metric_name="column_values.null.count",
@@ -156,7 +157,15 @@ def test_run_column_descriptive_metrics_creates_metric_run_then_raises_on_any_me
                     message="exception message",
                 ),
                 column="col1",
-            )
+            ),
+            # Also, a Metric with no exception within the MetricRun should still cause the action to raise:
+            ColumnMetric[int](
+                batch_id="batch_id",
+                metric_name="column_values.null.count",
+                value=2,
+                exception=None,
+                column="col2",
+            ),
         ]
     )
     mock_batch_inspector.compute_metric_run.return_value = mock_metric_run
