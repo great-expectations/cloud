@@ -44,6 +44,11 @@ class ColumnDescriptiveMetricsAction(AgentAction[RunColumnDescriptiveMetricsEven
 
         metric_run_id = self._metric_repository.add_metric_run(metric_run)
 
+        # Note: This exception is raised after the metric run is added to the repository so that
+        # the user can still access any computed metrics even if one of the metrics fails.
+        if any(metric.exception for metric in metric_run.metrics):
+            raise RuntimeError("One or more metrics failed to compute.")
+
         return ActionResult(
             id=id,
             type=event.type,
