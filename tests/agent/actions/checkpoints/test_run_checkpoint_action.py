@@ -28,25 +28,25 @@ def checkpoint_id():
 
 
 @pytest.fixture
-def datasource_names():
-    return ["Data Source name"]
+def datasource_names_to_asset_names() -> dict[str, set[str]]:
+    return {"Data Source 1": {"Data Asset A", "Data Asset B"}}
 
 
 @pytest.fixture
-def checkpoint_event_without_splitter_options(checkpoint_id, datasource_names):
+def checkpoint_event_without_splitter_options(checkpoint_id, datasource_names_to_asset_names):
     return RunCheckpointEvent(
         type="run_checkpoint_request",
         checkpoint_id=checkpoint_id,
-        datasource_names=datasource_names,
+        datasource_names_to_asset_names=datasource_names_to_asset_names,
     )
 
 
 @pytest.fixture
-def checkpoint_event_with_splitter_options(checkpoint_id, datasource_names):
+def checkpoint_event_with_splitter_options(checkpoint_id, datasource_names_to_asset_names):
     return RunCheckpointEvent(
         type="run_checkpoint_request",
         checkpoint_id=checkpoint_id,
-        datasource_names=datasource_names,
+        datasource_names_to_asset_names=datasource_names_to_asset_names,
         splitter_options={"year": 2023, "month": 11, "day": 30},
     )
 
@@ -109,7 +109,7 @@ def test_run_checkpoint_action_with_splitter_options_returns_action_result(
 
 
 def test_run_checkpoint_action_raises_on_test_connection_failure(
-    context, checkpoint_id, datasource_names
+    context, checkpoint_id, datasource_names_to_asset_names
 ):
     mock_datasource = MagicMock(spec=Datasource)
     context.get_datasource.return_value = mock_datasource
@@ -121,7 +121,7 @@ def test_run_checkpoint_action_raises_on_test_connection_failure(
         action.run(
             event=RunCheckpointEvent(
                 type="run_checkpoint_request",
-                datasource_names=datasource_names,
+                datasource_names_to_asset_names=datasource_names_to_asset_names,
                 checkpoint_id=checkpoint_id,
             ),
             id="test-id",

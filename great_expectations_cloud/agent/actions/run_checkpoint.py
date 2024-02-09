@@ -16,10 +16,14 @@ class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
     @override
     def run(self, event: RunCheckpointEvent, id: str) -> ActionResult:
         # TODO: move connection testing into OSS; there isn't really a reason it can't be done there
-        for datasource_name in event.datasource_names:
+        for datasource_name, data_asset_names in event.datasource_names_to_asset_names.items():
             datasource = self._context.get_datasource(datasource_name)
-            datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
-
+            datasource.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
+            for data_asset_name in (
+                data_asset_names
+            ):  # only test connection for assets that are validated in checkpoint
+                asset = datasource.get_asset(data_asset_name)
+                asset.test_connection()  # raises `TestConnectionError` on failure
         checkpoint_run_result = self._context.run_checkpoint(
             ge_cloud_id=event.checkpoint_id,
             batch_request={"options": event.splitter_options} if event.splitter_options else None,
