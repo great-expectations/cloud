@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from great_expectations.experimental.metric_repository.metric_repository import (
         MetricRepository,
     )
+    from great_expectations.experimental.metric_repository.metrics import MetricRun
 
 
 class ColumnDescriptiveMetricsAction(AgentAction[RunColumnDescriptiveMetricsEvent]):
@@ -46,8 +47,7 @@ class ColumnDescriptiveMetricsAction(AgentAction[RunColumnDescriptiveMetricsEven
 
         # Note: This exception is raised after the metric run is added to the repository so that
         # the user can still access any computed metrics even if one of the metrics fails.
-        if any(metric.exception for metric in metric_run.metrics):
-            raise RuntimeError("One or more metrics failed to compute.")
+        self._raise_on_any_metric_exception(metric_run)
 
         return ActionResult(
             id=id,
@@ -56,3 +56,7 @@ class ColumnDescriptiveMetricsAction(AgentAction[RunColumnDescriptiveMetricsEven
                 CreatedResource(resource_id=str(metric_run_id), type="MetricRun"),
             ],
         )
+
+    def _raise_on_any_metric_exception(self, metric_run: MetricRun) -> None:
+        if any(metric.exception for metric in metric_run.metrics):
+            raise RuntimeError("One or more metrics failed to compute.")
