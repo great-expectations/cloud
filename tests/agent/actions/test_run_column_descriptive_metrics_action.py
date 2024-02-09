@@ -166,9 +166,6 @@ def test_run_column_descriptive_metrics_creates_metric_run_then_raises_on_any_me
         batch_inspector=mock_batch_inspector,
     )
 
-    action._raise_on_any_metric_exception = Mock()
-    action._raise_on_any_metric_exception.side_effect = RuntimeError()
-
     with pytest.raises(RuntimeError):
         action.run(
             event=RunColumnDescriptiveMetricsEvent(
