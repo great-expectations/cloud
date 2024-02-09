@@ -144,6 +144,7 @@ def test_run_column_descriptive_metrics_creates_metric_run_then_raises_on_any_me
     mock_metric_repository = Mock(spec=MetricRepository)
     mock_batch_inspector = Mock(spec=BatchInspector)
 
+    # Using a real metric with a real exception in the metric run to test the exception handling
     mock_metric_run = MetricRun(
         metrics=[
             ColumnMetric[int](
@@ -151,8 +152,8 @@ def test_run_column_descriptive_metrics_creates_metric_run_then_raises_on_any_me
                 metric_name="column_values.null.count",
                 value=1,
                 exception=MetricException(
-                    type="Not found",
-                    message="Metric was not successfully computed but exception was not found.",
+                    type="test-exception",
+                    message="exception message",
                 ),
                 column="col1",
             )
