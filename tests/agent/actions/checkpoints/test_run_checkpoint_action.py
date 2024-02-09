@@ -28,7 +28,7 @@ def checkpoint_id():
 
 
 @pytest.fixture
-def datasource_names_to_asset_names() -> dict[str, set[str]]:
+def datasource_names_to_asset_names():
     return {"Data Source 1": {"Data Asset A", "Data Asset B"}}
 
 
