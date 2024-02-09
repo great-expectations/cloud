@@ -5,6 +5,7 @@ from uuid import UUID
 
 import pytest
 from great_expectations.data_context import CloudDataContext
+from great_expectations.datasource.fluent import Datasource
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
