@@ -38,7 +38,7 @@ def test_run_column_descriptive_metrics_computes_metric_run():
         batch_inspector=mock_batch_inspector,
     )
 
-    action._raise_on_any_metric_exception = Mock()
+    action._raise_on_any_metric_exception = Mock()  # type: ignore[method-assign]  # mock so that we don't raise
 
     action.run(
         event=RunColumnDescriptiveMetricsEvent(
@@ -66,7 +66,7 @@ def test_run_column_descriptive_metrics_creates_metric_run():
         batch_inspector=mock_batch_inspector,
     )
 
-    action._raise_on_any_metric_exception = Mock()
+    action._raise_on_any_metric_exception = Mock()  # type: ignore[method-assign]  # mock so that we don't raise
 
     action.run(
         event=RunColumnDescriptiveMetricsEvent(
@@ -93,7 +93,7 @@ def test_run_column_descriptive_metrics_returns_action_result():
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
     )
-    action._raise_on_any_metric_exception = Mock()
+    action._raise_on_any_metric_exception = Mock()  # type: ignore[method-assign]  # mock so that we don't raise
 
     action_result = action.run(
         event=RunColumnDescriptiveMetricsEvent(
