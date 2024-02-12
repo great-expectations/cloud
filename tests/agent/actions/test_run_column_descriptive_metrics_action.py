@@ -12,7 +12,11 @@ from great_expectations.experimental.metric_repository.batch_inspector import (
 from great_expectations.experimental.metric_repository.metric_repository import (
     MetricRepository,
 )
-from great_expectations.experimental.metric_repository.metrics import MetricRun
+from great_expectations.experimental.metric_repository.metrics import (
+    ColumnMetric,
+    MetricException,
+    MetricRun,
+)
 
 from great_expectations_cloud.agent.actions import ColumnDescriptiveMetricsAction
 from great_expectations_cloud.agent.models import (
@@ -33,6 +37,8 @@ def test_run_column_descriptive_metrics_computes_metric_run():
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
     )
+
+    action._raise_on_any_metric_exception = Mock()  # type: ignore[method-assign]  # mock so that we don't raise
 
     action.run(
         event=RunColumnDescriptiveMetricsEvent(
@@ -60,6 +66,8 @@ def test_run_column_descriptive_metrics_creates_metric_run():
         batch_inspector=mock_batch_inspector,
     )
 
+    action._raise_on_any_metric_exception = Mock()  # type: ignore[method-assign]  # mock so that we don't raise
+
     action.run(
         event=RunColumnDescriptiveMetricsEvent(
             type="column_descriptive_metrics_request.received",
@@ -85,6 +93,7 @@ def test_run_column_descriptive_metrics_returns_action_result():
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
     )
+    action._raise_on_any_metric_exception = Mock()  # type: ignore[method-assign]  # mock so that we don't raise
 
     action_result = action.run(
         event=RunColumnDescriptiveMetricsEvent(
@@ -128,3 +137,53 @@ def test_run_column_descriptive_metrics_raises_on_test_connection_failure():
         )
 
     mock_batch_inspector.compute_metric_run.assert_not_called()
+
+
+def test_run_column_descriptive_metrics_creates_metric_run_then_raises_on_any_metric_exception():
+    mock_context = Mock(spec=CloudDataContext)
+    mock_metric_repository = Mock(spec=MetricRepository)
+    mock_batch_inspector = Mock(spec=BatchInspector)
+
+    # Using a real metric with a real exception in the metric run to test the exception handling
+    mock_metric_run = MetricRun(
+        metrics=[
+            # Metric with an exception within the MetricRun should cause the action to raise:
+            ColumnMetric[int](
+                batch_id="batch_id",
+                metric_name="column_values.null.count",
+                value=1,
+                exception=MetricException(
+                    type="test-exception",
+                    message="exception message",
+                ),
+                column="col1",
+            ),
+            # Also, a Metric with no exception within the MetricRun should still cause the action to raise:
+            ColumnMetric[int](
+                batch_id="batch_id",
+                metric_name="column_values.null.count",
+                value=2,
+                exception=None,
+                column="col2",
+            ),
+        ]
+    )
+    mock_batch_inspector.compute_metric_run.return_value = mock_metric_run
+
+    action = ColumnDescriptiveMetricsAction(
+        context=mock_context,
+        metric_repository=mock_metric_repository,
+        batch_inspector=mock_batch_inspector,
+    )
+
+    with pytest.raises(RuntimeError):
+        action.run(
+            event=RunColumnDescriptiveMetricsEvent(
+                type="column_descriptive_metrics_request.received",
+                datasource_name="test-datasource",
+                data_asset_name="test-data-asset",
+            ),
+            id="test-id",
+        )
+
+    mock_metric_repository.add_metric_run.assert_called_once_with(mock_metric_run)
