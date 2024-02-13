@@ -4,7 +4,7 @@ import functools
 import logging
 import pathlib
 from pprint import pformat as pf
-from typing import TYPE_CHECKING, Final, Literal, MutableMapping
+from typing import TYPE_CHECKING, Any, Final, Literal, MutableMapping
 
 import invoke
 import requests
@@ -25,7 +25,7 @@ DOCKERFILE_PATH: Final[str] = "./Dockerfile"
 @functools.lru_cache(maxsize=8)
 def _get_pyproject_tool_dict(
     tool_key: Literal["poetry", "black", "ruff", "mypy"] | None = None,
-) -> MutableMapping:
+) -> MutableMapping[str, Any]:
     """
     Load the pyproject.toml file as a dict. Optional return the config of a specific tool.
     Caches each tool's config for faster access.
