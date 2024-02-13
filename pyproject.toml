@@ -182,6 +182,9 @@ max-complexity = 10
     "F403", # star imports
 ]
 "models.py" = [
+    # TODO: remove these once our min python is 3.9 or greater
+    # or once these rule respect runtime-evaluated-base-classes
+    "UP006", # non-pep585-annotation - pydantic models use annotations at runtime
     "UP007", # non-pep604-annotation - pydantic models use annotations at runtime
 ]
 "tasks.py" = [
