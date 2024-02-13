@@ -10,7 +10,7 @@ from typing_extensions import Annotated
 
 class AgentBaseModel(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
     class Config:
-        extra: str = Extra.forbid
+        extra: str = Extra.ignore
 
 
 class EventBase(AgentBaseModel):
