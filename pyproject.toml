@@ -79,7 +79,6 @@ follow_imports = 'normal'
 warn_redundant_casts = true
 show_error_codes = true
 implicit_reexport = true                                         # enabled due to strict mode
-disallow_any_generics = false                                    # consider enabling
 enable_error_code = ['ignore-without-code', 'explicit-override']
 
 
