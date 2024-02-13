@@ -22,7 +22,12 @@ class OnMessagePayload:
     body: bytes
 
 
-class OnMessageCallback(Protocol):
+class OnMessageFn(Protocol):
+    """
+    Callback invoked when a message is received.
+    Accepts a single argument, a payload object and returns None.
+    """
+
     def __call__(self, payload: OnMessagePayload) -> None:
         ...
 
@@ -40,7 +45,7 @@ class AsyncRabbitMQClient:
         self._consumer_tag = None
         self._consuming = False
 
-    def run(self, queue: str, on_message: OnMessageCallback) -> None:
+    def run(self, queue: str, on_message: OnMessageFn) -> None:
         """Run an async connection to RabbitMQ.
 
         Args:
@@ -150,7 +155,7 @@ class AsyncRabbitMQClient:
         method_frame: Basic.Deliver,
         header_frame: BasicProperties,
         body: bytes,
-        on_message: OnMessageCallback,
+        on_message: OnMessageFn,
     ) -> None:
         """Called by Pika when a message is received."""
         # param on_message is provided by the caller as an argument to AsyncRabbitMQClient.run
@@ -161,7 +166,7 @@ class AsyncRabbitMQClient:
         )
         return on_message(payload)
 
-    def _start_consuming(self, queue: str, on_message: OnMessageCallback, channel: Channel) -> None:
+    def _start_consuming(self, queue: str, on_message: OnMessageFn, channel: Channel) -> None:
         """Consume from a channel with the on_message callback."""
         channel.add_on_cancel_callback(self._on_consumer_canceled)
         self._consumer_tag = channel.basic_consume(queue=queue, on_message_callback=on_message)
@@ -188,7 +193,7 @@ class AsyncRabbitMQClient:
             self._channel.close()
 
     def _on_connection_open(
-        self, connection: AsyncioConnection, queue: str, on_message: OnMessageCallback
+        self, connection: AsyncioConnection, queue: str, on_message: OnMessageFn
     ) -> None:
         """Callback invoked after the broker opens the connection."""
         on_channel_open = partial(self._on_channel_open, queue=queue, on_message=on_message)
@@ -214,7 +219,7 @@ class AsyncRabbitMQClient:
         else:
             self._connection.close()
 
-    def _on_channel_open(self, channel: Channel, queue: str, on_message: OnMessageCallback) -> None:
+    def _on_channel_open(self, channel: Channel, queue: str, on_message: OnMessageFn) -> None:
         """Callback invoked after the broker opens the channel."""
         self._channel = channel
         channel.add_on_close_callback(self._on_channel_closed)
