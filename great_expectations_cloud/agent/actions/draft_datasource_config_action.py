@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any
 from uuid import UUID
 
 from great_expectations.compatibility import pydantic
@@ -35,7 +36,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
         return ActionResult(id=id, type=event.type, created_resources=[])
 
-    def get_draft_config(self, config_id: UUID) -> dict:
+    def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
         try:
             config = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:

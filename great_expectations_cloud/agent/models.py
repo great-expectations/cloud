@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Literal, Optional, Sequence, Union
+from typing import Any, Literal, Optional, Sequence, Union
 from uuid import UUID
 
 from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
@@ -39,7 +39,7 @@ class RunMissingnessDataAssistantEvent(RunDataAssistantEvent):
 class RunCheckpointEvent(EventBase):
     type: Literal["run_checkpoint_request"] = "run_checkpoint_request"
     checkpoint_id: uuid.UUID
-    splitter_options: Optional[dict] = None
+    splitter_options: Optional[dict[str, Any]] = None
 
 
 class RunColumnDescriptiveMetricsEvent(EventBase):
