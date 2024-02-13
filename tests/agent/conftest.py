@@ -99,10 +99,10 @@ def fake_subscriber(mocker) -> FakeSubscriber:
 
 
 class DataContextConfigTD(TypedDict):
-    anonymous_usage_statistics: dict
+    anonymous_usage_statistics: dict[str, Any]
     checkpoint_store_name: str
-    datasources: dict
-    stores: dict
+    datasources: dict[str, dict[str, Any]]
+    stores: dict[str, dict[str, Any]]
 
 
 @pytest.fixture
