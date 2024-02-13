@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 from functools import partial
 from json import JSONDecodeError
-from typing import TYPE_CHECKING, Callable, Coroutine
+from typing import TYPE_CHECKING, Callable, Coroutine, Protocol
 
 from great_expectations.compatibility import pydantic
 from pika.exceptions import (
@@ -42,10 +42,14 @@ class EventContext:
     correlation_id: str
     processed_successfully: Callable[[], None]
     processed_with_failures: Callable[[], None]
-    redeliver_message: Callable[[], Coroutine]
+    redeliver_message: Callable[[], Coroutine[OnMessageCallback, None, None]]
 
 
-OnMessageCallback = Callable[[EventContext], None]
+class OnMessageCallback(Protocol):
+    """Callback for handling incoming messages."""
+
+    def __call__(self, event_context: EventContext) -> None:
+        """Handle an incoming message."""
 
 
 class Subscriber:
