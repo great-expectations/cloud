@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal
 from unittest.mock import MagicMock
 from uuid import UUID
 
@@ -44,7 +44,9 @@ def set_required_env_vars(monkeypatch, org_id, token) -> None:
         monkeypatch.setenv(name=key, value=val)
 
 
-def build_payload(config: dict, id: UUID) -> dict:
+def build_payload(
+    config: dict[str, Any], id: UUID
+) -> dict[Literal["data"], dict[str, str | UUID | dict[str, Any]]]:
     return {
         "data": {
             "type": "draft_config",

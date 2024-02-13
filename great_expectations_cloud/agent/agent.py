@@ -9,7 +9,7 @@ from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
-from typing import TYPE_CHECKING, Dict, Final
+from typing import TYPE_CHECKING, Any, Dict, Final
 
 from great_expectations import get_context
 from great_expectations.compatibility import pydantic
@@ -104,8 +104,8 @@ class GXAgent:
         # the CloudDataContext cached here is used by the worker, so
         # it isn't safe to increase the number of workers running GX jobs.
         self._executor = ThreadPoolExecutor(max_workers=1)
-        self._current_task: Future | None = None
-        self._correlation_ids: defaultdict = defaultdict(lambda: 0)
+        self._current_task: Future[Any] | None = None
+        self._correlation_ids: defaultdict[str, int] = defaultdict(lambda: 0)
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
@@ -196,7 +196,9 @@ class GXAgent:
         result = handler.handle_event(event=event_context.event, id=event_context.correlation_id)
         return result
 
-    def _handle_event_as_thread_exit(self, future: Future, event_context: EventContext) -> None:
+    def _handle_event_as_thread_exit(
+        self, future: Future[ActionResult], event_context: EventContext
+    ) -> None:
         """Callback invoked when the thread running GX exits.
 
         Args:

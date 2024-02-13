@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Literal, Optional, Sequence, Union
+from typing import Any, Dict, Literal, Optional, Sequence, Union
 from uuid import UUID
 
 from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
@@ -10,7 +10,7 @@ from typing_extensions import Annotated
 
 class AgentBaseModel(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
     class Config:
-        extra: str = Extra.forbid
+        extra: str = Extra.ignore
 
 
 class EventBase(AgentBaseModel):
@@ -40,7 +40,7 @@ class RunCheckpointEvent(EventBase):
     type: Literal["run_checkpoint_request"] = "run_checkpoint_request"
     datasource_names_to_asset_names: dict
     checkpoint_id: uuid.UUID
-    splitter_options: Optional[dict] = None
+    splitter_options: Optional[Dict[str, Any]] = None
 
 
 class RunColumnDescriptiveMetricsEvent(EventBase):

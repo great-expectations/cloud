@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
@@ -58,7 +58,7 @@ class EventHandler:
     def __init__(self, context: CloudDataContext) -> None:
         self._context = context
 
-    def get_event_action(self, event: Event) -> AgentAction:
+    def get_event_action(self, event: Event) -> AgentAction[Any]:
         """Get the action that should be run for the given event."""
         if isinstance(event, RunOnboardingDataAssistantEvent):
             return RunOnboardingDataAssistantAction(context=self._context)
