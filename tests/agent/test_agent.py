@@ -353,7 +353,10 @@ def test_correlation_id_header(
         [
             (DraftDatasourceConfigEvent(config_id=datasource_config_id_1), agent_job_ids[0]),
             (DraftDatasourceConfigEvent(config_id=datasource_config_id_2), agent_job_ids[1]),
-            (RunCheckpointEvent(checkpoint_id=checkpoint_id), agent_job_ids[2]),
+            (
+                RunCheckpointEvent(checkpoint_id=checkpoint_id, datasource_names_to_asset_names={}),
+                agent_job_ids[2],
+            ),
         ]
     )
 

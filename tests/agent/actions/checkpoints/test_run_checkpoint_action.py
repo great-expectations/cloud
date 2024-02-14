@@ -5,6 +5,8 @@ from uuid import UUID
 
 import pytest
 from great_expectations.data_context import CloudDataContext
+from great_expectations.datasource.fluent import Datasource
+from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
 from great_expectations_cloud.agent.models import (
@@ -26,18 +28,25 @@ def checkpoint_id():
 
 
 @pytest.fixture
-def checkpoint_event_without_splitter_options(checkpoint_id):
+def datasource_names_to_asset_names():
+    return {"Data Source 1": {"Data Asset A", "Data Asset B"}}
+
+
+@pytest.fixture
+def checkpoint_event_without_splitter_options(checkpoint_id, datasource_names_to_asset_names):
     return RunCheckpointEvent(
         type="run_checkpoint_request",
         checkpoint_id=checkpoint_id,
+        datasource_names_to_asset_names=datasource_names_to_asset_names,
     )
 
 
 @pytest.fixture
-def checkpoint_event_with_splitter_options(checkpoint_id):
+def checkpoint_event_with_splitter_options(checkpoint_id, datasource_names_to_asset_names):
     return RunCheckpointEvent(
         type="run_checkpoint_request",
         checkpoint_id=checkpoint_id,
+        datasource_names_to_asset_names=datasource_names_to_asset_names,
         splitter_options={"year": 2023, "month": 11, "day": 30},
     )
 
@@ -97,3 +106,23 @@ def test_run_checkpoint_action_with_splitter_options_returns_action_result(
             type="SuiteValidationResult",
         ),
     ]
+
+
+def test_run_checkpoint_action_raises_on_test_connection_failure(
+    context, checkpoint_id, datasource_names_to_asset_names
+):
+    mock_datasource = MagicMock(spec=Datasource)
+    context.get_datasource.return_value = mock_datasource
+    mock_datasource.test_connection.side_effect = TestConnectionError()
+
+    action = RunCheckpointAction(context=context)
+
+    with pytest.raises(TestConnectionError):
+        action.run(
+            event=RunCheckpointEvent(
+                type="run_checkpoint_request",
+                datasource_names_to_asset_names=datasource_names_to_asset_names,
+                checkpoint_id=checkpoint_id,
+            ),
+            id="test-id",
+        )
