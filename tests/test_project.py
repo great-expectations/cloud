@@ -5,7 +5,7 @@ import pathlib
 import re
 import warnings
 from pprint import pformat as pf
-from typing import Final, Mapping
+from typing import Any, Final, Mapping
 
 import pytest
 import tomlkit
@@ -40,7 +40,7 @@ def test_great_expectations_is_installed(min_gx_version):
 
 
 @pytest.fixture
-def pre_commit_config_repos() -> Mapping[str, dict]:
+def pre_commit_config_repos() -> Mapping[str, dict[str, Any]]:
     """
     Extract the repos from the pre-commit config file and return a dict with the
     repo source url as the key
@@ -52,16 +52,17 @@ def pre_commit_config_repos() -> Mapping[str, dict]:
 
 
 @pytest.fixture
-def poetry_lock_packages() -> Mapping[str, dict]:
+def poetry_lock_packages() -> Mapping[str, dict[str, Any]]:
     poetry_lock = PROJECT_ROOT / "poetry.lock"
     toml_doc = tomlkit.loads(poetry_lock.read_text())
     LOGGER.info(f"poetry.lock ->\n {pf(toml_doc, depth=1)[:1000]}...")
-    packages: list[dict] = toml_doc["package"].unwrap()  # type: ignore[assignment] # values are always list[dict]
+    packages: list[dict[str, Any]] = toml_doc["package"].unwrap()  # type: ignore[assignment] # values are always list[dict]
     return {pkg.pop("name"): pkg for pkg in packages}
 
 
 def test_pre_commit_versions_are_in_sync(
-    pre_commit_config_repos: Mapping, poetry_lock_packages: Mapping
+    pre_commit_config_repos: Mapping[str, dict[str, Any]],
+    poetry_lock_packages: Mapping[str, dict[str, Any]],
 ):
     repo_package_lookup = {
         "https://github.com/astral-sh/ruff-pre-commit": "ruff",
