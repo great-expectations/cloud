@@ -35,8 +35,9 @@ class ColumnDescriptiveMetricsAction(AgentAction[RunColumnDescriptiveMetricsEven
     @override
     def run(self, event: RunColumnDescriptiveMetricsEvent, id: str) -> ActionResult:
         datasource = self._context.get_datasource(event.datasource_name)
-        datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
         data_asset = datasource.get_asset(event.data_asset_name)
+        data_asset.test_connection()  # raises `TestConnectionError` on failure
+
         batch_request = data_asset.build_batch_request()
 
         metric_run = self._batch_inspector.compute_metric_run(
