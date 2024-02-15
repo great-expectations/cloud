@@ -111,14 +111,16 @@ def test_run_column_descriptive_metrics_returns_action_result():
     ]
 
 
-def test_run_column_descriptive_metrics_raises_on_test_connection_failure():
+def test_run_column_descriptive_metrics_raises_on_test_connection_to_data_asset_failure():
     mock_context = Mock(spec=CloudDataContext)
     mock_metric_repository = Mock(spec=MetricRepository)
     mock_batch_inspector = Mock(spec=BatchInspector)
 
     mock_datasource = Mock()
     mock_context.get_datasource.return_value = mock_datasource
-    mock_datasource.test_connection.side_effect = TestConnectionError()
+    mock_data_asset = Mock()
+    mock_datasource.get_asset.return_value = mock_data_asset
+    mock_data_asset.test_connection.side_effect = TestConnectionError()
 
     action = ColumnDescriptiveMetricsAction(
         context=mock_context,
