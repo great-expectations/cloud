@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from great_expections.exceptions import CheckpointError
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions.agent_action import (
@@ -23,8 +22,8 @@ class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
                 if event.splitter_options
                 else None,
             )
-        except CheckpointError as e:
-            raise RuntimeError(str(e)) from e
+        except CheckpointMissingBatchRequest as e:  # noqa: F821 (only for prototyping)
+            raise RuntimeError(e.human_readable()) from e
         validation_results = checkpoint_run_result.run_results
         created_resources = []
         for key in validation_results.keys():
