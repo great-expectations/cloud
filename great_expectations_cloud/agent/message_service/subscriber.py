@@ -66,6 +66,7 @@ class Subscriber:
         self.client = client
         self._reconnect_delay = 0
 
+    # TODO: Consider using tenacity to handle reconnecting
     def consume(
         self,
         queue: str,
@@ -89,6 +90,7 @@ class Subscriber:
                 # If an authentication error happens when trying to connect to rabbitMQ,
                 # it means that the connection string is incorrect. Retrying would not
                 # enable us to reconnect.
+                self.client.stop()
                 raise e
             except (AMQPError, ChannelError):
                 self.client.stop()
