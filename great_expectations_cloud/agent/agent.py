@@ -175,15 +175,7 @@ class GXAgent:
             # request that this message is redelivered later. If the event is UnknownEvent
             # we don't understand it, so requeue it in the hope that someone else does.
             loop = asyncio.get_event_loop()
-
-            # We must keep a reference to the task to prevent it from being garbage collected
-            self._current_task = loop.create_task(event_context.redeliver_message())
-
-            def _dereference_current_task(instance, future: Future[ActionResult]) -> None:
-                instance._current_task = None
-
-            # when the task is done, remove the reference
-            self._current_task.add_done_callback(_dereference_current_task)
+            loop.create_task(event_context.redeliver_message())
             return
 
         # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
