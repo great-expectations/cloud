@@ -27,7 +27,6 @@ orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue 
 # relying on packaging in agent code so declaring it explicitly here
 packaging = "^21.3"
 tenacity = "^8.2.3"
-ruff = "0.2.1"
 
 [tool.poetry.extras]
 snowflake = [
