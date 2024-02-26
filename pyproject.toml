@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "0.0.33"
+version = "0.0.34.0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -26,15 +26,11 @@ pika = "^1.3.1"
 orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue is resolved
 # relying on packaging in agent code so declaring it explicitly here
 packaging = "^21.3"
+tenacity = "^8.2.3"
 
 [tool.poetry.extras]
-snowflake = [
-    "snowflake-sqlalchemy",
-]
-postgres = [
-    "sqlalchemy",
-    "psycopg2-binary",
-]
+snowflake = ["snowflake-sqlalchemy"]
+postgres = ["sqlalchemy", "psycopg2-binary"]
 
 [tool.poetry.group.sql.dependencies]
 great-expectations = { version = "^0.18.4", extras = [
@@ -44,7 +40,7 @@ great-expectations = { version = "^0.18.4", extras = [
 snowflake-sqlalchemy = ">=1.5.0"
 snowflake-connector-python = ">=3.3.1"
 # TODO: Remove the python constraint once this PR is merged - https://github.com/sqlalchemy-redshift/sqlalchemy-redshift/pull/288
-sqlalchemy-redshift = {version = "^0.8.8", python = "<3.11"}
+sqlalchemy-redshift = { version = "^0.8.8", python = "<3.11" }
 psycopg2-binary = "^2.9.9"
 
 [tool.poetry.group.dev.dependencies]
