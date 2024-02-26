@@ -157,9 +157,8 @@ class GXAgent:
             # this event has been redelivered too many times - remove it from circulation
             event_context.processed_with_failures()
             return
-        elif self._can_accept_new_task() is not True or isinstance(
-            event_context.event, UnknownEvent
-        ):
+        # Allow unknowns to continue
+        elif self._can_accept_new_task() is not True:
             # request that this message is redelivered later. If the event is UnknownEvent
             # we don't understand it, so requeue it in the hope that someone else does.
             loop = asyncio.get_event_loop()
@@ -209,14 +208,24 @@ class GXAgent:
 
         # get results or errors from the thread
         error = future.exception()
+        # TODO Clean up ifs
         if error is None:
             result: ActionResult = future.result()
-            status = JobCompleted(
-                success=True,
-                created_resources=result.created_resources,
-            )
-            print(f"Completed job: {event_context.event.type} ({event_context.correlation_id})")
+
+            # TODO This result may have an UnknownEvent error
+            if result.event is UnknownEvent:
+                status = JobCompleted(
+                    success=False,
+                    created_resources=[],
+                )
+            else:
+                status = JobCompleted(
+                    success=True,
+                    created_resources=result.created_resources,
+                )
+                print(f"Completed job: {event_context.event.type} ({event_context.correlation_id})")
         else:
+            # TODO we need unknown events to make it here
             status = JobCompleted(success=False, error_stack_trace=str(error))
             print(traceback.format_exc())
             print(

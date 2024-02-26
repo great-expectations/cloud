@@ -28,6 +28,7 @@ from great_expectations_cloud.agent.actions.draft_datasource_config_action impor
     DraftDatasourceConfigAction,
 )
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
+from great_expectations_cloud.agent.actions.unknown_event import UnknownEventAction
 from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
     Event,
@@ -88,12 +89,13 @@ class EventHandler:
         if isinstance(event, DraftDatasourceConfigEvent):
             return DraftDatasourceConfigAction(context=self._context)
 
-        # shouldn't get here
-        raise UnknownEventError("Unknown message received - cannot process.")
+        # Building an UnknownEventAction allows noop
+        return UnknownEventAction(context=self._context)
 
     def handle_event(self, event: Event, id: str) -> ActionResult:
         """Transform an Event into an ActionResult."""
         action = self.get_event_action(event=event)
+        # THis can be unknown event now!
         LOGGER.info(f"Handling event: {event.type} -> {action.__class__.__name__}")
         action_result = action.run(event=event, id=id)
         return action_result
