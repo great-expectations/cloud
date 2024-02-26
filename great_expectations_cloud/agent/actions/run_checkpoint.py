@@ -39,7 +39,7 @@ def run_checkpoint(context: CloudDataContext, event: Event, id: str) -> ActionRe
 
 
 def run_checkpoint_v0_18(context: CloudDataContext, event: Event, id: str) -> ActionResult:
-    # TODO: Add try except block
+    # TODO: Add try except block only if we plan to catch 0.18 exceptions
     for datasource_name, data_asset_names in event.datasource_names_to_asset_names.items():
         datasource = context.get_datasource(datasource_name)
         datasource.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
@@ -70,7 +70,19 @@ def run_checkpoint_v0_18(context: CloudDataContext, event: Event, id: str) -> Ac
 
 
 def run_checkpoint_v1_0(context: CloudDataContext, event: Event, id: str) -> ActionResult:
-    # TODO: Implement and add try except block
+    # try:
+    #     # TODO: Implement and add try except block
+    # except CheckpointError as e:  # Catch the exception from 0.18.x. Add more exception types if applicable.
+    #     raise GXCoreError(
+    #         detail=str(e),
+    #         code="checkpoint-error"
+    #     ) from e
+    # except Exception as e:
+    #     # Handle any other exception
+    #     raise GXCoreError(
+    #         detail=str(e),
+    #         code="generic-unhandled-error"
+    #     ) from e
     raise NotImplementedError
 
 
