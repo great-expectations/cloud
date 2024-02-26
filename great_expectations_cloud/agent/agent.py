@@ -142,6 +142,11 @@ class GXAgent:
             print("Received request to shutdown.")
         except (SubscriberError, ClientError):
             print("Connection to GX Cloud has encountered an error.")
+        except AuthenticationError:
+            # Retry with new credentials
+            self._config = self._get_config()
+            # Raise to use the retry decorator to handle the retry logic
+            raise
         finally:
             if subscriber is not None:
                 subscriber.close()
