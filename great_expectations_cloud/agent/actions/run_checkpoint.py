@@ -35,7 +35,7 @@ def lookup_runner(context: CloudDataContext) -> Callable:  # TODO: Return signat
 def run_checkpoint(context: CloudDataContext, event: Event, id: str) -> ActionResult:
     # TODO: Should the lookup be cached?
     checkpoint_runner = lookup_runner(context)
-    checkpoint_runner(context, event, id)
+    return checkpoint_runner(context, event, id)
 
 
 def run_checkpoint_v0_18(context: CloudDataContext, event: Event, id: str) -> ActionResult:
