@@ -62,8 +62,8 @@ class DraftDatasourceConfigEvent(EventBase):
 
 
 class UnknownEvent(EventBase):
-    """ Noop, returns error
-    """
+    """Noop, returns error"""
+
     type: Literal["unknown_event"] = "unknown_event"
 
 

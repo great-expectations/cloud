@@ -7,13 +7,11 @@ from great_expectations_cloud.agent.actions.agent_action import (
     AgentAction,
 )
 from great_expectations_cloud.agent.models import (
-    CreatedResource,
     RunCheckpointEvent,
-)
-
-from great_expectations_cloud.agent.models import (
     UnknownEvent,
 )
+
+
 class UnknownEventAction(AgentAction[UnknownEvent]):
     @override
     def run(self, event: RunCheckpointEvent, id: str) -> ActionResult:
