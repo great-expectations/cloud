@@ -217,6 +217,7 @@ class GXAgent:
                 status = JobCompleted(
                     success=False,
                     created_resources=[],
+                    error_stack_trace="Unknown event. May need to upgrade your Agent",
                 )
             else:
                 status = JobCompleted(
