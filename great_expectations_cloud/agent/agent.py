@@ -217,6 +217,7 @@ class GXAgent:
             )
             print(f"Completed job: {event_context.event.type} ({event_context.correlation_id})")
         else:
+            # TODO: Catch error code and any params here
             status = JobCompleted(success=False, error_stack_trace=str(error))
             print(traceback.format_exc())
             print(

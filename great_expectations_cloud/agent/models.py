@@ -96,3 +96,5 @@ class JobCompleted(AgentBaseModel):
 
 
 JobStatus = Union[JobStarted, JobCompleted]
+
+# TODO: Create class GXCoreError to bridge before we can standardize errors in GX Core. Is this the best place?
