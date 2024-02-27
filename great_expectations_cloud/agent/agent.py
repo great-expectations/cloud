@@ -107,6 +107,7 @@ class GXAgent:
         # it isn't safe to increase the number of workers running GX jobs.
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._current_task: Future[Any] | None = None
+        self._retry_task: asyncio.Task[Any] | None = None
         self._correlation_ids: defaultdict[str, int] = defaultdict(lambda: 0)
 
     def run(self) -> None:
@@ -180,7 +181,8 @@ class GXAgent:
             # request that this message is redelivered later. If the event is UnknownEvent
             # we don't understand it, so requeue it in the hope that someone else does.
             loop = asyncio.get_event_loop()
-            loop.create_task(event_context.redeliver_message())
+            # store a reference the task to ensure it isn't garbage collected
+            self._retry_task = loop.create_task(event_context.redeliver_message())
             return
 
         # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
