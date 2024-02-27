@@ -60,19 +60,8 @@ class EventHandler:
         self._context = context
 
     def get_event_action(self, event: Event) -> AgentAction[Any]:
-        EVENT_TO_ACTION_MAP = {
-            RunOnboardingDataAssistantEvent: RunOnboardingDataAssistantAction,
-            RunMissingnessDataAssistantEvent: RunMissingnessDataAssistantAction,
-            ListTableNamesEvent: ListTableNamesAction,
-            RunCheckpointEvent: RunCheckpointAction,
-            RunColumnDescriptiveMetricsEvent: ColumnDescriptiveMetricsAction,
-            DraftDatasourceConfigEvent: DraftDatasourceConfigAction,
-        }
+        return event.action(context=self._context)
 
-        if action := EVENT_TO_ACTION_MAP.get(event):
-            return action(context=self._context)
-        # Building an UnknownEventAction allows noop
-        return UnknownEventAction(context=self._context)
 
     def handle_event(self, event: Event, id: str) -> ActionResult:
         """Transform an Event into an ActionResult."""
