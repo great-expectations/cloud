@@ -60,35 +60,17 @@ class EventHandler:
         self._context = context
 
     def get_event_action(self, event: Event) -> AgentAction[Any]:
-        """Get the action that should be run for the given event."""
-        if isinstance(event, RunOnboardingDataAssistantEvent):
-            return RunOnboardingDataAssistantAction(context=self._context)
+        EVENT_TO_ACTION_MAP = {
+            RunOnboardingDataAssistantEvent: RunOnboardingDataAssistantAction,
+            RunMissingnessDataAssistantEvent: RunMissingnessDataAssistantAction,
+            ListTableNamesEvent: ListTableNamesAction,
+            RunCheckpointEvent: RunCheckpointAction,
+            RunColumnDescriptiveMetricsEvent: ColumnDescriptiveMetricsAction,
+            DraftDatasourceConfigEvent: DraftDatasourceConfigAction,
+        }
 
-        if isinstance(event, RunMissingnessDataAssistantEvent):
-            return RunMissingnessDataAssistantAction(context=self._context)
-
-        if isinstance(event, ListTableNamesEvent):
-            return ListTableNamesAction(context=self._context)
-
-        if isinstance(event, RunCheckpointEvent):
-            return RunCheckpointAction(context=self._context)
-
-        if isinstance(event, RunColumnDescriptiveMetricsEvent):
-            metric_retrievers: list[MetricRetriever] = [
-                ColumnDescriptiveMetricsMetricRetriever(self._context)
-            ]
-            batch_inspector = BatchInspector(self._context, metric_retrievers)
-            cloud_data_store = CloudDataStore(self._context)
-            column_descriptive_metrics_repository = MetricRepository(data_store=cloud_data_store)
-            return ColumnDescriptiveMetricsAction(
-                context=self._context,
-                batch_inspector=batch_inspector,
-                metric_repository=column_descriptive_metrics_repository,
-            )
-
-        if isinstance(event, DraftDatasourceConfigEvent):
-            return DraftDatasourceConfigAction(context=self._context)
-
+        if action := EVENT_TO_ACTION_MAP.get(event):
+            return action(context=self._context)
         # Building an UnknownEventAction allows noop
         return UnknownEventAction(context=self._context)
 
@@ -100,6 +82,3 @@ class EventHandler:
         action_result = action.run(event=event, id=id)
         return action_result
 
-
-class UnknownEventError(Exception):
-    ...
