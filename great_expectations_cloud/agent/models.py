@@ -1,17 +1,23 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, Literal, Optional, Sequence, Set, Union, TYPE_CHECKING, ClassVar
+from typing import Any, ClassVar, Dict, Literal, Optional, Sequence, Set, Union
 from uuid import UUID
 
 from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
 from typing_extensions import Annotated
 
-from great_expectations_cloud.agent.actions.draft_datasource_config_action import DraftDatasourceConfigAction
-
-if TYPE_CHECKING:
-    from great_expectations_cloud.agent.actions import AgentAction, RunOnboardingDataAssistantAction, \
-    RunCheckpointAction, ColumnDescriptiveMetricsAction, ListTableNamesAction, RunMissingnessDataAssistantAction
+from great_expectations_cloud.agent.actions import (
+    AgentAction,
+    ColumnDescriptiveMetricsAction,
+    ListTableNamesAction,
+    RunCheckpointAction,
+    RunMissingnessDataAssistantAction,
+    RunOnboardingDataAssistantAction,
+)
+from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
+    DraftDatasourceConfigAction,
+)
 
 
 class AgentBaseModel(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type

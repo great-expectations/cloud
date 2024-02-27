@@ -2,10 +2,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from great_expectations.experimental.metric_repository.batch_inspector import (
+    BatchInspector,
+)
 from great_expectations.experimental.metric_repository.cloud_data_store import CloudDataStore
-from great_expectations.experimental.metric_repository.column_descriptive_metrics_metric_retriever import \
-    ColumnDescriptiveMetricsMetricRetriever
-from great_expectations.experimental.metric_repository.metric_retriever import MetricRetriever
+from great_expectations.experimental.metric_repository.column_descriptive_metrics_metric_retriever import (
+    ColumnDescriptiveMetricsMetricRetriever,
+)
+from great_expectations.experimental.metric_repository.metric_repository import (
+    MetricRepository,
+)
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
@@ -16,12 +22,7 @@ from great_expectations_cloud.agent.models import (
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
-    from great_expectations.experimental.metric_repository.batch_inspector import (
-        BatchInspector,
-    )
-    from great_expectations.experimental.metric_repository.metric_repository import (
-        MetricRepository,
-    )
+    from great_expectations.experimental.metric_repository.metric_retriever import MetricRetriever
     from great_expectations.experimental.metric_repository.metrics import MetricRun
 
 
@@ -35,7 +36,7 @@ class ColumnDescriptiveMetricsAction(AgentAction[RunColumnDescriptiveMetricsEven
             ColumnDescriptiveMetricsMetricRetriever(self._context)
         ]
         cloud_data_store = CloudDataStore(self._context)
-        self._metric_repository =          MetricRepository(data_store=cloud_data_store)
+        self._metric_repository = MetricRepository(data_store=cloud_data_store)
         self._batch_inspector = BatchInspector(self._context, metric_retrievers)
 
     @override
