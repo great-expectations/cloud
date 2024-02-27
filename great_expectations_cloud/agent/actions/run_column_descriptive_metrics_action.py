@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from great_expectations.experimental.metric_repository.cloud_data_store import CloudDataStore
+from great_expectations.experimental.metric_repository.column_descriptive_metrics_metric_retriever import \
+    ColumnDescriptiveMetricsMetricRetriever
+from great_expectations.experimental.metric_repository.metric_retriever import MetricRetriever
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
@@ -25,12 +29,14 @@ class ColumnDescriptiveMetricsAction(AgentAction[RunColumnDescriptiveMetricsEven
     def __init__(
         self,
         context: CloudDataContext,
-        metric_repository: MetricRepository,
-        batch_inspector: BatchInspector,
     ):
         super().__init__(context=context)
-        self._metric_repository = metric_repository
-        self._batch_inspector = batch_inspector
+        metric_retrievers: list[MetricRetriever] = [
+            ColumnDescriptiveMetricsMetricRetriever(self._context)
+        ]
+        cloud_data_store = CloudDataStore(self._context)
+        self._metric_repository =          MetricRepository(data_store=cloud_data_store)
+        self._batch_inspector = BatchInspector(self._context, metric_retrievers)
 
     @override
     def run(self, event: RunColumnDescriptiveMetricsEvent, id: str) -> ActionResult:
