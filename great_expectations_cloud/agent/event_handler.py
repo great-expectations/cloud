@@ -3,19 +3,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
-from great_expectations.experimental.metric_repository.batch_inspector import (
-    BatchInspector,
-)
-from great_expectations.experimental.metric_repository.cloud_data_store import (
-    CloudDataStore,
-)
-from great_expectations.experimental.metric_repository.column_descriptive_metrics_metric_retriever import (
-    ColumnDescriptiveMetricsMetricRetriever,
-)
-from great_expectations.experimental.metric_repository.metric_repository import (
-    MetricRepository,
-)
-
 from great_expectations_cloud.agent.actions import (
     ColumnDescriptiveMetricsAction,
     ListTableNamesAction,
@@ -41,9 +28,6 @@ from great_expectations_cloud.agent.models import (
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
-    from great_expectations.experimental.metric_repository.metric_retriever import (
-        MetricRetriever,
-    )
 
     from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
 
@@ -81,4 +65,3 @@ class EventHandler:
         LOGGER.info(f"Handling event: {event.type} -> {action.__class__.__name__}")
         action_result = action.run(event=event, id=id)
         return action_result
-
