@@ -43,13 +43,10 @@ class EventHandler:
     def __init__(self, context: CloudDataContext) -> None:
         self._context = context
 
-    def get_event_action(self, event: Event) -> AgentAction[Any]:
-        return event.action(context=self._context)
-
 
     def handle_event(self, event: Event, id: str) -> ActionResult:
         """Transform an Event into an ActionResult."""
-        action = self.get_event_action(event=event)
+        action = event.action(context=self._context)
         # THis can be unknown event now!
         LOGGER.info(f"Handling event: {event.type} -> {action.__class__.__name__}")
         action_result = action.run(event=event, id=id)

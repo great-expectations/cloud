@@ -7,9 +7,9 @@ from uuid import UUID
 from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
 from typing_extensions import Annotated
 
-from great_expectations_cloud.agent.actions.draft_datasource_config_action import DraftDatasourceConfigAction
 
 if TYPE_CHECKING:
+    from great_expectations_cloud.agent.actions.draft_datasource_config_action import DraftDatasourceConfigAction
     from great_expectations_cloud.agent.actions import AgentAction, RunOnboardingDataAssistantAction, \
     RunCheckpointAction, ColumnDescriptiveMetricsAction, ListTableNamesAction, RunMissingnessDataAssistantAction
 
