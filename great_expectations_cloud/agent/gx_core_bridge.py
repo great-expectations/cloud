@@ -1,4 +1,4 @@
-# This file contains temporary code that can be included in the GX Core codebase.
+# This file contains temporary code that can eventually be included in the GX Core codebase.
 from __future__ import annotations
 
 

@@ -1,3 +1,9 @@
+"""This file contains compatibility code for different versions of Great Expectations Core.
+
+It is primarily used to run different code paths in AgentActions based on the major version of Great Expectations Core.
+Non version specific code should be placed in the appropriate action file, and version specific code should be placed in
+the appropriate version runner class.
+"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
