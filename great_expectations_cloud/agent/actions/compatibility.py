@@ -41,6 +41,8 @@ _VERSION_RUNNERS = {}
 
 
 def _register_version_runner(version: str, runner: _VersionRunner) -> None:
+    if version in _VERSION_RUNNERS:
+        raise ValueError(f"Version {version} already registered")
     _VERSION_RUNNERS[version] = runner
 
 
