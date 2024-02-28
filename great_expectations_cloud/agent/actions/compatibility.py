@@ -26,12 +26,12 @@ def register_version_runner(version: str, runner: VersionRunner) -> None:
 class V0Runner(VersionRunner):
     @override
     def run_checkpoint(self) -> None:
-        # ***** THIS IS WHERE THE 0.18 SPECIFIC CODE WOULD GO *****
+        # ***** THIS IS WHERE THE 0.18 SPECIFIC CODE WOULD GO, MOVED FROM THE ACTION *****
         print("Running run_checkpoint major version 0 (0.18)")
 
     @override
     def run_check_datasource_config(self) -> None:
-        # ***** THIS IS WHERE THE 0.18 SPECIFIC CODE WOULD GO *****
+        # ***** THIS IS WHERE THE 0.18 SPECIFIC CODE WOULD GO, MOVED FROM THE ACTION *****
         print("Running run_check_datasource_config major version 0 (0.18)")
 
 
@@ -41,12 +41,12 @@ register_version_runner("0", V0Runner())
 class V1Runner(VersionRunner):
     @override
     def run_checkpoint(self) -> None:
-        # ***** THIS IS WHERE THE 1.0 SPECIFIC CODE WOULD GO *****
+        # ***** THIS IS WHERE THE 1.0 SPECIFIC CODE WOULD GO, MOVED FROM THE ACTION *****
         print("Running run_checkpoint major version 1 (1.0)")
 
     @override
     def run_check_datasource_config(self) -> None:
-        # ***** THIS IS WHERE THE 1.0 SPECIFIC CODE WOULD GO *****
+        # ***** THIS IS WHERE THE 1.0 SPECIFIC CODE WOULD GO, MOVED FROM THE ACTION *****
         print("Running run_check_datasource_config major version 1 (1.0)")
 
 
