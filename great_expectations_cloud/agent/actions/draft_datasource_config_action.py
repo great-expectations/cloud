@@ -18,7 +18,7 @@ from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
     @override
     def run(self, event: DraftDatasourceConfigEvent, id: str) -> ActionResult:
-        draft_config = self.get_draft_config(config_id=event.config_id)
+        draft_config = self._get_draft_config(config_id=event.config_id)
         datasource_type = draft_config.get("type", None)
         if datasource_type is None:
             raise ValueError(
@@ -36,7 +36,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
         return ActionResult(id=id, type=event.type, created_resources=[])
 
-    def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
+    def _get_draft_config(self, config_id: UUID) -> dict[str, Any]:
         try:
             config = GxAgentEnvVars()
         except pydantic.ValidationError as validation_err:
