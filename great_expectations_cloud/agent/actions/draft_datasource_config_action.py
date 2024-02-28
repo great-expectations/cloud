@@ -8,6 +8,7 @@ from great_expectations.core.http import create_session
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
+from great_expectations_cloud.agent.actions.compatibility import lookup_runner
 from great_expectations_cloud.agent.config import (
     GxAgentEnvVars,
     generate_config_validation_error_text,
@@ -21,10 +22,13 @@ if TYPE_CHECKING:
 class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
     @override
     def run(self, event: DraftDatasourceConfigEvent, id: str) -> ActionResult:
-        return _run(context=self._context, event=event, id=id)
+        runner = lookup_runner()
+        return runner.run_check_datasource_config(context=self._context, event=event, id=id)
 
 
-def _run(context: CloudDataContext, event: DraftDatasourceConfigEvent, id: str) -> ActionResult:
+def check_draft_datasource_config(
+    context: CloudDataContext, event: DraftDatasourceConfigEvent, id: str
+) -> ActionResult:
     draft_config = _get_draft_config(config_id=event.config_id)
     datasource_type = draft_config.get("type", None)
     if datasource_type is None:
