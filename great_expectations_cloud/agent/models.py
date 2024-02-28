@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, Literal, Optional, Sequence, Set, Union, TYPE_CHECKING, ClassVar
+from typing import Any, ClassVar, Dict, Literal, Optional, Sequence, Set, Union, TYPE_CHECKING
 from uuid import UUID
 
 from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
