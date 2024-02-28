@@ -24,9 +24,6 @@ from great_expectations_cloud.agent.models import (
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
-    from great_expectations.experimental.metric_repository.metric_retriever import (
-        MetricRetriever,
-    )
     from great_expectations.experimental.metric_repository.metrics import MetricRun
 
 
@@ -38,12 +35,12 @@ class ColumnDescriptiveMetricsAction(AgentAction[RunColumnDescriptiveMetricsEven
         batch_inspector: BatchInspector | None = None,
     ):
         super().__init__(context=context)
-        metric_retrievers: list[MetricRetriever] = [
-            ColumnDescriptiveMetricsMetricRetriever(self._context)
-        ]
-        cloud_data_store = CloudDataStore(self._context)
-        self._metric_repository = metric_repository or MetricRepository(data_store=cloud_data_store)
-        self._batch_inspector = batch_inspector or BatchInspector(context, metric_retrievers)
+        self._metric_repository = metric_repository or MetricRepository(
+            data_store=CloudDataStore(self._context)
+        )
+        self._batch_inspector = batch_inspector or BatchInspector(
+            context, ColumnDescriptiveMetricsMetricRetriever(self._context)
+        )
 
     @override
     def run(self, event: RunColumnDescriptiveMetricsEvent, id: str) -> ActionResult:
