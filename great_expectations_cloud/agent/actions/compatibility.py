@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 
-class VersionRunner(Protocol):
+class _VersionRunner(Protocol):
     def run_checkpoint(self) -> None:
         ...
 
@@ -34,15 +34,15 @@ class VersionRunner(Protocol):
 _VERSION_RUNNERS = {}
 
 
-def register_version_runner(version: str, runner: VersionRunner) -> None:
+def _register_version_runner(version: str, runner: _VersionRunner) -> None:
     _VERSION_RUNNERS[version] = runner
 
 
-def raise_with_error_code(e: Exception, error_code: str) -> None:
+def _raise_with_error_code(e: Exception, error_code: str) -> None:
     raise GXCoreError(message=str(e), error_code=error_code) from e
 
 
-class V0Runner(VersionRunner):
+class _V0Runner(_VersionRunner):
     @override
     def run_checkpoint(self) -> None:
         # ***** THIS IS WHERE THE 0.18 SPECIFIC CODE WOULD GO *****
@@ -59,15 +59,15 @@ class V0Runner(VersionRunner):
             if "Incorrect username or password was specified" in str(
                 e
             ) and "snowflake.connector.errors.DatabaseError" in str(e):
-                raise_with_error_code(e=e, error_code="snowflake-wrong-username-or-password")
+                _raise_with_error_code(e=e, error_code="snowflake-wrong-username-or-password")
             else:
-                raise_with_error_code(e=e, error_code="generic-unhandled-error")
+                _raise_with_error_code(e=e, error_code="generic-unhandled-error")
 
 
-register_version_runner("0", V0Runner())
+_register_version_runner("0", _V0Runner())
 
 
-class V1Runner(VersionRunner):
+class _V1Runner(_VersionRunner):
     @override
     def run_checkpoint(self) -> None:
         # ***** THIS IS WHERE THE 1.0 SPECIFIC CODE WOULD GO *****
@@ -81,51 +81,24 @@ class V1Runner(VersionRunner):
         return check_draft_datasource_config(context=context, event=event, id=id)
 
 
-register_version_runner("1", V1Runner())
+_register_version_runner("1", _V1Runner())
 
 
-def get_major_version(version: str) -> str:
+def _get_major_version(version: str) -> str:
     """Get major version as a string. For example, "0.18.0" -> "0"."""
     parsed: Version = parse_version(version)
     return str(parsed.major)
 
 
-GX_MAJOR_VERSION = get_major_version(gx.__version__)
+_GX_MAJOR_VERSION = _get_major_version(gx.__version__)
 
 
 class NoVersionImplementationError(Exception):
     pass
 
 
-def lookup_runner(version: str = GX_MAJOR_VERSION) -> VersionRunner:
+def lookup_runner(version: str = _GX_MAJOR_VERSION) -> _VersionRunner:
     try:
         return _VERSION_RUNNERS[version]
     except KeyError as e:
-        raise NoVersionImplementationError(f"Version {version} not supported") from e
-
-
-### TODO: This is example usage, implement on specific actions instead:
-class ExampleAgentActionCheckpoint:
-    def __init__(self) -> None:
-        pass
-
-    def run(self) -> None:
-        runner = lookup_runner()
-        runner.run_checkpoint()
-
-
-class ExampleAgentActionDatasourceConfig:
-    def __init__(self) -> None:
-        pass
-
-    def run(self) -> None:
-        runner = lookup_runner()
-        runner.run_check_datasource_config()
-
-
-if __name__ == "__main__":
-    print("GX_MAJOR_VERSION:", GX_MAJOR_VERSION)
-    action = ExampleAgentActionCheckpoint()
-    action.run()
-    datasource_action = ExampleAgentActionDatasourceConfig()
-    datasource_action.run()
+        raise NoVersionImplementationError(f"GX Core major version {version} not supported") from e
