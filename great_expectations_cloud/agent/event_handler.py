@@ -33,7 +33,7 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 #         # Suggested naming convention, add version suffix "V1" e.g.: RunCheckpointEventV1
 #     },
 # }
-_EVENT_ACTION_MAP: dict[str, dict[str, type[AgentAction]]] = {}
+_EVENT_ACTION_MAP: dict[str, dict[str, type[AgentAction[Any]]]] = {}
 
 
 class EventHandler:
