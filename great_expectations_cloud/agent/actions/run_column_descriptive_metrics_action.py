@@ -39,7 +39,7 @@ class ColumnDescriptiveMetricsAction(AgentAction[RunColumnDescriptiveMetricsEven
             data_store=CloudDataStore(self._context)
         )
         self._batch_inspector = batch_inspector or BatchInspector(
-            context, ColumnDescriptiveMetricsMetricRetriever(self._context)
+            context, [ColumnDescriptiveMetricsMetricRetriever(self._context)]
         )
 
     @override
