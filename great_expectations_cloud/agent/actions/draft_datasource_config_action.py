@@ -12,6 +12,7 @@ from great_expectations_cloud.agent.config import (
     GxAgentEnvVars,
     generate_config_validation_error_text,
 )
+from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 
@@ -58,3 +59,6 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             return data["data"]["attributes"]["draft_config"]  # type: ignore[no-any-return]
         except KeyError as e:
             raise RuntimeError("Malformed response received from GX Cloud") from e
+
+
+register_event_action("0", DraftDatasourceConfigEvent, DraftDatasourceConfigAction)

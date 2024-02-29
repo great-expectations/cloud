@@ -92,3 +92,8 @@ def test_event_handler_handles_draft_config_event(mocker):
 
     action.assert_called_with(context=context)
     action.return_value.run.assert_called_with(event=event, id=correlation_id)
+
+
+def test_event_handler_registry():
+    # TODO: Add more tests
+    raise NotImplementedError
