@@ -56,20 +56,22 @@ class EventHandler:
     Core business logic mapping events to actions.
     """
 
+    _EVENT_TO_ACTION_MAP = {
+        RunOnboardingDataAssistantEvent: RunOnboardingDataAssistantAction,
+        RunMissingnessDataAssistantEvent: RunMissingnessDataAssistantAction,
+        ListTableNamesEvent: ListTableNamesAction,
+        RunCheckpointEvent: RunCheckpointAction,
+        RunColumnDescriptiveMetricsEvent: ColumnDescriptiveMetricsAction,
+        DraftDatasourceConfigEvent: DraftDatasourceConfigAction,
+    }
+
     def __init__(self, context: CloudDataContext) -> None:
         self._context = context
 
     def get_event_action(self, event: Event) -> AgentAction[Any]:
-        EVENT_TO_ACTION_MAP = {
-            RunOnboardingDataAssistantEvent: RunOnboardingDataAssistantAction,
-            RunMissingnessDataAssistantEvent: RunMissingnessDataAssistantAction,
-            ListTableNamesEvent: ListTableNamesAction,
-            RunCheckpointEvent: RunCheckpointAction,
-            RunColumnDescriptiveMetricsEvent: ColumnDescriptiveMetricsAction,
-            DraftDatasourceConfigEvent: DraftDatasourceConfigAction,
-        }
 
-        if action := EVENT_TO_ACTION_MAP.get(event):
+        event_class = event.__class__
+        if action := self._EVENT_TO_ACTION_MAP.get(event_class):
             return action(context=self._context)
         # Building an UnknownEventAction allows noop
         return UnknownEventAction(context=self._context)
