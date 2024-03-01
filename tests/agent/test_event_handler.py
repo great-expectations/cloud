@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Literal
 from unittest.mock import MagicMock
 from uuid import uuid4
 
@@ -21,6 +22,7 @@ from great_expectations_cloud.agent.event_handler import (
 from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
     Event,
+    EventBase,
     RunCheckpointEvent,
     RunMissingnessDataAssistantEvent,
     RunOnboardingDataAssistantEvent,
@@ -106,8 +108,8 @@ def test_event_handler_handles_draft_config_event(mocker):
     action.return_value.run.assert_called_with(event=event, id=correlation_id)
 
 
-class DummyEvent:
-    pass
+class DummyEvent(EventBase):
+    type: Literal["event_name.received"] = "event_name.received"
 
 
 class DummyAction(AgentAction):
@@ -134,7 +136,7 @@ class TestEventHandlerRegistry:
         context = MagicMock(autospec=CloudDataContext)
         handler = EventHandler(context=context)
 
-        assert handler.get_event_action(DummyEvent) == DummyAction
+        assert type(handler.get_event_action(DummyEvent)) == DummyAction
 
         del _EVENT_ACTION_MAP["0"][DummyEvent.__name__]
 

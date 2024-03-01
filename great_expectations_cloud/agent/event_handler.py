@@ -51,10 +51,10 @@ class EventHandler:
             raise NoVersionImplementationError(
                 f"No event action map implemented for GX Core major version {_GX_MAJOR_VERSION}"
             )
-        action_class = action_map.get(event.__class__.__name__)
+        action_class = action_map.get(event.__name__)
         if action_class is None:
             raise UnknownEventError(
-                f'Unknown message received: "{event.__class__.__name__}" - cannot process.'
+                f'Unknown message received: "{event.__name__}" - cannot process.'
             )
         return action_class(context=self._context)
 
