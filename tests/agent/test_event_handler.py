@@ -6,9 +6,19 @@ from uuid import uuid4
 import pytest
 from great_expectations.data_context import CloudDataContext
 
-from great_expectations_cloud.agent.event_handler import EventHandler, UnknownEventError
+from great_expectations_cloud.agent.actions import (
+    ActionResult,
+    AgentAction,
+)
+from great_expectations_cloud.agent.event_handler import (
+    _EVENT_ACTION_MAP,
+    EventHandler,
+    UnknownEventError,
+    register_event_action,
+)
 from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
+    Event,
     RunCheckpointEvent,
     RunMissingnessDataAssistantEvent,
     RunOnboardingDataAssistantEvent,
@@ -94,6 +104,33 @@ def test_event_handler_handles_draft_config_event(mocker):
     action.return_value.run.assert_called_with(event=event, id=correlation_id)
 
 
-def test_event_handler_registry():
+class TestEventHandlerRegistry:
+    def test_register_event_action(self):
+        class DummyEvent:
+            pass
+
+        class DummyAction(AgentAction):
+            def run(self, event: Event, id: str) -> ActionResult:
+                pass
+
+        register_event_action("0", DummyEvent, DummyAction)
+        assert _EVENT_ACTION_MAP["0"][DummyEvent.__name__] == DummyAction
+
+    def test_register_event_action_already_registered(self):
+        class DummyEvent:
+            pass
+
+        class DummyAction(AgentAction):
+            def run(self, event: Event, id: str) -> ActionResult:
+                pass
+
+        register_event_action("0", DummyEvent, DummyAction)
+        with pytest.raises(ValueError) as e:
+            register_event_action("0", DummyEvent, DummyAction)
+
+        assert str(e.value) == "Event type DummyEvent already registered for version 0."
+
+
+def test_event_handler_registry_more_tests():
     # TODO: Add more tests
-    raise NotImplementedError
+    raise NotImplementedError  # Reminder to add more tests
