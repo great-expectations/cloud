@@ -117,11 +117,7 @@ class Subscriber:
             payload: dataclass containing required message attributes
             on_message: the caller-provided callback
         """
-        event: Event
-        try:
-            event = pydantic.parse_raw_as(Event, payload.body)
-        except (pydantic.ValidationError, JSONDecodeError):
-            event = UnknownEvent()
+        event = parse_event(payload.body)
 
         # Allow the caller to determine whether to ack/nack this message,
         # even if the processing occurs in another thread.
@@ -146,6 +142,13 @@ class Subscriber:
         )
 
         return on_message(event_context)
+
+    def parse_event_from(cls, msg_body:bytes)->Event:
+        try:
+            return pydantic.parse_raw_as(Event, msg_body)
+        except (pydantic.ValidationError, JSONDecodeError):
+            return UnknownEvent()
+
 
     async def _redeliver_message(
         self,
