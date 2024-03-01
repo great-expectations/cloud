@@ -89,7 +89,7 @@ def register_event_action(
         _EVENT_ACTION_MAP.get(version) is not None
     )  # check for None explicitly since version can be empty
     if version_in_map and (event_type in _EVENT_ACTION_MAP[version]):
-        raise ValueError(f"Event type {event_type} already registered for version {version}.")
+        raise ValueError(f"Event type {event_type.__name__} already registered for version {version}.")
 
     if version not in _EVENT_ACTION_MAP:
         _EVENT_ACTION_MAP[version] = {}
