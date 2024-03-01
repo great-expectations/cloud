@@ -21,12 +21,8 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 # Built via registering using register_event_action(). For example:
 # _EVENT_ACTION_MAP = {
 #     "0": {
-#         RunOnboardingDataAssistantEvent.__name__: RunOnboardingDataAssistantAction,
-#         RunMissingnessDataAssistantEvent.__name__: RunMissingnessDataAssistantAction,
-#         ListTableNamesEvent.__name__: ListTableNamesAction,
-#         RunCheckpointEvent.__name__: RunCheckpointAction,
-#         RunColumnDescriptiveMetricsEvent.__name__: ColumnDescriptiveMetricsAction,
-#         DraftDatasourceConfigEvent.__name__: DraftDatasourceConfigAction,
+#         "EventName": AgentActionClass,
+#         "RunCheckpointEvent": RunCheckpointAction,
 #     },
 #     "1": {
 #         # No events implemented yet for GX Core v1
@@ -51,10 +47,10 @@ class EventHandler:
             raise NoVersionImplementationError(
                 f"No event action map implemented for GX Core major version {_GX_MAJOR_VERSION}"
             )
-        action_class = action_map.get(event.__name__)
+        action_class = action_map.get(_get_event_name(event))
         if action_class is None:
             raise UnknownEventError(
-                f'Unknown message received: "{event.__name__}" - cannot process.'
+                f'Unknown message received: "{_get_event_name(event)}" - cannot process.'
             )
         return action_class(context=self._context)
 
@@ -99,3 +95,10 @@ def register_event_action(
         _EVENT_ACTION_MAP[version] = {}
     event_type_str = event_type.__name__
     _EVENT_ACTION_MAP[version][event_type_str] = action_class
+
+
+def _get_event_name(event: Event) -> str:
+    try:
+        return event.__name__
+    except AttributeError:
+        return event.__class__.__name__
