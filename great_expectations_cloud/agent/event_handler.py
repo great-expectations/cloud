@@ -53,7 +53,9 @@ class EventHandler:
             )
         action_class = action_map.get(event.__class__.__name__)
         if action_class is None:
-            raise UnknownEventError("Unknown message received - cannot process.")
+            raise UnknownEventError(
+                f'Unknown message received: "{event.__class__.__name__}" - cannot process.'
+            )
         return action_class(context=self._context)
 
     def handle_event(self, event: Event, id: str) -> ActionResult:
