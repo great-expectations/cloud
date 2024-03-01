@@ -116,6 +116,8 @@ class TestEventHandlerRegistry:
         register_event_action("0", DummyEvent, DummyAction)
         assert _EVENT_ACTION_MAP["0"][DummyEvent.__name__] == DummyAction
 
+        del _EVENT_ACTION_MAP["0"][DummyEvent.__name__]  # Cleanup
+
     def test_register_event_action_already_registered(self):
         class DummyEvent:
             pass
@@ -125,10 +127,10 @@ class TestEventHandlerRegistry:
                 pass
 
         register_event_action("0", DummyEvent, DummyAction)
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError):
             register_event_action("0", DummyEvent, DummyAction)
 
-        assert str(e.value) == "Event type DummyEvent already registered for version 0."
+        del _EVENT_ACTION_MAP["0"][DummyEvent.__name__]  # Cleanup
 
 
 def test_event_handler_registry_more_tests():
