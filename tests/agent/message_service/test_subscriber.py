@@ -62,3 +62,11 @@ def test_subscriber_close_handles_amqp_errors_from_connection(error):
     subscriber = Subscriber(client=client)
 
     subscriber.close()  # no exception
+
+def test_subscriber_parse_event():
+    subscriber = Subscriber(client=Mock(autospec=AsyncRabbitMQClient))
+
+    event = subscriber.parse_event_from(b'{"type": "test"}')
+
+    assert event.type == "unknown_event"
+    assert event.dict() == {"type": "test"}
