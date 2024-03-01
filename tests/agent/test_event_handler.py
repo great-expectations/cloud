@@ -13,7 +13,9 @@ from great_expectations_cloud.agent.actions import (
 from great_expectations_cloud.agent.event_handler import (
     _EVENT_ACTION_MAP,
     EventHandler,
+    NoVersionImplementationError,
     UnknownEventError,
+    _get_major_version,
     register_event_action,
 )
 from great_expectations_cloud.agent.models import (
@@ -104,35 +106,63 @@ def test_event_handler_handles_draft_config_event(mocker):
     action.return_value.run.assert_called_with(event=event, id=correlation_id)
 
 
+class DummyEvent:
+    pass
+
+
+class DummyAction(AgentAction):
+    def run(self, event: Event, id: str) -> ActionResult:
+        pass
+
+
 class TestEventHandlerRegistry:
     def test_register_event_action(self):
-        class DummyEvent:
-            pass
-
-        class DummyAction(AgentAction):
-            def run(self, event: Event, id: str) -> ActionResult:
-                pass
-
         register_event_action("0", DummyEvent, DummyAction)
         assert _EVENT_ACTION_MAP["0"][DummyEvent.__name__] == DummyAction
 
         del _EVENT_ACTION_MAP["0"][DummyEvent.__name__]  # Cleanup
 
     def test_register_event_action_already_registered(self):
-        class DummyEvent:
-            pass
-
-        class DummyAction(AgentAction):
-            def run(self, event: Event, id: str) -> ActionResult:
-                pass
-
         register_event_action("0", DummyEvent, DummyAction)
         with pytest.raises(ValueError):
             register_event_action("0", DummyEvent, DummyAction)
 
         del _EVENT_ACTION_MAP["0"][DummyEvent.__name__]  # Cleanup
 
+    def test_event_handler_gets_correct_event_action(self):
+        register_event_action("0", DummyEvent, DummyAction)
+        context = MagicMock(autospec=CloudDataContext)
+        handler = EventHandler(context=context)
 
-def test_event_handler_registry_more_tests():
-    # TODO: Add more tests
-    raise NotImplementedError  # Reminder to add more tests
+        assert handler.get_event_action(DummyEvent) == DummyAction
+
+        del _EVENT_ACTION_MAP["0"][DummyEvent.__name__]
+
+    def test_event_handler_raises_on_no_version_implementation(self, mocker):
+        gx_major_version = mocker.patch(
+            "great_expectations_cloud.agent.event_handler._GX_MAJOR_VERSION"
+        )
+        gx_major_version.return_value = "NOT_A_REAL_VERSION"
+
+        context = MagicMock(autospec=CloudDataContext)
+        handler = EventHandler(context=context)
+
+        with pytest.raises(NoVersionImplementationError):
+            handler.get_event_action(DummyEvent)
+
+    @pytest.mark.parametrize(
+        "version, expected",
+        [
+            ("0.0.1", "0"),
+            ("1.0.1", "1"),
+            ("2.0.1", "2"),
+            ("1.1alpha1", "1"),
+            ("10.0.1", "10"),
+        ],
+    )
+    def test__get_major_version(self, version: str, expected: str):
+        assert _get_major_version(version) == expected
+
+    def test__get_major_version_raises_on_invalid_version(self):
+        with pytest.raises(ValueError):
+            _get_major_version("NOT_A_REAL_VERSION")
