@@ -84,7 +84,6 @@ class EventHandler:
 
     def get_event_action(self, event: Event) -> AgentAction[Any]:
         """Get the action that should be run for the given event."""
-        print("_EVENT_ACTION_MAP:", _EVENT_ACTION_MAP)
         action_map = _EVENT_ACTION_MAP.get(_GX_MAJOR_VERSION)
         if action_map is None:
             raise NoVersionImplementationError(
