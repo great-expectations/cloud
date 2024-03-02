@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 from unittest import mock
 from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
 from great_expectations.data_context import CloudDataContext
+from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import (
     ActionResult,
@@ -99,7 +100,7 @@ class TestEventHandler:
         ],
     )
     def test_event_handler_handles_all_events(
-        self, mocker, event_name: str, event: Event, action_type: type[AgentAction]
+        self, mocker, event_name: str, event: Event, action_type: type[AgentAction[Any]]
     ):
         action = MagicMock(autospec=action_type)
         mocker.patch("great_expectations_cloud.agent.event_handler._GX_MAJOR_VERSION", "1")
@@ -124,16 +125,17 @@ class TestEventHandler:
         handler = EventHandler(context=context)
 
         with pytest.raises(NoVersionImplementationError):
-            handler.get_event_action(DummyEvent)
+            handler.get_event_action(DummyEvent)  # type: ignore[arg-type]  # Dummy event only used in testing
 
 
 class DummyEvent(EventBase):
     type: Literal["event_name.received"] = "event_name.received"
 
 
-class DummyAction(AgentAction):
+class DummyAction(AgentAction[Any]):
+    @override
     def run(self, event: Event, id: str) -> ActionResult:
-        pass
+        return ActionResult(id=id, type="DummyAction", created_resources=[])
 
 
 class TestEventHandlerRegistry:
@@ -155,7 +157,7 @@ class TestEventHandlerRegistry:
         context = MagicMock(autospec=CloudDataContext)
         handler = EventHandler(context=context)
 
-        assert type(handler.get_event_action(DummyEvent)) == DummyAction
+        assert type(handler.get_event_action(DummyEvent)) == DummyAction  # type: ignore[arg-type]  # Dummy event only used in testing
 
         del _EVENT_ACTION_MAP["0"][DummyEvent.__name__]
 
@@ -171,5 +173,3 @@ class TestEventHandlerRegistry:
     )
     def test__get_major_version(self, version: str, expected: str):
         assert _get_major_version(version) == expected
-
-    # Note: Version coerces to LegacyVersion rather than raising an error, so we don't test for invalid versions.

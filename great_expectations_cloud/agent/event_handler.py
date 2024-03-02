@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Final
 
 import great_expectations as gx
-from packaging.version import Version
+from packaging.version import LegacyVersion, Version
 from packaging.version import parse as parse_version
 
 if TYPE_CHECKING:
@@ -70,9 +70,15 @@ class NoVersionImplementationError(Exception):
     ...
 
 
+class InvalidVersionError(Exception):
+    ...
+
+
 def _get_major_version(version: str) -> str:
     """Get major version as a string. For example, "0.18.0" -> "0"."""
-    parsed: Version = parse_version(version)
+    parsed: Version | LegacyVersion = parse_version(version)
+    if not isinstance(parsed, Version):
+        raise InvalidVersionError(f"Invalid version: {version}")
     return str(parsed.major)
 
 
@@ -99,6 +105,6 @@ def register_event_action(
 
 def _get_event_name(event: Event) -> str:
     try:
-        return event.__name__
+        return str(event.__name__)
     except AttributeError:
-        return event.__class__.__name__
+        return str(event.__class__.__name__)
