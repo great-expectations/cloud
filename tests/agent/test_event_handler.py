@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Any, Literal
 from unittest import mock
 from unittest.mock import MagicMock
@@ -24,6 +25,7 @@ from great_expectations_cloud.agent.actions.draft_datasource_config_action impor
 from great_expectations_cloud.agent.event_handler import (
     _EVENT_ACTION_MAP,
     EventHandler,
+    InvalidVersionError,
     NoVersionImplementationError,
     UnknownEventError,
     _get_major_version,
@@ -173,3 +175,13 @@ class TestEventHandlerRegistry:
     )
     def test__get_major_version(self, version: str, expected: str):
         assert _get_major_version(version) == expected
+
+    def test__get_major_version_raises_on_invalid_version(self):
+        with pytest.raises(InvalidVersionError):
+            with warnings.catch_warnings():
+                # Filter Deprecation warnings about LegacyVersion
+                warnings.filterwarnings(
+                    "ignore",
+                    message="Creating a LegacyVersion has been deprecated and will be removed in the next major release",
+                )
+                _get_major_version("invalid_version")
