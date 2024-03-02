@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Final
 
 import great_expectations as gx
@@ -29,7 +30,7 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 #         # Suggested naming convention, add version suffix "V1" e.g.: RunCheckpointEventV1
 #     },
 # }
-_EVENT_ACTION_MAP: dict[str, dict[str, type[AgentAction[Any]]]] = {}
+_EVENT_ACTION_MAP: dict[str, dict[str, type[AgentAction[Any]]]] = defaultdict(dict)
 
 
 class EventHandler:
@@ -89,16 +90,10 @@ def register_event_action(
     version: str, event_type: type[Event], action_class: type[AgentAction[Any]]
 ) -> None:
     """Register an event type to an action class."""
-    version_in_map = (
-        _EVENT_ACTION_MAP.get(version) is not None
-    )  # check for None explicitly since version can be empty
-    if version_in_map and (event_type.__name__ in _EVENT_ACTION_MAP[version]):
+    if version in _EVENT_ACTION_MAP and event_type.__name__ in _EVENT_ACTION_MAP[version]:
         raise ValueError(
             f"Event type {event_type.__name__} already registered for version {version}."
         )
-
-    if version not in _EVENT_ACTION_MAP:
-        _EVENT_ACTION_MAP[version] = {}
     event_type_str = event_type.__name__
     _EVENT_ACTION_MAP[version][event_type_str] = action_class
 

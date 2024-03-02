@@ -141,11 +141,18 @@ class DummyAction(AgentAction[Any]):
 
 
 class TestEventHandlerRegistry:
-    def test_register_event_action(self):
-        register_event_action("0", DummyEvent, DummyAction)
-        assert _EVENT_ACTION_MAP["0"][DummyEvent.__name__] == DummyAction
+    @pytest.mark.parametrize(
+        "version",
+        [
+            "0",
+            "1234567890",  # Version that doesn't exist already in the map
+        ],
+    )
+    def test_register_event_action(self, version: str):
+        register_event_action(version, DummyEvent, DummyAction)
+        assert _EVENT_ACTION_MAP[version][DummyEvent.__name__] == DummyAction
 
-        del _EVENT_ACTION_MAP["0"][DummyEvent.__name__]  # Cleanup
+        del _EVENT_ACTION_MAP[version][DummyEvent.__name__]  # Cleanup
 
     def test_register_event_action_already_registered(self):
         register_event_action("0", DummyEvent, DummyAction)
