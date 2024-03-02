@@ -10,7 +10,6 @@ from great_expectations_cloud.agent.actions.data_assistants.utils import (
     build_action_result,
     build_batch_request,
 )
-from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import RunMissingnessDataAssistantEvent
 
 if TYPE_CHECKING:
@@ -40,6 +39,3 @@ class RunMissingnessDataAssistantAction(AgentAction[RunMissingnessDataAssistantE
             data_assistant_result=data_assistant_result,
             id=id,
         )
-
-
-register_event_action("0", RunMissingnessDataAssistantEvent, RunMissingnessDataAssistantAction)

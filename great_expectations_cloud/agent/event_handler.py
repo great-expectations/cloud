@@ -8,12 +8,30 @@ import great_expectations as gx
 from packaging.version import LegacyVersion, Version
 from packaging.version import parse as parse_version
 
+from great_expectations_cloud.agent.actions import (
+    ColumnDescriptiveMetricsAction,
+    ListTableNamesAction,
+    RunCheckpointAction,
+    RunMissingnessDataAssistantAction,
+    RunOnboardingDataAssistantAction,
+)
+from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
+    DraftDatasourceConfigAction,
+)
+from great_expectations_cloud.agent.models import (
+    DraftDatasourceConfigEvent,
+    ListTableNamesEvent,
+    RunCheckpointEvent,
+    RunColumnDescriptiveMetricsEvent,
+    RunMissingnessDataAssistantEvent,
+    RunOnboardingDataAssistantEvent,
+)
+
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
     from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
     from great_expectations_cloud.agent.models import Event
-
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -33,6 +51,29 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 _EVENT_ACTION_MAP: dict[str, dict[str, type[AgentAction[Any]]]] = defaultdict(dict)
 
 
+def register_event_action(
+    version: str, event_type: type[Event], action_class: type[AgentAction[Any]]
+) -> None:
+    """Register an event type to an action class."""
+    if version in _EVENT_ACTION_MAP and event_type.__name__ in _EVENT_ACTION_MAP[version]:
+        raise ValueError(
+            f"Event type {event_type.__name__} already registered for version {version}."
+        )
+    event_type_str = event_type.__name__
+    _EVENT_ACTION_MAP[version][event_type_str] = action_class
+    LOGGER.debug(
+        f"Registered event action: {event_type_str} -> {action_class.__name__} (version {version})"
+    )
+
+
+register_event_action("0", RunCheckpointEvent, RunCheckpointAction)
+register_event_action("0", DraftDatasourceConfigEvent, DraftDatasourceConfigAction)
+register_event_action("0", RunColumnDescriptiveMetricsEvent, ColumnDescriptiveMetricsAction)
+register_event_action("0", ListTableNamesEvent, ListTableNamesAction)
+register_event_action("0", RunMissingnessDataAssistantEvent, RunMissingnessDataAssistantAction)
+register_event_action("0", RunOnboardingDataAssistantEvent, RunOnboardingDataAssistantAction)
+
+
 class EventHandler:
     """
     Core business logic mapping events to actions.
@@ -43,6 +84,7 @@ class EventHandler:
 
     def get_event_action(self, event: Event) -> AgentAction[Any]:
         """Get the action that should be run for the given event."""
+        print("_EVENT_ACTION_MAP:", _EVENT_ACTION_MAP)
         action_map = _EVENT_ACTION_MAP.get(_GX_MAJOR_VERSION)
         if action_map is None:
             raise NoVersionImplementationError(
@@ -84,18 +126,6 @@ def _get_major_version(version: str) -> str:
 
 
 _GX_MAJOR_VERSION = _get_major_version(gx.__version__)
-
-
-def register_event_action(
-    version: str, event_type: type[Event], action_class: type[AgentAction[Any]]
-) -> None:
-    """Register an event type to an action class."""
-    if version in _EVENT_ACTION_MAP and event_type.__name__ in _EVENT_ACTION_MAP[version]:
-        raise ValueError(
-            f"Event type {event_type.__name__} already registered for version {version}."
-        )
-    event_type_str = event_type.__name__
-    _EVENT_ACTION_MAP[version][event_type_str] = action_class
 
 
 def _get_event_name(event: Event) -> str:

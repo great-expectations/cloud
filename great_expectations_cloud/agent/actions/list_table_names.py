@@ -17,7 +17,6 @@ from great_expectations_cloud.agent.config import (
     GxAgentEnvVars,
     generate_config_validation_error_text,
 )
-from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     ListTableNamesEvent,
 )
@@ -71,6 +70,3 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
                 f"={datasource_id}.",
                 response=response,
             )
-
-
-register_event_action("0", ListTableNamesEvent, ListTableNamesAction)
