@@ -11,6 +11,8 @@ from great_expectations.data_context import CloudDataContext
 from great_expectations_cloud.agent.actions import (
     ActionResult,
     AgentAction,
+    ColumnDescriptiveMetricsAction,
+    ListTableNamesAction,
     RunCheckpointAction,
     RunMissingnessDataAssistantAction,
     RunOnboardingDataAssistantAction,
@@ -30,7 +32,9 @@ from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
     Event,
     EventBase,
+    ListTableNamesEvent,
     RunCheckpointEvent,
+    RunColumnDescriptiveMetricsEvent,
     RunMissingnessDataAssistantEvent,
     RunOnboardingDataAssistantEvent,
     UnknownEvent,
@@ -79,6 +83,18 @@ class TestEventHandler:
                 "DraftDatasourceConfigEvent",
                 DraftDatasourceConfigEvent(config_id=uuid4()),
                 DraftDatasourceConfigAction,
+            ),
+            (
+                "ListTableNamesEvent",
+                ListTableNamesEvent(datasource_name="test-datasource"),
+                ListTableNamesAction,
+            ),
+            (
+                "RunColumnDescriptiveMetricsEvent",
+                RunColumnDescriptiveMetricsEvent(
+                    datasource_name="test-datasource", data_asset_name="test-data-asset"
+                ),
+                ColumnDescriptiveMetricsAction,
             ),
         ],
     )
