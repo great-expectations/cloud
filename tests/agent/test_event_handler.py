@@ -12,6 +12,11 @@ from great_expectations_cloud.agent.actions import (
     ActionResult,
     AgentAction,
     RunCheckpointAction,
+    RunMissingnessDataAssistantAction,
+    RunOnboardingDataAssistantAction,
+)
+from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
+    DraftDatasourceConfigAction,
 )
 from great_expectations_cloud.agent.event_handler import (
     _EVENT_ACTION_MAP,
@@ -34,83 +39,76 @@ from great_expectations_cloud.agent.models import (
 pytestmark = pytest.mark.unit
 
 
-def test_event_handler_raises_for_unknown_event():
-    event = UnknownEvent()
-    correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
-    context = MagicMock(autospec=CloudDataContext)
-    handler = EventHandler(context=context)
-
-    with pytest.raises(UnknownEventError):
-        handler.handle_event(event=event, id=correlation_id)
-
-
-def test_event_handler_handles_run_missingness_data_assistant_event(mocker):
-    action = mocker.patch(
-        "great_expectations_cloud.agent.event_handler.RunMissingnessDataAssistantAction"
-    )
-    event = RunMissingnessDataAssistantEvent(
-        datasource_name="test-datasource",
-        data_asset_name="test-data-asset",
-    )
-    correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
-    context = MagicMock(autospec=CloudDataContext)
-    handler = EventHandler(context=context)
-
-    handler.handle_event(event=event, id=correlation_id)
-
-    action.assert_called_with(context=context)
-    action().run.assert_called_with(event=event, id=correlation_id)
-
-
-def test_event_handler_handles_run_onboarding_data_assistant_event(mocker):
-    action = mocker.patch(
-        "great_expectations_cloud.agent.event_handler.RunOnboardingDataAssistantAction"
-    )
-    event = RunOnboardingDataAssistantEvent(
-        datasource_name="test-datasource", data_asset_name="test-data-asset"
-    )
-    correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
-    context = MagicMock(autospec=CloudDataContext)
-    handler = EventHandler(context=context)
-
-    handler.handle_event(event=event, id=correlation_id)
-
-    action.assert_called_with(context=context)
-    action().run.assert_called_with(event=event, id=correlation_id)
-
-
-def test_event_handler_handles_run_checkpoint_event(mocker):
-    action = MagicMock(autospec=RunCheckpointAction)
-    mocker.patch("great_expectations_cloud.agent.event_handler._GX_MAJOR_VERSION", "1")
-
-    with mock.patch.dict(_EVENT_ACTION_MAP, {"1": {"RunCheckpointEvent": action}}):
-        event = RunCheckpointEvent(
-            checkpoint_id="3ecd140b-1dd5-41f4-bdb1-c8009d4f1940",
-            datasource_names_to_asset_names={"Data Source name": {"Asset name"}},
-        )
+class TestEventHandler:
+    def test_event_handler_raises_for_unknown_event(self):
+        event = UnknownEvent()
         correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
         context = MagicMock(autospec=CloudDataContext)
         handler = EventHandler(context=context)
 
-        handler.handle_event(event=event, id=correlation_id)
+        with pytest.raises(UnknownEventError):
+            handler.handle_event(event=event, id=correlation_id)
 
-        action.assert_called_with(context=context)
-        action().run.assert_called_with(event=event, id=correlation_id)
-
-
-def test_event_handler_handles_draft_config_event(mocker):
-    action = mocker.patch(
-        "great_expectations_cloud.agent.event_handler.DraftDatasourceConfigAction"
+    @pytest.mark.parametrize(
+        "event_name, event, action_type",
+        [
+            (
+                "RunMissingnessDataAssistantEvent",
+                RunMissingnessDataAssistantEvent(
+                    datasource_name="test-datasource",
+                    data_asset_name="test-data-asset",
+                ),
+                RunMissingnessDataAssistantAction,
+            ),
+            (
+                "RunOnboardingDataAssistantEvent",
+                RunOnboardingDataAssistantEvent(
+                    datasource_name="test-datasource", data_asset_name="test-data-asset"
+                ),
+                RunOnboardingDataAssistantAction,
+            ),
+            (
+                "RunCheckpointEvent",
+                RunCheckpointEvent(
+                    checkpoint_id="3ecd140b-1dd5-41f4-bdb1-c8009d4f1940",
+                    datasource_names_to_asset_names={"Data Source name": {"Asset name"}},
+                ),
+                RunCheckpointAction,
+            ),
+            (
+                "DraftDatasourceConfigEvent",
+                DraftDatasourceConfigEvent(config_id=uuid4()),
+                DraftDatasourceConfigAction,
+            ),
+        ],
     )
-    event = DraftDatasourceConfigEvent(config_id=uuid4())
-    correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
-    context = MagicMock(autospec=CloudDataContext)
-    handler = EventHandler(context=context)
+    def test_event_handler_handles_all_events(
+        self, mocker, event_name: str, event: Event, action_type: type[AgentAction]
+    ):
+        action = MagicMock(autospec=action_type)
+        mocker.patch("great_expectations_cloud.agent.event_handler._GX_MAJOR_VERSION", "1")
 
-    handler.handle_event(event=event, id=correlation_id)
+        with mock.patch.dict(_EVENT_ACTION_MAP, {"1": {event_name: action}}):
+            correlation_id = str(uuid4())
+            context = MagicMock(autospec=CloudDataContext)
+            handler = EventHandler(context=context)
 
-    action.assert_called_with(context=context)
-    action.return_value.run.assert_called_with(event=event, id=correlation_id)
+            handler.handle_event(event=event, id=correlation_id)
+
+            action.assert_called_with(context=context)
+            action().run.assert_called_with(event=event, id=correlation_id)
+
+    def test_event_handler_raises_on_no_version_implementation(self, mocker):
+        gx_major_version = mocker.patch(
+            "great_expectations_cloud.agent.event_handler._GX_MAJOR_VERSION"
+        )
+        gx_major_version.return_value = "NOT_A_REAL_VERSION"
+
+        context = MagicMock(autospec=CloudDataContext)
+        handler = EventHandler(context=context)
+
+        with pytest.raises(NoVersionImplementationError):
+            handler.get_event_action(DummyEvent)
 
 
 class DummyEvent(EventBase):
@@ -144,18 +142,6 @@ class TestEventHandlerRegistry:
         assert type(handler.get_event_action(DummyEvent)) == DummyAction
 
         del _EVENT_ACTION_MAP["0"][DummyEvent.__name__]
-
-    def test_event_handler_raises_on_no_version_implementation(self, mocker):
-        gx_major_version = mocker.patch(
-            "great_expectations_cloud.agent.event_handler._GX_MAJOR_VERSION"
-        )
-        gx_major_version.return_value = "NOT_A_REAL_VERSION"
-
-        context = MagicMock(autospec=CloudDataContext)
-        handler = EventHandler(context=context)
-
-        with pytest.raises(NoVersionImplementationError):
-            handler.get_event_action(DummyEvent)
 
     @pytest.mark.parametrize(
         "version, expected",
