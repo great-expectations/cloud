@@ -51,7 +51,6 @@ class RunColumnDescriptiveMetricsEvent(EventBase):
     datasource_name: str
     data_asset_name: str
 
-
 class ListTableNamesEvent(EventBase):
     type: Literal["list_table_names_request.received"] = "list_table_names_request.received"
     datasource_name: str

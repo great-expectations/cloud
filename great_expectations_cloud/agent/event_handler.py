@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from json import JSONDecodeError
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, ClassVar, Final
 
 from great_expectations.compatibility import pydantic
 
