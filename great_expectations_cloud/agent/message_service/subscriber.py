@@ -12,6 +12,8 @@ from pika.exceptions import (
     ChannelError,
 )
 
+from great_expectations_cloud.agent.event_handler import EventHandler
+
 if TYPE_CHECKING:
     from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
         AsyncRabbitMQClient,
@@ -114,7 +116,7 @@ class Subscriber:
             payload: dataclass containing required message attributes
             on_message: the caller-provided callback
         """
-        event = self.parse_event_from(payload.body)
+        event = EventHandler.parse_event_from(payload.body)
 
         # Allow the caller to determine whether to ack/nack this message,
         # even if the processing occurs in another thread.
