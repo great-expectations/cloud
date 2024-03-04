@@ -5,6 +5,7 @@ from uuid import UUID
 
 from great_expectations.compatibility import pydantic
 from great_expectations.core.http import create_session
+from great_expectations.datasource.fluent.interfaces import TestConnectionError
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
@@ -12,12 +13,27 @@ from great_expectations_cloud.agent.config import (
     GxAgentEnvVars,
     generate_config_validation_error_text,
 )
+from great_expectations_cloud.agent.exceptions import raise_with_error_code
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 
 class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
     @override
     def run(self, event: DraftDatasourceConfigEvent, id: str) -> ActionResult:
+        try:
+            return self.check_draft_datasource_config(event=event, id=id)
+        except TestConnectionError as e:
+            # TODO: Can we do better than string matching here?:
+            if "Incorrect username or password was specified" in str(
+                e
+            ) and "snowflake.connector.errors.DatabaseError" in str(e):
+                raise_with_error_code(e=e, error_code="snowflake-wrong-username-or-password")
+            else:
+                raise_with_error_code(e=e, error_code="generic-unhandled-error")
+
+    def check_draft_datasource_config(
+        self, event: DraftDatasourceConfigEvent, id: str
+    ) -> ActionResult:
         draft_config = self.get_draft_config(config_id=event.config_id)
         datasource_type = draft_config.get("type", None)
         if datasource_type is None:
