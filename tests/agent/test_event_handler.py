@@ -106,7 +106,6 @@ def test_event_handler_handles_run_checkpoint_event(mocker):
     mock_action = MagicMock(autospec=RunCheckpointEvent)
     # Override with mock
     EventHandler._EVENT_TO_ACTION_MAP[RunCheckpointEvent] = mock_action
-    action = mocker.patch("great_expectations_cloud.agent.event_handler.RunCheckpointAction")
     event = RunCheckpointEvent(
         checkpoint_id="3ecd140b-1dd5-41f4-bdb1-c8009d4f1940",
         datasource_names_to_asset_names={"Data Source name": {"Asset name"}},
