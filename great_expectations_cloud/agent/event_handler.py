@@ -40,7 +40,7 @@ class EventHandler:
     Core business logic mapping events to actions.
     """
 
-    _EVENT_TO_ACTION_MAP: Final[dict[Event, AgentAction]] = {
+    _EVENT_TO_ACTION_MAP: Final[dict[type[Event], type[AgentAction[Any]]]] = {
         RunOnboardingDataAssistantEvent: RunOnboardingDataAssistantAction,
         RunMissingnessDataAssistantEvent: RunMissingnessDataAssistantAction,
         ListTableNamesEvent: ListTableNamesAction,
