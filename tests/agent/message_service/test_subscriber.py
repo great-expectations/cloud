@@ -62,4 +62,3 @@ def test_subscriber_close_handles_amqp_errors_from_connection(error):
     subscriber = Subscriber(client=client)
 
     subscriber.close()  # no exception
-

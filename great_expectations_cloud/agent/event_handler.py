@@ -72,7 +72,6 @@ class EventHandler:
         action_result = action.run(event=event, id=id)
         return action_result
 
-
     @classmethod
     def parse_event_from(cls, msg_body: bytes) -> Event:
         try:
