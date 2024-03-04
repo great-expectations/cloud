@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import re
 import uuid
-from unittest import mock
-from unittest.mock import MagicMock
+from typing import TYPE_CHECKING
 
 import pytest
 import responses
-from great_expectations.data_context import CloudDataContext
 from great_expectations.datasource.fluent import (
     PandasDatasource,
     SQLDatasource,
@@ -19,6 +17,9 @@ from great_expectations_cloud.agent.actions import (
     ListTableNamesAction,
 )
 from great_expectations_cloud.agent.models import ListTableNamesEvent
+
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
 
 pytestmark = pytest.mark.unit
 
@@ -52,12 +53,6 @@ def set_required_env_vars(monkeypatch, dummy_org_id, dummy_base_url, dummy_acces
         monkeypatch.setenv(name=key, value=val)
 
 
-@pytest.fixture(scope="function")
-def context(dummy_base_url, dummy_org_id):
-    mock_context = MagicMock(autospec=CloudDataContext)
-    return mock_context
-
-
 @pytest.fixture
 def event():
     return ListTableNamesEvent(
@@ -66,13 +61,15 @@ def event():
     )
 
 
-def test_list_table_names_event_raises_for_non_sql_datasource(context, event):
-    action = ListTableNamesAction(context=context)
+def test_list_table_names_event_raises_for_non_sql_datasource(
+    mock_context, event, mocker: MockerFixture
+):
+    action = ListTableNamesAction(context=mock_context)
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
-    context.get_expectation_suite.side_effect = StoreBackendError("test-message")
-    context.get_checkpoint.side_effect = StoreBackendError("test-message")
-    datasource = MagicMock(spec=PandasDatasource)
-    context.get_datasource.return_value = datasource
+    mock_context.get_expectation_suite.side_effect = StoreBackendError("test-message")
+    mock_context.get_checkpoint.side_effect = StoreBackendError("test-message")
+    datasource = mocker.Mock(spec=PandasDatasource)
+    mock_context.get_datasource.return_value = datasource
 
     with pytest.raises(TypeError, match=r"This operation requires a SQL Data Source but got"):
         action.run(event=event, id=id)
@@ -80,32 +77,30 @@ def test_list_table_names_event_raises_for_non_sql_datasource(context, event):
 
 @responses.activate
 def test_run_list_table_names_action_returns_action_result(
-    context, event, dummy_base_url, dummy_org_id, set_required_env_vars
+    mock_context, event, dummy_base_url, dummy_org_id, set_required_env_vars, mocker: MockerFixture
 ):
-    action = ListTableNamesAction(context=context)
+    action = ListTableNamesAction(context=mock_context)
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
-    with mock.patch(
-        "great_expectations_cloud.agent.actions.list_table_names.inspect"
-    ) as mock_inspect:
-        datasource = MagicMock(spec=SQLDatasource)
-        datasource_id = str(uuid.uuid4())
-        datasource.id = datasource_id
-        context.get_datasource.return_value = datasource
+    mock_inspect = mocker.patch("great_expectations_cloud.agent.actions.list_table_names.inspect")
+    datasource = mocker.Mock(spec=SQLDatasource)
+    datasource_id = str(uuid.uuid4())
+    datasource.id = datasource_id
+    mock_context.get_datasource.return_value = datasource
 
-        responses.patch(
-            re.compile(rf"{dummy_base_url}/organizations/{dummy_org_id}/datasources/.*"),
-            status=204,
-        )
+    responses.patch(
+        re.compile(rf"{dummy_base_url}/organizations/{dummy_org_id}/datasources/.*"),
+        status=204,
+    )
 
-        table_names = ["table_1", "table_2", "table_3"]
-        inspector = MagicMock(spec=Inspector)
-        inspector.get_table_names.return_value = table_names
+    table_names = ["table_1", "table_2", "table_3"]
+    inspector = mocker.Mock(spec=Inspector)
+    inspector.get_table_names.return_value = table_names
 
-        mock_inspect.return_value = inspector
+    mock_inspect.return_value = inspector
 
-        action_result = action.run(event=event, id=id)
+    action_result = action.run(event=event, id=id)
 
-        assert action_result.type == event.type
-        assert action_result.id == id
-        assert action_result.created_resources == []
+    assert action_result.type == event.type
+    assert action_result.id == id
+    assert action_result.created_resources == []
