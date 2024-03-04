@@ -7,6 +7,8 @@ from uuid import UUID
 from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
 from typing_extensions import Annotated
 
+from great_expectations_cloud.agent.exceptions import GXCoreError
+
 
 class AgentBaseModel(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
     class Config:
@@ -98,3 +100,17 @@ class JobCompleted(AgentBaseModel):
 
 
 JobStatus = Union[JobStarted, JobCompleted]
+
+
+def build_failed_job_completed_status(error: BaseException) -> JobCompleted:
+    if isinstance(error, GXCoreError):
+        status = JobCompleted(
+            success=False,
+            error_stack_trace=str(error),
+            error_code=error.error_code,
+            error_params=error.get_error_params(),
+        )
+    else:
+        status = JobCompleted(success=False, error_stack_trace=str(error))
+
+    return status

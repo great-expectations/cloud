@@ -23,7 +23,6 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         try:
             return self.check_draft_datasource_config(event=event, id=id)
         except TestConnectionError as e:
-            # TODO: Can we do better than string matching here?:
             if "Incorrect username or password was specified" in str(
                 e
             ) and "snowflake.connector.errors.DatabaseError" in str(e):
