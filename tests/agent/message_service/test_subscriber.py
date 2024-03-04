@@ -102,7 +102,7 @@ def test_subscriber_parse_event_invalid_json(mock_subscriber, example_event):
     event_dict = example_event.dict()
     # required field
     invalid_json_addition = "}}}}"
-    serialized_bytes = (json.dumps(dict(event_dict)) + invalid_json_addition).encode('utf-8')
+    serialized_bytes = (json.dumps(dict(event_dict)) + invalid_json_addition).encode("utf-8")
     event = mock_subscriber.parse_event_from(serialized_bytes)
 
     assert event.type == "unknown_event"
