@@ -233,7 +233,7 @@ class GXAgent:
                 status = JobCompleted(
                     success=False,
                     created_resources=[],
-                    error_stack_trace="Unknown event. Ensure agent is up-to-date.",
+                    error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to latest.",
                 )
                 print(
                     f"Job completed with error: {event_context.event.type} ({event_context.correlation_id}). Ensure agent is up-to-date."
