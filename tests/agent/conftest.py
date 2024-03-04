@@ -43,8 +43,8 @@ def mock_gx_version_check(
 
 @pytest.fixture
 def mock_context(mocker: MockerFixture) -> CloudDataContext:
-    """Returns a `Mock` of a `CloudDataContext` for testing purposes."""
-    return mocker.Mock(autospec=CloudDataContext)
+    """Returns a `MagicMock` of a `CloudDataContext` for testing purposes."""
+    return mocker.MagicMock(autospec=CloudDataContext)
 
 
 class FakeMessagePayload(NamedTuple):
