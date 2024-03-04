@@ -229,7 +229,7 @@ class GXAgent:
         if error is None:
             result: ActionResult = future.result()
 
-            if result.event is UnknownEvent:
+            if result.type == UnknownEvent().type:
                 status = JobCompleted(
                     success=False,
                     created_resources=[],
