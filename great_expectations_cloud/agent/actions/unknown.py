@@ -20,7 +20,9 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 class UnknownEventAction(AgentAction[UnknownEvent]):
     @override
     def run(self, event: UnknownEvent, id: str) -> ActionResult:
-        warnings.warn("The version of the GX Agent you are using does not support this job ({event.type}). Please upgrade to latest.")
+        warnings.warn(
+            "The version of the GX Agent you are using does not support this job ({event.type}). Please upgrade to latest."
+        )
         # noop
         return ActionResult(
             id=id,
