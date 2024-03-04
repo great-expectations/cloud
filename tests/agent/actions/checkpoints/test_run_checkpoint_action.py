@@ -114,7 +114,7 @@ def test_run_checkpoint_action_with_splitter_options_returns_action_result(
 def test_run_checkpoint_action_raises_on_test_connection_failure(
     context, checkpoint_id, datasource_names_to_asset_names, mocker: MockerFixture
 ):
-    mock_datasource = mocker.mock(spec=Datasource)
+    mock_datasource = mocker.Mock(spec=Datasource)
     context.get_datasource.return_value = mock_datasource
     mock_datasource.test_connection.side_effect = TestConnectionError()
 
