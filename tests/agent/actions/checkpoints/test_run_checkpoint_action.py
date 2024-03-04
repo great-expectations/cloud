@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 import pytest
@@ -14,12 +14,15 @@ from great_expectations_cloud.agent.models import (
     RunCheckpointEvent,
 )
 
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
 pytestmark = pytest.mark.unit
 
 
 @pytest.fixture(scope="function")
-def context():
-    return MagicMock(autospec=CloudDataContext)
+def context(mocker: MockerFixture):
+    return mocker.Mock(autospec=CloudDataContext)
 
 
 @pytest.fixture
@@ -109,9 +112,9 @@ def test_run_checkpoint_action_with_splitter_options_returns_action_result(
 
 
 def test_run_checkpoint_action_raises_on_test_connection_failure(
-    context, checkpoint_id, datasource_names_to_asset_names
+    context, checkpoint_id, datasource_names_to_asset_names, mocker: MockerFixture
 ):
-    mock_datasource = MagicMock(spec=Datasource)
+    mock_datasource = mocker.mock(spec=Datasource)
     context.get_datasource.return_value = mock_datasource
     mock_datasource.test_connection.side_effect = TestConnectionError()
 
