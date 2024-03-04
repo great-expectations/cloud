@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING, Any, Literal
 from unittest.mock import MagicMock
 from uuid import UUID
@@ -142,6 +143,36 @@ def test_test_draft_datasource_config_raises_for_non_fds(
         action.run(event=event, id=str(job_id))
 
     session.get.assert_called_with(expected_url)
+
+
+@pytest.mark.parametrize(
+    "error_message, expected_error_code",
+    [
+        (
+            """Attempt to connect to datasource failed with the following error message: (snowflake.connector.errors.DatabaseError) 250001 (08001): None: Failed to connect to DB: <DB Name> Incorrect username or password was specified.\n(Background on this error at: https://sqlalche.me/e/14/4xp6)""",
+            "snowflake-wrong-username-or-password",
+        ),
+        (
+            """Unrecognized error.""",
+            "generic-unhandled-error",
+        ),
+    ],
+)
+def test_draft_datasource_config_failure_raises_correct_gx_core_error(
+    context, mocker: MockerFixture, error_message: str, expected_error_code: str
+):
+    action = DraftDatasourceConfigAction(context=MagicMock(autospec=CloudDataContext))
+    mock_check_draft_datasource_config = mocker.patch(
+        f"{DraftDatasourceConfigAction.__module__}.{DraftDatasourceConfigAction.__name__}.check_draft_datasource_config"
+    )
+    mock_check_draft_datasource_config.side_effect = TestConnectionError(error_message)
+
+    event = DraftDatasourceConfigEvent(config_id=uuid.uuid4())
+    with pytest.raises(GXCoreError) as e:
+        action.run(event=event, id=str(uuid.uuid4()))
+
+    assert e.value.error_code == expected_error_code
+    assert e.value.get_error_params() == {}
 
 
 def test_test_draft_datasource_config_raises_for_unknown_type(
