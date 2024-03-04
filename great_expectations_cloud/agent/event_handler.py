@@ -40,29 +40,25 @@ class EventHandler:
     Core business logic mapping events to actions.
     """
 
+    _EVENT_TO_ACTION_MAP = {
+        RunOnboardingDataAssistantEvent: RunOnboardingDataAssistantAction,
+        RunMissingnessDataAssistantEvent: RunMissingnessDataAssistantAction,
+        ListTableNamesEvent: ListTableNamesAction,
+        RunCheckpointEvent: RunCheckpointAction,
+        RunColumnDescriptiveMetricsEvent: ColumnDescriptiveMetricsAction,
+        DraftDatasourceConfigEvent: DraftDatasourceConfigAction,
+    }
+
     def __init__(self, context: CloudDataContext) -> None:
         self._context = context
 
     def get_event_action(self, event: Event) -> AgentAction[Any]:
         """Get the action that should be run for the given event."""
-        if isinstance(event, RunOnboardingDataAssistantEvent):
-            return RunOnboardingDataAssistantAction(context=self._context)
 
-        if isinstance(event, RunMissingnessDataAssistantEvent):
-            return RunMissingnessDataAssistantAction(context=self._context)
-
-        if isinstance(event, ListTableNamesEvent):
-            return ListTableNamesAction(context=self._context)
-
-        if isinstance(event, RunCheckpointEvent):
-            return RunCheckpointAction(context=self._context)
-
-        if isinstance(event, RunColumnDescriptiveMetricsEvent):
-            return ColumnDescriptiveMetricsAction(context=self._context)
-
-        if isinstance(event, DraftDatasourceConfigEvent):
-            return DraftDatasourceConfigAction(context=self._context)
-
+        event_class = event.__class__
+        if action := self._EVENT_TO_ACTION_MAP.get(event_class):
+            return action(context=self._context)
+        # Building an UnknownEventAction allows noop
         return UnknownEventAction(context=self._context)
 
     def handle_event(self, event: Event, id: str) -> ActionResult:

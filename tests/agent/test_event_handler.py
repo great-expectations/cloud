@@ -67,9 +67,10 @@ def test_event_action_unknown():
 
 
 def test_event_handler_handles_run_missingness_data_assistant_event(mocker):
-    action = mocker.patch(
-        "great_expectations_cloud.agent.event_handler.RunMissingnessDataAssistantAction"
-    )
+    mock_action=MagicMock(autospec=RunMissingnessDataAssistantAction)
+    # Override with mock
+    EventHandler._EVENT_TO_ACTION_MAP[RunMissingnessDataAssistantEvent] = mock_action
+
     event = RunMissingnessDataAssistantEvent(
         datasource_name="test-datasource",
         data_asset_name="test-data-asset",
@@ -80,14 +81,14 @@ def test_event_handler_handles_run_missingness_data_assistant_event(mocker):
 
     handler.handle_event(event=event, id=correlation_id)
 
-    action.assert_called_with(context=context)
-    action().run.assert_called_with(event=event, id=correlation_id)
+    mock_action.assert_called_with(context=context)
+    mock_action().run.assert_called_with(event=event, id=correlation_id)
 
 
 def test_event_handler_handles_run_onboarding_data_assistant_event(mocker):
-    action = mocker.patch(
-        "great_expectations_cloud.agent.event_handler.RunOnboardingDataAssistantAction"
-    )
+    mock_action = MagicMock(autospec=RunOnboardingDataAssistantAction)
+    # Override with mock
+    EventHandler._EVENT_TO_ACTION_MAP[RunOnboardingDataAssistantEvent] = mock_action
     event = RunOnboardingDataAssistantEvent(
         datasource_name="test-datasource", data_asset_name="test-data-asset"
     )
@@ -97,11 +98,14 @@ def test_event_handler_handles_run_onboarding_data_assistant_event(mocker):
 
     handler.handle_event(event=event, id=correlation_id)
 
-    action.assert_called_with(context=context)
-    action().run.assert_called_with(event=event, id=correlation_id)
+    mock_action.assert_called_with(context=context)
+    mock_action().run.assert_called_with(event=event, id=correlation_id)
 
 
 def test_event_handler_handles_run_checkpoint_event(mocker):
+    mock_action = MagicMock(autospec=RunCheckpointEvent)
+    # Override with mock
+    EventHandler._EVENT_TO_ACTION_MAP[RunCheckpointEvent] = mock_action
     action = mocker.patch("great_expectations_cloud.agent.event_handler.RunCheckpointAction")
     event = RunCheckpointEvent(
         checkpoint_id="3ecd140b-1dd5-41f4-bdb1-c8009d4f1940",
@@ -113,14 +117,14 @@ def test_event_handler_handles_run_checkpoint_event(mocker):
 
     handler.handle_event(event=event, id=correlation_id)
 
-    action.assert_called_with(context=context)
-    action().run.assert_called_with(event=event, id=correlation_id)
+    mock_action.assert_called_with(context=context)
+    mock_action().run.assert_called_with(event=event, id=correlation_id)
 
 
 def test_event_handler_handles_draft_config_event(mocker):
-    action = mocker.patch(
-        "great_expectations_cloud.agent.event_handler.DraftDatasourceConfigAction"
-    )
+    mock_action = MagicMock(autospec=DraftDatasourceConfigAction)
+    # Override with mock
+    EventHandler._EVENT_TO_ACTION_MAP[DraftDatasourceConfigEvent] = mock_action
     event = DraftDatasourceConfigEvent(config_id=uuid4())
     correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
     context = MagicMock(autospec=CloudDataContext)
@@ -128,5 +132,5 @@ def test_event_handler_handles_draft_config_event(mocker):
 
     handler.handle_event(event=event, id=correlation_id)
 
-    action.assert_called_with(context=context)
-    action.return_value.run.assert_called_with(event=event, id=correlation_id)
+    mock_action.assert_called_with(context=context)
+    mock_action.return_value.run.assert_called_with(event=event, id=correlation_id)
