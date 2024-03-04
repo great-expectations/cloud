@@ -6,17 +6,26 @@ from uuid import uuid4
 import pytest
 from great_expectations.data_context import CloudDataContext
 
-from great_expectations_cloud.agent.actions import RunOnboardingDataAssistantAction, RunMissingnessDataAssistantAction, \
-    ListTableNamesAction, RunCheckpointAction, ColumnDescriptiveMetricsAction
-from great_expectations_cloud.agent.actions.draft_datasource_config_action import DraftDatasourceConfigAction
+from great_expectations_cloud.agent.actions import (
+    ColumnDescriptiveMetricsAction,
+    ListTableNamesAction,
+    RunCheckpointAction,
+    RunMissingnessDataAssistantAction,
+    RunOnboardingDataAssistantAction,
+)
+from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
+    DraftDatasourceConfigAction,
+)
 from great_expectations_cloud.agent.actions.unknown import UnknownEventAction
-from great_expectations_cloud.agent.event_handler import EventHandler, UnknownEventError
+from great_expectations_cloud.agent.event_handler import EventHandler
 from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
+    ListTableNamesEvent,
     RunCheckpointEvent,
+    RunColumnDescriptiveMetricsEvent,
     RunMissingnessDataAssistantEvent,
     RunOnboardingDataAssistantEvent,
-    UnknownEvent, ListTableNamesEvent, RunColumnDescriptiveMetricsEvent,
+    UnknownEvent,
 )
 
 pytestmark = pytest.mark.unit
@@ -31,14 +40,17 @@ def test_event_handler_unknown_event():
     assert result.type == "unknown_event"
 
 
-@pytest.mark.parametrize("event_class,action_class", {
+@pytest.mark.parametrize(
+    "event_class,action_class",
+    {
         RunOnboardingDataAssistantEvent: RunOnboardingDataAssistantAction,
         RunMissingnessDataAssistantEvent: RunMissingnessDataAssistantAction,
         ListTableNamesEvent: ListTableNamesAction,
         RunCheckpointEvent: RunCheckpointAction,
         RunColumnDescriptiveMetricsEvent: ColumnDescriptiveMetricsAction,
         DraftDatasourceConfigEvent: DraftDatasourceConfigAction,
-    }.items())
+    }.items(),
+)
 def test_get_action(event_class, action_class):
     event = MagicMock(spec=event_class)
     context = MagicMock(autospec=CloudDataContext)

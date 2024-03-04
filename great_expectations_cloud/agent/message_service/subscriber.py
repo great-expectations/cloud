@@ -143,12 +143,11 @@ class Subscriber:
 
         return on_message(event_context)
 
-    def parse_event_from(cls, msg_body:bytes)->Event:
+    def parse_event_from(cls, msg_body: bytes) -> Event:
         try:
             return pydantic.parse_raw_as(Event, msg_body)
         except (pydantic.ValidationError, JSONDecodeError):
             return UnknownEvent()
-
 
     async def _redeliver_message(
         self,
