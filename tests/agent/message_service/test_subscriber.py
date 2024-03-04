@@ -97,6 +97,7 @@ def test_subscriber_parse_event_missing_required_field(mock_subscriber, example_
 
     assert event.type == "unknown_event"
 
+
 def test_subscriber_parse_event_invalid_json(mock_subscriber, example_event):
     event_dict = example_event.dict()
     # required field
@@ -105,6 +106,7 @@ def test_subscriber_parse_event_invalid_json(mock_subscriber, example_event):
     event = mock_subscriber.parse_event_from(serialized_bytes)
 
     assert event.type == "unknown_event"
+
 
 def test_subscriber_parse_event(mock_subscriber, example_event):
     serialized_bytes = example_event.json().encode("utf-8")
