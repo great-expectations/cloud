@@ -93,6 +93,8 @@ class JobCompleted(AgentBaseModel):
     success: bool
     created_resources: Sequence[CreatedResource] = []
     error_stack_trace: Union[str, None] = None
+    error_code: Union[str, None] = None
+    error_params: Union[Dict[str, str], None] = None
 
 
 JobStatus = Union[JobStarted, JobCompleted]
