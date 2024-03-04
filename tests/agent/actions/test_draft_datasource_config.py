@@ -13,6 +13,7 @@ from great_expectations_cloud.agent.actions.draft_datasource_config_action impor
     DraftDatasourceConfigAction,
 )
 from great_expectations_cloud.agent.config import GxAgentEnvVars
+from great_expectations_cloud.agent.exceptions import GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 if TYPE_CHECKING:
@@ -111,7 +112,7 @@ def test_test_draft_datasource_config_failure(
     context.sources.type_lookup = {ds_type: datasource_cls}
     datasource_cls.return_value.test_connection.side_effect = TestConnectionError
 
-    with pytest.raises(TestConnectionError):
+    with pytest.raises(GXCoreError):
         action.run(event=event, id=str(job_id))
 
     session.get.assert_called_with(expected_url)
