@@ -175,9 +175,7 @@ class GXAgent:
             # this event has been redelivered too many times - remove it from circulation
             event_context.processed_with_failures()
             return
-        elif self._can_accept_new_task() is not True or isinstance(
-            event_context.event, UnknownEvent
-        ):
+        elif self._can_accept_new_task() is not True:
             # request that this message is redelivered later. If the event is UnknownEvent
             # we don't understand it, so requeue it in the hope that someone else does.
             loop = asyncio.get_event_loop()
