@@ -17,3 +17,8 @@ class GXCoreError(Exception):
     def __init__(self, message: str, error_code: str) -> None:
         super().__init__(message)
         self.error_code = error_code
+
+    def get_error_params(self) -> dict[str, str]:
+        """Return a dictionary of error parameters to be included in the error response,
+        not including the error message or error code."""
+        return {k: str(v) for k, v in vars(self).items() if k not in ["message", "error_code"]}
