@@ -140,7 +140,6 @@ class Subscriber:
 
         return on_message(event_context)
 
-
     async def _redeliver_message(
         self,
         delivery_tag: int,
