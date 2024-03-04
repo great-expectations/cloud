@@ -81,7 +81,7 @@ def test_subscriber_close_handles_amqp_errors_from_connection(error):
 
 
 def test_subscriber_parse_event_extra_field(mock_subscriber, example_event):
-    event_dict = dict(example_event)
+    event_dict = example_event.dict()
     event_dict["new_field"] = "surprise!"
     serialized_bytes = json.dumps(dict(event_dict), indent=2).encode("utf-8")
     event = mock_subscriber.parse_event_from(serialized_bytes)
@@ -90,25 +90,24 @@ def test_subscriber_parse_event_extra_field(mock_subscriber, example_event):
 
 
 def test_subscriber_parse_event_missing_required_field(mock_subscriber, example_event):
-    event_dict = dict(example_event)
+    event_dict = example_event.dict()
     del event_dict["datasource_name"]
-    serialized_bytes = json.dumps(dict(event_dict), indent=2).encode("utf-8")
+    serialized_bytes = json.dumps(dict(event_dict)).encode("utf-8")
     event = mock_subscriber.parse_event_from(serialized_bytes)
 
     assert event.type == "unknown_event"
 
 def test_subscriber_parse_event_invalid_json(mock_subscriber, example_event):
-    event_dict = dict(example_event)
+    event_dict = example_event.dict()
     # required field
     invalid_json_addition = "}}}}"
-    serialized_bytes = (json.dumps(dict(event_dict), indent=2) + invalid_json_addition).encode('utf-8')
+    serialized_bytes = (json.dumps(dict(event_dict)) + invalid_json_addition).encode('utf-8')
     event = mock_subscriber.parse_event_from(serialized_bytes)
 
     assert event.type == "unknown_event"
 
 def test_subscriber_parse_event(mock_subscriber, example_event):
-    event_dict = dict(example_event)
-    serialized_bytes = json.dumps(dict(event_dict), indent=2).encode("utf-8")
+    serialized_bytes = example_event.json().encode("utf-8")
     event = mock_subscriber.parse_event_from(serialized_bytes)
 
     assert event.type == "onboarding_data_assistant_request.received"
