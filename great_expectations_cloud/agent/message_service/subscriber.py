@@ -146,7 +146,7 @@ class Subscriber:
     @classmethod
     def parse_event_from(cls, msg_body: bytes) -> Event:
         try:
-            event:Event = pydantic.parse_raw_as(Event, msg_body)
+            event: Event = pydantic.parse_raw_as(Event, msg_body)
             return event
         except (pydantic.ValidationError, JSONDecodeError):
             return UnknownEvent()
