@@ -78,6 +78,7 @@ class EventHandler:
             event: Event = pydantic.parse_raw_as(Event, msg_body)
             return event
         except (pydantic.ValidationError, JSONDecodeError):
+            LOGGER.error("Unable to parse event type", extra={"msg_body": f"{msg_body}"})
             return UnknownEvent()
 
 
