@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from unittest.mock import MagicMock
 from uuid import uuid4
 
@@ -29,6 +30,15 @@ from great_expectations_cloud.agent.models import (
 )
 
 pytestmark = pytest.mark.unit
+
+
+@pytest.fixture()
+def example_event():
+    return RunOnboardingDataAssistantEvent(
+        type="onboarding_data_assistant_request.received",
+        datasource_name="abc",
+        data_asset_name="boo",
+    )
 
 
 def test_event_handler_unknown_event():
@@ -132,3 +142,37 @@ def test_event_handler_handles_draft_config_event(mocker):
 
     mock_action.assert_called_with(context=context)
     mock_action.return_value.run.assert_called_with(event=event, id=correlation_id)
+
+
+def test_subscriber_parse_event_extra_field(example_event):
+    event_dict = example_event.dict()
+    event_dict["new_field"] = "surprise!"
+    serialized_bytes = json.dumps(dict(event_dict), indent=2).encode("utf-8")
+    event = EventHandler.parse_event_from(serialized_bytes)
+
+    assert event.type == "unknown_event"
+
+
+def test_subscriber_parse_event_missing_required_field(example_event):
+    event_dict = example_event.dict()
+    del event_dict["datasource_name"]
+    serialized_bytes = json.dumps(dict(event_dict)).encode("utf-8")
+    event = EventHandler.parse_event_from(serialized_bytes)
+
+    assert event.type == "unknown_event"
+
+
+def test_subscriber_parse_event_invalid_json(example_event):
+    event_dict = example_event.dict()
+    invalid_json_addition = "}}}}"
+    serialized_bytes = (json.dumps(dict(event_dict)) + invalid_json_addition).encode("utf-8")
+    event = EventHandler.parse_event_from(serialized_bytes)
+
+    assert event.type == "unknown_event"
+
+
+def test_subscriber_parse_event(example_event):
+    serialized_bytes = example_event.json().encode("utf-8")
+    event = EventHandler.parse_event_from(serialized_bytes)
+
+    assert event.type == "onboarding_data_assistant_request.received"

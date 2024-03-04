@@ -4,23 +4,20 @@ import asyncio
 import time
 from dataclasses import dataclass
 from functools import partial
-from json import JSONDecodeError
 from typing import TYPE_CHECKING, Callable, Coroutine, Protocol
 
-from great_expectations.compatibility import pydantic
 from pika.exceptions import (
     AMQPError,
     AuthenticationError,
     ChannelError,
 )
 
-from great_expectations_cloud.agent.models import Event, UnknownEvent
-
 if TYPE_CHECKING:
     from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
         AsyncRabbitMQClient,
         OnMessagePayload,
     )
+    from great_expectations_cloud.agent.models import Event
 
 
 @dataclass(frozen=True)
@@ -143,13 +140,6 @@ class Subscriber:
 
         return on_message(event_context)
 
-    @classmethod
-    def parse_event_from(cls, msg_body: bytes) -> Event:
-        try:
-            event: Event = pydantic.parse_raw_as(Event, msg_body)
-            return event
-        except (pydantic.ValidationError, JSONDecodeError):
-            return UnknownEvent()
 
     async def _redeliver_message(
         self,

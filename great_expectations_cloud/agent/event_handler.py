@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import logging
+from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, Final
+
+from great_expectations.compatibility import pydantic
 
 from great_expectations_cloud.agent.actions import (
     ColumnDescriptiveMetricsAction,
@@ -24,6 +27,7 @@ from great_expectations_cloud.agent.models import (
     RunColumnDescriptiveMetricsEvent,
     RunMissingnessDataAssistantEvent,
     RunOnboardingDataAssistantEvent,
+    UnknownEvent,
 )
 
 if TYPE_CHECKING:
@@ -67,6 +71,15 @@ class EventHandler:
         LOGGER.info(f"Handling event: {event.type} -> {action.__class__.__name__}")
         action_result = action.run(event=event, id=id)
         return action_result
+
+
+    @classmethod
+    def parse_event_from(cls, msg_body: bytes) -> Event:
+        try:
+            event: Event = pydantic.parse_raw_as(Event, msg_body)
+            return event
+        except (pydantic.ValidationError, JSONDecodeError):
+            return UnknownEvent()
 
 
 class UnknownEventError(Exception):
