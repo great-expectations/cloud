@@ -235,6 +235,9 @@ class GXAgent:
                     created_resources=[],
                     error_stack_trace="Unknown event. Ensure agent is up-to-date.",
                 )
+                print(
+                    f"Job completed with error: {event_context.event.type} ({event_context.correlation_id}). Ensure agent is up-to-date."
+                )
             else:
                 status = JobCompleted(
                     success=True,
@@ -247,6 +250,7 @@ class GXAgent:
             print(
                 f"Job completed with error: {event_context.event.type} ({event_context.correlation_id})"
             )
+
         self._update_status(job_id=event_context.correlation_id, status=status)
 
         # ack message and cleanup resources
