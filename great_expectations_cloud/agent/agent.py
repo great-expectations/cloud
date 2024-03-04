@@ -28,6 +28,7 @@ from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderNa
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
 )
+from great_expectations_cloud.agent.exceptions import GXCoreError
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     AsyncRabbitMQClient,
     ClientError,
@@ -236,7 +237,16 @@ class GXAgent:
             )
             print(f"Completed job: {event_context.event.type} ({event_context.correlation_id})")
         else:
-            status = JobCompleted(success=False, error_stack_trace=str(error))
+            # TODO: Refactor into build_failed_job_completed_status method
+            if isinstance(error, GXCoreError):
+                status = JobCompleted(
+                    success=False,
+                    error_stack_trace=str(error),
+                    error_code=error.error_code,
+                    error_params=error.get_error_params(),
+                )
+            else:
+                status = JobCompleted(success=False, error_stack_trace=str(error))
             print(traceback.format_exc())
             print(
                 f"Job completed with error: {event_context.event.type} ({event_context.correlation_id})"
