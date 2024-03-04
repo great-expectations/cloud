@@ -231,12 +231,11 @@ class GXAgent:
         if error is None:
             result: ActionResult = future.result()
 
-            # TODO This result may have an UnknownEvent error
             if result.event is UnknownEvent:
                 status = JobCompleted(
                     success=False,
                     created_resources=[],
-                    error_stack_trace="Unknown event. May need to upgrade your Agent",
+                    error_stack_trace="Unknown event. Ensure agent is up-to-date.",
                 )
             else:
                 status = JobCompleted(
