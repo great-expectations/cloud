@@ -79,7 +79,7 @@ def test_event_action_unknown():
 def test_event_handler_handles_run_missingness_data_assistant_event(mocker):
     mock_action = mocker.patch(
         "great_expectations_cloud.agent.event_handler.RunMissingnessDataAssistantAction",
-        autospec=RunMissingnessDataAssistantAction
+        autospec=RunMissingnessDataAssistantAction,
     )
 
     event = RunMissingnessDataAssistantEvent(
