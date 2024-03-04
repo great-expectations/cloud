@@ -28,4 +28,6 @@ known-first-party = ["great_expectations_cloud", "tests"]
 [lint.flake8-tidy-imports.banned-api]
 # https://pytest-mock.readthedocs.io/en/latest/index.html
 # standard library mock doesn't clean up after itself which can affect unrelated tests
-"unittest.mock".msg = "Please do not use unittest.mock directly, use the `pytest-mock` `mocker` fixture or `pytest.monkeypatch` instead."
+"unittest.mock.MagicMock".msg = "Please do not use unittest.mock.MagicMock directly, use the `pytest-mock` `mocker` fixture or `pytest.monkeypatch` instead."
+"unittest.mock.Mock".msg = "Please do not use unittest.mock.Mock directly, use the `pytest-mock` `mocker` fixture or `pytest.monkeypatch` instead."
+"unittest.mock.patch".msg = "Please do not use unittest.mock.patch directly, use the `pytest-mock` `mocker` fixture or `pytest.monkeypatch` instead."
