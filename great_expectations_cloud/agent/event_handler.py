@@ -63,7 +63,7 @@ class EventHandler:
             return DraftDatasourceConfigAction(context=self._context)
 
         # shouldn't get here
-        raise UnknownEventError("Unknown message received - cannot process.")
+        raise UnknownEventError
 
     def handle_event(self, event: Event, id: str) -> ActionResult:
         """Transform an Event into an ActionResult."""
@@ -74,4 +74,5 @@ class EventHandler:
 
 
 class UnknownEventError(Exception):
-    ...
+    def __init__(self) -> None:
+        super().__init__("Unknown message received - cannot process.")
