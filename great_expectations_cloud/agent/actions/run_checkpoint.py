@@ -6,6 +6,7 @@ from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
+from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunCheckpointEvent,
@@ -45,3 +46,6 @@ class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
             type=event.type,
             created_resources=created_resources,
         )
+
+
+register_event_action("0", RunCheckpointEvent, RunCheckpointAction)

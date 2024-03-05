@@ -17,6 +17,7 @@ from great_expectations.experimental.metric_repository.metric_repository import 
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
+from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunColumnDescriptiveMetricsEvent,
@@ -73,3 +74,6 @@ class ColumnDescriptiveMetricsAction(AgentAction[RunColumnDescriptiveMetricsEven
             raise RuntimeError(  # noqa: TRY003 # one off error
                 "One or more metrics failed to compute."
             )
+
+
+register_event_action("0", RunColumnDescriptiveMetricsEvent, ColumnDescriptiveMetricsAction)
