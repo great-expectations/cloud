@@ -79,7 +79,7 @@ class EventHandler:
             return event
         except (pydantic.ValidationError, JSONDecodeError):
             # Log as bytes
-            LOGGER.error("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
+            LOGGER.warning("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
             return UnknownEvent()
 
 
