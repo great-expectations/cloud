@@ -21,6 +21,7 @@ from great_expectations_cloud.agent.actions.draft_datasource_config_action impor
 )
 from great_expectations_cloud.agent.event_handler import (
     _EVENT_ACTION_MAP,
+    EventAlreadyRegisteredError,
     EventHandler,
     InvalidVersionError,
     NoVersionImplementationError,
@@ -111,7 +112,7 @@ class TestEventHandler:
         action = mocker.MagicMock(autospec=action_type)
         mocker.patch("great_expectations_cloud.agent.event_handler._GX_MAJOR_VERSION", "1")
 
-        mocker.patch.dict(_EVENT_ACTION_MAP, {"1": {event_name: action}})
+        mocker.patch.dict(_EVENT_ACTION_MAP, {"1": {event_name: action}}, clear=True)
         correlation_id = str(uuid4())
         handler = EventHandler(context=mock_context)
 
@@ -152,26 +153,23 @@ class TestEventHandlerRegistry:
             "1234567890",  # Version that doesn't exist already in the map
         ],
     )
-    def test_register_event_action(self, version: str):
+    def test_register_event_action(self, mocker: MockerFixture, version: str):
+        mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
         register_event_action(version, DummyEvent, DummyAction)
         assert _EVENT_ACTION_MAP[version][DummyEvent.__name__] == DummyAction
 
-        del _EVENT_ACTION_MAP[version][DummyEvent.__name__]  # Cleanup
-
-    def test_register_event_action_already_registered(self):
+    def test_register_event_action_already_registered(self, mocker: MockerFixture):
+        mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
         register_event_action("0", DummyEvent, DummyAction)
-        with pytest.raises(ValueError):
+        with pytest.raises(EventAlreadyRegisteredError):
             register_event_action("0", DummyEvent, DummyAction)
 
-        del _EVENT_ACTION_MAP["0"][DummyEvent.__name__]  # Cleanup
-
-    def test_event_handler_gets_correct_event_action(self, mock_context):
+    def test_event_handler_gets_correct_event_action(self, mocker: MockerFixture, mock_context):
+        mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
         register_event_action("0", DummyEvent, DummyAction)
         handler = EventHandler(context=mock_context)
 
-        assert type(handler.get_event_action(DummyEvent)) == DummyAction  # type: ignore[arg-type]  # Dummy event only used in testing
-
-        del _EVENT_ACTION_MAP["0"][DummyEvent.__name__]
+        assert isinstance(handler.get_event_action(DummyEvent), DummyAction)  # type: ignore[arg-type]  # Dummy event only used in testing
 
     @pytest.mark.parametrize(
         "version, expected",

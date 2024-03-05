@@ -13,6 +13,7 @@ from great_expectations_cloud.agent.config import (
     GxAgentEnvVars,
     generate_config_validation_error_text,
 )
+from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.exceptions import ErrorCode, raise_with_error_code
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
@@ -36,14 +37,14 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         draft_config = self.get_draft_config(config_id=event.config_id)
         datasource_type = draft_config.get("type", None)
         if datasource_type is None:
-            raise ValueError(
+            raise TypeError(  # noqa: TRY003 # one off error
                 "The DraftDatasourceConfigAction can only be used with a "
                 "fluent-style Data Source."
             )
         try:
             datasource_cls = self._context.sources.type_lookup[datasource_type]
-        except KeyError as exc:
-            raise ValueError(
+        except LookupError as exc:
+            raise TypeError(  # noqa: TRY003 # one off error
                 "DraftDatasourceConfigAction received an unknown Data Source type."
             ) from exc
         datasource = datasource_cls(**draft_config)
@@ -65,11 +66,16 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         session = create_session(access_token=config.gx_cloud_access_token)
         response = session.get(resource_url)
         if not response.ok:
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY003 # one off error
                 "DraftDatasourceConfigAction encountered an error while " "connecting to GX Cloud"
             )
         data = response.json()
         try:
             return data["data"]["attributes"]["draft_config"]  # type: ignore[no-any-return]
         except KeyError as e:
-            raise RuntimeError("Malformed response received from GX Cloud") from e
+            raise RuntimeError(  # noqa: TRY003 # one off error
+                "Malformed response received from GX Cloud"
+            ) from e
+
+
+register_event_action("0", DraftDatasourceConfigEvent, DraftDatasourceConfigAction)
