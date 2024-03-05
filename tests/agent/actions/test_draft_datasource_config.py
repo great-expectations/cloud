@@ -152,9 +152,9 @@ def test_test_draft_datasource_config_raises_for_non_fds(
     ],
 )
 def test_draft_datasource_config_failure_raises_correct_gx_core_error(
-    context, mocker: MockerFixture, error_message: str, expected_error_code: str
+    mock_context, mocker: MockerFixture, error_message: str, expected_error_code: str
 ):
-    action = DraftDatasourceConfigAction(context=MagicMock(autospec=CloudDataContext))
+    action = DraftDatasourceConfigAction(context=mock_context)
     mock_check_draft_datasource_config = mocker.patch(
         f"{DraftDatasourceConfigAction.__module__}.{DraftDatasourceConfigAction.__name__}.check_draft_datasource_config"
     )
