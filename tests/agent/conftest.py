@@ -4,10 +4,11 @@ import logging
 import time
 import uuid
 from collections import deque
-from typing import Any, Iterable, NamedTuple, TypedDict
+from typing import TYPE_CHECKING, Any, Iterable, NamedTuple, TypedDict
 
 import pytest
 from great_expectations import __version__ as gx_version
+from great_expectations.data_context import CloudDataContext
 from packaging.version import Version
 from typing_extensions import override
 
@@ -17,6 +18,9 @@ from great_expectations_cloud.agent.message_service.subscriber import (
     Subscriber,
 )
 from great_expectations_cloud.agent.models import Event
+
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +39,12 @@ def mock_gx_version_check(
         _mock_get_lastest_version_from_pypi,
         raising=True,
     )
+
+
+@pytest.fixture
+def mock_context(mocker: MockerFixture) -> CloudDataContext:
+    """Returns a `MagicMock` of a `CloudDataContext` for testing purposes."""
+    return mocker.MagicMock(autospec=CloudDataContext)
 
 
 class FakeMessagePayload(NamedTuple):

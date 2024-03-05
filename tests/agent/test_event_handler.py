@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Literal
-from unittest import mock
-from unittest.mock import MagicMock
+from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
 
 import pytest
-from great_expectations.data_context import CloudDataContext
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import (
@@ -43,15 +40,17 @@ from great_expectations_cloud.agent.models import (
     UnknownEvent,
 )
 
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
 pytestmark = pytest.mark.unit
 
 
 class TestEventHandler:
-    def test_event_handler_raises_for_unknown_event(self):
+    def test_event_handler_raises_for_unknown_event(self, mock_context):
         event = UnknownEvent()
         correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
-        context = MagicMock(autospec=CloudDataContext)
-        handler = EventHandler(context=context)
+        handler = EventHandler(context=mock_context)
 
         with pytest.raises(UnknownEventError):
             handler.handle_event(event=event, id=correlation_id)
@@ -102,29 +101,34 @@ class TestEventHandler:
         ],
     )
     def test_event_handler_handles_all_events(
-        self, mocker, event_name: str, event: Event, action_type: type[AgentAction[Any]]
+        self,
+        mock_context,
+        mocker: MockerFixture,
+        event_name: str,
+        event: Event,
+        action_type: type[AgentAction[Any]],
     ):
-        action = MagicMock(autospec=action_type)
+        action = mocker.MagicMock(autospec=action_type)
         mocker.patch("great_expectations_cloud.agent.event_handler._GX_MAJOR_VERSION", "1")
 
-        with mock.patch.dict(_EVENT_ACTION_MAP, {"1": {event_name: action}}):
+        with mocker.patch.dict(_EVENT_ACTION_MAP, {"1": {event_name: action}}):
             correlation_id = str(uuid4())
-            context = MagicMock(autospec=CloudDataContext)
-            handler = EventHandler(context=context)
+            handler = EventHandler(context=mock_context)
 
             handler.handle_event(event=event, id=correlation_id)
 
-            action.assert_called_with(context=context)
+            action.assert_called_with(context=mock_context)
             action().run.assert_called_with(event=event, id=correlation_id)
 
-    def test_event_handler_raises_on_no_version_implementation(self, mocker):
+    def test_event_handler_raises_on_no_version_implementation(
+        self, mock_context, mocker: MockerFixture
+    ):
         gx_major_version = mocker.patch(
             "great_expectations_cloud.agent.event_handler._GX_MAJOR_VERSION"
         )
         gx_major_version.return_value = "NOT_A_REAL_VERSION"
 
-        context = MagicMock(autospec=CloudDataContext)
-        handler = EventHandler(context=context)
+        handler = EventHandler(context=mock_context)
 
         with pytest.raises(NoVersionImplementationError):
             handler.get_event_action(DummyEvent)  # type: ignore[arg-type]  # Dummy event only used in testing
@@ -161,10 +165,9 @@ class TestEventHandlerRegistry:
 
         del _EVENT_ACTION_MAP["0"][DummyEvent.__name__]  # Cleanup
 
-    def test_event_handler_gets_correct_event_action(self):
+    def test_event_handler_gets_correct_event_action(self, mock_context):
         register_event_action("0", DummyEvent, DummyAction)
-        context = MagicMock(autospec=CloudDataContext)
-        handler = EventHandler(context=context)
+        handler = EventHandler(context=mock_context)
 
         assert type(handler.get_event_action(DummyEvent)) == DummyAction  # type: ignore[arg-type]  # Dummy event only used in testing
 
