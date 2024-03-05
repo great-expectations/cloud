@@ -116,7 +116,7 @@ class InvalidVersionError(Exception):
     ...
 
 
-def _get_major_version(version: str) -> str:
+def _get_major_version(version: str | Version) -> str:
     """Get major version as a string. For example, "0.18.0" -> "0"."""
     parsed: Version | LegacyVersion = parse_version(version)
     if not isinstance(parsed, Version):
