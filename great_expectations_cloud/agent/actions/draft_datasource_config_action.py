@@ -26,7 +26,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             if "Incorrect username or password was specified" in str(
                 e
             ) and "snowflake.connector.errors.DatabaseError" in str(e):
-                raise_with_error_code(e=e, error_code="snowflake-wrong-username-or-password")
+                raise_with_error_code(e=e, error_code="wrong-username-or-password")
             else:
                 raise_with_error_code(e=e, error_code="generic-unhandled-error")
 
