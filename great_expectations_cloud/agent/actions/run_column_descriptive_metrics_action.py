@@ -70,4 +70,6 @@ class ColumnDescriptiveMetricsAction(AgentAction[RunColumnDescriptiveMetricsEven
 
     def _raise_on_any_metric_exception(self, metric_run: MetricRun) -> None:
         if any(metric.exception for metric in metric_run.metrics):
-            raise RuntimeError("One or more metrics failed to compute.")
+            raise RuntimeError(  # noqa: TRY003 # one off error
+                "One or more metrics failed to compute."
+            )

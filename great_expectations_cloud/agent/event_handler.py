@@ -56,9 +56,7 @@ def register_event_action(
 ) -> None:
     """Register an event type to an action class."""
     if version in _EVENT_ACTION_MAP and event_type.__name__ in _EVENT_ACTION_MAP[version]:
-        raise ValueError(
-            f"Event type {event_type.__name__} already registered for version {version}."
-        )
+        raise EventAlreadyRegisteredError(event_type_name=event_type.__name__, version=version)
     event_type_str = event_type.__name__
     _EVENT_ACTION_MAP[version][event_type_str] = action_class
     LOGGER.debug(
@@ -86,14 +84,10 @@ class EventHandler:
         """Get the action that should be run for the given event."""
         action_map = _EVENT_ACTION_MAP.get(_GX_MAJOR_VERSION)
         if action_map is None:
-            raise NoVersionImplementationError(
-                f"No event action map implemented for GX Core major version {_GX_MAJOR_VERSION}"
-            )
+            raise NoVersionImplementationError(version=_GX_MAJOR_VERSION)
         action_class = action_map.get(_get_event_name(event))
         if action_class is None:
-            raise UnknownEventError(
-                f'Unknown message received: "{_get_event_name(event)}" - cannot process.'
-            )
+            raise UnknownEventError(event_name=_get_event_name(event))
         return action_class(context=self._context)
 
     def handle_event(self, event: Event, id: str) -> ActionResult:
@@ -109,22 +103,30 @@ class EventError(Exception):
 
 
 class UnknownEventError(EventError):
-    ...
+    def __init__(self, event_name: str):
+        super().__init__(f'Unknown message received: "{event_name}" - cannot process.')
 
 
 class NoVersionImplementationError(EventError):
-    ...
+    def __init__(self, version: str | Version):
+        super().__init__(f"No event action map implemented for GX Core major version {version}.")
 
 
 class InvalidVersionError(EventError):
-    ...
+    def __init__(self, version: str | Version):
+        super().__init__(f"Invalid version: {version}")
+
+
+class EventAlreadyRegisteredError(EventError):
+    def __init__(self, event_type_name: str, version: str | Version):
+        super().__init__(f"Event type {event_type_name} already registered for version {version}.")
 
 
 def _get_major_version(version: str | Version) -> str:
     """Get major version as a string. For example, "0.18.0" -> "0"."""
     parsed: Version | LegacyVersion = parse_version(version)
     if not isinstance(parsed, Version):
-        raise InvalidVersionError(f"Invalid version: {version}")
+        raise InvalidVersionError(version)
     return str(parsed.major)
 
 
