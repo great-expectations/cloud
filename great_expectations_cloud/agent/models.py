@@ -25,15 +25,15 @@ class RunDataAssistantEvent(EventBase):
 
 
 class RunOnboardingDataAssistantEvent(RunDataAssistantEvent):
-    type: Literal[
+    type: Literal["onboarding_data_assistant_request.received"] = (
         "onboarding_data_assistant_request.received"
-    ] = "onboarding_data_assistant_request.received"
+    )
 
 
 class RunMissingnessDataAssistantEvent(RunDataAssistantEvent):
-    type: Literal[
+    type: Literal["missingness_data_assistant_request.received"] = (
         "missingness_data_assistant_request.received"
-    ] = "missingness_data_assistant_request.received"
+    )
 
 
 class RunCheckpointEvent(EventBase):
@@ -44,9 +44,9 @@ class RunCheckpointEvent(EventBase):
 
 
 class RunColumnDescriptiveMetricsEvent(EventBase):
-    type: Literal[
+    type: Literal["column_descriptive_metrics_request.received"] = (
         "column_descriptive_metrics_request.received"
-    ] = "column_descriptive_metrics_request.received"
+    )
     datasource_name: str
     data_asset_name: str
 

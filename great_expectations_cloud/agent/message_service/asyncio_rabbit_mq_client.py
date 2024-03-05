@@ -28,8 +28,7 @@ class OnMessageFn(Protocol):
     Accepts a single argument, a payload object and returns None.
     """
 
-    def __call__(self, payload: OnMessagePayload) -> None:
-        ...
+    def __call__(self, payload: OnMessagePayload) -> None: ...
 
 
 class AsyncRabbitMQClient:
@@ -242,5 +241,4 @@ class AsyncRabbitMQClient:
         return parameters
 
 
-class ClientError(Exception):
-    ...
+class ClientError(Exception): ...

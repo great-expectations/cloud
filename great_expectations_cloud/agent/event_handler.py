@@ -73,5 +73,4 @@ class EventHandler:
         return action_result
 
 
-class UnknownEventError(Exception):
-    ...
+class UnknownEventError(Exception): ...
