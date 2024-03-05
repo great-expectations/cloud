@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import warnings
 from typing import Final
 
 from typing_extensions import override
@@ -13,6 +12,7 @@ from great_expectations_cloud.agent.actions.agent_action import (
 from great_expectations_cloud.agent.models import (
     UnknownEvent,
 )
+from great_expectations_cloud.agent.warnings import warn_unknown_event
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -20,10 +20,7 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 class UnknownEventAction(AgentAction[UnknownEvent]):
     @override
     def run(self, event: UnknownEvent, id: str) -> ActionResult:
-        warnings.warn(
-            f"The version of the GX Agent you are using does not support this job ({event.type}). Please upgrade to latest.",
-            stacklevel=2,
-        )
+        warn_unknown_event(event.type)
         # noop
         return ActionResult(
             id=id,
