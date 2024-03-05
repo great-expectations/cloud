@@ -8,25 +8,6 @@ import great_expectations as gx
 from packaging.version import LegacyVersion, Version
 from packaging.version import parse as parse_version
 
-from great_expectations_cloud.agent.actions import (
-    ColumnDescriptiveMetricsAction,
-    ListTableNamesAction,
-    RunCheckpointAction,
-    RunMissingnessDataAssistantAction,
-    RunOnboardingDataAssistantAction,
-)
-from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
-    DraftDatasourceConfigAction,
-)
-from great_expectations_cloud.agent.models import (
-    DraftDatasourceConfigEvent,
-    ListTableNamesEvent,
-    RunCheckpointEvent,
-    RunColumnDescriptiveMetricsEvent,
-    RunMissingnessDataAssistantEvent,
-    RunOnboardingDataAssistantEvent,
-)
-
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
@@ -62,14 +43,6 @@ def register_event_action(
     LOGGER.debug(
         f"Registered event action: {event_type_str} -> {action_class.__name__} (version {version})"
     )
-
-
-register_event_action("0", RunCheckpointEvent, RunCheckpointAction)
-register_event_action("0", DraftDatasourceConfigEvent, DraftDatasourceConfigAction)
-register_event_action("0", RunColumnDescriptiveMetricsEvent, ColumnDescriptiveMetricsAction)
-register_event_action("0", ListTableNamesEvent, ListTableNamesAction)
-register_event_action("0", RunMissingnessDataAssistantEvent, RunMissingnessDataAssistantAction)
-register_event_action("0", RunOnboardingDataAssistantEvent, RunOnboardingDataAssistantAction)
 
 
 class EventHandler:
