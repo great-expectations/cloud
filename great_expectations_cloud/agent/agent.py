@@ -290,7 +290,9 @@ class GXAgent:
 
         response = session.post(agent_sessions_url)
         if response.ok is not True:
-            raise GXAgentError("Unable to authenticate to GX Cloud. Please check your credentials.")
+            raise GXAgentError(  # noqa: TRY003 # TODO: use AuthenticationError
+                "Unable to authenticate to GX Cloud. Please check your credentials."
+            )
 
         json_response = response.json()
         queue = json_response["queue"]

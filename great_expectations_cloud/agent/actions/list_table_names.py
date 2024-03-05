@@ -31,7 +31,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
         datasource_name: str = event.datasource_name
         datasource = self._context.get_datasource(datasource_name=datasource_name)
         if not isinstance(datasource, SQLDatasource):
-            raise TypeError(
+            raise TypeError(  # noqa: TRY003 # one off error
                 f"This operation requires a SQL Data Source but got {type(datasource).__name__}."
             )
 
