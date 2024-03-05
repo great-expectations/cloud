@@ -35,7 +35,7 @@ def build_batch_request(
 ) -> BatchRequest:
     datasource = context.get_datasource(datasource_name=event.datasource_name)
     if not isinstance(datasource, FluentDatasource):
-        raise ValueError(
+        raise TypeError(  # noqa: TRY003 # one off error
             "The RunDataAssistant Action can only be used with a fluent-style Data Source."
         )
 

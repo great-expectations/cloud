@@ -21,14 +21,14 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         draft_config = self.get_draft_config(config_id=event.config_id)
         datasource_type = draft_config.get("type", None)
         if datasource_type is None:
-            raise ValueError(
+            raise TypeError(  # noqa: TRY003 # one off error
                 "The DraftDatasourceConfigAction can only be used with a "
                 "fluent-style Data Source."
             )
         try:
             datasource_cls = self._context.sources.type_lookup[datasource_type]
         except LookupError as exc:
-            raise ValueError(
+            raise TypeError(  # noqa: TRY003 # one off error
                 "DraftDatasourceConfigAction received an unknown Data Source type."
             ) from exc
         datasource = datasource_cls(**draft_config)
