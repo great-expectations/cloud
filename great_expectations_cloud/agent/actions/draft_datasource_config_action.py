@@ -50,11 +50,13 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         session = create_session(access_token=config.gx_cloud_access_token)
         response = session.get(resource_url)
         if not response.ok:
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: TRY003 # one off error
                 "DraftDatasourceConfigAction encountered an error while " "connecting to GX Cloud"
             )
         data = response.json()
         try:
             return data["data"]["attributes"]["draft_config"]  # type: ignore[no-any-return]
         except KeyError as e:
-            raise RuntimeError("Malformed response received from GX Cloud") from e
+            raise RuntimeError(  # noqa: TRY003 # one off error
+                "Malformed response received from GX Cloud"
+            ) from e

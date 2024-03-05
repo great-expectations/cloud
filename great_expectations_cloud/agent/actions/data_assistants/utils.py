@@ -43,7 +43,7 @@ def build_batch_request(
     try:
         batch_request = asset.build_batch_request()
     except ValueError as e:
-        raise ValueError(
+        raise ValueError(  # noqa: TRY003 # one off error
             "The RunDataAssistant Action for data assistant cannot be used with an "
             "in-memory Data Asset."
         ) from e
@@ -112,7 +112,7 @@ def build_action_result(
     expectation_suite_id = expectation_suite.ge_cloud_id
     checkpoint_id = checkpoint.ge_cloud_id
     if expectation_suite_id is None or checkpoint_id is None:
-        raise ValueError("Cloud backed resources must have an ID.")
+        raise ValueError("Cloud backed resources must have an ID.")  # noqa: TRY003 # one off error
     return ActionResult(
         id=id,
         type=event.type,
