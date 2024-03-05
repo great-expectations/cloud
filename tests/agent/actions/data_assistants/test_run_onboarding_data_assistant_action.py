@@ -40,7 +40,7 @@ def test_run_onboarding_data_assistant_event_raises_for_legacy_datasource(
     datasource = mocker.Mock(spec=LegacyDatasource)
     mock_context.get_datasource.return_value = datasource
 
-    with pytest.raises(ValueError, match=r"fluent-style Data Source"):
+    with pytest.raises(TypeError, match=r"fluent-style Data Source"):
         action.run(event=onboarding_event, id=id)
 
 
