@@ -16,7 +16,7 @@ def run_agent() -> None:
         agent.run()
     except GXAgentConfigError as error:
         # catch error to avoid stacktrace printout
-        LOGGER.error(error)
+        LOGGER.error(error)  # noqa: TRY400 # intentionally avoiding logging stacktrace
 
 
 def get_version() -> str:

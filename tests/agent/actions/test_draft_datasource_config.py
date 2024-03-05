@@ -132,7 +132,7 @@ def test_test_draft_datasource_config_raises_for_non_fds(
         f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
         f"/datasources/drafts/{config_id}"
     )
-    with pytest.raises(ValueError, match="fluent-style Data Source"):
+    with pytest.raises(TypeError, match="fluent-style Data Source"):
         action.run(event=event, id=str(job_id))
 
     session.get.assert_called_with(expected_url)
@@ -191,7 +191,7 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
 
     mock_context.sources.type_lookup = {}
 
-    with pytest.raises(ValueError, match="unknown Data Source type"):
+    with pytest.raises(TypeError, match="unknown Data Source type"):
         action.run(event=event, id=str(job_id))
 
     session.get.assert_called_with(expected_url)

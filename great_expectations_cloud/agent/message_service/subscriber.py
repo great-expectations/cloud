@@ -86,12 +86,12 @@ class Subscriber:
         while True:
             try:
                 self.client.run(queue=queue, on_message=callback)
-            except AuthenticationError as e:
+            except AuthenticationError:
                 # If an authentication error happens when trying to connect to rabbitMQ,
                 # it means that the connection string is incorrect. Retrying would not
                 # enable us to reconnect.
                 self.client.stop()
-                raise e
+                raise
             except (AMQPError, ChannelError):
                 self.client.stop()
                 reconnect_delay = self._get_reconnect_delay()
