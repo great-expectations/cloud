@@ -52,7 +52,7 @@ _EVENT_ACTION_MAP: dict[str, dict[str, type[AgentAction[Any]]]] = defaultdict(di
 
 
 def register_event_action(
-    version: str | Version, event_type: type[Event], action_class: type[AgentAction[Any]]
+    version: str, event_type: type[Event], action_class: type[AgentAction[Any]]
 ) -> None:
     """Register an event type to an action class."""
     if version in _EVENT_ACTION_MAP and event_type.__name__ in _EVENT_ACTION_MAP[version]:
@@ -122,15 +122,15 @@ class EventAlreadyRegisteredError(EventError):
         super().__init__(f"Event type {event_type_name} already registered for version {version}.")
 
 
-def _get_major_version(version: str | Version) -> str:
-    """Get major version as a string. For example, "0.18.0" -> "0"."""
+def _get_major_version(version: str) -> str:
+    """Get major version as a string from version as a string. For example, "0.18.0" -> "0"."""
     parsed: Version | LegacyVersion = parse_version(version)
     if not isinstance(parsed, Version):
         raise InvalidVersionError(version)
     return str(parsed.major)
 
 
-_GX_MAJOR_VERSION = _get_major_version(gx.__version__)
+_GX_MAJOR_VERSION = _get_major_version(str(gx.__version__))
 
 
 def _get_event_name(event: Event) -> str:
