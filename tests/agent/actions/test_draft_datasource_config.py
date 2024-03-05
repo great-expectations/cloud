@@ -12,7 +12,7 @@ from great_expectations_cloud.agent.actions.draft_datasource_config_action impor
     DraftDatasourceConfigAction,
 )
 from great_expectations_cloud.agent.config import GxAgentEnvVars
-from great_expectations_cloud.agent.exceptions import GXCoreError
+from great_expectations_cloud.agent.exceptions import ErrorCode, GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 if TYPE_CHECKING:
@@ -143,11 +143,11 @@ def test_test_draft_datasource_config_raises_for_non_fds(
     [
         (
             """Attempt to connect to datasource failed with the following error message: (snowflake.connector.errors.DatabaseError) 250001 (08001): None: Failed to connect to DB: <DB Name> Incorrect username or password was specified.\n(Background on this error at: https://sqlalche.me/e/14/4xp6)""",
-            "snowflake-wrong-username-or-password",
+            ErrorCode.WRONG_USERNAME_OR_PASSWORD,
         ),
         (
             """Unrecognized error.""",
-            "generic-unhandled-error",
+            ErrorCode.GENERIC_UNHANDLED_ERROR,
         ),
     ],
 )

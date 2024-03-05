@@ -13,7 +13,7 @@ from great_expectations_cloud.agent.config import (
     GxAgentEnvVars,
     generate_config_validation_error_text,
 )
-from great_expectations_cloud.agent.exceptions import raise_with_error_code
+from great_expectations_cloud.agent.exceptions import ErrorCode, raise_with_error_code
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 
@@ -26,9 +26,9 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             if "Incorrect username or password was specified" in str(
                 e
             ) and "snowflake.connector.errors.DatabaseError" in str(e):
-                raise_with_error_code(e=e, error_code="wrong-username-or-password")
+                raise_with_error_code(e=e, error_code=ErrorCode.WRONG_USERNAME_OR_PASSWORD)
             else:
-                raise_with_error_code(e=e, error_code="generic-unhandled-error")
+                raise_with_error_code(e=e, error_code=ErrorCode.GENERIC_UNHANDLED_ERROR)
 
     def check_draft_datasource_config(
         self, event: DraftDatasourceConfigEvent, id: str
