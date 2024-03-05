@@ -52,7 +52,7 @@ _EVENT_ACTION_MAP: dict[str, dict[str, type[AgentAction[Any]]]] = defaultdict(di
 
 
 def register_event_action(
-    version: str, event_type: type[Event], action_class: type[AgentAction[Any]]
+    version: str | Version, event_type: type[Event], action_class: type[AgentAction[Any]]
 ) -> None:
     """Register an event type to an action class."""
     if version in _EVENT_ACTION_MAP and event_type.__name__ in _EVENT_ACTION_MAP[version]:
