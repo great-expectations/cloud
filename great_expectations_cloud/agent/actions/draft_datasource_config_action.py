@@ -27,7 +27,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             )
         try:
             datasource_cls = self._context.sources.type_lookup[datasource_type]
-        except KeyError as exc:
+        except LookupError as exc:
             raise ValueError(
                 "DraftDatasourceConfigAction received an unknown Data Source type."
             ) from exc
