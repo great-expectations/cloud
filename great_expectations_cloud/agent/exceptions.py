@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from typing import NoReturn
 
-def raise_with_error_code(e: Exception, error_code: str) -> None:
+
+def raise_with_error_code(e: Exception, error_code: str) -> NoReturn:
     """Raise a GXCoreError with the given error_code and the message from the given exception.
 
     Meant to standardize the way we raise GXCoreErrors with error codes.

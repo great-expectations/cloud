@@ -64,5 +64,5 @@ class ErrorWithParamsAndMore(GXCoreError):
         ),
     ],
 )
-def test_get_error_params(error: GXCoreError, expected_params: dict):
+def test_get_error_params(error: GXCoreError, expected_params: dict[str, str]):
     assert error.get_error_params() == expected_params
