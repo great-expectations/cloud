@@ -104,15 +104,19 @@ class EventHandler:
         return action_result
 
 
-class UnknownEventError(Exception):
+class EventError(Exception):
     ...
 
 
-class NoVersionImplementationError(Exception):
+class UnknownEventError(EventError):
     ...
 
 
-class InvalidVersionError(Exception):
+class NoVersionImplementationError(EventError):
+    ...
+
+
+class InvalidVersionError(EventError):
     ...
 
 
