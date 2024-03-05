@@ -107,6 +107,9 @@ lint.select = [
     "TCH", # flake8-type-checking-tch
     # https://beta.ruff.rs/docs/rules/#flake8-tidy-imports-tid
     "TID", # flake8-tidy-imports
+    # https://docs.astral.sh/ruff/rules/#tryceratops-try
+    # https://github.com/guilatrova/tryceratops
+    "TRY", # tryceratops - pythonic exception handling
     # https://beta.ruff.rs/docs/rules/#flake8-pyi-pyi
     "PYI", # flake8-pyi - type stub files
     # https://beta.ruff.rs/docs/rules/#flake8-use-pathlib-pth
