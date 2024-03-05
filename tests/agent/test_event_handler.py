@@ -111,14 +111,14 @@ class TestEventHandler:
         action = mocker.MagicMock(autospec=action_type)
         mocker.patch("great_expectations_cloud.agent.event_handler._GX_MAJOR_VERSION", "1")
 
-        with mocker.patch.dict(_EVENT_ACTION_MAP, {"1": {event_name: action}}):
-            correlation_id = str(uuid4())
-            handler = EventHandler(context=mock_context)
+        mocker.patch.dict(_EVENT_ACTION_MAP, {"1": {event_name: action}})
+        correlation_id = str(uuid4())
+        handler = EventHandler(context=mock_context)
 
-            handler.handle_event(event=event, id=correlation_id)
+        handler.handle_event(event=event, id=correlation_id)
 
-            action.assert_called_with(context=mock_context)
-            action().run.assert_called_with(event=event, id=correlation_id)
+        action.assert_called_with(context=mock_context)
+        action().run.assert_called_with(event=event, id=correlation_id)
 
     def test_event_handler_raises_on_no_version_implementation(
         self, mock_context, mocker: MockerFixture
