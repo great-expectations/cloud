@@ -79,13 +79,12 @@ class EventHandler:
 
     @classmethod
     def parse_event_from(cls, msg_body: bytes) -> Event:
-        event: Event
         try:
-            event = pydantic.parse_raw_as(Event, msg_body)
+            event: Event = pydantic.parse_raw_as(Event, msg_body)
         except (pydantic.ValidationError, JSONDecodeError):
             # Log as bytes
             LOGGER.exception("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
-            event = UnknownEvent
+            return UnknownEvent()
 
         return event
 
