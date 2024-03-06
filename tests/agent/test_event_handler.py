@@ -39,6 +39,7 @@ from great_expectations_cloud.agent.models import (
     RunOnboardingDataAssistantEvent,
     UnknownEvent,
 )
+from great_expectations_cloud.agent.warnings import GXAgentUserWarning
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -52,7 +53,8 @@ class TestEventHandler:
         correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
         context = mocker.MagicMock(autospec=CloudDataContext)
         handler = EventHandler(context=context)
-        result = handler.handle_event(event=event, id=correlation_id)
+        with pytest.warns(GXAgentUserWarning):
+            result = handler.handle_event(event=event, id=correlation_id)
         assert result.type == "unknown_event"
 
     @pytest.mark.parametrize(

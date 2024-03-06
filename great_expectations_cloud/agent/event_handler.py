@@ -10,6 +10,7 @@ from great_expectations.compatibility import pydantic
 from packaging.version import LegacyVersion, Version
 from packaging.version import parse as parse_version
 
+from great_expectations_cloud.agent.actions.unknown import UnknownEventAction
 from great_expectations_cloud.agent.models import (
     Event,
     UnknownEvent,
@@ -67,7 +68,7 @@ class EventHandler:
             raise NoVersionImplementationError(version=_GX_MAJOR_VERSION)
         action_class = action_map.get(_get_event_name(event))
         if action_class is None:
-            raise UnknownEventError(event_name=_get_event_name(event))
+            action_class = UnknownEventAction
         return action_class(context=self._context)
 
     def handle_event(self, event: Event, id: str) -> ActionResult:
