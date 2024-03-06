@@ -177,8 +177,7 @@ class GXAgent:
             event_context.processed_with_failures()
             return
         elif self._can_accept_new_task() is not True:
-            # request that this message is redelivered later. If the event is UnknownEvent
-            # we don't understand it, so requeue it in the hope that someone else does.
+            # request that this message is redelivered later
             loop = asyncio.get_event_loop()
             # store a reference the task to ensure it isn't garbage collected
             self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
