@@ -5,33 +5,16 @@ from collections import defaultdict
 from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, Final
 
-from great_expectations.compatibility import pydantic
-from packaging.version import Version, LegacyVersion
-from pkg_resources import parse_version
-
-from great_expectations_cloud.agent.actions import (
-    ColumnDescriptiveMetricsAction,
-    ListTableNamesAction,
-)
-from great_expectations_cloud.agent.actions.data_assistants import (
-    RunMissingnessDataAssistantAction,
-    RunOnboardingDataAssistantAction,
-)
-from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
-    DraftDatasourceConfigAction,
-)
-from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
-from great_expectations_cloud.agent.models import (
-    DraftDatasourceConfigEvent,
-    Event,
-    ListTableNamesEvent,
-    RunCheckpointEvent,
-    RunColumnDescriptiveMetricsEvent,
-    RunMissingnessDataAssistantEvent,
-    RunOnboardingDataAssistantEvent, UnknownEvent,
-)
 import great_expectations as gx
+from great_expectations.compatibility import pydantic
+from packaging.version import LegacyVersion, Version
 from packaging.version import parse as parse_version
+
+from great_expectations_cloud.agent.models import (
+    Event,
+    UnknownEvent,
+)
+
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
@@ -101,7 +84,7 @@ class EventHandler:
             return event
         except (pydantic.ValidationError, JSONDecodeError):
             # Log as bytes
-            LOGGER.error("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
+            LOGGER.exception("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
             return UnknownEvent()
 
 

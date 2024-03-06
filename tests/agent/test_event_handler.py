@@ -3,25 +3,41 @@ from __future__ import annotations
 import json
 import warnings
 from typing import TYPE_CHECKING, Any, Literal
-from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
 from great_expectations.data_context import CloudDataContext
 from typing_extensions import override
 
-from great_expectations_cloud.agent.actions import RunMissingnessDataAssistantAction, RunOnboardingDataAssistantAction, \
-    RunCheckpointAction, DraftDatasourceConfigAction, ListTableNamesAction, ColumnDescriptiveMetricsAction, AgentAction, \
-    ActionResult
-from great_expectations_cloud.agent.event_handler import EventHandler, UnknownEventError, InvalidVersionError, \
-    _get_major_version, register_event_action, _EVENT_ACTION_MAP, NoVersionImplementationError, \
-    EventAlreadyRegisteredError
+from great_expectations_cloud.agent.actions import (
+    ActionResult,
+    AgentAction,
+    ColumnDescriptiveMetricsAction,
+    DraftDatasourceConfigAction,
+    ListTableNamesAction,
+    RunCheckpointAction,
+    RunMissingnessDataAssistantAction,
+    RunOnboardingDataAssistantAction,
+)
+from great_expectations_cloud.agent.event_handler import (
+    _EVENT_ACTION_MAP,
+    EventAlreadyRegisteredError,
+    EventHandler,
+    InvalidVersionError,
+    NoVersionImplementationError,
+    _get_major_version,
+    register_event_action,
+)
 from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
+    Event,
+    EventBase,
+    ListTableNamesEvent,
     RunCheckpointEvent,
+    RunColumnDescriptiveMetricsEvent,
     RunMissingnessDataAssistantEvent,
     RunOnboardingDataAssistantEvent,
-    UnknownEvent, ListTableNamesEvent, RunColumnDescriptiveMetricsEvent, Event, EventBase,
+    UnknownEvent,
 )
 
 if TYPE_CHECKING:
@@ -31,10 +47,10 @@ pytestmark = pytest.mark.unit
 
 
 class TestEventHandler:
-    def test_event_handler_unknown_event(self):
+    def test_event_handler_unknown_event(self, mocker):
         event = UnknownEvent()
         correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
-        context = MagicMock(autospec=CloudDataContext)
+        context = mocker.MagicMock(autospec=CloudDataContext)
         handler = EventHandler(context=context)
         result = handler.handle_event(event=event, id=correlation_id)
         assert result.type == "unknown_event"
