@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
@@ -11,6 +12,7 @@ from great_expectations_cloud.agent.actions.draft_datasource_config_action impor
     DraftDatasourceConfigAction,
 )
 from great_expectations_cloud.agent.config import GxAgentEnvVars
+from great_expectations_cloud.agent.exceptions import ErrorCode, GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 if TYPE_CHECKING:
@@ -104,7 +106,7 @@ def test_test_draft_datasource_config_failure(
     mock_context.sources.type_lookup = {ds_type: datasource_cls}
     datasource_cls.return_value.test_connection.side_effect = TestConnectionError
 
-    with pytest.raises(TestConnectionError):
+    with pytest.raises(GXCoreError):
         action.run(event=event, id=str(job_id))
 
     session.get.assert_called_with(expected_url)
@@ -134,6 +136,36 @@ def test_test_draft_datasource_config_raises_for_non_fds(
         action.run(event=event, id=str(job_id))
 
     session.get.assert_called_with(expected_url)
+
+
+@pytest.mark.parametrize(
+    "error_message, expected_error_code",
+    [
+        (
+            """Attempt to connect to datasource failed with the following error message: (snowflake.connector.errors.DatabaseError) 250001 (08001): None: Failed to connect to DB: <DB Name> Incorrect username or password was specified.\n(Background on this error at: https://sqlalche.me/e/14/4xp6)""",
+            ErrorCode.WRONG_USERNAME_OR_PASSWORD,
+        ),
+        (
+            """Unrecognized error.""",
+            ErrorCode.GENERIC_UNHANDLED_ERROR,
+        ),
+    ],
+)
+def test_draft_datasource_config_failure_raises_correct_gx_core_error(
+    mock_context, mocker: MockerFixture, error_message: str, expected_error_code: str
+):
+    action = DraftDatasourceConfigAction(context=mock_context)
+    mock_check_draft_datasource_config = mocker.patch(
+        f"{DraftDatasourceConfigAction.__module__}.{DraftDatasourceConfigAction.__name__}.check_draft_datasource_config"
+    )
+    mock_check_draft_datasource_config.side_effect = TestConnectionError(error_message)
+
+    event = DraftDatasourceConfigEvent(config_id=uuid.uuid4())
+    with pytest.raises(GXCoreError) as e:
+        action.run(event=event, id=str(uuid.uuid4()))
+
+    assert e.value.error_code == expected_error_code
+    assert e.value.get_error_params() == {}
 
 
 def test_test_draft_datasource_config_raises_for_unknown_type(
