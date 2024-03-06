@@ -24,6 +24,11 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         try:
             return self.check_draft_datasource_config(event=event, id=id)
         except TestConnectionError as e:
+            # NOTE: This (string matching) is a temporary solution to handle the error codes for the 0.18.x release
+            # as a demo / proof of concept of the error code system.
+            # It will be replaced in the GX Core 1.0.0 actions with more specific exceptions that can be caught.
+            # These exceptions will be raised with the appropriate error code, and also contain parameters of any
+            # relevant information that can be used to construct a user-friendly error message.
             if "Incorrect username or password was specified" in str(
                 e
             ) and "snowflake.connector.errors.DatabaseError" in str(e):
