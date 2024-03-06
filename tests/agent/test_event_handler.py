@@ -47,6 +47,15 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.unit
 
 
+@pytest.fixture()
+def example_event():
+    return RunOnboardingDataAssistantEvent(
+        type="onboarding_data_assistant_request.received",
+        datasource_name="abc",
+        data_asset_name="boo",
+    )
+
+
 class TestEventHandler:
     def test_event_handler_unknown_event(self, mocker):
         event = UnknownEvent()
