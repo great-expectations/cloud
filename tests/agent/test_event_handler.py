@@ -194,7 +194,7 @@ class TestEventHandlerRegistry:
                 _get_major_version("invalid_version")
 
 
-def test_subscriber_parse_event_extra_field(example_event):
+def test_parse_event_extra_field(example_event):
     event_dict = example_event.dict()
     event_dict["new_field"] = "surprise!"
     serialized_bytes = json.dumps(dict(event_dict), indent=2).encode("utf-8")
@@ -203,7 +203,7 @@ def test_subscriber_parse_event_extra_field(example_event):
     assert event.type == "unknown_event"
 
 
-def test_subscriber_parse_event_missing_required_field(example_event):
+def test_parse_event_missing_required_field(example_event):
     event_dict = example_event.dict()
     del event_dict["datasource_name"]
     serialized_bytes = json.dumps(dict(event_dict)).encode("utf-8")
@@ -212,7 +212,7 @@ def test_subscriber_parse_event_missing_required_field(example_event):
     assert event.type == "unknown_event"
 
 
-def test_subscriber_parse_event_invalid_json(example_event):
+def test_parse_event_invalid_json(example_event):
     event_dict = example_event.dict()
     invalid_json_addition = "}}}}"
     serialized_bytes = (json.dumps(dict(event_dict)) + invalid_json_addition).encode("utf-8")
@@ -221,7 +221,7 @@ def test_subscriber_parse_event_invalid_json(example_event):
     assert event.type == "unknown_event"
 
 
-def test_subscriber_parse_event(example_event):
+def test_parse_event(example_event):
     serialized_bytes = example_event.json().encode("utf-8")
     event = EventHandler.parse_event_from(serialized_bytes)
 
