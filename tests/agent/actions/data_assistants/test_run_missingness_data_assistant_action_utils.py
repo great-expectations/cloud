@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from typing import TYPE_CHECKING
 
 import pytest
-from great_expectations.data_context import CloudDataContext
 from great_expectations.datasource.fluent import Datasource
 from great_expectations.exceptions import StoreBackendError
 
@@ -15,12 +14,10 @@ from great_expectations_cloud.agent.models import (
     RunMissingnessDataAssistantEvent,
 )
 
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
 pytestmark = pytest.mark.unit
-
-
-@pytest.fixture(scope="function")
-def context():
-    return MagicMock(autospec=CloudDataContext)
 
 
 @pytest.fixture
@@ -43,20 +40,20 @@ def missingness_event_with_expectation_suite_name():
 
 
 def test_run_missingness_data_assistant_action_without_expectation_suite_name(
-    context, missingness_event_without_expectation_suite_name
+    mock_context, missingness_event_without_expectation_suite_name, mocker: MockerFixture
 ):
-    action = RunMissingnessDataAssistantAction(context=context)
+    action = RunMissingnessDataAssistantAction(context=mock_context)
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
-    context.get_expectation_suite.side_effect = StoreBackendError("test-message")
-    context.get_checkpoint.side_effect = StoreBackendError("test-message")
+    mock_context.get_expectation_suite.side_effect = StoreBackendError("test-message")
+    mock_context.get_checkpoint.side_effect = StoreBackendError("test-message")
     expectation_suite_id = "084a6e0f-c014-4e40-b6b7-b2f57cb9e176"
     checkpoint_id = "f5d32bbf-1392-4248-bc40-a3966fab2e0e"
-    expectation_suite = context.assistants.missingness.run().get_expectation_suite()
+    expectation_suite = mock_context.assistants.missingness.run().get_expectation_suite()
     expectation_suite.ge_cloud_id = expectation_suite_id
-    checkpoint = context.add_checkpoint.return_value
+    checkpoint = mock_context.add_checkpoint.return_value
     checkpoint.ge_cloud_id = checkpoint_id
-    datasource = MagicMock(spec=Datasource)
-    context.get_datasource.return_value = datasource
+    datasource = mocker.Mock(spec=Datasource)
+    mock_context.get_datasource.return_value = datasource
 
     action_result = action.run(event=missingness_event_without_expectation_suite_name, id=id)
 
@@ -69,18 +66,18 @@ def test_run_missingness_data_assistant_action_without_expectation_suite_name(
 
 
 def test_run_missingness_data_assistant_action_with_expectation_suite_name(
-    context, missingness_event_with_expectation_suite_name
+    mock_context, missingness_event_with_expectation_suite_name, mocker: MockerFixture
 ):
-    action = RunMissingnessDataAssistantAction(context=context)
+    action = RunMissingnessDataAssistantAction(context=mock_context)
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     expectation_suite_id = "084a6e0f-c014-4e40-b6b7-b2f57cb9e176"
     checkpoint_id = "f5d32bbf-1392-4248-bc40-a3966fab2e0e"
-    expectation_suite = context.assistants.missingness.run().get_expectation_suite()
+    expectation_suite = mock_context.assistants.missingness.run().get_expectation_suite()
     expectation_suite.ge_cloud_id = expectation_suite_id
-    checkpoint = context.add_checkpoint.return_value
+    checkpoint = mock_context.add_checkpoint.return_value
     checkpoint.ge_cloud_id = checkpoint_id
-    datasource = MagicMock(spec=Datasource)
-    context.get_datasource.return_value = datasource
+    datasource = mocker.Mock(spec=Datasource)
+    mock_context.get_datasource.return_value = datasource
 
     action_result = action.run(event=missingness_event_with_expectation_suite_name, id=id)
 
@@ -92,6 +89,6 @@ def test_run_missingness_data_assistant_action_with_expectation_suite_name(
     ]
 
     # should have created expectation suite with the name provided in the event
-    assert context.get_expectation_suite(
+    assert mock_context.get_expectation_suite(
         expectation_suite_name=missingness_event_with_expectation_suite_name.expectation_suite_name
     )
