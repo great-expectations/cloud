@@ -12,7 +12,8 @@ from great_expectations_cloud.agent.exceptions import GXCoreError
 
 class AgentBaseModel(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
     class Config:
-        extra: str = Extra.ignore
+        # 2024-03-04: ZEL-501 Strictly enforce models for handling outdated APIs
+        extra: str = Extra.forbid
 
 
 class EventBase(AgentBaseModel):
