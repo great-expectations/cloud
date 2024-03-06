@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
 
 import pytest
-from great_expectations.data_context import CloudDataContext
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import (
@@ -57,11 +56,10 @@ def example_event():
 
 
 class TestEventHandler:
-    def test_event_handler_unknown_event(self, mocker):
+    def test_event_handler_unknown_event(self, mock_context):
         event = UnknownEvent()
         correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
-        context = mocker.MagicMock(autospec=CloudDataContext)
-        handler = EventHandler(context=context)
+        handler = EventHandler(context=mock_context)
         with pytest.warns(GXAgentUserWarning):
             result = handler.handle_event(event=event, id=correlation_id)
         assert result.type == "unknown_event"
