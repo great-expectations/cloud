@@ -77,9 +77,9 @@ def test_event_action_unknown():
 
 
 def test_event_handler_handles_run_missingness_data_assistant_event(mocker):
-    mock_action = MagicMock(autospec=RunMissingnessDataAssistantAction)
-    # Override with mock
-    EventHandler._EVENT_TO_ACTION_MAP[RunMissingnessDataAssistantEvent] = mock_action
+    mock_action = mocker.patch(
+        "great_expectations_cloud.agent.event_handler.RunMissingnessDataAssistantAction",
+    )
 
     event = RunMissingnessDataAssistantEvent(
         datasource_name="test-datasource",
