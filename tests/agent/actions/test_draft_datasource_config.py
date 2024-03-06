@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING, Any, Literal
-from unittest.mock import MagicMock
 from uuid import UUID
 
 import pytest
-from great_expectations.data_context import CloudDataContext
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
@@ -13,15 +12,11 @@ from great_expectations_cloud.agent.actions.draft_datasource_config_action impor
     DraftDatasourceConfigAction,
 )
 from great_expectations_cloud.agent.config import GxAgentEnvVars
+from great_expectations_cloud.agent.exceptions import ErrorCode, GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
-
-
-@pytest.fixture(scope="function")
-def context():
-    return MagicMock(autospec=CloudDataContext)
 
 
 @pytest.fixture
@@ -57,7 +52,7 @@ def build_payload(
 
 
 def test_test_draft_datasource_config_success(
-    context, mocker: MockerFixture, set_required_env_vars: None
+    mock_context, mocker: MockerFixture, set_required_env_vars: None
 ):
     datasource_config = {"type": "pandas", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
@@ -69,7 +64,7 @@ def test_test_draft_datasource_config_success(
     response.ok = True
     response.json.return_value = build_payload(config=datasource_config, id=config_id)
     env_vars = GxAgentEnvVars()
-    action = DraftDatasourceConfigAction(context=context)
+    action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url: str = (
@@ -87,7 +82,7 @@ def test_test_draft_datasource_config_success(
 
 
 def test_test_draft_datasource_config_failure(
-    context, mocker: MockerFixture, set_required_env_vars: None
+    mock_context, mocker: MockerFixture, set_required_env_vars: None
 ):
     ds_type = "sql"
     datasource_config = {"type": ds_type, "name": "test-1-2-3"}
@@ -100,25 +95,25 @@ def test_test_draft_datasource_config_failure(
     response.ok = True
     response.json.return_value = build_payload(config=datasource_config, id=config_id)
     env_vars = GxAgentEnvVars()
-    action = DraftDatasourceConfigAction(context=context)
+    action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url = (
         f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
         f"/datasources/drafts/{config_id}"
     )
-    datasource_cls = MagicMock(autospec=SQLDatasource)
-    context.sources.type_lookup = {ds_type: datasource_cls}
+    datasource_cls = mocker.Mock(autospec=SQLDatasource)
+    mock_context.sources.type_lookup = {ds_type: datasource_cls}
     datasource_cls.return_value.test_connection.side_effect = TestConnectionError
 
-    with pytest.raises(TestConnectionError):
+    with pytest.raises(GXCoreError):
         action.run(event=event, id=str(job_id))
 
     session.get.assert_called_with(expected_url)
 
 
 def test_test_draft_datasource_config_raises_for_non_fds(
-    context, mocker: MockerFixture, set_required_env_vars: None
+    mock_context, mocker: MockerFixture, set_required_env_vars: None
 ):
     datasource_config = {"name": "test-1-2-3", "connection_string": ""}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
@@ -130,21 +125,51 @@ def test_test_draft_datasource_config_raises_for_non_fds(
     response.ok = True
     response.json.return_value = build_payload(config=datasource_config, id=config_id)
     env_vars = GxAgentEnvVars()
-    action = DraftDatasourceConfigAction(context=context)
+    action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url = (
         f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
         f"/datasources/drafts/{config_id}"
     )
-    with pytest.raises(ValueError, match="fluent-style Data Source"):
+    with pytest.raises(TypeError, match="fluent-style Data Source"):
         action.run(event=event, id=str(job_id))
 
     session.get.assert_called_with(expected_url)
 
 
+@pytest.mark.parametrize(
+    "error_message, expected_error_code",
+    [
+        (
+            """Attempt to connect to datasource failed with the following error message: (snowflake.connector.errors.DatabaseError) 250001 (08001): None: Failed to connect to DB: <DB Name> Incorrect username or password was specified.\n(Background on this error at: https://sqlalche.me/e/14/4xp6)""",
+            ErrorCode.WRONG_USERNAME_OR_PASSWORD,
+        ),
+        (
+            """Unrecognized error.""",
+            ErrorCode.GENERIC_UNHANDLED_ERROR,
+        ),
+    ],
+)
+def test_draft_datasource_config_failure_raises_correct_gx_core_error(
+    mock_context, mocker: MockerFixture, error_message: str, expected_error_code: str
+):
+    action = DraftDatasourceConfigAction(context=mock_context)
+    mock_check_draft_datasource_config = mocker.patch(
+        f"{DraftDatasourceConfigAction.__module__}.{DraftDatasourceConfigAction.__name__}.check_draft_datasource_config"
+    )
+    mock_check_draft_datasource_config.side_effect = TestConnectionError(error_message)
+
+    event = DraftDatasourceConfigEvent(config_id=uuid.uuid4())
+    with pytest.raises(GXCoreError) as e:
+        action.run(event=event, id=str(uuid.uuid4()))
+
+    assert e.value.error_code == expected_error_code
+    assert e.value.get_error_params() == {}
+
+
 def test_test_draft_datasource_config_raises_for_unknown_type(
-    context, mocker: MockerFixture, set_required_env_vars: None
+    mock_context, mocker: MockerFixture, set_required_env_vars: None
 ):
     datasource_config = {"type": "not a datasource", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
@@ -156,7 +181,7 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
     response.ok = True
     response.json.return_value = build_payload(config=datasource_config, id=config_id)
     env_vars = GxAgentEnvVars()
-    action = DraftDatasourceConfigAction(context=context)
+    action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url = (
@@ -164,16 +189,16 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
         f"/datasources/drafts/{config_id}"
     )
 
-    context.sources.type_lookup = {}
+    mock_context.sources.type_lookup = {}
 
-    with pytest.raises(ValueError, match="unknown Data Source type"):
+    with pytest.raises(TypeError, match="unknown Data Source type"):
         action.run(event=event, id=str(job_id))
 
     session.get.assert_called_with(expected_url)
 
 
 def test_test_draft_datasource_config_raises_for_cloud_backend_error(
-    context, mocker: MockerFixture, set_required_env_vars: None
+    mock_context, mocker: MockerFixture, set_required_env_vars: None
 ):
     datasource_config = {"type": "not a datasource", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
@@ -185,7 +210,7 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
     response.ok = False
     response.json.return_value = build_payload(config=datasource_config, id=config_id)
     env_vars = GxAgentEnvVars()
-    action = DraftDatasourceConfigAction(context=context)
+    action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url = (

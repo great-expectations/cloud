@@ -44,6 +44,7 @@ from great_expectations_cloud.agent.models import (
     JobStarted,
     JobStatus,
     UnknownEvent,
+    build_failed_job_completed_status,
 )
 
 if TYPE_CHECKING:
@@ -245,7 +246,7 @@ class GXAgent:
                 )
                 print(f"Completed job: {event_context.event.type} ({event_context.correlation_id})")
         else:
-            status = JobCompleted(success=False, error_stack_trace=str(error))
+            status = build_failed_job_completed_status(error)
             print(traceback.format_exc())
             print(
                 f"Job completed with error: {event_context.event.type} ({event_context.correlation_id})"
@@ -300,7 +301,9 @@ class GXAgent:
 
         response = session.post(agent_sessions_url)
         if response.ok is not True:
-            raise GXAgentError("Unable to authenticate to GX Cloud. Please check your credentials.")
+            raise GXAgentError(  # noqa: TRY003 # TODO: use AuthenticationError
+                "Unable to authenticate to GX Cloud. Please check your credentials."
+            )
 
         json_response = response.json()
         queue = json_response["queue"]
