@@ -134,7 +134,7 @@ The contents from [/examples/agent/data](/examples/agent/data/) will be copied t
 
 #### Adding an action to the agent
 1. Make a new action in `great_expectations_cloud/agent/actions/` in a separate file.
-1. Register your action in the file it was created in using `great_expectations_cloud.agent.event_handler.register_event_action()`. Register for the major version of GX Core that the action applies to, e.g. `register_event_action("1", RunCheckpointEvent, RunCheckpointAction)` registers the action for major version 1 of GX Core (e.g. 1.0.0).
-1. Import your action in `great_expectations_cloud/agent/actions/__init__.py`
+2. Register your action in the file it was created in using `great_expectations_cloud.agent.event_handler.register_event_action()`. Register for the major version of GX Core that the action applies to, e.g. `register_event_action("1", RunCheckpointEvent, RunCheckpointAction)` registers the action for major version 1 of GX Core (e.g. 1.0.0).
+3. Import your action in `great_expectations_cloud/agent/actions/__init__.py`
 
 Note: The agent is core-version specific but this registration mechanism allows us to preemptively work on actions for future versions of GX Core while still supporting the existing latest major version.
