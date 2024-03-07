@@ -4,23 +4,22 @@ import asyncio
 import time
 from dataclasses import dataclass
 from functools import partial
-from json import JSONDecodeError
 from typing import TYPE_CHECKING, Callable, Coroutine, Protocol
 
-from great_expectations.compatibility import pydantic
 from pika.exceptions import (
     AMQPError,
     AuthenticationError,
     ChannelError,
 )
 
-from great_expectations_cloud.agent.models import Event, UnknownEvent
+from great_expectations_cloud.agent.event_handler import EventHandler
 
 if TYPE_CHECKING:
     from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
         AsyncRabbitMQClient,
         OnMessagePayload,
     )
+    from great_expectations_cloud.agent.models import Event
 
 
 @dataclass(frozen=True)
@@ -86,12 +85,12 @@ class Subscriber:
         while True:
             try:
                 self.client.run(queue=queue, on_message=callback)
-            except AuthenticationError as e:
+            except AuthenticationError:
                 # If an authentication error happens when trying to connect to rabbitMQ,
                 # it means that the connection string is incorrect. Retrying would not
                 # enable us to reconnect.
                 self.client.stop()
-                raise e
+                raise
             except (AMQPError, ChannelError):
                 self.client.stop()
                 reconnect_delay = self._get_reconnect_delay()
@@ -117,11 +116,7 @@ class Subscriber:
             payload: dataclass containing required message attributes
             on_message: the caller-provided callback
         """
-        event: Event
-        try:
-            event = pydantic.parse_raw_as(Event, payload.body)
-        except (pydantic.ValidationError, JSONDecodeError):
-            event = UnknownEvent()
+        event = EventHandler.parse_event_from(payload.body)
 
         # Allow the caller to determine whether to ack/nack this message,
         # even if the processing occurs in another thread.

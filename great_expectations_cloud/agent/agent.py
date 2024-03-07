@@ -44,6 +44,7 @@ from great_expectations_cloud.agent.models import (
     JobStarted,
     JobStatus,
     UnknownEvent,
+    build_failed_job_completed_status,
 )
 
 if TYPE_CHECKING:
@@ -175,11 +176,8 @@ class GXAgent:
             # this event has been redelivered too many times - remove it from circulation
             event_context.processed_with_failures()
             return
-        elif self._can_accept_new_task() is not True or isinstance(
-            event_context.event, UnknownEvent
-        ):
-            # request that this message is redelivered later. If the event is UnknownEvent
-            # we don't understand it, so requeue it in the hope that someone else does.
+        elif self._can_accept_new_task() is not True:
+            # request that this message is redelivered later
             loop = asyncio.get_event_loop()
             # store a reference the task to ensure it isn't garbage collected
             self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
@@ -230,17 +228,29 @@ class GXAgent:
         error = future.exception()
         if error is None:
             result: ActionResult = future.result()
-            status = JobCompleted(
-                success=True,
-                created_resources=result.created_resources,
-            )
-            print(f"Completed job: {event_context.event.type} ({event_context.correlation_id})")
+
+            if result.type == UnknownEvent().type:
+                status = JobCompleted(
+                    success=False,
+                    created_resources=[],
+                    error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to latest.",
+                )
+                print(
+                    f"Job completed with error: {event_context.event.type} ({event_context.correlation_id}). Ensure agent is up-to-date."
+                )
+            else:
+                status = JobCompleted(
+                    success=True,
+                    created_resources=result.created_resources,
+                )
+                print(f"Completed job: {event_context.event.type} ({event_context.correlation_id})")
         else:
-            status = JobCompleted(success=False, error_stack_trace=str(error))
+            status = build_failed_job_completed_status(error)
             print(traceback.format_exc())
             print(
                 f"Job completed with error: {event_context.event.type} ({event_context.correlation_id})"
             )
+
         self._update_status(job_id=event_context.correlation_id, status=status)
 
         # ack message and cleanup resources
@@ -290,7 +300,9 @@ class GXAgent:
 
         response = session.post(agent_sessions_url)
         if response.ok is not True:
-            raise GXAgentError("Unable to authenticate to GX Cloud. Please check your credentials.")
+            raise GXAgentError(  # noqa: TRY003 # TODO: use AuthenticationError
+                "Unable to authenticate to GX Cloud. Please check your credentials."
+            )
 
         json_response = response.json()
         queue = json_response["queue"]
