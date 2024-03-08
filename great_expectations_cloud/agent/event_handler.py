@@ -2,17 +2,25 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, Final
 
 import great_expectations as gx
+from great_expectations.compatibility import pydantic
 from packaging.version import LegacyVersion, Version
 from packaging.version import parse as parse_version
+
+from great_expectations_cloud.agent.actions.unknown import UnknownEventAction
+from great_expectations_cloud.agent.models import (
+    Event,
+    UnknownEvent,
+)
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
     from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
-    from great_expectations_cloud.agent.models import Event
+
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -60,7 +68,7 @@ class EventHandler:
             raise NoVersionImplementationError(version=_GX_MAJOR_VERSION)
         action_class = action_map.get(_get_event_name(event))
         if action_class is None:
-            raise UnknownEventError(event_name=_get_event_name(event))
+            action_class = UnknownEventAction
         return action_class(context=self._context)
 
     def handle_event(self, event: Event, id: str) -> ActionResult:
@@ -69,6 +77,17 @@ class EventHandler:
         LOGGER.info(f"Handling event: {event.type} -> {action.__class__.__name__}")
         action_result = action.run(event=event, id=id)
         return action_result
+
+    @classmethod
+    def parse_event_from(cls, msg_body: bytes) -> Event:
+        try:
+            event: Event = pydantic.parse_raw_as(Event, msg_body)
+        except (pydantic.ValidationError, JSONDecodeError):
+            # Log as bytes
+            LOGGER.exception("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
+            return UnknownEvent()
+
+        return event
 
 
 class EventError(Exception):

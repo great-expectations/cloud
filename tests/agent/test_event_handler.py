@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import warnings
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
@@ -11,13 +12,11 @@ from great_expectations_cloud.agent.actions import (
     ActionResult,
     AgentAction,
     ColumnDescriptiveMetricsAction,
+    DraftDatasourceConfigAction,
     ListTableNamesAction,
     RunCheckpointAction,
     RunMissingnessDataAssistantAction,
     RunOnboardingDataAssistantAction,
-)
-from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
-    DraftDatasourceConfigAction,
 )
 from great_expectations_cloud.agent.event_handler import (
     _EVENT_ACTION_MAP,
@@ -25,7 +24,6 @@ from great_expectations_cloud.agent.event_handler import (
     EventHandler,
     InvalidVersionError,
     NoVersionImplementationError,
-    UnknownEventError,
     _get_major_version,
     register_event_action,
 )
@@ -40,6 +38,7 @@ from great_expectations_cloud.agent.models import (
     RunOnboardingDataAssistantEvent,
     UnknownEvent,
 )
+from great_expectations_cloud.agent.warnings import GXAgentUserWarning
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -47,14 +46,23 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.unit
 
 
+@pytest.fixture()
+def example_event():
+    return RunOnboardingDataAssistantEvent(
+        type="onboarding_data_assistant_request.received",
+        datasource_name="abc",
+        data_asset_name="boo",
+    )
+
+
 class TestEventHandler:
-    def test_event_handler_raises_for_unknown_event(self, mock_context):
+    def test_event_handler_unknown_event(self, mock_context):
         event = UnknownEvent()
         correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
         handler = EventHandler(context=mock_context)
-
-        with pytest.raises(UnknownEventError):
-            handler.handle_event(event=event, id=correlation_id)
+        with pytest.warns(GXAgentUserWarning):
+            result = handler.handle_event(event=event, id=correlation_id)
+        assert result.type == "unknown_event"
 
     @pytest.mark.parametrize(
         "event_name, event, action_type",
@@ -193,3 +201,37 @@ class TestEventHandlerRegistry:
                     message="Creating a LegacyVersion has been deprecated and will be removed in the next major release",
                 )
                 _get_major_version("invalid_version")
+
+
+def test_parse_event_extra_field(example_event):
+    event_dict = example_event.dict()
+    event_dict["new_field"] = "surprise!"
+    serialized_bytes = json.dumps(dict(event_dict), indent=2).encode("utf-8")
+    event = EventHandler.parse_event_from(serialized_bytes)
+
+    assert event.type == "unknown_event"
+
+
+def test_parse_event_missing_required_field(example_event):
+    event_dict = example_event.dict()
+    del event_dict["datasource_name"]
+    serialized_bytes = json.dumps(dict(event_dict)).encode("utf-8")
+    event = EventHandler.parse_event_from(serialized_bytes)
+
+    assert event.type == "unknown_event"
+
+
+def test_parse_event_invalid_json(example_event):
+    event_dict = example_event.dict()
+    invalid_json_addition = "}}}}"
+    serialized_bytes = (json.dumps(dict(event_dict)) + invalid_json_addition).encode("utf-8")
+    event = EventHandler.parse_event_from(serialized_bytes)
+
+    assert event.type == "unknown_event"
+
+
+def test_parse_event(example_event):
+    serialized_bytes = example_event.json().encode("utf-8")
+    event = EventHandler.parse_event_from(serialized_bytes)
+
+    assert event.type == "onboarding_data_assistant_request.received"
