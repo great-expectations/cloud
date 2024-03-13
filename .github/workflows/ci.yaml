@@ -144,7 +144,7 @@ jobs:
           COVERALLS_PARALLEL: true
 
   coveralls:
-    name: Indicate completion to coveralls.io
+    name: Upload to coveralls.io
     needs: tests
     runs-on: ubuntu-latest
     steps:
@@ -169,9 +169,9 @@ jobs:
         uses: snok/install-poetry@v1
 
       - name: Install dependencies
-        run: poetry install --sync  --with dev
+        run: poetry install --sync  --only dev
 
-      - name: Finished
+      - name: Upload
         run: poetry run coveralls --service=github --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
