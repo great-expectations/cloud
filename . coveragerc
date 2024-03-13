@@ -1,0 +1,14 @@
+# .coveragerc to control coverage.py
+# https://coverage.readthedocs.io/en/6.5.0/config.html#syntax
+[run]
+branch = True
+
+[report]
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    class .*\\bProtocol\\):
+    @(abc\\.)?abstractmethod
