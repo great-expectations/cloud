@@ -143,8 +143,15 @@ jobs:
           COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
           COVERALLS_PARALLEL: true
 
+      # upload coverage report to codecov
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: great-expectations/cloud
+
   coveralls:
-    name: Indicate completion to coveralls.io
+    name: Upload to coveralls.io
     needs: tests
     runs-on: ubuntu-latest
     steps:
@@ -162,16 +169,16 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.local # the path depends on the OS
-          key: poetry-0 # increment to reset cache
+          key: poetry-dev0 # increment to reset cache
 
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
 
       - name: Install dependencies
-        run: poetry install --sync  --with dev
+        run: poetry install --sync  --only dev
 
-      - name: Finished
+      - name: Upload
         run: poetry run coveralls --service=github --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
