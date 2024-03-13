@@ -168,6 +168,9 @@ jobs:
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
 
+      - name: Install dependencies
+        run: poetry install --sync  --with dev
+
       - name: Finished
         run: poetry run coveralls --service=github --finish
         env:
