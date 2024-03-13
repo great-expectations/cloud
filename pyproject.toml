@@ -226,3 +226,12 @@ filterwarnings = [
     # PoetryVersionOutdated: The latest version of poetry is latest_poetry_version: 1.8.0 but the poetry.lock file was generated using 1.7.1.
     "once:.*:tests.test_project.PoetryVersionOutdated",
 ]
+
+[tool.coverage.report]
+exclude_also = [
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+    ]
