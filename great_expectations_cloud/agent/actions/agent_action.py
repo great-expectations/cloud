@@ -25,5 +25,4 @@ class AgentAction(Generic[_EventT]):
         self._context = context
 
     @abstractmethod
-    def run(self, event: _EventT, id: str) -> ActionResult:
-        ...
+    def run(self, event: _EventT, id: str) -> ActionResult: ...
