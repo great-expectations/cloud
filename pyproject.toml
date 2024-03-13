@@ -44,7 +44,7 @@ sqlalchemy-redshift = { version = "^0.8.8", python = "<3.11" }
 psycopg2-binary = "^2.9.9"
 
 [tool.poetry.group.dev.dependencies]
-coveralls = "^3.3.1"
+coveralls = "^3.3.1"  # only needed for CI
 invoke = "^2.2.0"
 mypy = ">=1.7.1,<1.9.0"
 pre-commit = "^3.3.3"
