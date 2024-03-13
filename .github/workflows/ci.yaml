@@ -134,7 +134,7 @@ jobs:
         run: poetry install --sync
 
       - name: Run tests
-        run: poetry run pytest -m "not agentjobs" --cov-report xml --cov-config=.coveragerc --cov=great_expectations_cloud
+        run: poetry run pytest -m "not agentjobs" --cov-report xml
 
       # upload coverage report to coveralls
       - run: poetry run coveralls --service=github

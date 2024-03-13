@@ -194,6 +194,7 @@ max-complexity = 10
 ]
 
 [tool.pytest.ini_options]
+addopts = "--cov=great_expectations_cloud --cov-config=.coveragerc"
 markers = ["agentjobs", "unit"]
 log_level = "info"
 filterwarnings = [
