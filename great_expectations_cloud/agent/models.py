@@ -5,6 +5,7 @@ from typing import Any, Dict, Literal, Optional, Sequence, Set, Union
 from uuid import UUID
 
 from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
+from great_expectations.experimental.metric_repository.metrics import MetricTypes
 from typing_extensions import Annotated
 
 from great_expectations_cloud.agent.exceptions import GXCoreError
@@ -55,10 +56,10 @@ class RunColumnDescriptiveMetricsEvent(EventBase):
 
 
 class RunMetricsEvent(EventBase):
-    type: Literal["column_descriptive_metrics_request.received"] = "metrics_request.received"
+    type: Literal["metrics_request.received"] = "metrics_request.received"
     datasource_name: str
     data_asset_name: str
-    metrics_list: Sequence[str]
+    metrics_list: Sequence[MetricTypes]
 
 
 class ListTableNamesEvent(EventBase):

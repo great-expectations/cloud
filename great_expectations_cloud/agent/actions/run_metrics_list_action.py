@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from great_expectations.experimental.metric_repository.metrics import MetricRun
 
 
-class MetricsAction(AgentAction[RunMetricsEvent]):
+class MetricsListAction(AgentAction[RunMetricsEvent]):
     def __init__(
         self,
         context: CloudDataContext,
@@ -79,4 +79,4 @@ class MetricsAction(AgentAction[RunMetricsEvent]):
             )
 
 
-register_event_action("0", RunColumnDescriptiveMetricsEvent, MetricsAction)
+register_event_action("0", RunMetricsEvent, MetricsListAction)
