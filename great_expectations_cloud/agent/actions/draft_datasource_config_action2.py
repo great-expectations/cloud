@@ -18,7 +18,7 @@ from great_expectations_cloud.agent.exceptions import ErrorCode, raise_with_erro
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 
-class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
+class DraftDatasourceConfigAction2(AgentAction[DraftDatasourceConfigEvent]):
     @override
     def run(self, event: DraftDatasourceConfigEvent, id: str) -> ActionResult:
         try:
@@ -83,4 +83,4 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             ) from e
 
 
-register_event_action("0", DraftDatasourceConfigEvent, DraftDatasourceConfigAction)
+register_event_action("1", DraftDatasourceConfigEvent, DraftDatasourceConfigAction2)
