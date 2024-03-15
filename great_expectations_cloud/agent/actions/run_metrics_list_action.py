@@ -8,8 +8,8 @@ from great_expectations.experimental.metric_repository.batch_inspector import (
 from great_expectations.experimental.metric_repository.cloud_data_store import (
     CloudDataStore,
 )
-from great_expectations.experimental.metric_repository.column_descriptive_metrics_metric_retriever import (
-    ColumnDescriptiveMetricsMetricRetriever,
+from great_expectations.experimental.metric_repository.metric_list_metric_retriever import (
+    MetricListMetricRetriever,
 )
 from great_expectations.experimental.metric_repository.metric_repository import (
     MetricRepository,
@@ -20,7 +20,6 @@ from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     CreatedResource,
-    RunColumnDescriptiveMetricsEvent,
     RunMetricsEvent,
 )
 
@@ -41,21 +40,24 @@ class MetricsListAction(AgentAction[RunMetricsEvent]):
             data_store=CloudDataStore(self._context)
         )
         self._batch_inspector = batch_inspector or BatchInspector(
-            context, [ColumnDescriptiveMetricsMetricRetriever(self._context)]
+            context, [MetricListMetricRetriever(self._context)]
         )
 
     @override
-    def run(self, event: RunColumnDescriptiveMetricsEvent, id: str) -> ActionResult:
+    def run(self, event: RunMetricsEvent, id: str) -> ActionResult:
         datasource = self._context.get_datasource(event.datasource_name)
         data_asset = datasource.get_asset(event.data_asset_name)
         data_asset.test_connection()  # raises `TestConnectionError` on failure
 
         batch_request = data_asset.build_batch_request()
 
-        # TODO Add metrics param
-        metric_run = self._batch_inspector.compute_metric_run(
+        # TODO: compute_metric_list_run
+        # Add a test "called_with"
+        # "define the contract you have"
+        metric_run = self._batch_inspector.compute_metric_list_run(
             data_asset_id=data_asset.id,
             batch_request=batch_request,
+            metrics_list=event.metrics_list,
         )
 
         metric_run_id = self._metric_repository.add_metric_run(metric_run)

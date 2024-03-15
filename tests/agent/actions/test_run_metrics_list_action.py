@@ -52,7 +52,7 @@ def test_run_metrics_list_computes_metric_run(
         ),
         id="test-id",
     )
-    mock_batch_inspector.compute_metric_run.assert_called_once()
+    mock_batch_inspector.compute_metric_list_run.assert_called_once()
 
 
 def test_run_metrics_list_computes_metric_run_missing_batch_inspector(
@@ -85,7 +85,7 @@ def test_run_metrics_list_computes_metric_run_missing_batch_inspector(
     )
 
     # Asserting against mocked class proved challenging
-    action._batch_inspector.compute_metric_run.assert_called_once()
+    action._batch_inspector.compute_metric_list_run.assert_called_once()
 
 
 def test_run_metrics_list_creates_metric_run(mock_context, mocker: MockerFixture):
@@ -93,7 +93,7 @@ def test_run_metrics_list_creates_metric_run(mock_context, mocker: MockerFixture
     mock_batch_inspector = mocker.Mock(spec=BatchInspector)
 
     mock_metric_run = mocker.Mock(spec=MetricRun)
-    mock_batch_inspector.compute_metric_run.return_value = mock_metric_run
+    mock_batch_inspector.compute_metric_list_run.return_value = mock_metric_run
 
     action = MetricsListAction(
         context=mock_context,
@@ -209,7 +209,7 @@ def test_run_metrics_list_creates_metric_run_then_raises_on_any_metric_exception
             ),
         ]
     )
-    mock_batch_inspector.compute_metric_run.return_value = mock_metric_run
+    mock_batch_inspector.compute_metric_list_run.return_value = mock_metric_run
 
     action = MetricsListAction(
         context=mock_context,
@@ -227,5 +227,7 @@ def test_run_metrics_list_creates_metric_run_then_raises_on_any_metric_exception
             ),
             id="test-id",
         )
-
     mock_metric_repository.add_metric_run.assert_called_once_with(mock_metric_run)
+
+    # at each interface we want to ensure that it is behaving properly
+    # called_once_with(kwargs) and ensure that the metric list is there
