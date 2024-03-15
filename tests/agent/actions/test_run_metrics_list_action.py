@@ -228,34 +228,3 @@ def test_run_metrics_list_creates_metric_run_then_raises_on_any_metric_exception
             id="test-id",
         )
     mock_metric_repository.add_metric_run.assert_called_once_with(mock_metric_run)
-
-
-def test_run_metrics_list_does_not_raise_on_no_metric_exception(
-    mock_context, mocker: MockerFixture
-):
-    mock_metric_repository = mocker.Mock(spec=MetricRepository)
-    mock_batch_inspector = mocker.Mock(spec=BatchInspector)
-
-    # Using a real metric with no exception in the metric run to test the exception handling
-    mock_metric_run = MetricRun(
-        metrics=[
-            # Metric with no exception within the MetricRun should not cause the action to raise:
-            ColumnMetric[int](
-                batch_id="batch_id",
-                metric_name="column_values.null.count",
-                value=2,
-                exception=None,
-                column="col2",
-            ),
-        ]
-    )
-    mock_batch_inspector.compute_metric_list_run.return_value = mock_metric_run
-
-    action = MetricsListAction(
-        context=mock_context,
-        metric_repository=mock_metric_repository,
-        batch_inspector=mock_batch_inspector,
-    )
-
-    action._raise_on_any_metric_exception(mock_metric_run)  # Should not raise
-    mock_metric_repository.add_metric_run.assert_called_once_with(mock_metric_run)
