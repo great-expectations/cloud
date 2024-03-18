@@ -863,13 +863,13 @@ files = [
 
 [[package]]
 name = "great-expectations"
-version = "0.18.10"
+version = "0.18.11"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "great_expectations-0.18.10-py3-none-any.whl", hash = "sha256:43a73a042ac82650880bd076461a74ec582673e65153fc796acd1baeb0748262"},
-    {file = "great_expectations-0.18.10.tar.gz", hash = "sha256:b16b1cdaee81abd5cad701d19db3756067f01c1df19644d62888e895a5668d85"},
+    {file = "great_expectations-0.18.11-py3-none-any.whl", hash = "sha256:381304569047e05503ffa3cc4df3c683d9bd931dd1274ec93f1a284c5f947f3e"},
+    {file = "great_expectations-0.18.11.tar.gz", hash = "sha256:1c25bd040846d5e9a54886a769ac6aa6584a01e10cbc18875fc5ef08c30c802c"},
 ]
 
 [package.dependencies]
