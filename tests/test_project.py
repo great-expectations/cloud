@@ -154,9 +154,11 @@ class TestCoverageSettings:
         This test ensures the codecov.yml flags are valid pytest markers from the pyproject.toml file.
         The python versions flags are an exception here 3.8, 3.10, etc. do not need to pytest markers.
         """
-        pytest_markers: Iterable[str] = tomlkit.loads(PYPROJECT_TOML.read_text())["tool"]["pytest"][  # type: ignore[index,assignment] # always
+        pytest_markers: Iterable[str] = tomlkit.loads(PYPROJECT_TOML.read_text())["tool"]["pytest"][  # type: ignore[index,assignment]
             "ini_options"
-        ]["markers"]
+        ][
+            "markers"
+        ]
         codecov_dict = yaml.load(CODECOV_YML.read_text())
 
         invalid_flags: set[str] = set()
