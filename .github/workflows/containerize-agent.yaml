@@ -115,3 +115,17 @@ jobs:
       - name: Show logs, if failure
         if: failure()
         run: docker compose logs
+
+      # upload coverage report to coveralls
+      - run: poetry run coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: agentjobs
+          COVERALLS_PARALLEL: true
+
+      # upload coverage report to codecov
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: great-expectations/cloud
