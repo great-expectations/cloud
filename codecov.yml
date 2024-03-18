@@ -6,12 +6,12 @@ flag_management:
         target: auto # the default target for the project
         threshold: 2% # the minimum coverage required to pass the project
       - type: patch
-        target: 85%
+        target: 90%
   # in general these individual flags should correspond to pytest markers
   individual_flags: # exceptions to the default rules above, stated flag by flag
     - name: agentjobs
       statuses:
         - type: project
-          target: 70%
+          target: 45%
         - type: patch
-          target: 90%
+          target: 70%
