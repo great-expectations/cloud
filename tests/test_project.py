@@ -5,7 +5,7 @@ import pathlib
 import re
 import warnings
 from pprint import pformat as pf
-from typing import Any, Final, Mapping
+from typing import Any, Final, Mapping, Sequence
 
 import pytest
 import tomlkit
@@ -20,6 +20,7 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
 PROJECT_ROOT: Final = pathlib.Path(__file__).parent.parent
 PYPROJECT_TOML: Final = PROJECT_ROOT / "pyproject.toml"
+CODECOV_YML: Final = PROJECT_ROOT / "codecov.yml"
 
 
 @pytest.fixture
@@ -145,6 +146,30 @@ def test_lockfile_poetry_version(lock_file_poetry_version: Version, latest_poetr
     assert lock_file_poetry_version >= Version(
         "1.7.1"
     ), "poetry.lock was generated using an older version of poetry"
+
+
+class TestCoverageSettings:
+    def test_flags_are_valid_markers(self):
+        """
+        This test ensures the codecov.yml flags are valid pytest markers from the pyproject.toml file.
+        The python versions flags are an exception here 3.8, 3.10, etc. do not need to pytest markers.
+        """
+        pytest_markers: Sequence[str] = tomlkit.loads(PYPROJECT_TOML.read_text())["tool"]["pytest"][
+            "ini_options"
+        ]["markers"]
+        codecov_dict = yaml.load(CODECOV_YML.read_text())
+
+        invalid_flags: set[str] = set()
+
+        for details in codecov_dict["flag_management"]["individual_flags"]:
+            flag = details["name"]
+            if flag not in pytest_markers:
+                invalid_flags.add(flag)
+
+        assert not invalid_flags, (
+            "The following flags do not have a corresponding marker in "
+            f" {PYPROJECT_TOML.name} -> `tool.pytest.ini_options`: {invalid_flags}"
+        )
 
 
 if __name__ == "__main__":

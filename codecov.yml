@@ -1,0 +1,18 @@
+flag_management:
+  default_rules: # the rules that will be followed for any flag added, generally
+    carryforward: true
+    statuses:
+      - type: project
+        target: auto # the default target for the project
+        threshold: 2% # the minimum coverage required to pass the project
+      - type: patch
+        target: 90%
+  # in general these individual flags should correspond to pytest markers
+  individual_flags: # exceptions to the default rules above, stated flag by flag
+    - name: agentjobs
+      carryforward: true
+      statuses:
+        - type: project
+          target: 80%
+        - type: patch
+          target: 95%
