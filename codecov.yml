@@ -4,7 +4,7 @@ flag_management:
     statuses:
       - type: project
         target: auto # the default target for the project
-        threshold: 2% # the minimum coverage required to pass the project
+        threshold: 70% # the default minimum threshold for the project
       - type: patch
         target: 90%
   # in general these individual flags should correspond to pytest markers
