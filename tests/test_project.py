@@ -5,7 +5,7 @@ import pathlib
 import re
 import warnings
 from pprint import pformat as pf
-from typing import Any, Final, Mapping, Sequence
+from typing import Any, Final, Iterable, Mapping
 
 import pytest
 import tomlkit
@@ -154,7 +154,7 @@ class TestCoverageSettings:
         This test ensures the codecov.yml flags are valid pytest markers from the pyproject.toml file.
         The python versions flags are an exception here 3.8, 3.10, etc. do not need to pytest markers.
         """
-        pytest_markers: Sequence[str] = tomlkit.loads(PYPROJECT_TOML.read_text())["tool"]["pytest"][
+        pytest_markers: Iterable[str] = tomlkit.loads(PYPROJECT_TOML.read_text())["tool"]["pytest"][  # type: ignore[index,assignment] # always
             "ini_options"
         ]["markers"]
         codecov_dict = yaml.load(CODECOV_YML.read_text())
