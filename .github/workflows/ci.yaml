@@ -149,6 +149,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: great-expectations/cloud
+          flags: ${{ matrix.python-version }}
 
   coveralls:
     name: Upload to coveralls.io
