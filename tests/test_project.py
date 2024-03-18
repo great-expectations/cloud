@@ -156,9 +156,7 @@ class TestCoverageSettings:
         """
         pytest_markers: Iterable[str] = tomlkit.loads(PYPROJECT_TOML.read_text())["tool"]["pytest"][  # type: ignore[index,assignment]
             "ini_options"
-        ][
-            "markers"
-        ]
+        ]["markers"]
         codecov_dict = yaml.load(CODECOV_YML.read_text())
 
         invalid_flags: set[str] = set()
