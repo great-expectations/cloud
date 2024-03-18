@@ -11,15 +11,15 @@ Parameters:
     Description: Enter the arn of the AWS managed secret you created for your agent.
 Resources:
   ECSCluster:
-    Type: 'AWS::ECS::Cluster'
+    Type: "AWS::ECS::Cluster"
     Properties:
       ClusterName: GXAgentCluster
   ECSTaskDefinition:
-    Type: 'AWS::ECS::TaskDefinition'
+    Type: "AWS::ECS::TaskDefinition"
     Properties:
       ContainerDefinitions:
         - Essential: true
-          Image: 'greatexpectations/agent:latest'
+          Image: "greatexpectations/agent:latest"
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -46,7 +46,7 @@ Resources:
       RuntimePlatform:
         OperatingSystemFamily: LINUX
   ECSService:
-    Type: 'AWS::ECS::Service'
+    Type: "AWS::ECS::Service"
     Properties:
       ServiceName: gx-agent-service
       Cluster: !Ref ECSCluster
@@ -66,7 +66,7 @@ Resources:
       LogGroupName: /ecs/gx-agent-task
       RetentionInDays: 30
   GXAgentTaskExecutionRole:
-    Type: 'AWS::IAM::Role'
+    Type: "AWS::IAM::Role"
     Properties:
       AssumeRolePolicyDocument:
         Statement:
@@ -76,7 +76,7 @@ Resources:
                 - ecs.amazonaws.com
                 - ecs-tasks.amazonaws.com
             Action:
-              - 'sts:AssumeRole'
+              - "sts:AssumeRole"
       Path: /
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
@@ -86,8 +86,8 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 'secretsmanager:GetResourcePolicy'
-                  - 'secretsmanager:GetSecretValue'
-                  - 'secretsmanager:DescribeSecret'
-                  - 'secretsmanager:ListSecretVersionId'
+                  - "secretsmanager:GetResourcePolicy"
+                  - "secretsmanager:GetSecretValue"
+                  - "secretsmanager:DescribeSecret"
+                  - "secretsmanager:ListSecretVersionId"
                 Resource: !Sub "${GXAgentSecretARN}"
