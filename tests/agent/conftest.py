@@ -93,7 +93,7 @@ class FakeSubscriber(Subscriber):
             on_message(event_context)
             # allow time for thread to process the event
             # TODO: better solution for this might be to make the FakeSubscriber not run in a separate thread at all
-            time.sleep(0.2)
+            time.sleep(0.4)
 
     @override
     def close(self) -> None:

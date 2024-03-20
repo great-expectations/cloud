@@ -15,8 +15,8 @@ spec:
         app: gx-agent
     spec:
       containers:
-      - name: gx-agent
-        image: greatexpectations/agent:latest
-        envFrom:
-        - secretRef:
-            name: gx-agent-secret
+        - name: gx-agent
+          image: greatexpectations/agent:latest
+          envFrom:
+            - secretRef:
+                name: gx-agent-secret
