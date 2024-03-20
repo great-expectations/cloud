@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from great_expectations.experimental.metric_repository.metrics import MetricRun
 
 
+# TODO MetricListAction rename
 class MetricsListAction(AgentAction[RunMetricsEvent]):
     def __init__(
         self,
@@ -57,7 +58,7 @@ class MetricsListAction(AgentAction[RunMetricsEvent]):
         metric_run = self._batch_inspector.compute_metric_list_run(
             data_asset_id=data_asset.id,
             batch_request=batch_request,
-            metrics_list=event.metrics_list,
+            metric_list=event.metric_list,
         )
 
         metric_run_id = self._metric_repository.add_metric_run(metric_run)

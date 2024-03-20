@@ -59,7 +59,7 @@ class RunMetricsEvent(EventBase):
     type: Literal["metrics_request.received"] = "metrics_request.received"
     datasource_name: str
     data_asset_name: str
-    metrics_list: Sequence[MetricTypes]
+    metric_list: Sequence[MetricTypes]
 
 
 class ListTableNamesEvent(EventBase):
