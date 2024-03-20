@@ -6,7 +6,6 @@ on:
     - cron: "0 */2 * * *"
 
 jobs:
-
   check-if-agent-changed:
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'schedule' }}
@@ -21,7 +20,6 @@ jobs:
           filters: |
             agent:
               - 'great_expectations_cloud/agent/**'
-
 
   check-version-is-bumped:
     # This job checks that the version in the PR is different from the version in main if the agent has changed.
@@ -145,7 +143,7 @@ jobs:
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@v4.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: great-expectations/cloud
