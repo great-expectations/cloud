@@ -40,7 +40,7 @@ def test_run_metrics_list_computes_metric_run(
         batch_inspector=mock_batch_inspector,
     )
 
-    action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]  # mock so that we don't raise
+    action._raise_on_any_metric_exception = mocker.Mock()  # mock so that we don't raise
 
     action.run(
         event=RunMetricsEvent(
@@ -71,7 +71,7 @@ def test_run_metrics_list_computes_metric_run_missing_batch_inspector(
         batch_inspector=None,
     )
 
-    action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]  # mock so that we don't raise
+    action._raise_on_any_metric_exception = mocker.Mock()  # mock so that we don't raise
 
     action.run(
         event=RunMetricsEvent(
@@ -100,7 +100,7 @@ def test_run_metrics_list_creates_metric_run(mock_context, mocker: MockerFixture
         batch_inspector=mock_batch_inspector,
     )
 
-    action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]  # mock so that we don't raise
+    action._raise_on_any_metric_exception = mocker.Mock()  # mock so that we don't raise
 
     action.run(
         event=RunMetricsEvent(
@@ -127,7 +127,7 @@ def test_run_metrics_list_returns_action_result(mock_context, mocker: MockerFixt
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
     )
-    action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]  # mock so that we don't raise
+    action._raise_on_any_metric_exception = mocker.Mock()  # mock so that we don't raise
 
     action_result = action.run(
         event=RunMetricsEvent(
