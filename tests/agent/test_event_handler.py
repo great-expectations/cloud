@@ -213,8 +213,7 @@ def test_parse_event_extra_field(example_event):
 
 
 def test_parse_event_missing_required_field(example_event):
-    event_dict = example_event.dict()
-    del event_dict["datasource_name"]
+    event_dict = example_event.dict(exclude={"datasource_name"})
     serialized_bytes = json.dumps(dict(event_dict)).encode("utf-8")
     event = EventHandler.parse_event_from(serialized_bytes)
 
