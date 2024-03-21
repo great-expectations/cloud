@@ -1,4 +1,3 @@
-# how do you generate the tests here?
 from __future__ import annotations
 
 import uuid
@@ -19,7 +18,7 @@ from great_expectations.experimental.metric_repository.metrics import (
     MetricTypes,
 )
 
-from great_expectations_cloud.agent.actions import MetricsListAction
+from great_expectations_cloud.agent.actions import MetricListAction
 from great_expectations_cloud.agent.models import CreatedResource, RunMetricsEvent
 
 if TYPE_CHECKING:
@@ -35,7 +34,7 @@ def test_run_metrics_list_computes_metric_run(
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
     mock_batch_inspector = mocker.Mock(spec=BatchInspector)
 
-    action = MetricsListAction(
+    action = MetricListAction(
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
@@ -66,7 +65,7 @@ def test_run_metrics_list_computes_metric_run_missing_batch_inspector(
 
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
 
-    action = MetricsListAction(
+    action = MetricListAction(
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=None,
@@ -95,7 +94,7 @@ def test_run_metrics_list_creates_metric_run(mock_context, mocker: MockerFixture
     mock_metric_run = mocker.Mock(spec=MetricRun)
     mock_batch_inspector.compute_metric_list_run.return_value = mock_metric_run
 
-    action = MetricsListAction(
+    action = MetricListAction(
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
@@ -123,7 +122,7 @@ def test_run_metrics_list_returns_action_result(mock_context, mocker: MockerFixt
     metric_run_id = uuid.uuid4()
     mock_metric_repository.add_metric_run.return_value = metric_run_id
 
-    action = MetricsListAction(
+    action = MetricListAction(
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
@@ -159,7 +158,7 @@ def test_run_column_descriptive_metrics_raises_on_test_connection_to_data_asset_
     mock_datasource.get_asset.return_value = mock_data_asset
     mock_data_asset.test_connection.side_effect = TestConnectionError()
 
-    action = MetricsListAction(
+    action = MetricListAction(
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
@@ -211,7 +210,7 @@ def test_run_metrics_list_creates_metric_run_then_raises_on_any_metric_exception
     )
     mock_batch_inspector.compute_metric_list_run.return_value = mock_metric_run
 
-    action = MetricsListAction(
+    action = MetricListAction(
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,

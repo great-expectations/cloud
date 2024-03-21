@@ -28,8 +28,7 @@ if TYPE_CHECKING:
     from great_expectations.experimental.metric_repository.metrics import MetricRun
 
 
-# TODO MetricListAction rename
-class MetricsListAction(AgentAction[RunMetricsEvent]):
+class MetricListAction(AgentAction[RunMetricsEvent]):
     def __init__(
         self,
         context: CloudDataContext,
@@ -52,9 +51,6 @@ class MetricsListAction(AgentAction[RunMetricsEvent]):
 
         batch_request = data_asset.build_batch_request()
 
-        # TODO: compute_metric_list_run
-        # Add a test "called_with"
-        # "define the contract you have"
         metric_run = self._batch_inspector.compute_metric_list_run(
             data_asset_id=data_asset.id,
             batch_request=batch_request,
@@ -82,4 +78,4 @@ class MetricsListAction(AgentAction[RunMetricsEvent]):
             )
 
 
-register_event_action("0", RunMetricsEvent, MetricsListAction)
+register_event_action("0", RunMetricsEvent, MetricListAction)
