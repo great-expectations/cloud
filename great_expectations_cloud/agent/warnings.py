@@ -3,8 +3,7 @@ from __future__ import annotations
 import warnings
 
 
-class GXAgentUserWarning(UserWarning):
-    ...
+class GXAgentUserWarning(UserWarning): ...
 
 
 def warn_unknown_event(event_type: str) -> None:

@@ -115,3 +115,14 @@ jobs:
       - name: Show logs, if failure
         if: failure()
         run: docker compose logs
+
+      # NOTE: can't use coveralls here without refactoring workflows
+
+      # upload coverage report to codecov
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.1.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: great-expectations/cloud
+          # use the same flags as the test markers
+          flags: agentjobs

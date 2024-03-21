@@ -5,6 +5,7 @@ from typing import Any, Dict, Literal, Optional, Sequence, Set, Union
 from uuid import UUID
 
 from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
+from great_expectations.experimental.metric_repository.metrics import MetricTypes
 from typing_extensions import Annotated
 
 from great_expectations_cloud.agent.exceptions import GXCoreError
@@ -28,15 +29,15 @@ class RunDataAssistantEvent(EventBase):
 
 
 class RunOnboardingDataAssistantEvent(RunDataAssistantEvent):
-    type: Literal[
+    type: Literal["onboarding_data_assistant_request.received"] = (
         "onboarding_data_assistant_request.received"
-    ] = "onboarding_data_assistant_request.received"
+    )
 
 
 class RunMissingnessDataAssistantEvent(RunDataAssistantEvent):
-    type: Literal[
+    type: Literal["missingness_data_assistant_request.received"] = (
         "missingness_data_assistant_request.received"
-    ] = "missingness_data_assistant_request.received"
+    )
 
 
 class RunCheckpointEvent(EventBase):
@@ -47,11 +48,18 @@ class RunCheckpointEvent(EventBase):
 
 
 class RunColumnDescriptiveMetricsEvent(EventBase):
-    type: Literal[
+    type: Literal["column_descriptive_metrics_request.received"] = (
         "column_descriptive_metrics_request.received"
-    ] = "column_descriptive_metrics_request.received"
+    )
     datasource_name: str
     data_asset_name: str
+
+
+class RunMetricsEvent(EventBase):
+    type: Literal["metrics_request.received"] = "metrics_request.received"
+    datasource_name: str
+    data_asset_name: str
+    metric_list: Sequence[MetricTypes]
 
 
 class ListTableNamesEvent(EventBase):
@@ -74,6 +82,7 @@ Event = Annotated[
         RunMissingnessDataAssistantEvent,
         RunCheckpointEvent,
         RunColumnDescriptiveMetricsEvent,
+        RunMetricsEvent,
         DraftDatasourceConfigEvent,
         ListTableNamesEvent,
         UnknownEvent,

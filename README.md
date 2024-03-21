@@ -4,6 +4,8 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/greatexpectations/agent)](https://hub.docker.com/r/greatexpectations/agent)
 [![ci](https://github.com/great-expectations/cloud/actions/workflows/ci.yaml/badge.svg?event=schedule)](https://github.com/great-expectations/cloud/actions/workflows/ci.yaml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/great-expectations/cloud/main.svg)](https://results.pre-commit.ci/latest/github/great-expectations/cloud/main)
+[![coveralls](https://coveralls.io/repos/github/great-expectations/cloud/badge.svg?branch=main)](https://coveralls.io/github/great-expectations/cloud?branch=main)
+[![codecov](https://codecov.io/gh/great-expectations/cloud/graph/badge.svg?token=8WNA5ti8nm)](https://codecov.io/gh/great-expectations/cloud)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 ## Quick Start
@@ -130,3 +132,11 @@ Now go into GX Cloud and issue commands for the GX Agent to run, such as generat
 
 #### Example Data
 The contents from [/examples/agent/data](/examples/agent/data/) will be copied to `/data` for the docker container.
+
+
+#### Adding an action to the agent
+1. Make a new action in `great_expectations_cloud/agent/actions/` in a separate file.
+2. Register your action in the file it was created in using `great_expectations_cloud.agent.event_handler.register_event_action()`. Register for the major version of GX Core that the action applies to, e.g. `register_event_action("1", RunCheckpointEvent, RunCheckpointAction)` registers the action for major version 1 of GX Core (e.g. 1.0.0).
+3. Import your action in `great_expectations_cloud/agent/actions/__init__.py`
+
+Note: The agent is core-version specific but this registration mechanism allows us to preemptively work on actions for future versions of GX Core while still supporting the existing latest major version.

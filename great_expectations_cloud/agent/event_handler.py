@@ -90,8 +90,7 @@ class EventHandler:
         return event
 
 
-class EventError(Exception):
-    ...
+class EventError(Exception): ...
 
 
 class UnknownEventError(EventError):

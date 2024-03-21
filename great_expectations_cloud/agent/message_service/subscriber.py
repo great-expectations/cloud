@@ -170,5 +170,4 @@ class Subscriber:
         self.client.stop()
 
 
-class SubscriberError(Exception):
-    ...
+class SubscriberError(Exception): ...

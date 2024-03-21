@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "0.0.42"
+version = "0.0.45"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -44,18 +44,20 @@ sqlalchemy-redshift = { version = "^0.8.8", python = "<3.11" }
 psycopg2-binary = "^2.9.9"
 
 [tool.poetry.group.dev.dependencies]
+coveralls = "^3.3.1"  # only needed for CI
 invoke = "^2.2.0"
-mypy = ">=1.7.1,<1.9.0"
+mypy = "1.9"
 pre-commit = "^3.3.3"
 pytest = ">=7.4,<9.0"
+pytest-cov = "^4.1.0"
 pytest-icdiff = "*"
 pytest-mock = "*"
 responses = "^0.23.1"
-ruff = "^0.2.2"
+ruff = "0.3.2"
 tenacity = "^8.2.3"
 tomlkit = "^0.12.1"
-typing_extensions = ">=4.4.0"
 types-requests = "^2.31"
+typing_extensions = ">=4.4.0"
 
 [tool.poetry.scripts]
 gx-agent = 'great_expectations_cloud.agent.cli:main'
@@ -192,6 +194,7 @@ max-complexity = 10
 ]
 
 [tool.pytest.ini_options]
+addopts = "--cov=great_expectations_cloud --cov-config=.coveragerc"
 markers = ["agentjobs", "unit"]
 log_level = "info"
 filterwarnings = [
