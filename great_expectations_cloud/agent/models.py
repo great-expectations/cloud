@@ -55,11 +55,11 @@ class RunColumnDescriptiveMetricsEvent(EventBase):
     data_asset_name: str
 
 
-class RunMetricsEvent(EventBase):
-    type: Literal["metrics_request.received"] = "metrics_request.received"
+class RunMetricsListEvent(EventBase):
+    type: Literal["metrics_list_request.received"] = "metrics_list_request.received"
     datasource_name: str
     data_asset_name: str
-    metric_list: Sequence[MetricTypes]
+    metric_names: Sequence[MetricTypes]
 
 
 class ListTableNamesEvent(EventBase):
@@ -82,7 +82,7 @@ Event = Annotated[
         RunMissingnessDataAssistantEvent,
         RunCheckpointEvent,
         RunColumnDescriptiveMetricsEvent,
-        RunMetricsEvent,
+        RunMetricsListEvent,
         DraftDatasourceConfigEvent,
         ListTableNamesEvent,
         UnknownEvent,

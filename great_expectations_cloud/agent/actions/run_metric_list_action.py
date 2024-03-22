@@ -20,7 +20,7 @@ from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     CreatedResource,
-    RunMetricsEvent,
+    RunMetricsListEvent,
 )
 
 if TYPE_CHECKING:
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from great_expectations.experimental.metric_repository.metrics import MetricRun
 
 
-class MetricListAction(AgentAction[RunMetricsEvent]):
+class MetricListAction(AgentAction[RunMetricsListEvent]):
     def __init__(
         self,
         context: CloudDataContext,
@@ -44,7 +44,7 @@ class MetricListAction(AgentAction[RunMetricsEvent]):
         )
 
     @override
-    def run(self, event: RunMetricsEvent, id: str) -> ActionResult:
+    def run(self, event: RunMetricsListEvent, id: str) -> ActionResult:
         datasource = self._context.get_datasource(event.datasource_name)
         data_asset = datasource.get_asset(event.data_asset_name)
         data_asset.test_connection()  # raises `TestConnectionError` on failure
@@ -54,7 +54,7 @@ class MetricListAction(AgentAction[RunMetricsEvent]):
         metric_run = self._batch_inspector.compute_metric_list_run(
             data_asset_id=data_asset.id,
             batch_request=batch_request,
-            metric_list=event.metric_list,
+            metric_list=event.metric_names,
         )
 
         metric_run_id = self._metric_repository.add_metric_run(metric_run)
@@ -78,4 +78,4 @@ class MetricListAction(AgentAction[RunMetricsEvent]):
             )
 
 
-register_event_action("0", RunMetricsEvent, MetricListAction)
+register_event_action("0", RunMetricsListEvent, MetricListAction)
