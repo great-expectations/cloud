@@ -19,7 +19,7 @@ from great_expectations.experimental.metric_repository.metrics import (
 )
 
 from great_expectations_cloud.agent.actions import MetricListAction
-from great_expectations_cloud.agent.models import CreatedResource, RunMetricsEvent
+from great_expectations_cloud.agent.models import CreatedResource, RunMetricsListEvent
 
 if TYPE_CHECKING:
     from great_expectations.data_context.data_context.cloud_data_context import CloudDataContext
@@ -44,11 +44,11 @@ def test_run_metrics_list_computes_metric_run(
     # mock so that we don't raise
 
     action.run(
-        event=RunMetricsEvent(
-            type="metrics_request.received",
+        event=RunMetricsListEvent(
+            type="metrics_list_request.received",
             datasource_name="test-datasource",
             data_asset_name="test-data-asset",
-            metric_list=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+            metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
         ),
         id="test-id",
     )
@@ -76,11 +76,11 @@ def test_run_metrics_list_computes_metric_run_missing_batch_inspector(
     # mock so that we don't raise
 
     action.run(
-        event=RunMetricsEvent(
-            type="metrics_request.received",
+        event=RunMetricsListEvent(
+            type="metrics_list_request.received",
             datasource_name="test-datasource",
             data_asset_name="test-data-asset",
-            metric_list=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+            metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
         ),
         id="test-id",
     )
@@ -106,11 +106,11 @@ def test_run_metrics_list_creates_metric_run(mock_context, mocker: MockerFixture
     # mock so that we don't raise
 
     action.run(
-        event=RunMetricsEvent(
-            type="metrics_request.received",
+        event=RunMetricsListEvent(
+            type="metrics_list_request.received",
             datasource_name="test-datasource",
             data_asset_name="test-data-asset",
-            metric_list=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+            metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
         ),
         id="test-id",
     )
@@ -134,16 +134,16 @@ def test_run_metrics_list_returns_action_result(mock_context, mocker: MockerFixt
     # mock so that we don't raise
 
     action_result = action.run(
-        event=RunMetricsEvent(
-            type="metrics_request.received",
+        event=RunMetricsListEvent(
+            type="metrics_list_request.received",
             datasource_name="test-datasource",
             data_asset_name="test-data-asset",
-            metric_list=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+            metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
         ),
         id="test-id",
     )
 
-    assert action_result.type == "metrics_request.received"
+    assert action_result.type == "metrics_list_request.received"
     assert action_result.id == "test-id"
     assert action_result.created_resources == [
         CreatedResource(resource_id=str(metric_run_id), type="MetricRun"),
@@ -170,11 +170,11 @@ def test_run_column_descriptive_metrics_raises_on_test_connection_to_data_asset_
 
     with pytest.raises(TestConnectionError):
         action.run(
-            event=RunMetricsEvent(
-                type="metrics_request.received",
+            event=RunMetricsListEvent(
+                type="metrics_list_request.received",
                 datasource_name="test-datasource",
                 data_asset_name="test-data-asset",
-                metric_list=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+                metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
             ),
             id="test-id",
         )
@@ -222,11 +222,11 @@ def test_run_metrics_list_creates_metric_run_then_raises_on_any_metric_exception
 
     with pytest.raises(RuntimeError):
         action.run(
-            event=RunMetricsEvent(
-                type="metrics_request.received",
+            event=RunMetricsListEvent(
+                type="metrics_list_request.received",
                 datasource_name="test-datasource",
                 data_asset_name="test-data-asset",
-                metric_list=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+                metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
             ),
             id="test-id",
         )
