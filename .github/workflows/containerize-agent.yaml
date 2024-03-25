@@ -104,7 +104,7 @@ jobs:
         run: echo "POETRY_VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
 
       # Uses the version from pyproject.toml for the tag
-      - name: Push to Docker Hub
+      - name: Push to Docker Hub and Internal ECR
         uses: docker/build-push-action@v5
         with:
           context: .
