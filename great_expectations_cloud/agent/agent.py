@@ -17,7 +17,7 @@ from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from packaging.version import Version
-from pika.exceptions import AuthenticationError
+from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from tenacity import after_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from great_expectations_cloud.agent.config import (
@@ -144,7 +144,7 @@ class GXAgent:
             print("Received request to shutdown.")
         except (SubscriberError, ClientError):
             print("Connection to GX Cloud has encountered an error.")
-        except AuthenticationError:
+        except (AuthenticationError, ProbableAuthenticationError):
             # Retry with new credentials
             self._config = self._get_config()
             # Raise to use the retry decorator to handle the retry logic

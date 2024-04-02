@@ -7,6 +7,7 @@ from unittest.mock import call
 
 import pytest
 import responses
+from pika.exceptions import ProbableAuthenticationError
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
@@ -204,6 +205,15 @@ def test_gx_agent_run_handles_subscriber_error_on_consume(
     subscriber.consume.side_effect = SubscriberError
     agent = GXAgent()
     agent.run()
+
+
+def test_gx_agent_run_handles_subscriber_probable_authentication_error_on_init(
+    get_context, subscriber, client, gx_agent_config
+):
+    with pytest.raises(ProbableAuthenticationError):
+        client.side_effect = ProbableAuthenticationError
+        agent = GXAgent()
+        agent.run()
 
 
 def test_gx_agent_run_handles_subscriber_error_on_close(
