@@ -14,8 +14,10 @@ LOGGER = logging.getLogger(__name__)
 class Arguments:
     log_level: LogLevel
     skip_log_file: bool
+    json_log: bool
     log_cfg_file: pathlib.Path | None
     version: bool
+    environment: str
 
 
 def _parse_args() -> Arguments:
@@ -37,9 +39,21 @@ def _parse_args() -> Arguments:
         type=pathlib.Path,
     )
     parser.add_argument(
+        "--json-log",
+        help="Output logs in JSON format. Defaults to False.",
+        # TODO Revert to False
+        default=True,
+    )
+    parser.add_argument(
         "--log-cfg-file",
         help="Path to a logging configuration json file. Supersedes --log-level and --skip-log-file.",
         type=pathlib.Path,
+    )
+    parser.add_argument(
+        "--environment",
+        help="The environment in which agent is running",
+        type=str,
+        default="production"
     )
     parser.add_argument("--version", help="Show the gx agent version.", action="store_true")
     args = parser.parse_args()
@@ -48,14 +62,17 @@ def _parse_args() -> Arguments:
         skip_log_file=args.skip_log_file,
         log_cfg_file=args.log_cfg_file,
         version=args.version,
+        json_log=args.json_log,
+        environment=args.environment
     )
 
 
 def main() -> None:
     # lazy imports ensure our cli is fast and responsive
     args: Arguments = _parse_args()
+    # TODO Pass in env, log type
     configure_logger(
-        log_level=args.log_level, skip_log_file=args.skip_log_file, log_cfg_file=args.log_cfg_file
+        log_level=args.log_level, skip_log_file=args.skip_log_file, log_cfg_file=args.log_cfg_file, json_log=args.json_log, environment=args.environment
     )
 
     if args.version:
