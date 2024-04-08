@@ -61,48 +61,44 @@ def configure_logger(
         dict_config = json.loads(log_cfg_file.read_text())
         logging.config.dictConfig(dict_config)
         LOGGER.info(f"Configured logging from file {log_cfg_file}")
-    else:
-        logDirectory = pathlib.Path("logs")
-        if not logDirectory.exists():
-            pathlib.Path(logDirectory).mkdir()
+        return
+    def _add_our_custom_fields(
+            logger: structlog.types.WrappedLogger,
+            method_name: str,
+            event_dict: MutableMapping[str, Any],
+    ) -> MutableMapping[str, Any]:
+        event_dict["service"] = "gx-agent"
+        event_dict["env"] = environment
 
-        # logger = logging.getLogger()
-        # # TODO Replace this one
-        # formatter = logging.Formatter(
-        #     "%(asctime)s | %(name)s | line: %(lineno)d | %(levelname)s: %(message)s"
-        # )
+        return event_dict
 
-        # The StreamHandler writes logs to stderr based on the provided log level
-        # stream_handler = logging.StreamHandler()
-        # stream_handler.setLevel(log_level.numeric_level)
-        # stream_handler.setFormatter(formatter)
-        # logger.addHandler(stream_handler)
-        # logger.setLevel(
-        #     logging.DEBUG
-        # )  # set root logger to lowest-possible level - otherwise it will block levels set for file handler and stream handler
-        #
-        # if skip_log_file:
-        #     return
-        #
-        # # The FileHandler writes all logs to a local file
-        # file_handler = logging.handlers.TimedRotatingFileHandler(
-        #     filename=logDirectory / "logfile", when="midnight", backupCount=30
-        # )  # creates a new file every day; keeps 30 days of logs at most
-        # file_handler.setFormatter(formatter)
-        # file_handler.setLevel(logging.DEBUG)
-        # file_handler.namer = lambda name: name + ".log"  # append file extension to name
-        # logger.addHandler(file_handler)
+    custom_fmt_processors: list[Processor]  = [_add_our_custom_fields]
 
-        # new...
-        formatter = structlog.stdlib.ProcessorFormatter(
-            processors=_build_processors(json_log),
-            foreign_pre_chain=_build_pre_processors(),
-        )
-        handler = logging.StreamHandler()
-        handler.setFormatter(formatter)
-        root = logging.getLogger()
-        root.setLevel(log_level.numeric_level)
-        root.addHandler(handler)
+    formatter = structlog.stdlib.ProcessorFormatter(
+        processors=_build_processors(json_log),
+        foreign_pre_chain=_build_pre_processors(custom_fmt_processors),
+    )
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    root = logging.getLogger()
+    root.setLevel(log_level.numeric_level)
+    root.addHandler(handler)
+
+    if skip_log_file:
+        return
+
+    logDirectory = pathlib.Path("logs")
+    if not logDirectory.exists():
+        pathlib.Path(logDirectory).mkdir()
+
+    # The FileHandler writes all logs to a local file
+    file_handler = logging.handlers.TimedRotatingFileHandler(
+        filename=logDirectory / "logfile", when="midnight", backupCount=30
+    )  # creates a new file every day; keeps 30 days of logs at most
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.namer = lambda name: name + ".log"  # append file extension to name
+    root.addHandler(file_handler)
 
 
 # This is mocked in our testing, so its useful to be in its own function
@@ -121,7 +117,7 @@ def _build_processors(json_log:bool) -> Sequence[Processor]:
 # https://www.structlog.org/en/stable/standard-library.html#processors
 # tl;dr: The processors modify the logger kwargs in sequential order
 #
-def _build_pre_processors(tags: dict | None = None):
+def _build_pre_processors(custom_processors: list[Processor]):
     return [
         # Append the logger name to event dict argument
         #   .warn("something bad", ..., logger="thatclass")
@@ -142,15 +138,6 @@ def _build_pre_processors(tags: dict | None = None):
         structlog.processors.UnicodeDecoder(),
         # adds our custom environment vars
         #   .warn("something bad", ..., service="mercury", logging_version="0.0.1", env="dev")
-        _add_our_custom_fields,
+        *custom_processors
     ]
 
-def _add_our_custom_fields(
-    logger: structlog.types.WrappedLogger,
-    method_name: str,
-    event_dict: MutableMapping[str, Any],
-) -> MutableMapping[str, Any]:
-    event_dict["service"] = "gx-agent"
-    event_dict["env"] = "TODO add environment"
-
-    return event_dict
