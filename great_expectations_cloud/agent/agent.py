@@ -89,7 +89,6 @@ class GXAgent:
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
         LOGGER.info(f"GX Agent version: {agent_version}")
-        LOGGER.error("LALALA")
         print(f"Great Expectations version: {great_expectations_version}")
         print("Initializing the GX Agent.")
         self._set_http_session_headers()
