@@ -6,7 +6,7 @@ import logging
 import logging.config
 import logging.handlers
 import pathlib
-from typing import TYPE_CHECKING, Any, Final, MutableMapping, Sequence
+from typing import TYPE_CHECKING, Any, Final, MutableMapping, Sequence, TextIO
 
 import structlog
 from typing_extensions import override
@@ -76,7 +76,7 @@ def configure_logger(
         root.addHandler(file_handler)
 
 
-def _get_file_handler():
+def _get_file_handler() -> logging.handlers.TimedRotatingFileHandler:
     formatter = logging.Formatter(
         "%(asctime)s | %(name)s | line: %(lineno)d | %(levelname)s: %(message)s"
     )
@@ -93,7 +93,7 @@ def _get_file_handler():
     return file_handler
 
 
-def _get_structured_log_handler(json_log: bool, environment: str):
+def _get_structured_log_handler(json_log: bool, environment: str) -> logging.StreamHandler[TextIO]:
     def _add_our_custom_fields(
         logger: structlog.types.WrappedLogger,
         method_name: str,
@@ -116,7 +116,7 @@ def _get_structured_log_handler(json_log: bool, environment: str):
     return handler
 
 
-def _load_cfg_from_file(log_cfg_file):
+def _load_cfg_from_file(log_cfg_file: pathlib.Path) -> None:
     if not log_cfg_file.exists():
         raise FileNotFoundError(  # noqa: TRY003 # one off error
             f"Logging config file not found: {log_cfg_file.absolute()}"
@@ -130,10 +130,9 @@ def _select_final_output(json_log: bool) -> Sequence[Processor]:
     # remove_processors_meta cleans up the event dict
     processors: list[Processor] = [structlog.stdlib.ProcessorFormatter.remove_processors_meta]
     if json_log:
-        renderer = structlog.processors.JSONRenderer()
+        processors.append(structlog.processors.JSONRenderer())
     else:
-        renderer = structlog.dev.ConsoleRenderer()
-    processors.append(renderer)
+        processors.append(structlog.dev.ConsoleRenderer())
     return processors
 
 
@@ -141,7 +140,7 @@ def _select_final_output(json_log: bool) -> Sequence[Processor]:
 # https://www.structlog.org/en/stable/standard-library.html#processors
 # tl;dr: The processors modify the logger kwargs in sequential order
 #
-def _build_pre_processors(custom_processors: list[Processor]):
+def _build_pre_processors(custom_processors: list[Processor]) -> list[Processor]:
     return [
         # Append the logger name to event dict argument
         #   .warn("something bad", ..., logger="thatclass")
