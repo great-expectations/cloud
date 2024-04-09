@@ -88,19 +88,19 @@ class GXAgent:
     def __init__(self: Self):
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
-        print(f"GX Agent version: {agent_version}")
-        print(f"Great Expectations version: {great_expectations_version}")
-        print("Initializing the GX Agent.")
+        LOGGER.info("GX Agent", extra={"version":agent_version})
+        LOGGER.info("Great Expectations", extra={"version": great_expectations_version})
+        LOGGER.info("Initializing the GX Agent.")
         self._set_http_session_headers()
         self._config = self._get_config()
-        print("Loading a DataContext - this might take a moment.")
+        LOGGER.info("Loading a DataContext - this might take a moment.")
 
         with warnings.catch_warnings():
             # suppress warnings about GX version
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
             self._context: CloudDataContext = get_context(cloud_mode=True)
 
-        print("DataContext is ready.")
+        LOGGER.info("DataContext is ready.")
 
         # Create a thread pool with a single worker, so we can run long-lived
         # GX processes and maintain our connection to the broker. Note that
@@ -114,9 +114,9 @@ class GXAgent:
     def run(self) -> None:
         """Open a connection to GX Cloud."""
 
-        print("Opening connection to GX Cloud.")
+        LOGGER.debug("Opening connection to GX Cloud.")
         self._listen()
-        print("Connection to GX Cloud has been closed.")
+        LOGGER.debug("Connection to GX Cloud has been closed.")
 
     # ZEL-505: A race condition can occur if two or more agents are started at the same time
     #          due to the generation of passwords for rabbitMQ queues. This can be mitigated
@@ -141,9 +141,9 @@ class GXAgent:
                 on_message=self._handle_event_as_thread_enter,
             )
         except KeyboardInterrupt:
-            print("Received request to shutdown.")
+            logger.critical("Received request to shutdown.")
         except (SubscriberError, ClientError):
-            print("Connection to GX Cloud has encountered an error.")
+            LOGGER.exception("Connection to GX Cloud has encountered an error.")
         except (AuthenticationError, ProbableAuthenticationError):
             # Retry with new credentials
             self._config = self._get_config()
@@ -207,7 +207,7 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
         self._update_status(job_id=event_context.correlation_id, status=JobStarted())
-        print(f"Starting job {event_context.event.type} ({event_context.correlation_id}) ")
+        LOGGER.info(f"Starting job", extra={"event_type":event_context.event.type, "correlation_id": event_context.correlation_id})
         handler = EventHandler(context=self._context)
         # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
         result = handler.handle_event(event=event_context.event, id=event_context.correlation_id)
@@ -235,7 +235,7 @@ class GXAgent:
                     created_resources=[],
                     error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to latest.",
                 )
-                print(
+                LOGGER.error(
                     f"Job completed with error: {event_context.event.type} ({event_context.correlation_id}). Ensure agent is up-to-date."
                 )
             else:
@@ -243,13 +243,12 @@ class GXAgent:
                     success=True,
                     created_resources=result.created_resources,
                 )
-                print(f"Completed job: {event_context.event.type} ({event_context.correlation_id})")
+                LOGGER.info(f"Completed job", extra={"event_type":event_context.event.type, "correlation_id": event_context.correlation_id})
         else:
             status = build_failed_job_completed_status(error)
-            print(traceback.format_exc())
-            print(
-                f"Job completed with error: {event_context.event.type} ({event_context.correlation_id})"
-            )
+            LOGGER.info(traceback.format_exc())
+            LOGGER.info(
+                "Job completed with error", extra={"event_type":event_context.event.type, "correlation_id": event_context.correlation_id})
 
         self._update_status(job_id=event_context.correlation_id, status=status)
 
@@ -329,7 +328,7 @@ class GXAgent:
             job_id: job identifier, also known as correlation_id
             status: pydantic model encapsulating the current status
         """
-        LOGGER.info(f"Updating status: {job_id} - {status}")
+        LOGGER.debug("Updating status", extra={"job_id":job_id, "status":status})
         agent_sessions_url = (
             f"{self._config.gx_cloud_base_url}/organizations/{self._config.gx_cloud_organization_id}"
             + f"/agent-jobs/{job_id}"
@@ -356,13 +355,13 @@ class GXAgent:
         ):
             # TODO: public API should be available in v1
             LOGGER.info(
-                f"Unable to set {HeaderName.USER_AGENT} or {HeaderName.AGENT_JOB_ID} header for requests to GX Cloud"
+                "Unable to set header for requests to GX Cloud", extra={"user_agent":HeaderName.USER_AGENT,"agent_job_id":HeaderName.AGENT_JOB_ID}
             )
             return
 
         agent_version = self.get_current_gx_agent_version()
         LOGGER.debug(
-            f"Setting session headers for GX Cloud. {HeaderName.USER_AGENT}:{agent_version} {HeaderName.AGENT_JOB_ID}:{correlation_id}"
+            "Setting session headers for GX Cloud", extra={"user_agent":HeaderName.USER_AGENT, "agent_version":agent_version,"job_id":HeaderName.AGENT_JOB_ID, "correlation_id": correlation_id}
         )
 
         if correlation_id:

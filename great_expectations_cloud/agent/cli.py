@@ -26,8 +26,8 @@ def _parse_args() -> Arguments:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--log-level",
-        help="Level of logging to use. Defaults to WARNING.",
-        default="WARNING",
+        help="Level of logging to use. Defaults to INFO.",
+        default="INFO",
         type=LogLevel,
     )
     parser.add_argument(
