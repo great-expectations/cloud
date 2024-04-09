@@ -88,7 +88,7 @@ class GXAgent:
     def __init__(self: Self):
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
-        LOGGER.info("GX Agent", extra={"version":agent_version})
+        LOGGER.info("GX Agent", extra={"version": agent_version})
         LOGGER.info("Great Expectations", extra={"version": great_expectations_version})
         LOGGER.info("Initializing the GX Agent.")
         self._set_http_session_headers()
@@ -207,7 +207,13 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
         self._update_status(job_id=event_context.correlation_id, status=JobStarted())
-        LOGGER.info(f"Starting job", extra={"event_type":event_context.event.type, "correlation_id": event_context.correlation_id})
+        LOGGER.info(
+            "Starting job",
+            extra={
+                "event_type": event_context.event.type,
+                "correlation_id": event_context.correlation_id,
+            },
+        )
         handler = EventHandler(context=self._context)
         # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
         result = handler.handle_event(event=event_context.event, id=event_context.correlation_id)
@@ -243,12 +249,23 @@ class GXAgent:
                     success=True,
                     created_resources=result.created_resources,
                 )
-                LOGGER.info(f"Completed job", extra={"event_type":event_context.event.type, "correlation_id": event_context.correlation_id})
+                LOGGER.info(
+                    "Completed job",
+                    extra={
+                        "event_type": event_context.event.type,
+                        "correlation_id": event_context.correlation_id,
+                    },
+                )
         else:
             status = build_failed_job_completed_status(error)
             LOGGER.info(traceback.format_exc())
             LOGGER.info(
-                "Job completed with error", extra={"event_type":event_context.event.type, "correlation_id": event_context.correlation_id})
+                "Job completed with error",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                },
+            )
 
         self._update_status(job_id=event_context.correlation_id, status=status)
 
@@ -328,7 +345,7 @@ class GXAgent:
             job_id: job identifier, also known as correlation_id
             status: pydantic model encapsulating the current status
         """
-        LOGGER.debug("Updating status", extra={"job_id":job_id, "status":status})
+        LOGGER.debug("Updating status", extra={"job_id": job_id, "status": status})
         agent_sessions_url = (
             f"{self._config.gx_cloud_base_url}/organizations/{self._config.gx_cloud_organization_id}"
             + f"/agent-jobs/{job_id}"
@@ -355,13 +372,23 @@ class GXAgent:
         ):
             # TODO: public API should be available in v1
             LOGGER.info(
-                "Unable to set header for requests to GX Cloud", extra={"user_agent":HeaderName.USER_AGENT,"agent_job_id":HeaderName.AGENT_JOB_ID}
+                "Unable to set header for requests to GX Cloud",
+                extra={
+                    "user_agent": HeaderName.USER_AGENT,
+                    "agent_job_id": HeaderName.AGENT_JOB_ID,
+                },
             )
             return
 
         agent_version = self.get_current_gx_agent_version()
         LOGGER.debug(
-            "Setting session headers for GX Cloud", extra={"user_agent":HeaderName.USER_AGENT, "agent_version":agent_version,"job_id":HeaderName.AGENT_JOB_ID, "correlation_id": correlation_id}
+            "Setting session headers for GX Cloud",
+            extra={
+                "user_agent": HeaderName.USER_AGENT,
+                "agent_version": agent_version,
+                "job_id": HeaderName.AGENT_JOB_ID,
+                "correlation_id": correlation_id,
+            },
         )
 
         if correlation_id:
