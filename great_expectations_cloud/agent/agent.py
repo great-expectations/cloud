@@ -134,14 +134,14 @@ class GXAgent:
         try:
             client = AsyncRabbitMQClient(url=str(self._config.connection_string))
             subscriber = Subscriber(client=client)
-            print("The GX Agent is ready.")
+            LOGGER.info("The GX Agent is ready.")
             # Open a connection until encountering a shutdown event
             subscriber.consume(
                 queue=self._config.queue,
                 on_message=self._handle_event_as_thread_enter,
             )
         except KeyboardInterrupt:
-            logger.critical("Received request to shutdown.")
+            LOGGER.critical("Received request to shutdown.")
         except (SubscriberError, ClientError):
             LOGGER.exception("Connection to GX Cloud has encountered an error.")
         except (AuthenticationError, ProbableAuthenticationError):
