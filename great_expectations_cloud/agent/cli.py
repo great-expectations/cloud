@@ -41,8 +41,7 @@ def _parse_args() -> Arguments:
     parser.add_argument(
         "--json-log",
         help="Output logs in JSON format. Defaults to False.",
-        # TODO Revert to False
-        default=True,
+        default=False,
     )
     parser.add_argument(
         "--log-cfg-file",
@@ -53,7 +52,7 @@ def _parse_args() -> Arguments:
         "--environment",
         help="The environment in which agent is running",
         type=str,
-        default="production"
+        default="production",
     )
     parser.add_argument("--version", help="Show the gx agent version.", action="store_true")
     args = parser.parse_args()
@@ -63,7 +62,7 @@ def _parse_args() -> Arguments:
         log_cfg_file=args.log_cfg_file,
         version=args.version,
         json_log=args.json_log,
-        environment=args.environment
+        environment=args.environment,
     )
 
 
@@ -72,7 +71,11 @@ def main() -> None:
     args: Arguments = _parse_args()
     # TODO Pass in env, log type
     configure_logger(
-        log_level=args.log_level, skip_log_file=args.skip_log_file, log_cfg_file=args.log_cfg_file, json_log=args.json_log, environment=args.environment
+        log_level=args.log_level,
+        skip_log_file=args.skip_log_file,
+        log_cfg_file=args.log_cfg_file,
+        json_log=args.json_log,
+        environment=args.environment,
     )
 
     if args.version:
