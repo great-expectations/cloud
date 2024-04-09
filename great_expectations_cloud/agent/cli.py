@@ -69,7 +69,6 @@ def _parse_args() -> Arguments:
 def main() -> None:
     # lazy imports ensure our cli is fast and responsive
     args: Arguments = _parse_args()
-    # TODO Pass in env, log type
     configure_logger(
         log_level=args.log_level,
         skip_log_file=args.skip_log_file,
