@@ -160,7 +160,6 @@ class BumpVersionParams:
             latest_pre_release_version=Version("20240411.dev0"),
             current_date="20240411",
         ).params(),
-        # TODO: Enable the below after adding the missing params
         BumpVersionParams(
             id="pre-release 20240410.dev3 -> 20240411.dev0",
             version_on_main=Version("20240410.dev3"),
@@ -170,26 +169,33 @@ class BumpVersionParams:
             latest_pre_release_version=Version("20240410.dev3"),
             current_date="20240411",
         ).params(),
-        # param(
-        #     Version("20240410.dev3"),
-        #     Version("20240411.dev0"),
-        #     True,
-        #     id="pre-release 20240410.dev3 -> 20240411.dev0",
-        # ),
-        # # 4. test bump_version for standard release to pre-release
-        # param(
-        #     Version("20240410"),
-        #     Version("20240411.dev0"),
-        #     True,
-        #     id="pre-release 20240410 -> 20240411.dev0",
-        # ),
-        # # 5. test bump_version for second standard release to pre-release
+        # 4. test bump_version for standard release to pre-release
+        BumpVersionParams(
+            id="pre-release 20240410 -> 20240411.dev0",
+            version_on_main=Version("20240410"),
+            expected_version=Version("20240411.dev0"),
+            pre_release=True,
+            latest_version=Version("20240410"),
+            latest_pre_release_version=Version("20240409.dev0"),
+            current_date="20240411",
+        ).params(),
+        # 5. test bump_version for second standard release to pre-release
+        # BumpVersionParams(
+        #     id="pre-release 20240411.1 -> 20240411.2.dev0",
+        #     version_on_main=Version("20240411.1"),
+        #     expected_version=Version("20240411.2.dev0"),
+        #     pre_release=True,
+        #     latest_version=Version("20240411"),
+        #     latest_pre_release_version=Version("20240410.1.dev0"),
+        #     current_date="20240411",
+        # ).params(),
         # param(
         #     Version("20240411.1"),
         #     Version("20240411.2.dev0"),
         #     True,
         #     id="pre-release 20240411.1 -> 20240411.2.dev0",
         # ),
+        # TODO: Enable the below after adding the missing params
         # param(
         #     Version("20240411"),
         #     Version("20240411.1.dev0"),
