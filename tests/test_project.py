@@ -82,7 +82,7 @@ def test_pre_commit_versions_are_in_sync(
 @dataclass
 class BumpVersionParams:
     id: str
-    version_initial: Version
+    version_on_main: Version
     expected_version: Version
     pre_release: bool
     latest_version: Version
@@ -91,7 +91,7 @@ class BumpVersionParams:
 
     def params(self):
         return param(
-            self.version_initial,
+            self.version_on_main,
             self.expected_version,
             self.pre_release,
             self.latest_version,
@@ -112,7 +112,7 @@ class BumpVersionParams:
 # 8. test bump_version for transition from semver style to date based versioning
 @pytest.mark.parametrize(
     [
-        "version_initial",
+        "version_on_main",
         "expected_version",
         "pre_release",
         "latest_version",
@@ -133,24 +133,34 @@ class BumpVersionParams:
         # New tests
         # 2. test bump_version with standard release
         BumpVersionParams(
-            # TODO: Add more descriptive id
-            id="standard 20240410 -> 20240411 SHOULD WORK",
-            version_initial=Version("20240410"),
+            id="standard 20240410 -> 20240411",
+            version_on_main=Version("20240410"),
             expected_version=Version("20240411"),
             pre_release=False,
             latest_version=Version("20240410"),
             latest_pre_release_version=Version("20240409.dev0"),
             current_date="20240411",
         ).params(),
+        BumpVersionParams(
+            id="standard 20240411.dev0 -> 20240411",
+            version_on_main=Version("20240411.dev0"),
+            expected_version=Version("20240411"),
+            pre_release=False,
+            latest_version=Version("20240410"),
+            latest_pre_release_version=Version("20240411.dev0"),
+            current_date="20240411",
+        ).params(),
+        # 3. test bump_version with pre-release
+        BumpVersionParams(
+            id="pre-release 20240411.dev0 -> 20240411.dev1",
+            version_on_main=Version("20240411.dev0"),
+            expected_version=Version("20240411.dev1"),
+            pre_release=True,
+            latest_version=Version("20240411"),
+            latest_pre_release_version=Version("20240411.dev0"),
+            current_date="20240411",
+        ).params(),
         # TODO: Enable the below after adding the missing params
-        # param(Version("20240410"), Version("20240411"), False, id="standard 20240410 -> 20240411"),
-        # param(
-        #     Version("20240411.dev0"),
-        #     Version("20240411"),
-        #     False,
-        #     id="standard 20240411.dev0 -> 20240411",
-        # ),
-        # # 3. test bump_version with pre-release
         # param(
         #     Version("20240411.dev0"),
         #     Version("20240411.dev1"),
@@ -225,7 +235,7 @@ class BumpVersionParams:
     ],
 )
 def test_bump_version(
-    version_initial: Version,
+    version_on_main: Version,
     expected_version: Version,
     pre_release: bool,
     latest_version: Version,
@@ -233,14 +243,14 @@ def test_bump_version(
     current_date: str,
 ):
     bumped_version = bump_version(
-        version_=version_initial,
+        version_=version_on_main,
         latest_version=latest_version,
         latest_pre_release_version=latest_pre_release_version,
         pre_release=pre_release,
         current_date=current_date,
     )
     assert (
-        bumped_version > version_initial
+        bumped_version > version_on_main
     ), "bumped version should be greater than the initial version"
     assert bumped_version == expected_version, f"Expected {expected_version}, got {bumped_version}"
 

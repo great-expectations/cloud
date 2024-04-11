@@ -193,7 +193,16 @@ def _new_pre_release_version(
     latest_pre_release_version: Version,
     current_date: str,
 ) -> Version:
-    raise NotImplementedError
+    # TODO: Check latest version to make sure we don't have to add an intervening .# component
+
+    # TODO: Handle intervening components if they already exist
+
+    # Case with no intervening .# component
+    new_version = Version(
+        f"{latest_pre_release_version.major}.dev{latest_pre_release_version.dev + 1}"
+    )
+
+    return new_version
 
 
 def bump_version(
