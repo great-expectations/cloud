@@ -161,12 +161,15 @@ class BumpVersionParams:
             current_date="20240411",
         ).params(),
         # TODO: Enable the below after adding the missing params
-        # param(
-        #     Version("20240411.dev0"),
-        #     Version("20240411.dev1"),
-        #     True,
-        #     id="pre-release 20240411.dev0 -> 20240411.dev1",
-        # ),
+        BumpVersionParams(
+            id="pre-release 20240410.dev3 -> 20240411.dev0",
+            version_on_main=Version("20240410.dev3"),
+            expected_version=Version("20240411.dev0"),
+            pre_release=True,
+            latest_version=Version("20240410"),
+            latest_pre_release_version=Version("20240410.dev3"),
+            current_date="20240411",
+        ).params(),
         # param(
         #     Version("20240410.dev3"),
         #     Version("20240411.dev0"),

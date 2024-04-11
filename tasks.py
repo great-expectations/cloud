@@ -197,10 +197,14 @@ def _new_pre_release_version(
 
     # TODO: Handle intervening components if they already exist
 
-    # Case with no intervening .# component
-    new_version = Version(
-        f"{latest_pre_release_version.major}.dev{latest_pre_release_version.dev + 1}"
-    )
+    # Case where the latest pre-release was on an earlier date
+    if latest_pre_release_version.major < int(current_date):
+        new_version = Version(f"{current_date}.dev0")
+    else:
+        # Case with no intervening .# component
+        new_version = Version(
+            f"{latest_pre_release_version.major}.dev{latest_pre_release_version.dev + 1}"
+        )
 
     return new_version
 
