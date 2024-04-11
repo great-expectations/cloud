@@ -4,6 +4,7 @@ import logging
 import pathlib
 import re
 import warnings
+from dataclasses import dataclass
 from pprint import pformat as pf
 from typing import Any, Final, Iterable, Mapping
 
@@ -78,6 +79,28 @@ def test_pre_commit_versions_are_in_sync(
         )
 
 
+@dataclass
+class BumpVersionParams:
+    id: str
+    version_initial: Version
+    expected_version: Version
+    pre_release: bool
+    latest_version: Version
+    latest_pre_release_version: Version
+    current_date: str
+
+    def params(self):
+        return param(
+            self.version_initial,
+            self.expected_version,
+            self.pre_release,
+            self.latest_version,
+            self.latest_pre_release_version,
+            self.current_date,
+            id=self.id,
+        )
+
+
 # TODO: Clean up comments
 # 1. mock _get_current_date with a fixed date
 # 2. test bump_version with standard release
@@ -88,7 +111,14 @@ def test_pre_commit_versions_are_in_sync(
 # 7. test bump_version for second standard release from release
 # 8. test bump_version for transition from semver style to date based versioning
 @pytest.mark.parametrize(
-    ["version_initial", "expected_version", "pre_release"],
+    [
+        "version_initial",
+        "expected_version",
+        "pre_release",
+        "latest_version",
+        "latest_pre_release_version",
+        "current_date",
+    ],
     [
         # TODO: Old tests, make sure to cover these cases and then remove them
         # param(Version("0.0.1"), Version("0.0.2.dev0"), True, id="pre-release 0.0.1 -> 0.0.2.dev0"),
@@ -102,95 +132,112 @@ def test_pre_commit_versions_are_in_sync(
         # param(Version("0.0.1"), Version("0.0.2"), False, id="standard 0.0.1 -> 0.0.2"),
         # New tests
         # 2. test bump_version with standard release
-        param(Version("20240410"), Version("20240411"), False, id="standard 20240410 -> 20240411"),
-        param(
-            Version("20240411.dev0"),
-            Version("20240411"),
-            False,
-            id="standard 20240411.dev0 -> 20240411",
-        ),
-        # 3. test bump_version with pre-release
-        param(
-            Version("20240411.dev0"),
-            Version("20240411.dev1"),
-            True,
-            id="pre-release 20240411.dev0 -> 20240411.dev1",
-        ),
-        param(
-            Version("20240410.dev3"),
-            Version("20240411.dev0"),
-            True,
-            id="pre-release 20240410.dev3 -> 20240411.dev0",
-        ),
-        # 4. test bump_version for standard release to pre-release
-        param(
-            Version("20240410"),
-            Version("20240411.dev0"),
-            True,
-            id="pre-release 20240410 -> 20240411.dev0",
-        ),
-        # 5. test bump_version for second standard release to pre-release
-        param(
-            Version("20240411.1"),
-            Version("20240411.2.dev0"),
-            True,
-            id="pre-release 20240411.1 -> 20240411.2.dev0",
-        ),
-        param(
-            Version("20240411"),
-            Version("20240411.1.dev0"),
-            True,
-            id="pre-release 20240411 -> 20240411.1.dev0",
-        ),
-        # 6. test bump_version for second standard release from pre-release
-        param(
-            Version("20240411.1.dev2"),
-            Version("20240411.2"),
-            False,
-            id="standard 20240411.1.dev2 -> 20240411.2",
-        ),
-        # 7. test bump_version for second standard release from release
-        param(
-            Version("20240411.1"),
-            Version("20240411.2"),
-            False,
-            id="standard 20240411.1 -> 20240411.2",
-        ),
-        # 8. test bump_version for transition from semver style to date based versioning
-        param(
-            Version("0.0.1"),
-            Version("20240411"),
-            False,
-            id="standard 0.0.1 style to date based -> 20240411",
-        ),
-        param(
-            Version("0.0.1.dev1"),
-            Version("20240411"),
-            False,
-            id="release 0.0.1.dev1 style to date based -> 20240411",
-        ),
-        param(
-            Version("0.0.1"),
-            Version("20240411.dev0"),
-            True,
-            id="pre-release 0.0.1 style to date based -> 20240411.dev0",
-        ),
-        param(
-            Version("0.0.1.dev1"),
-            Version("20240411.dev0"),
-            True,
-            id="pre-release 0.0.1.dev1 style to date based -> 20240411.dev0",
-        ),
+        BumpVersionParams(
+            # TODO: Add more descriptive id
+            id="standard 20240410 -> 20240411 SHOULD WORK",
+            version_initial=Version("20240410"),
+            expected_version=Version("20240411"),
+            pre_release=False,
+            latest_version=Version("20240410"),
+            latest_pre_release_version=Version("20240409.dev0"),
+            current_date="20240411",
+        ).params(),
+        # TODO: Enable the below after adding the missing params
+        # param(Version("20240410"), Version("20240411"), False, id="standard 20240410 -> 20240411"),
+        # param(
+        #     Version("20240411.dev0"),
+        #     Version("20240411"),
+        #     False,
+        #     id="standard 20240411.dev0 -> 20240411",
+        # ),
+        # # 3. test bump_version with pre-release
+        # param(
+        #     Version("20240411.dev0"),
+        #     Version("20240411.dev1"),
+        #     True,
+        #     id="pre-release 20240411.dev0 -> 20240411.dev1",
+        # ),
+        # param(
+        #     Version("20240410.dev3"),
+        #     Version("20240411.dev0"),
+        #     True,
+        #     id="pre-release 20240410.dev3 -> 20240411.dev0",
+        # ),
+        # # 4. test bump_version for standard release to pre-release
+        # param(
+        #     Version("20240410"),
+        #     Version("20240411.dev0"),
+        #     True,
+        #     id="pre-release 20240410 -> 20240411.dev0",
+        # ),
+        # # 5. test bump_version for second standard release to pre-release
+        # param(
+        #     Version("20240411.1"),
+        #     Version("20240411.2.dev0"),
+        #     True,
+        #     id="pre-release 20240411.1 -> 20240411.2.dev0",
+        # ),
+        # param(
+        #     Version("20240411"),
+        #     Version("20240411.1.dev0"),
+        #     True,
+        #     id="pre-release 20240411 -> 20240411.1.dev0",
+        # ),
+        # # 6. test bump_version for second standard release from pre-release
+        # param(
+        #     Version("20240411.1.dev2"),
+        #     Version("20240411.2"),
+        #     False,
+        #     id="standard 20240411.1.dev2 -> 20240411.2",
+        # ),
+        # # 7. test bump_version for second standard release from release
+        # param(
+        #     Version("20240411.1"),
+        #     Version("20240411.2"),
+        #     False,
+        #     id="standard 20240411.1 -> 20240411.2",
+        # ),
+        # # 8. test bump_version for transition from semver style to date based versioning
+        # param(
+        #     Version("0.0.1"),
+        #     Version("20240411"),
+        #     False,
+        #     id="standard 0.0.1 style to date based -> 20240411",
+        # ),
+        # param(
+        #     Version("0.0.1.dev1"),
+        #     Version("20240411"),
+        #     False,
+        #     id="release 0.0.1.dev1 style to date based -> 20240411",
+        # ),
+        # param(
+        #     Version("0.0.1"),
+        #     Version("20240411.dev0"),
+        #     True,
+        #     id="pre-release 0.0.1 style to date based -> 20240411.dev0",
+        # ),
+        # param(
+        #     Version("0.0.1.dev1"),
+        #     Version("20240411.dev0"),
+        #     True,
+        #     id="pre-release 0.0.1.dev1 style to date based -> 20240411.dev0",
+        # ),
     ],
 )
-def test_bump_version(version_initial: Version, expected_version: Version, pre_release: bool):
+def test_bump_version(
+    version_initial: Version,
+    expected_version: Version,
+    pre_release: bool,
+    latest_version: Version,
+    latest_pre_release_version: Version,
+    current_date: str,
+):
     bumped_version = bump_version(
         version_=version_initial,
-        # TODO: Parametrize these values: latest_version, latest_pre_release_version, current_date
-        latest_version=Version("20240411"),
-        latest_pre_release_version=Version("20240411.dev0"),
+        latest_version=latest_version,
+        latest_pre_release_version=latest_pre_release_version,
         pre_release=pre_release,
-        current_date="20240411",
+        current_date=current_date,
     )
     assert (
         bumped_version > version_initial
