@@ -193,7 +193,20 @@ def _new_pre_release_version(
     latest_pre_release_version: Version,
     current_date: str,
 ) -> Version:
-    # TODO: Check latest version to make sure we don't have to add an intervening .# component
+    # TODO: This logic should be refactored to be more readable & to reduce cyclomatic complexity.
+
+    if latest_version.major == int(current_date) and latest_version.minor:
+        if (
+            latest_pre_release_version.major == int(current_date)
+            and latest_pre_release_version.minor == latest_version.minor
+        ):
+            new_version = Version(
+                f"{current_date}.{latest_version.minor}.dev{latest_pre_release_version.dev + 1}"
+            )
+            return new_version
+        else:
+            new_version = Version(f"{current_date}.{latest_version.minor + 1}.dev0")
+            return new_version
 
     # TODO: Handle intervening components if they already exist
 

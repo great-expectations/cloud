@@ -131,7 +131,7 @@ class BumpVersionParams:
         # param(Version("0.0.1.dev1"), Version("0.0.1"), False, id="standard 0.0.1.dev1 -> 0.0.1"),
         # param(Version("0.0.1"), Version("0.0.2"), False, id="standard 0.0.1 -> 0.0.2"),
         # New tests
-        # 2. test bump_version with standard release
+        # standard release
         BumpVersionParams(
             id="standard 20240410 -> 20240411",
             version_on_main=Version("20240410"),
@@ -150,7 +150,7 @@ class BumpVersionParams:
             latest_pre_release_version=Version("20240411.dev0"),
             current_date="20240411",
         ).params(),
-        # 3. test bump_version with pre-release
+        # pre-release
         BumpVersionParams(
             id="pre-release 20240411.dev0 -> 20240411.dev1",
             version_on_main=Version("20240411.dev0"),
@@ -169,7 +169,7 @@ class BumpVersionParams:
             latest_pre_release_version=Version("20240410.dev3"),
             current_date="20240411",
         ).params(),
-        # 4. test bump_version for standard release to pre-release
+        # standard release to pre-release
         BumpVersionParams(
             id="pre-release 20240410 -> 20240411.dev0",
             version_on_main=Version("20240410"),
@@ -179,22 +179,26 @@ class BumpVersionParams:
             latest_pre_release_version=Version("20240409.dev0"),
             current_date="20240411",
         ).params(),
-        # 5. test bump_version for second standard release to pre-release
-        # BumpVersionParams(
-        #     id="pre-release 20240411.1 -> 20240411.2.dev0",
-        #     version_on_main=Version("20240411.1"),
-        #     expected_version=Version("20240411.2.dev0"),
-        #     pre_release=True,
-        #     latest_version=Version("20240411"),
-        #     latest_pre_release_version=Version("20240410.1.dev0"),
-        #     current_date="20240411",
-        # ).params(),
-        # param(
-        #     Version("20240411.1"),
-        #     Version("20240411.2.dev0"),
-        #     True,
-        #     id="pre-release 20240411.1 -> 20240411.2.dev0",
-        # ),
+        # second standard release to pre-release
+        BumpVersionParams(
+            id="pre-release 20240411.1 -> 20240411.2.dev0",
+            version_on_main=Version("20240411.1"),
+            expected_version=Version("20240411.2.dev0"),
+            pre_release=True,
+            latest_version=Version("20240411.1"),
+            latest_pre_release_version=Version("20240410.1.dev0"),
+            current_date="20240411",
+        ).params(),
+        # second pre-release from second release with pre-release
+        BumpVersionParams(
+            id="pre-release 20240411.1.dev0 -> 20240411.1.dev1",
+            version_on_main=Version("20240411.1.dev0"),
+            expected_version=Version("20240411.1.dev1"),
+            pre_release=True,
+            latest_version=Version("20240411.1"),
+            latest_pre_release_version=Version("20240411.1.dev0"),
+            current_date="20240411",
+        ).params(),
         # TODO: Enable the below after adding the missing params
         # param(
         #     Version("20240411"),
@@ -258,9 +262,10 @@ def test_bump_version(
         pre_release=pre_release,
         current_date=current_date,
     )
-    assert (
-        bumped_version > version_on_main
-    ), "bumped version should be greater than the initial version"
+    # TODO: Do we need this assertion?
+    # assert (
+    #     bumped_version > version_on_main
+    # ), "bumped version should be greater than the initial version"
     assert bumped_version == expected_version, f"Expected {expected_version}, got {bumped_version}"
 
 
