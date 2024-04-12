@@ -110,6 +110,10 @@ class BumpVersionParams:
 # 6. test bump_version for second standard release from pre-release
 # 7. test bump_version for second standard release from release
 # 8. test bump_version for transition from semver style to date based versioning
+# 9. pre release from release on a different day
+# 10. pre release from release on the same day
+# 11. pre release from pre release on a different day
+# 12. pre release from pre release on the same day
 @pytest.mark.parametrize(
     [
         "version_on_main",
@@ -238,32 +242,43 @@ class BumpVersionParams:
             latest_pre_release_version=Version("20240410.0.dev0"),
             current_date="20240411",
         ).params(),
-        # TODO: Enable the below after adding the missing params
-        # # 8. test bump_version for transition from semver style to date based versioning
-        # param(
-        #     Version("0.0.1"),
-        #     Version("20240411"),
-        #     False,
-        #     id="standard 0.0.1 style to date based -> 20240411",
-        # ),
-        # param(
-        #     Version("0.0.1.dev1"),
-        #     Version("20240411"),
-        #     False,
-        #     id="release 0.0.1.dev1 style to date based -> 20240411",
-        # ),
-        # param(
-        #     Version("0.0.1"),
-        #     Version("20240411.dev0"),
-        #     True,
-        #     id="pre-release 0.0.1 style to date based -> 20240411.dev0",
-        # ),
-        # param(
-        #     Version("0.0.1.dev1"),
-        #     Version("20240411.dev0"),
-        #     True,
-        #     id="pre-release 0.0.1.dev1 style to date based -> 20240411.dev0",
-        # ),
+        # transition from semver style to date based versioning
+        BumpVersionParams(
+            id="standard 0.0.1 -> 20240411.0",
+            version_on_main=Version("0.0.1"),
+            expected_version=Version("20240411.0"),
+            pre_release=False,
+            latest_version=Version("0.0.1"),
+            latest_pre_release_version=Version("20240410.1.dev0"),
+            current_date="20240411",
+        ).params(),
+        BumpVersionParams(
+            id="pre-release 0.0.1.dev1 -> 20240411.0",
+            version_on_main=Version("0.0.1.dev1"),
+            expected_version=Version("20240411.0"),
+            pre_release=False,
+            latest_version=Version("0.0.1"),
+            latest_pre_release_version=Version("20240410.1.dev0"),
+            current_date="20240411",
+        ).params(),
+        BumpVersionParams(
+            id="pre-release 0.0.1 -> 20240411.0.dev0",
+            version_on_main=Version("0.0.1"),
+            expected_version=Version("20240411.0.dev0"),
+            pre_release=True,
+            latest_version=Version("0.0.1"),
+            latest_pre_release_version=Version("0.0.1.dev0"),
+            current_date="20240411",
+        ).params(),
+        BumpVersionParams(
+            id="pre-release 0.0.1.dev1 -> 20240411.0.dev0",
+            version_on_main=Version("0.0.1.dev1"),
+            expected_version=Version("20240411.0.dev0"),
+            pre_release=True,
+            latest_version=Version("0.0.1"),
+            latest_pre_release_version=Version("0.0.1.dev1"),
+            current_date="20240411",
+        ).params(),
     ],
 )
 def test_bump_version(
