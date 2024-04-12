@@ -113,17 +113,6 @@ class BumpVersionParams:
         "current_date",
     ],
     [
-        # TODO: Old tests, make sure to cover these cases and then remove them
-        # param(Version("0.0.1"), Version("0.0.2.dev0"), True, id="pre-release 0.0.1 -> 0.0.2.dev0"),
-        # param(
-        #     Version("0.0.1.dev1"),
-        #     Version("0.0.1.dev2"),
-        #     True,
-        #     id="pre-release 0.0.1.dev1 -> 0.0.1.dev2",
-        # ),
-        # param(Version("0.0.1.dev1"), Version("0.0.1"), False, id="standard 0.0.1.dev1 -> 0.0.1"),
-        # param(Version("0.0.1"), Version("0.0.2"), False, id="standard 0.0.1 -> 0.0.2"),
-        # New tests
         # standard release
         BumpVersionParams(
             id="standard release from release on new date 20240410.0 -> 20240411.0",
@@ -297,10 +286,9 @@ def test_bump_version(
         pre_release=pre_release,
         current_date=current_date,
     )
-    # TODO: Do we need this assertion?
-    # assert (
-    #     bumped_version > version_on_main
-    # ), "bumped version should be greater than the initial version"
+    assert (
+        bumped_version > version_on_main
+    ), "bumped version should be greater than the initial version"
     assert bumped_version == expected_version, f"Expected {expected_version}, got {bumped_version}"
 
 
