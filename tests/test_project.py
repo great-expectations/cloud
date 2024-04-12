@@ -156,7 +156,7 @@ class BumpVersionParams:
             version_on_main=Version("20240411.dev0"),
             expected_version=Version("20240411.dev1"),
             pre_release=True,
-            latest_version=Version("20240411"),
+            latest_version=Version("20240410"),
             latest_pre_release_version=Version("20240411.dev0"),
             current_date="20240411",
         ).params(),
