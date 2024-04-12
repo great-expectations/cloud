@@ -209,14 +209,17 @@ class BumpVersionParams:
             latest_pre_release_version=Version("20240411.0.dev0"),
             current_date="20240411",
         ).params(),
+        # second standard release from pre-release
+        BumpVersionParams(
+            id="standard 20240411.1.dev2 -> 20240411.1",
+            version_on_main=Version("20240411.1.dev2"),
+            expected_version=Version("20240411.1"),
+            pre_release=False,
+            latest_version=Version("20240411.0"),
+            latest_pre_release_version=Version("20240411.1.dev2"),
+            current_date="20240411",
+        ).params(),
         # TODO: Enable the below after adding the missing params
-        # 6. test bump_version for second standard release from pre-release
-        # param(
-        #     Version("20240411.1.dev2"),
-        #     Version("20240411.2"),
-        #     False,
-        #     id="standard 20240411.1.dev2 -> 20240411.2",
-        # ),
         # # 7. test bump_version for second standard release from release
         # param(
         #     Version("20240411.1"),
