@@ -180,8 +180,10 @@ def _new_release_version(
 ) -> Version:
     proposed_version = Version(current_date)
     if proposed_version > latest_version:
+        # Always bump if it is a new date
         return Version(f"{proposed_version.major}.0")
     else:
+        # Bump the minor version onlyd if it is the same date
         return Version(f"{latest_version.major}.{latest_version.minor + 1}")
 
 
@@ -239,21 +241,6 @@ def bump_version(
         )
     else:
         new_version = _new_release_version(latest_version=latest_version, current_date=current_date)
-
-    # if not pre_release:
-    #     # standard release - remove the dev component if it exists
-    #     if version_.dev:
-    #         new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro}")
-    #     else:
-    #         new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro + 1}")
-    # elif version_.dev:
-    #     # bump an existing pre-release version
-    #     new_version = Version(
-    #         f"{version_.major}.{version_.minor}.{version_.micro}.dev{version_.dev + 1}"
-    #     )
-    # else:
-    #     # create the first pre-release version
-    #     new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro + 1}.dev0")
 
     # check that the number of components is correct
     expected_components: int = 3 if new_version.is_prerelease else 2
