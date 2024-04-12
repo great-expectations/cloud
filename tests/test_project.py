@@ -219,14 +219,26 @@ class BumpVersionParams:
             latest_pre_release_version=Version("20240411.1.dev2"),
             current_date="20240411",
         ).params(),
+        # second standard release from release
+        BumpVersionParams(
+            id="standard 20240411.1 -> 20240411.2",
+            version_on_main=Version("20240411.1"),
+            expected_version=Version("20240411.2"),
+            pre_release=False,
+            latest_version=Version("20240411.1"),
+            latest_pre_release_version=Version("20240411.2.dev0"),
+            current_date="20240411",
+        ).params(),
+        BumpVersionParams(
+            id="standard 20240411.1 -> 20240411.2",
+            version_on_main=Version("20240411.1"),
+            expected_version=Version("20240411.2"),
+            pre_release=False,
+            latest_version=Version("20240411.1"),
+            latest_pre_release_version=Version("20240410.0.dev0"),
+            current_date="20240411",
+        ).params(),
         # TODO: Enable the below after adding the missing params
-        # # 7. test bump_version for second standard release from release
-        # param(
-        #     Version("20240411.1"),
-        #     Version("20240411.2"),
-        #     False,
-        #     id="standard 20240411.1 -> 20240411.2",
-        # ),
         # # 8. test bump_version for transition from semver style to date based versioning
         # param(
         #     Version("0.0.1"),
