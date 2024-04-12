@@ -170,10 +170,6 @@ def _get_latest_versions() -> tuple[Version, Version]:
     return max(pre_releases), max(releases)
 
 
-def _get_current_date() -> str:
-    return datetime.date.today().strftime("%Y%m%d")  # noqa: DTZ011 # timezone agnostic, local time OK.
-
-
 def _new_release_version(
     latest_version: Version,
     current_date: str,
@@ -239,6 +235,21 @@ def bump_version(
     latest_pre_release_version: Version,
     current_date: str,
 ) -> Version:
+    """Generate the new package version.
+
+    Args:
+        pre_release: Whether to generate a pre-release version or standard.
+        latest_version: The latest release version on pypi.
+        latest_pre_release_version: The latest pre-release version on pypi.
+        current_date: The current date in the format YYYYMMDD.
+
+    Returns:
+        The new version.
+
+    Raises:
+        AssertionError: If the number of version components is not as expected.
+        PreReleaseVersionError: If the new pre-release version could not be determined. This should never happen.
+    """
     if pre_release:
         new_version = _new_pre_release_version(
             latest_version=latest_version,
@@ -292,7 +303,7 @@ def _version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> No
         pre_release=pre,
         latest_version=latest_release_version,
         latest_pre_release_version=latest_pre_release_version,
-        current_date=_get_current_date(),
+        current_date=datetime.date.today().strftime("%Y%m%d"),  # noqa: DTZ011 # timezone agnostic, local time OK.
     )
     _update_version(new_version)
     print(f"\nnew version: \t{new_version}")
