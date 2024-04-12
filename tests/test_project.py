@@ -6,7 +6,7 @@ import re
 import warnings
 from dataclasses import dataclass
 from pprint import pformat as pf
-from typing import Any, Final, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Final, Iterable, Mapping
 
 import pytest
 import tomlkit
@@ -14,6 +14,9 @@ from packaging.version import Version
 from pytest import param
 from ruamel.yaml import YAML
 from tasks import bump_version  # local invoke tasks.py module
+
+if TYPE_CHECKING:
+    from pytest.mark.structures import ParameterSet
 
 yaml = YAML(typ="safe")
 
@@ -90,7 +93,7 @@ class BumpVersionParams:
     latest_pre_release_version: Version
     current_date: str
 
-    def params(self):
+    def params(self) -> ParameterSet:
         return param(
             self.expected_version,
             self.pre_release,
