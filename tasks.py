@@ -180,9 +180,9 @@ def _new_release_version(
     latest_pre_release_version: Version,
     current_date: str,
 ) -> Version:
-    proposed_version = Version(_get_current_date())
+    proposed_version = Version(current_date)
     if proposed_version > latest_version:
-        return proposed_version
+        return Version(f"{proposed_version.major}.0")
     else:
         return Version(f"{latest_version.major}.{latest_version.minor + 1}")
 
