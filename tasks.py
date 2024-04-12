@@ -175,9 +175,7 @@ def _get_current_date() -> str:
 
 
 def _new_release_version(
-    version_: Version,
     latest_version: Version,
-    latest_pre_release_version: Version,
     current_date: str,
 ) -> Version:
     proposed_version = Version(current_date)
@@ -188,7 +186,6 @@ def _new_release_version(
 
 
 def _new_pre_release_version(
-    version_: Version,
     latest_version: Version,
     latest_pre_release_version: Version,
     current_date: str,
@@ -216,8 +213,6 @@ def _new_pre_release_version(
         new_version = Version(f"{current_date}.1.dev0")
         return new_version
 
-    # TODO: Handle intervening components if they already exist
-
     # Case where the latest pre-release was on an earlier date
     if latest_pre_release_version.major < int(current_date):
         new_version = Version(f"{current_date}.dev0")
@@ -231,21 +226,19 @@ def _new_pre_release_version(
 
 
 def bump_version(
-    # TODO: Do I need all these params? Can I remove _version?
-    version_: Version,
+    pre_release: bool,
     latest_version: Version,
     latest_pre_release_version: Version,
-    pre_release: bool,
     current_date: str,
 ) -> Version:
     if pre_release:
         new_version = _new_pre_release_version(
-            version_, latest_version, latest_pre_release_version, current_date
+            latest_version=latest_version,
+            latest_pre_release_version=latest_pre_release_version,
+            current_date=current_date,
         )
     else:
-        new_version = _new_release_version(
-            version_, latest_version, latest_pre_release_version, current_date
-        )
+        new_version = _new_release_version(latest_version=latest_version, current_date=current_date)
 
     # if not pre_release:
     #     # standard release - remove the dev component if it exists
@@ -302,7 +295,6 @@ def _version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> No
     print("\n  bumping version ...", end=" ")
 
     new_version = bump_version(
-        local_version,
         pre_release=pre,
         latest_version=latest_release_version,
         latest_pre_release_version=latest_pre_release_version,

@@ -280,7 +280,6 @@ def test_bump_version(
     current_date: str,
 ):
     bumped_version = bump_version(
-        version_=version_on_main,
         latest_version=latest_version,
         latest_pre_release_version=latest_pre_release_version,
         pre_release=pre_release,
