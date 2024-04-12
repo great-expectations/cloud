@@ -12,6 +12,7 @@ import requests
 import tomlkit
 from packaging.version import Version
 from tomlkit import TOMLDocument
+from typing_extensions import override
 
 if TYPE_CHECKING:
     from invoke.context import Context
@@ -182,7 +183,7 @@ def _new_release_version(
         # Always bump if it is a new date
         return Version(f"{proposed_version.major}.0")
     else:
-        # Bump the minor version onlyd if it is the same date
+        # Bump the minor version only if it is the same date
         return Version(f"{latest_version.major}.{latest_version.minor + 1}")
 
 
@@ -195,6 +196,7 @@ class PreReleaseVersionError(Exception):
         self.latest_pre_release_version = latest_pre_release_version
         self.current_date = current_date
 
+    @override
     def __str__(self) -> str:
         return f"{super().__str__()} latest_version: {self.latest_version} latest_pre_release_version: {self.latest_pre_release_version} current_date: {self.current_date}"
 
@@ -206,8 +208,9 @@ def _new_pre_release_version(
 ) -> Version:
     # Case where the latest pre-release is ahead of the latest version e.g. the next day
     if latest_pre_release_version > latest_version:
+        current_dev_version = latest_pre_release_version.dev or 0
         return Version(
-            f"{latest_pre_release_version.major}.{latest_pre_release_version.minor}.dev{latest_pre_release_version.dev + 1}"
+            f"{latest_pre_release_version.major}.{latest_pre_release_version.minor}.dev{current_dev_version + 1}"
         )
     # Case where the latest pre-release was on the same date and there was already a release on that date
     elif latest_version.major == int(current_date) and latest_version.minor:
@@ -222,6 +225,7 @@ def _new_pre_release_version(
         new_version = Version(f"{current_date}.0.dev0")
         return new_version
     else:
+        # We should never get here
         raise PreReleaseVersionError(
             latest_version=latest_version,
             latest_pre_release_version=latest_pre_release_version,
