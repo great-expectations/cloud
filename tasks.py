@@ -274,17 +274,19 @@ def _update_version(version_: Version | str) -> None:
 def _version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> None:
     """Bump project version and release to pypi."""
     local_version = _get_local_version()
-    print(f"local: \t\t{local_version}")
+    print(f"local was: \t\t\t{local_version}")
     latest_pre_release_version, latest_release_version = _get_latest_versions()
-    print(f"pypi latest: \t{latest_release_version}")
+    print(f"pypi latest release: \t\t{latest_release_version}")
+    print(f"pypi latest pre-release: \t{latest_pre_release_version}")
 
+    release_type = "standard release" if standard else "pre-release"
     if standard:
         pre = False
     elif not pre:
         # if not explicitly set to standard release, default to pre-release
         pre = True
 
-    print("\n  bumping version ...", end=" ")
+    print(f"\nbumping version ({release_type}) ...", end=" ")
 
     new_version = bump_version(
         pre_release=pre,
@@ -294,7 +296,9 @@ def _version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> No
     )
     _update_version(new_version)
     print(f"\nnew version: \t{new_version}")
-    print(f"\n✅ {new_version} will be published to pypi on next merge to main")
+    print(
+        f"\n✅ {new_version} will be published to pypi and dockerhub when these changes are merged into main."
+    )
 
 
 @invoke.task(
