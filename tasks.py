@@ -195,6 +195,11 @@ def _new_pre_release_version(
 ) -> Version:
     # TODO: This logic should be refactored to be more readable & to reduce cyclomatic complexity.
 
+    if latest_pre_release_version > latest_version:
+        return Version(
+            f"{latest_pre_release_version.major}.{latest_pre_release_version.minor}.dev{latest_pre_release_version.dev + 1}"
+        )
+
     if latest_version.major == int(current_date) and latest_version.minor:
         if (
             latest_pre_release_version.major == int(current_date)
