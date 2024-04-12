@@ -84,7 +84,6 @@ class BumpVersionParams:
     """Model for bump_version function test cases."""
 
     id: str
-    version_on_main: Version
     expected_version: Version
     pre_release: bool
     latest_version: Version
@@ -93,7 +92,6 @@ class BumpVersionParams:
 
     def params(self):
         return param(
-            self.version_on_main,
             self.expected_version,
             self.pre_release,
             self.latest_version,
@@ -105,7 +103,6 @@ class BumpVersionParams:
 
 @pytest.mark.parametrize(
     [
-        "version_on_main",
         "expected_version",
         "pre_release",
         "latest_version",
@@ -116,7 +113,6 @@ class BumpVersionParams:
         # standard release
         BumpVersionParams(
             id="standard release from release on new date 20240410.0 -> 20240411.0",
-            version_on_main=Version("20240410.0"),
             expected_version=Version("20240411.0"),
             pre_release=False,
             latest_version=Version("20240410.0"),
@@ -125,7 +121,6 @@ class BumpVersionParams:
         ).params(),
         BumpVersionParams(
             id="standard release from pre on same date 20240411.0.dev0 -> 20240411.0",
-            version_on_main=Version("20240411.0.dev0"),
             expected_version=Version("20240411.0"),
             pre_release=False,
             latest_version=Version("20240410.0"),
@@ -135,7 +130,6 @@ class BumpVersionParams:
         # pre-release
         BumpVersionParams(
             id="pre-release from pre on same date 20240411.0.dev0 -> 20240411.0.dev1",
-            version_on_main=Version("20240411.0.dev0"),
             expected_version=Version("20240411.0.dev1"),
             pre_release=True,
             latest_version=Version("20240410.0"),
@@ -144,7 +138,6 @@ class BumpVersionParams:
         ).params(),
         BumpVersionParams(
             id="pre-release from pre on prior date 20240410.0.dev3 -> 20240411.0.dev0",
-            version_on_main=Version("20240410.0.dev3"),
             expected_version=Version("20240411.0.dev0"),
             pre_release=True,
             latest_version=Version("20240410.0"),
@@ -154,7 +147,6 @@ class BumpVersionParams:
         # standard release to pre-release
         BumpVersionParams(
             id="pre-release from standard on prior date 20240410.0 -> 20240411.0.dev0",
-            version_on_main=Version("20240410.0"),
             expected_version=Version("20240411.0.dev0"),
             pre_release=True,
             latest_version=Version("20240410.0"),
@@ -163,7 +155,6 @@ class BumpVersionParams:
         ).params(),
         BumpVersionParams(
             id="pre-release from standard on same date 20240411.0 -> 20240411.1.dev0",
-            version_on_main=Version("20240411.0"),
             expected_version=Version("20240411.1.dev0"),
             pre_release=True,
             latest_version=Version("20240411.0"),
@@ -173,7 +164,6 @@ class BumpVersionParams:
         # second standard release to pre-release
         BumpVersionParams(
             id="pre-release from second standard release 20240411.1 -> 20240411.2.dev0",
-            version_on_main=Version("20240411.1"),
             expected_version=Version("20240411.2.dev0"),
             pre_release=True,
             latest_version=Version("20240411.1"),
@@ -183,7 +173,6 @@ class BumpVersionParams:
         # second pre-release from second release with pre-release
         BumpVersionParams(
             id="pre-release from second release with pre-release 20240411.2.dev0 -> 20240411.2.dev1",
-            version_on_main=Version("20240411.2.dev0"),
             expected_version=Version("20240411.2.dev1"),
             pre_release=True,
             latest_version=Version("20240411.1"),
@@ -193,7 +182,6 @@ class BumpVersionParams:
         # Pre-release after release
         BumpVersionParams(
             id="pre-release after release same day (with prior pre release) 20240411.0 -> 20240411.1.dev0",
-            version_on_main=Version("20240411.0"),
             expected_version=Version("20240411.1.dev0"),
             pre_release=True,
             latest_version=Version("20240411.0"),
@@ -204,7 +192,6 @@ class BumpVersionParams:
         # second standard release from pre-release
         BumpVersionParams(
             id="second standard release from pre-release 20240411.1.dev2 -> 20240411.1",
-            version_on_main=Version("20240411.1.dev2"),
             expected_version=Version("20240411.1"),
             pre_release=False,
             latest_version=Version("20240411.0"),
@@ -214,17 +201,15 @@ class BumpVersionParams:
         # second standard release from release
         BumpVersionParams(
             id="second standard release from release (pre release same day) 20240411.1 -> 20240411.2",
-            version_on_main=Version("20240411.1"),
             expected_version=Version("20240411.2"),
             pre_release=False,
             latest_version=Version("20240411.1"),
-            # Pre release from the same day:
+            # Pre-release from the same day:
             latest_pre_release_version=Version("20240411.2.dev0"),
             current_date="20240411",
         ).params(),
         BumpVersionParams(
             id="second standard release from release (pre release prior day) 20240411.1 -> 20240411.2",
-            version_on_main=Version("20240411.1"),
             expected_version=Version("20240411.2"),
             pre_release=False,
             latest_version=Version("20240411.1"),
@@ -235,7 +220,6 @@ class BumpVersionParams:
         # transition from semver style to date based versioning
         BumpVersionParams(
             id="standard from release semver to date 0.0.1 -> 20240411.0",
-            version_on_main=Version("0.0.1"),
             expected_version=Version("20240411.0"),
             pre_release=False,
             latest_version=Version("0.0.1"),
@@ -244,16 +228,14 @@ class BumpVersionParams:
         ).params(),
         BumpVersionParams(
             id="standard from pre-release semver to date 0.0.1.dev1 -> 20240411.0",
-            version_on_main=Version("0.0.1.dev1"),
             expected_version=Version("20240411.0"),
             pre_release=False,
             latest_version=Version("0.0.1"),
-            latest_pre_release_version=Version("20240410.1.dev0"),
+            latest_pre_release_version=Version("0.0.1.dev1"),
             current_date="20240411",
         ).params(),
         BumpVersionParams(
             id="pre-release from release semver 0.0.1 -> 20240411.0.dev0",
-            version_on_main=Version("0.0.1"),
             expected_version=Version("20240411.0.dev0"),
             pre_release=True,
             latest_version=Version("0.0.1"),
@@ -262,7 +244,6 @@ class BumpVersionParams:
         ).params(),
         BumpVersionParams(
             id="pre-release from pre-release semver 0.0.1.dev1 -> 20240411.0.dev0",
-            version_on_main=Version("0.0.1.dev1"),
             expected_version=Version("20240411.0.dev0"),
             pre_release=True,
             latest_version=Version("0.0.1"),
@@ -272,7 +253,6 @@ class BumpVersionParams:
     ],
 )
 def test_bump_version(
-    version_on_main: Version,
     expected_version: Version,
     pre_release: bool,
     latest_version: Version,
@@ -286,8 +266,11 @@ def test_bump_version(
         current_date=current_date,
     )
     assert (
-        bumped_version > version_on_main
+        bumped_version > latest_version
     ), "bumped version should be greater than the initial version"
+    assert (
+        bumped_version > latest_pre_release_version
+    ), "bumped version should be greater than the latest pre-release version"
     assert bumped_version == expected_version, f"Expected {expected_version}, got {bumped_version}"
 
 
