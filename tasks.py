@@ -207,6 +207,9 @@ def _new_pre_release_version(
         else:
             new_version = Version(f"{current_date}.{latest_version.minor + 1}.dev0")
             return new_version
+    elif latest_version.major == int(current_date):
+        new_version = Version(f"{current_date}.1.dev0")
+        return new_version
 
     # TODO: Handle intervening components if they already exist
 
@@ -223,6 +226,7 @@ def _new_pre_release_version(
 
 
 def bump_version(
+    # TODO: Do I need all these params? Can I remove _version?
     version_: Version,
     latest_version: Version,
     latest_pre_release_version: Version,
