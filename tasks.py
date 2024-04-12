@@ -187,6 +187,19 @@ def _new_release_version(
         return Version(f"{latest_version.major}.{latest_version.minor + 1}")
 
 
+class PreReleaseVersionError(Exception):
+    def __init__(
+        self, latest_version: Version, latest_pre_release_version: Version, current_date: str
+    ):
+        super().__init__("Could not determine the new pre-release version.")
+        self.latest_version = latest_version
+        self.latest_pre_release_version = latest_pre_release_version
+        self.current_date = current_date
+
+    def __str__(self) -> str:
+        return f"{super().__str__()} latest_version: {self.latest_version} latest_pre_release_version: {self.latest_pre_release_version} current_date: {self.current_date}"
+
+
 def _new_pre_release_version(
     latest_version: Version,
     latest_pre_release_version: Version,
@@ -195,36 +208,26 @@ def _new_pre_release_version(
     # TODO: This logic should be refactored to be more readable & to reduce cyclomatic complexity.
 
     if latest_pre_release_version > latest_version:
+        # Case where the latest pre-release is ahead of the latest version e.g. the next day
         return Version(
             f"{latest_pre_release_version.major}.{latest_pre_release_version.minor}.dev{latest_pre_release_version.dev + 1}"
         )
-
-    if latest_version.major == int(current_date) and latest_version.minor:
-        if (
-            latest_pre_release_version.major == int(current_date)
-            and latest_pre_release_version.minor == latest_version.minor
-        ):
-            new_version = Version(
-                f"{current_date}.{latest_version.minor}.dev{latest_pre_release_version.dev + 1}"
-            )
-            return new_version
-        else:
-            new_version = Version(f"{current_date}.{latest_version.minor + 1}.dev0")
-            return new_version
+    elif latest_version.major == int(current_date) and latest_version.minor:
+        new_version = Version(f"{current_date}.{latest_version.minor + 1}.dev0")
+        return new_version
     elif latest_version.major == int(current_date):
         new_version = Version(f"{current_date}.1.dev0")
         return new_version
-
     # Case where the latest pre-release was on an earlier date
-    if latest_pre_release_version.major < int(current_date):
+    elif latest_pre_release_version.major < int(current_date):
         new_version = Version(f"{current_date}.0.dev0")
+        return new_version
     else:
-        # Case with no intervening .# component
-        new_version = Version(
-            f"{latest_pre_release_version.major}.{latest_pre_release_version.minor}.dev{latest_pre_release_version.dev + 1}"
+        raise PreReleaseVersionError(
+            latest_version=latest_version,
+            latest_pre_release_version=latest_pre_release_version,
+            current_date=current_date,
         )
-
-    return new_version
 
 
 def bump_version(
