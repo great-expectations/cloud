@@ -215,11 +215,11 @@ def _new_pre_release_version(
 
     # Case where the latest pre-release was on an earlier date
     if latest_pre_release_version.major < int(current_date):
-        new_version = Version(f"{current_date}.dev0")
+        new_version = Version(f"{current_date}.0.dev0")
     else:
         # Case with no intervening .# component
         new_version = Version(
-            f"{latest_pre_release_version.major}.dev{latest_pre_release_version.dev + 1}"
+            f"{latest_pre_release_version.major}.{latest_pre_release_version.minor}.dev{latest_pre_release_version.dev + 1}"
         )
 
     return new_version
@@ -256,12 +256,11 @@ def bump_version(
     #     new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro + 1}.dev0")
 
     # check that the number of components is correct
-    # TODO: Reenable this check
-    # expected_components: int = 4 if new_version.is_prerelease else 3
-    # components = str(new_version).split(".")
-    # assert (
-    #     len(components) == expected_components
-    # ), f"expected {expected_components} components; got {components}"
+    expected_components: int = 3 if new_version.is_prerelease else 2
+    components = str(new_version).split(".")
+    assert (
+        len(components) == expected_components
+    ), f"expected {expected_components} components; got {components}"
     return new_version
 
 

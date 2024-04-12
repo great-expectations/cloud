@@ -272,6 +272,9 @@ def test_bump_version(
         bumped_version > latest_pre_release_version
     ), "bumped version should be greater than the latest pre-release version"
     assert bumped_version == expected_version, f"Expected {expected_version}, got {bumped_version}"
+    assert (
+        str(bumped_version) == str(expected_version)
+    ), f"Version string representation should match expected {expected_version!s} got {bumped_version!s}"
 
 
 @pytest.fixture
