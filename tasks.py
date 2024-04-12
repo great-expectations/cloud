@@ -155,14 +155,13 @@ def _get_latest_version() -> Version:
     return version
 
 
-@functools.lru_cache(maxsize=2)
+@functools.lru_cache(maxsize=1)
 def _get_all_versions() -> list[Version]:
     r = requests.get("https://pypi.org/pypi/great-expectations-cloud/json", timeout=10)
     r.raise_for_status()
     return [Version(v) for v in r.json()["releases"].keys()]
 
 
-@functools.lru_cache(maxsize=2)
 def _get_latest_versions() -> tuple[Version, Version]:
     all_versions = _get_all_versions()
     pre_releases = sorted(v for v in all_versions if v.is_prerelease)
@@ -205,16 +204,16 @@ def _new_pre_release_version(
     latest_pre_release_version: Version,
     current_date: str,
 ) -> Version:
-    # TODO: This logic should be refactored to be more readable & to reduce cyclomatic complexity.
-
+    # Case where the latest pre-release is ahead of the latest version e.g. the next day
     if latest_pre_release_version > latest_version:
-        # Case where the latest pre-release is ahead of the latest version e.g. the next day
         return Version(
             f"{latest_pre_release_version.major}.{latest_pre_release_version.minor}.dev{latest_pre_release_version.dev + 1}"
         )
+    # Case where the latest pre-release was on the same date and there was already a release on that date
     elif latest_version.major == int(current_date) and latest_version.minor:
         new_version = Version(f"{current_date}.{latest_version.minor + 1}.dev0")
         return new_version
+    # Case where the latest pre-release was on the same date
     elif latest_version.major == int(current_date):
         new_version = Version(f"{current_date}.1.dev0")
         return new_version
