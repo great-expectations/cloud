@@ -187,3 +187,12 @@ A new docker tag will also be generated and pushed to [Docker Hub](https://hub.d
 #### Releases
 
 Releases will be completed on a regular basis by the maintainers of the project and with any release of [GX Core](https://github.com/great-expectations/great_expectations)
+
+For maintainers, to create a release, run the following command:
+
+```console
+invoke release
+```
+
+This will create a new release version and push it to PyPi.
+A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
