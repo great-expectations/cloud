@@ -325,11 +325,11 @@ def version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> Non
 
 @invoke.task(name="release", aliases=("version-bump --standard",))
 def release(ctx: Context) -> None:
-    """Bump project release version and release to pypi."""
+    """Bump project release version for release to pypi and build image for dockerhub."""
     _version_bump(ctx, pre=False, standard=True)
 
 
 @invoke.task(name="pre-release", aliases=("version-bump --pre",))
 def prerelease(ctx: Context) -> None:
-    """Bump project pre-release version and release to pypi."""
+    """Bump project pre-release version for release to pypi and build image for dockerhub."""
     _version_bump(ctx, pre=True, standard=False)
