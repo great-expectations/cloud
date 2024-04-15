@@ -12,6 +12,7 @@ import requests
 import tomlkit
 from packaging.version import Version
 from tomlkit import TOMLDocument
+from typing_extensions import override
 
 if TYPE_CHECKING:
     from invoke.context import Context
@@ -185,6 +186,17 @@ def _new_release_version(
         return Version(f"{latest_version.major}.{latest_version.minor + 1}")
 
 
+class PreReleaseVersionError(Exception):
+    def __init__(self, latest_version: Version, current_date: str):
+        super().__init__("Could not determine the new pre-release version.")
+        self.latest_version = latest_version
+        self.current_date = current_date
+
+    @override
+    def __str__(self) -> str:
+        return f"{super().__str__()} latest_version: {self.latest_version} current_date: {self.current_date}"
+
+
 def _new_pre_release_version(
     latest_version: Version,
     current_date: str,
@@ -192,6 +204,7 @@ def _new_pre_release_version(
     # If it is a pre-release on the same day only bump the dev version
     # e.g. 20240411.0.dev0 -> 20240411.0.dev1 (if today is 20240411)
     if latest_version.is_prerelease and str(latest_version.major) == current_date:
+        assert latest_version.dev is not None  # mypy type narrowing
         return Version(f"{latest_version.major}.{latest_version.minor}.dev{latest_version.dev + 1}")
     # If it is a release on the same day, bump the minor version and start a new dev version
     # e.g. 20240411.0 -> 20240411.1.dev0 (if today is 20240411)
@@ -201,6 +214,9 @@ def _new_pre_release_version(
     # e.g. 20240410.0 -> 20240411.0.dev0 (if today is 20240411)
     elif Version(current_date) > latest_version:
         return Version(f"{current_date}.0.dev0")
+    else:
+        # We should never get here
+        raise PreReleaseVersionError(latest_version=latest_version, current_date=current_date)
 
 
 def bump_version(
@@ -220,6 +236,7 @@ def bump_version(
 
     Raises:
         AssertionError: If the number of version components is not as expected.
+        PreReleaseVersionError: If the new pre-release version could not be determined. This should never happen.
     """
     if pre_release:
         new_version = _new_pre_release_version(
