@@ -12,7 +12,6 @@ import requests
 import tomlkit
 from packaging.version import Version
 from tomlkit import TOMLDocument
-from typing_extensions import override
 
 if TYPE_CHECKING:
     from invoke.context import Context
@@ -163,11 +162,11 @@ def _get_all_versions() -> list[Version]:
     return [Version(v) for v in r.json()["releases"].keys()]
 
 
-def _get_latest_versions() -> tuple[Version, Version]:
+def _get_latest_versions() -> tuple[Version, Version, Version]:
     all_versions = _get_all_versions()
     pre_releases = sorted(v for v in all_versions if v.is_prerelease)
     releases = sorted(v for v in all_versions if not v.is_prerelease)
-    return max(pre_releases), max(releases)
+    return max(pre_releases), max(releases), max(all_versions)
 
 
 def _new_release_version(
@@ -183,56 +182,21 @@ def _new_release_version(
         return Version(f"{latest_version.major}.{latest_version.minor + 1}")
 
 
-class PreReleaseVersionError(Exception):
-    def __init__(
-        self, latest_version: Version, latest_pre_release_version: Version, current_date: str
-    ):
-        super().__init__("Could not determine the new pre-release version.")
-        self.latest_version = latest_version
-        self.latest_pre_release_version = latest_pre_release_version
-        self.current_date = current_date
-
-    @override
-    def __str__(self) -> str:
-        return f"{super().__str__()} latest_version: {self.latest_version} latest_pre_release_version: {self.latest_pre_release_version} current_date: {self.current_date}"
-
-
 def _new_pre_release_version(
     latest_version: Version,
-    latest_pre_release_version: Version,
     current_date: str,
 ) -> Version:
-    # Case where the latest pre-release is ahead of the latest version e.g. the next day
-    if latest_pre_release_version > latest_version:
-        current_dev_version = latest_pre_release_version.dev or 0
-        return Version(
-            f"{latest_pre_release_version.major}.{latest_pre_release_version.minor}.dev{current_dev_version + 1}"
-        )
-    # Case where the latest pre-release was on the same date and there was already a release on that date
-    elif latest_version.major == int(current_date) and latest_version.minor:
-        new_version = Version(f"{current_date}.{latest_version.minor + 1}.dev0")
-        return new_version
-    # Case where the latest pre-release was on the same date
-    elif latest_version.major == int(current_date):
-        new_version = Version(f"{current_date}.1.dev0")
-        return new_version
-    # Case where the latest pre-release was on an earlier date
-    elif latest_pre_release_version.major < int(current_date):
-        new_version = Version(f"{current_date}.0.dev0")
-        return new_version
+    if latest_version.is_prerelease:
+        return Version(f"{latest_version.major}.{latest_version.minor}.dev{latest_version.dev + 1}")
+    elif Version(current_date) > latest_version:
+        return Version(f"{current_date}.0.dev0")
     else:
-        # We should never get here
-        raise PreReleaseVersionError(
-            latest_version=latest_version,
-            latest_pre_release_version=latest_pre_release_version,
-            current_date=current_date,
-        )
+        return Version(f"{latest_version.major}.{latest_version.minor + 1}.dev0")
 
 
 def bump_version(
     pre_release: bool,
     latest_version: Version,
-    latest_pre_release_version: Version,
     current_date: str,
 ) -> Version:
     """Generate the new package version.
@@ -240,7 +204,6 @@ def bump_version(
     Args:
         pre_release: Whether to generate a pre-release version or standard.
         latest_version: The latest release version on pypi.
-        latest_pre_release_version: The latest pre-release version on pypi.
         current_date: The current date in the format YYYYMMDD.
 
     Returns:
@@ -253,7 +216,6 @@ def bump_version(
     if pre_release:
         new_version = _new_pre_release_version(
             latest_version=latest_version,
-            latest_pre_release_version=latest_pre_release_version,
             current_date=current_date,
         )
     else:
@@ -286,7 +248,7 @@ def _version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> No
     """Bump project version and release to pypi."""
     local_version = _get_local_version()
     print(f"local was: \t\t\t{local_version}")
-    latest_pre_release_version, latest_release_version = _get_latest_versions()
+    latest_pre_release_version, latest_release_version, latest_version = _get_latest_versions()
     print(f"pypi latest release: \t\t{latest_release_version}")
     print(f"pypi latest pre-release: \t{latest_pre_release_version}")
 
@@ -301,8 +263,7 @@ def _version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> No
 
     new_version = bump_version(
         pre_release=pre,
-        latest_version=latest_release_version,
-        latest_pre_release_version=latest_pre_release_version,
+        latest_version=latest_version,
         current_date=datetime.datetime.now(tz=datetime.timezone.utc).date().strftime("%Y%m%d"),
     )
     _update_version(new_version)
