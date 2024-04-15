@@ -22,8 +22,8 @@ jobs:
               - 'great_expectations_cloud/agent/**'
               - 'poetry.lock'
 
-  check-version-is-bumped:
-    # This job checks that the version in the PR is different from the version in main if the agent has changed.
+  check-version-is-not-bumped:
+    # This job checks that the version in the PR has not been bumped, since we now do that automatically on merge
     needs: check-if-agent-changed
     runs-on: ubuntu-latest
     if: ${{ needs.check-if-agent-changed.outputs.agent_changed == 'true' && github.event_name != 'schedule' }}
@@ -62,10 +62,11 @@ jobs:
         id: main_version
         run: echo "VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
 
-      - name: Check version in PR is not the same as in main
-        if: ${{ steps.pr_version.outputs.VERSION == steps.main_version.outputs.VERSION }}
+      - name: Check version in PR is the same as in main
+        if: ${{ steps.pr_version.outputs.VERSION != steps.main_version.outputs.VERSION }}
         run: |
-          echo "Version in PR is the same as in main. Please bump the version in pyproject.toml."
+          echo "Version in PR is not the same as in main."
+          echo "Please do not bump the version in pyproject.toml as it is now done automatically on merge."
           exit 1
 
   static-analysis:
