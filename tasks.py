@@ -303,7 +303,7 @@ def _version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> No
         pre_release=pre,
         latest_version=latest_release_version,
         latest_pre_release_version=latest_pre_release_version,
-        current_date=datetime.date.today().strftime("%Y%m%d"),  # noqa: DTZ011 # timezone agnostic, local time OK.
+        current_date=datetime.datetime.now(tz=datetime.timezone.utc).date().strftime("%Y%m%d"),
     )
     _update_version(new_version)
     print(f"\nnew version: \t{new_version}")
