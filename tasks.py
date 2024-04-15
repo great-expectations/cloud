@@ -211,7 +211,7 @@ def bump_version(
 
     Args:
         pre_release: Whether to generate a pre-release version or standard.
-        latest_version: The latest release version on pypi.
+        latest_version: The latest version on pypi (pre or standard).
         current_date: The current date in the format YYYYMMDD.
 
     Returns:
@@ -219,7 +219,6 @@ def bump_version(
 
     Raises:
         AssertionError: If the number of version components is not as expected.
-        PreReleaseVersionError: If the new pre-release version could not be determined. This should never happen.
     """
     if pre_release:
         new_version = _new_pre_release_version(
