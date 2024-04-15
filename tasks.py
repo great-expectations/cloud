@@ -173,14 +173,15 @@ def _new_release_version(
     latest_version: Version,
     current_date: str,
 ) -> Version:
+    # Always bump if it is a new date
     proposed_version = Version(current_date)
     if proposed_version > latest_version:
-        # Always bump if it is a new date
         return Version(f"{proposed_version.major}.0")
+    # If the latest version is a pre-release, remove the pre-release tag
     elif latest_version.is_prerelease:
         return Version(f"{latest_version.major}.{latest_version.minor}")
+    # Bump the minor version if it is the same date
     else:
-        # Bump the minor version only if it is the same date
         return Version(f"{latest_version.major}.{latest_version.minor + 1}")
 
 
