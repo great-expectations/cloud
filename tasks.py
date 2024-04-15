@@ -177,6 +177,8 @@ def _new_release_version(
     if proposed_version > latest_version:
         # Always bump if it is a new date
         return Version(f"{proposed_version.major}.0")
+    elif latest_version.is_prerelease:
+        return Version(f"{latest_version.major}.{latest_version.minor}")
     else:
         # Bump the minor version only if it is the same date
         return Version(f"{latest_version.major}.{latest_version.minor + 1}")
@@ -186,12 +188,18 @@ def _new_pre_release_version(
     latest_version: Version,
     current_date: str,
 ) -> Version:
-    if latest_version.is_prerelease:
+    # If it is a pre-release on the same day only bump the dev version
+    # e.g. 20240411.0.dev0 -> 20240411.0.dev1 (if today is 20240411)
+    if latest_version.is_prerelease and str(latest_version.major) == current_date:
         return Version(f"{latest_version.major}.{latest_version.minor}.dev{latest_version.dev + 1}")
+    # If it is a release on the same day, bump the minor version and start a new dev version
+    # e.g. 20240411.0 -> 20240411.1.dev0 (if today is 20240411)
+    elif not latest_version.is_prerelease and str(latest_version.major) == current_date:
+        return Version(f"{latest_version.major}.{latest_version.minor + 1}.dev0")
+    # If the current date is greater than the latest version, start a new dev version with the current date
+    # e.g. 20240410.0 -> 20240411.0.dev0 (if today is 20240411)
     elif Version(current_date) > latest_version:
         return Version(f"{current_date}.0.dev0")
-    else:
-        return Version(f"{latest_version.major}.{latest_version.minor + 1}.dev0")
 
 
 def bump_version(
