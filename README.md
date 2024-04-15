@@ -4,7 +4,6 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/greatexpectations/agent)](https://hub.docker.com/r/greatexpectations/agent)
 [![ci](https://github.com/great-expectations/cloud/actions/workflows/ci.yaml/badge.svg?event=schedule)](https://github.com/great-expectations/cloud/actions/workflows/ci.yaml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/great-expectations/cloud/main.svg)](https://results.pre-commit.ci/latest/github/great-expectations/cloud/main)
-[![coveralls](https://coveralls.io/repos/github/great-expectations/cloud/badge.svg?branch=main)](https://coveralls.io/github/great-expectations/cloud?branch=main)
 [![codecov](https://codecov.io/gh/great-expectations/cloud/graph/badge.svg?token=8WNA5ti8nm)](https://codecov.io/gh/great-expectations/cloud)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
@@ -13,10 +12,13 @@
 ### Python
 
 #### Install
+
 ```console
 pip install great_expectations_cloud
 ```
+
 ##### Optional Dependencies
+
 ```console
 pip install 'great_expectations_cloud[sql]'
 ```
@@ -76,6 +78,7 @@ Common developer tasks are available via `invoke` (defined in `tasks.py`)
 
 To ensure you are using the latest version of the core and development dependencies run `poetry install --sync`.
 Also available as an invoke task.
+
 ```console
 invoke deps
 ```
@@ -85,27 +88,18 @@ invoke deps
 The dependencies installed in our CI and the docker build step are determined by the [poetry.lock file](https://python-poetry.org/docs/basic-usage/#installing-with-poetrylock).
 
 [To update only a specific dependency](https://python-poetry.org/docs/cli/#update) (such as `great_expectations`) ...
+
 ```console
 poetry update great_expectations
 ```
 
 [To resolve and update all dependencies ...](https://python-poetry.org/docs/cli/#lock)
+
 ```console
 poetry lock
 ```
 
 In either case, the updated `poetry.lock` file must be committed and merged to main.
-
-
-#### Release to PyPI and Docker
-
-To release a new version to PyPI the version must be incremented.
-New versions are automatically published to PyPI when merging to `main`.
-```console
-invoke version-bump
-```
-
-A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent).
 
 #### Building and Running the GX Agent Image
 
@@ -120,7 +114,9 @@ Running the GX Agent:
 ```
 invoke docker --run
 ```
+
 or
+
 ```
 docker run --env GX_CLOUD_ACCESS_TOKEN="<GX_TOKEN>" --env GX_CLOUD_ORGANIZATION_ID="<GX_ORG_ID>" gx/agent
 ```
@@ -129,14 +125,74 @@ Now go into GX Cloud and issue commands for the GX Agent to run, such as generat
 
 > Note if you are pushing out a new image update the image tag version in `containerize-agent.yaml`. The image will be built and pushed out via GitHub Actions.
 
-
 #### Example Data
+
 The contents from [/examples/agent/data](/examples/agent/data/) will be copied to `/data` for the docker container.
 
-
 #### Adding an action to the agent
+
 1. Make a new action in `great_expectations_cloud/agent/actions/` in a separate file.
 2. Register your action in the file it was created in using `great_expectations_cloud.agent.event_handler.register_event_action()`. Register for the major version of GX Core that the action applies to, e.g. `register_event_action("1", RunCheckpointEvent, RunCheckpointAction)` registers the action for major version 1 of GX Core (e.g. 1.0.0).
 3. Import your action in `great_expectations_cloud/agent/actions/__init__.py`
 
 Note: The agent is core-version specific but this registration mechanism allows us to preemptively work on actions for future versions of GX Core while still supporting the existing latest major version.
+
+### Release Process
+
+#### Versioning
+
+This is the version that will be used for the docker image tag as well.
+
+_Standard Release_:
+The versioning scheme is `YYYYMMDD.{release_number}` where:
+
+- the date is the date of the release
+- the release number starts at 0 for the first release of the day
+- the release number is incremented for each release within the same day
+
+For example: `20240403.0`
+
+_Pre-release_:
+The versioing scheme is `YYYYMMDD.{release_number}.dev{dev_number}`
+
+- the date is the date of the release
+- the dev number starts at 0 for the first pre-release of the day
+- the dev number is incremented for each pre-release within the same day
+- the release number is the release that this pre-release is for
+
+For example: `20240403.0.dev0` is the first pre-release for the `20240403.0` release.
+
+For example, imagine the following sequence of releases given for a day with two releases:
+
+- `20240403.0.dev0`
+- `20240403.0.dev1`
+- `20240403.0`
+- `20240403.1.dev0`
+- `20240403.1`
+
+There can be days with no standard releases, only pre-releases or days with no pre-release or standard release at all.
+
+#### Pre-releases
+
+Pre-releases will be completed automatically with each merge to the main branch
+in the future. For now, to create a pre-release, run the following command:
+
+```console
+invoke pre-release
+```
+
+This will create a new pre-release version and push it to PyPi.
+A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
+
+#### Releases
+
+Releases will be completed on a regular basis by the maintainers of the project and with any release of [GX Core](https://github.com/great-expectations/great_expectations)
+
+For maintainers, to create a release, run the following command:
+
+```console
+invoke release
+```
+
+This will create a new release version and push it to PyPi.
+A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)

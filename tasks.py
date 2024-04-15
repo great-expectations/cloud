@@ -193,14 +193,8 @@ def _update_version(version_: Version | str) -> None:
         tomlkit.dump(toml_doc, f_out)
 
 
-@invoke.task(
-    help={
-        "pre": "Bump the pre-release version (Default)",
-        "standard": "Bump the non pre-release micro version",
-    }
-)
-def version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> None:
-    """Bump project version."""
+def _version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> None:
+    """Bump project version and release to pypi."""
     local_version = _get_local_version()
     print(f"local: \t\t{local_version}")
     latest_version = _get_latest_version()
@@ -217,3 +211,26 @@ def version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> Non
     _update_version(new_version)
     print(f"\nnew version: \t{new_version}")
     print(f"\n✅ {new_version} will be published to pypi on next merge to main")
+
+
+@invoke.task(
+    help={
+        "pre": "Bump the pre-release version (Default)",
+        "standard": "Bump the non pre-release micro version",
+    },
+)
+def version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> None:
+    """Bump project version and release to pypi."""
+    _version_bump(ctx, pre=pre, standard=standard)
+
+
+@invoke.task(name="release", aliases=["version-bump --standard"])
+def release(ctx: Context) -> None:
+    """Bump project release version and release to pypi."""
+    _version_bump(ctx, pre=False, standard=True)
+
+
+@invoke.task(name="pre-release", aliases=["version-bump --pre"])
+def prerelease(ctx: Context) -> None:
+    """Bump project pre-release version and release to pypi."""
+    _version_bump(ctx, pre=True, standard=False)
