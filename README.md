@@ -176,7 +176,8 @@ There can be days with no standard releases, only pre-releases or days with no p
 
 Pre-releases will be completed automatically with each merge to the main branch
 in the future. For now, to create a pre-release, run the following command to update the version in `pyproject.toml`
-and then merge along with your changes:
+and then merge along with your changes. This should be done in each PR that is merged to `main` that includes
+changes to the agent or it's dependencies:
 
 ```console
 invoke pre-release
