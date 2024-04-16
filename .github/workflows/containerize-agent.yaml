@@ -119,8 +119,8 @@ jobs:
             greatexpectations/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
             258143015559.dkr.ecr.us-east-1.amazonaws.com/gx/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
 
-      - name: Push Pre-Release to Docker Hub and Internal ECR
-        if: ${{ steps.get_is_release.outputs.IS_RELEASE == 'false' }}
+      - name: Push Release to Docker Hub and Internal ECR
+        if: ${{ steps.get_is_release.outputs.IS_RELEASE == 'true' }}
         uses: docker/build-push-action@v5
         with:
           context: .
