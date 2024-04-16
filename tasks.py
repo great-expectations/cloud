@@ -269,7 +269,9 @@ def _update_version(version_: Version | str) -> None:
         tomlkit.dump(toml_doc, f_out)
 
 
-def _version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> None:
+def _version_bump(
+    ctx: Context, pre: bool = False, standard: bool = False, dry_run: bool = False
+) -> None:
     """Bump project version and release to pypi."""
     local_version = _get_local_version()
     print(f"local was: \t\t\t{local_version}")
@@ -291,31 +293,50 @@ def _version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> No
         latest_version=latest_version,
         current_date=datetime.datetime.now(tz=datetime.timezone.utc).date().strftime("%Y%m%d"),
     )
-    _update_version(new_version)
     print(f"\nnew version: \t{new_version}")
-    print(
-        f"\n✅ {new_version} will be published to pypi and dockerhub when these changes are merged into main."
-    )
+
+    if dry_run:
+        print("\n🚨 Dry run mode. No changes were made.")
+    else:
+        print(
+            f"\n✅ {new_version} will be published to pypi and dockerhub when these changes are merged into main."
+        )
+        _update_version(new_version)
 
 
 @invoke.task(
     help={
         "pre": "Bump the pre-release version (Default)",
         "standard": "Bump the non pre-release micro version",
+        "dry-run": "Don't bump the version, just print the new version and exit.",
     },
 )
-def version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> None:
+def version_bump(
+    ctx: Context, pre: bool = False, standard: bool = False, dry_run: bool = False
+) -> None:
     """Bump project version and release to pypi."""
-    _version_bump(ctx, pre=pre, standard=standard)
+    _version_bump(ctx, pre=pre, standard=standard, dry_run=dry_run)
 
 
-@invoke.task(name="release", aliases=("version-bump --standard",))
-def release(ctx: Context) -> None:
+@invoke.task(
+    name="release",
+    aliases=("version-bump --standard",),
+    help={
+        "dry-run": "Don't bump the version, just print the new version and exit.",
+    },
+)
+def release(ctx: Context, dry_run: bool = False) -> None:
     """Bump project release version for release to pypi and build image for dockerhub."""
-    _version_bump(ctx, pre=False, standard=True)
+    _version_bump(ctx, pre=False, standard=True, dry_run=dry_run)
 
 
-@invoke.task(name="pre-release", aliases=("version-bump --pre",))
-def prerelease(ctx: Context) -> None:
+@invoke.task(
+    name="pre-release",
+    aliases=("version-bump --pre",),
+    help={
+        "dry-run": "Don't bump the version, just print the new version and exit.",
+    },
+)
+def prerelease(ctx: Context, dry_run: bool = False) -> None:
     """Bump project pre-release version for release to pypi and build image for dockerhub."""
-    _version_bump(ctx, pre=True, standard=False)
+    _version_bump(ctx, pre=True, standard=False, dry_run=dry_run)
