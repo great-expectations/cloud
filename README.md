@@ -174,16 +174,21 @@ There can be days with no standard releases, only pre-releases or days with no p
 
 #### Pre-releases
 
-Pre-releases will be completed automatically with each merge to the main branch
-in the future. For now, to create a pre-release, run the following command to update the version in `pyproject.toml`
-and then merge along with your changes. This should be done in each PR that is merged to `main` that includes
-changes to the agent or it's dependencies:
+Pre-releases are completed automatically with each merge to the `main` branch.
+The version is updated in `pyproject.toml` and a pre-release is created on PyPi.
+A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
+
+**Manual Pre-releases**
+
+NOTE: CI will automatically create pre-releases on merges to `main`. Instead of manually creating pre-releases, consider using the CI process. This is only for exceptional cases.
+
+To manually create a pre-release, run the following command to update the version in `pyproject.toml` and then merge it to `main` in a standalone PR:
 
 ```console
 invoke pre-release
 ```
 
-This will create a new pre-release version and push it to PyPi.
+This will create a new pre-release version. On the next merge to `main`, the release will be uploaded to PyPi.
 A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
 
 #### Releases
@@ -197,5 +202,5 @@ merge it to `main` in a standalone PR:
 invoke release
 ```
 
-This will create a new release version and push it to PyPi.
+This will create a new release version. On the next merge to `main`, the release will be uploaded to PyPi.
 A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
