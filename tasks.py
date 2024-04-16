@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import functools
 import logging
 import pathlib
@@ -11,6 +12,7 @@ import requests
 import tomlkit
 from packaging.version import Version
 from tomlkit import TOMLDocument
+from typing_extensions import override
 
 if TYPE_CHECKING:
     from invoke.context import Context
@@ -74,7 +76,7 @@ def lint(ctx: Context, check: bool = False, unsafe_fixes: bool = False) -> None:
 
 
 @invoke.task(
-    aliases=["build"],
+    aliases=("build",),
     help={
         "check": "Lint Dockerfile using hadolint tool",
         "run": "Run the Docker container. Inject .env file",
@@ -116,7 +118,7 @@ def docker(
 
 
 @invoke.task(
-    aliases=["types"],
+    aliases=("types",),
 )
 def type_check(ctx: Context, install_types: bool = False, check: bool = False) -> None:
     """Type check code with mypy"""
@@ -128,7 +130,7 @@ def type_check(ctx: Context, install_types: bool = False, check: bool = False) -
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
-@invoke.task(aliases=["sync"])
+@invoke.task(aliases=("sync",))
 def deps(ctx: Context) -> None:
     """Sync dependencies with poetry lock file"""
     # using --with dev incase poetry changes the default behavior
@@ -140,7 +142,7 @@ def _get_local_version() -> Version:
     return Version(_get_pyproject_tool_dict("poetry")["version"])
 
 
-@invoke.task(aliases=["version"])
+@invoke.task(aliases=("version",))
 def get_version(ctx: Context) -> None:
     """Print the current package version and exit."""
     print(_get_local_version())
@@ -154,24 +156,98 @@ def _get_latest_version() -> Version:
     return version
 
 
-def bump_version(version_: Version, pre_release: bool) -> Version:
-    if not pre_release:
-        # standard release - remove the dev component if it exists
-        if version_.dev:
-            new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro}")
-        else:
-            new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro + 1}")
-    elif version_.dev:
-        # bump an existing pre-release version
-        new_version = Version(
-            f"{version_.major}.{version_.minor}.{version_.micro}.dev{version_.dev + 1}"
+@functools.lru_cache(maxsize=1)
+def _get_all_versions() -> list[Version]:
+    r = requests.get("https://pypi.org/pypi/great-expectations-cloud/json", timeout=10)
+    r.raise_for_status()
+    return [Version(v) for v in r.json()["releases"].keys()]
+
+
+def _get_latest_versions() -> tuple[Version, Version, Version]:
+    all_versions = _get_all_versions()
+    pre_releases = sorted(v for v in all_versions if v.is_prerelease)
+    releases = sorted(v for v in all_versions if not v.is_prerelease)
+    return max(pre_releases), max(releases), max(all_versions)
+
+
+def _new_release_version(
+    latest_version: Version,
+    current_date: str,
+) -> Version:
+    # Always bump if it is a new date
+    proposed_version = Version(current_date)
+    if proposed_version > latest_version:
+        return Version(f"{proposed_version.major}.0")
+    # If the latest version is a pre-release, remove the pre-release tag
+    elif latest_version.is_prerelease:
+        return Version(f"{latest_version.major}.{latest_version.minor}")
+    # Bump the minor version if it is the same date
+    else:
+        return Version(f"{latest_version.major}.{latest_version.minor + 1}")
+
+
+class PreReleaseVersionError(Exception):
+    def __init__(self, latest_version: Version, current_date: str):
+        super().__init__("Could not determine the new pre-release version.")
+        self.latest_version = latest_version
+        self.current_date = current_date
+
+    @override
+    def __str__(self) -> str:
+        return f"{super().__str__()} latest_version: {self.latest_version} current_date: {self.current_date}"
+
+
+def _new_pre_release_version(
+    latest_version: Version,
+    current_date: str,
+) -> Version:
+    # If it is a pre-release on the same day only bump the dev version
+    # e.g. 20240411.0.dev0 -> 20240411.0.dev1 (if today is 20240411)
+    if latest_version.is_prerelease and str(latest_version.major) == current_date:
+        assert latest_version.dev is not None  # mypy type narrowing
+        return Version(f"{latest_version.major}.{latest_version.minor}.dev{latest_version.dev + 1}")
+    # If it is a release on the same day, bump the minor version and start a new dev version
+    # e.g. 20240411.0 -> 20240411.1.dev0 (if today is 20240411)
+    elif not latest_version.is_prerelease and str(latest_version.major) == current_date:
+        return Version(f"{latest_version.major}.{latest_version.minor + 1}.dev0")
+    # If the current date is greater than the latest version, start a new dev version with the current date
+    # e.g. 20240410.0 -> 20240411.0.dev0 (if today is 20240411)
+    elif Version(current_date) > latest_version:
+        return Version(f"{current_date}.0.dev0")
+    else:
+        # We should never get here
+        raise PreReleaseVersionError(latest_version=latest_version, current_date=current_date)
+
+
+def bump_version(
+    pre_release: bool,
+    latest_version: Version,
+    current_date: str,
+) -> Version:
+    """Generate the new package version.
+
+    Args:
+        pre_release: Whether to generate a pre-release version or standard.
+        latest_version: The latest version on pypi (pre or standard).
+        current_date: The current date in the format YYYYMMDD.
+
+    Returns:
+        The new version.
+
+    Raises:
+        AssertionError: If the number of version components is not as expected.
+        PreReleaseVersionError: If the new pre-release version could not be determined. This should never happen.
+    """
+    if pre_release:
+        new_version = _new_pre_release_version(
+            latest_version=latest_version,
+            current_date=current_date,
         )
     else:
-        # create the first pre-release version
-        new_version = Version(f"{version_.major}.{version_.minor}.{version_.micro + 1}.dev0")
+        new_version = _new_release_version(latest_version=latest_version, current_date=current_date)
 
     # check that the number of components is correct
-    expected_components: int = 4 if new_version.is_prerelease else 3
+    expected_components: int = 3 if new_version.is_prerelease else 2
     components = str(new_version).split(".")
     assert (
         len(components) == expected_components
@@ -193,44 +269,74 @@ def _update_version(version_: Version | str) -> None:
         tomlkit.dump(toml_doc, f_out)
 
 
-def _version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> None:
+def _version_bump(
+    ctx: Context, pre: bool = False, standard: bool = False, dry_run: bool = False
+) -> None:
     """Bump project version and release to pypi."""
     local_version = _get_local_version()
-    print(f"local: \t\t{local_version}")
-    latest_version = _get_latest_version()
-    print(f"pypi latest: \t{latest_version}")
+    print(f"local was: \t\t\t{local_version}")
+    latest_pre_release_version, latest_release_version, latest_version = _get_latest_versions()
+    print(f"pypi latest release: \t\t{latest_release_version}")
+    print(f"pypi latest pre-release: \t{latest_pre_release_version}")
 
+    release_type = "standard release" if standard else "pre-release"
     if standard:
         pre = False
     elif not pre:
         # if not explicitly set to standard release, default to pre-release
         pre = True
 
-    print("\n  bumping version ...", end=" ")
-    new_version = bump_version(local_version, pre_release=pre)
-    _update_version(new_version)
+    print(f"\nbumping version ({release_type}) ...", end=" ")
+
+    new_version = bump_version(
+        pre_release=pre,
+        latest_version=latest_version,
+        current_date=datetime.datetime.now(tz=datetime.timezone.utc).date().strftime("%Y%m%d"),
+    )
     print(f"\nnew version: \t{new_version}")
-    print(f"\n✅ {new_version} will be published to pypi on next merge to main")
+
+    if dry_run:
+        print("\n🚨 Dry run mode. No changes were made.")
+    else:
+        print(
+            f"\n✅ {new_version} will be published to pypi and dockerhub when these changes are merged into main."
+        )
+        _update_version(new_version)
 
 
 @invoke.task(
     help={
         "pre": "Bump the pre-release version (Default)",
         "standard": "Bump the non pre-release micro version",
+        "dry-run": "Don't bump the version, just print the new version and exit.",
     },
 )
-def version_bump(ctx: Context, pre: bool = False, standard: bool = False) -> None:
+def version_bump(
+    ctx: Context, pre: bool = False, standard: bool = False, dry_run: bool = False
+) -> None:
     """Bump project version and release to pypi."""
-    _version_bump(ctx, pre=pre, standard=standard)
+    _version_bump(ctx, pre=pre, standard=standard, dry_run=dry_run)
 
 
-@invoke.task(name="release", aliases=["version-bump --standard"])
-def release(ctx: Context) -> None:
-    """Bump project release version and release to pypi."""
-    _version_bump(ctx, pre=False, standard=True)
+@invoke.task(
+    name="release",
+    aliases=("version-bump --standard",),
+    help={
+        "dry-run": "Don't bump the version, just print the new version and exit.",
+    },
+)
+def release(ctx: Context, dry_run: bool = False) -> None:
+    """Bump project release version for release to pypi and build image for dockerhub."""
+    _version_bump(ctx, pre=False, standard=True, dry_run=dry_run)
 
 
-@invoke.task(name="pre-release", aliases=["version-bump --pre"])
-def prerelease(ctx: Context) -> None:
-    """Bump project pre-release version and release to pypi."""
-    _version_bump(ctx, pre=True, standard=False)
+@invoke.task(
+    name="pre-release",
+    aliases=("version-bump --pre",),
+    help={
+        "dry-run": "Don't bump the version, just print the new version and exit.",
+    },
+)
+def prerelease(ctx: Context, dry_run: bool = False) -> None:
+    """Bump project pre-release version for release to pypi and build image for dockerhub."""
+    _version_bump(ctx, pre=True, standard=False, dry_run=dry_run)
