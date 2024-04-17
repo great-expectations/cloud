@@ -25,6 +25,8 @@ class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
             ):  # only test connection for assets that are validated in checkpoint
                 asset = datasource.get_asset(data_asset_name)
                 asset.test_connection()  # raises `TestConnectionError` on failure
+        # is this a REST request?
+        # confirmed: it is
         checkpoint_run_result = self._context.run_checkpoint(
             ge_cloud_id=event.checkpoint_id,
             batch_request={"options": event.splitter_options} if event.splitter_options else None,
