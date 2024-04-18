@@ -41,10 +41,6 @@ class LogLevel(str, enum.Enum):
             self
         )
 
-    # This is required because:
-    # 1. The logger formatter dictConfig must detch by import
-    # 2. The formatter must be parametrized in a way not supported by dictConfig
-
 
 # TODO Add org ID
 def configure_logger(
@@ -68,7 +64,6 @@ def configure_logger(
         _load_cfg_from_file(log_cfg_file)
         return
 
-    # Custom formatter for precise format
     class JSONFormatter(logging.Formatter):
         """
         All custom formatting is done through subclassing this Formatter class
@@ -102,10 +97,6 @@ def configure_logger(
 
         @override
         def format(self, record):
-            # TODO Better way to get this
-            # dict() causing error: 'LogRecord' object is not iterable
-            # dict(record)
-
             # DD ref:
             # {"event": "send_request_body.started request=<Request [b'GET']>", "logger": "httpcore.http11", "level": "debug",
             #  "timestamp": "2024-04-18T10:17:56.411405Z", "service": "unset", "logging_version": "0.2.0", "env": "robs",
@@ -158,6 +149,7 @@ def configure_logger(
 
     logging.config.dictConfig(config_2)
 
+    # TODO Define file loggers as dictConfig as well
     root = logging.getLogger()
 
     if not skip_log_file:
