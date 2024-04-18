@@ -105,7 +105,7 @@ jobs:
         uses: snok/install-poetry@v1
 
       - name: Install dependencies
-        run: poetry install --sync
+        run: poetry install --sync only dev
 
       - run: poetry run invoke docker
 
