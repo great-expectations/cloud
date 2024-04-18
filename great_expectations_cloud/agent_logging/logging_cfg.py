@@ -49,7 +49,7 @@ class LogLevel(str, enum.Enum):
     # 1. The logger formatter dictConfig must detch by import
     # 2. The formatter must be parametrized in a way not supported by dictConfig
 
-
+# TODO Add org ID
 def configure_logger(
     log_level: LogLevel,
     skip_log_file: bool,
@@ -67,67 +67,73 @@ def configure_logger(
     Note: this method should only be called once in the lifecycle of the application.
     """
 
+    if log_cfg_file:
+        _load_cfg_from_file(log_cfg_file)
+        return
+
     # Custom formatter for precise format
     class MyCustomFormatter(logging.Formatter):
+        """
+        All custom formatting is done through subclassing this Formatter class
+        Note: Defined within fn bc parametrization of Formatters is not supported by dictConfig
+
+        LogRecord attribute:
+        'name': 'great_expectations_cloud.agent.agent',
+         'msg': 'GX Agent version: 0.0.47.dev0',
+         'args': (),
+         'levelname': 'ERROR',
+         'levelno': 40,
+         'pathname': '/Users/r/py/cloud/great_expectations_cloud/agent/agent.py',
+         'filename': 'agent.py',
+         'module': 'agent',
+         'exc_info': None,
+         'exc_text': None,
+         'stack_info': None,
+         'lineno': 91,
+         'funcName': '__init__',
+         'created': 1713292929.1121202,
+         'msecs': 112.0,
+         'relativeCreated': 5210.726261138916,
+         'thread': 8276975872,
+         'threadName': 'MainThread',
+         'processName': 'MainProcess',
+         'process': 44923}
+         """
         def __init__(self, fmt=None, datefmt=None, style="%", validate=True, *args, defaults=None):
             super().__init__(fmt, datefmt, style, validate)
 
         @override
         def format(self, record):
-            # message = super().format(record)
-            # formatted_message = f"{message} [env: {self.env}]"
 
             # TODO Better way to get this
-            # dict() causing errors
-            full_record = record.__dict__
+            # dict() causing error: 'LogRecord' object is not iterable
+            # dict(record)
 
+            # DD ref:
             # {"event": "send_request_body.started request=<Request [b'GET']>", "logger": "httpcore.http11", "level": "debug",
             #  "timestamp": "2024-04-18T10:17:56.411405Z", "service": "unset", "logging_version": "0.2.0", "env": "robs",
             #  "dd.trace_id": "0", "dd.span_id": "0"}
 
-            # TODO Use map with fallbacks
             formatted_record = {
-                "msg": full_record.get("msg"),
-                "event": full_record.get("msg"),
-                "level": full_record.get("levelname"),
-                "logger": full_record.get("name"),
-                # TODO Required to be ISO?
-                "timestamp_unix": full_record.get("created"),
+                "event": record.msg,
+                "level": record.levelname,
+                "logger": record.name,
             }
             custom_fields = {
                 "service": SERVICE_NAME,
-                "env": "lala2",
-                "organization_id": "TODO",
-                "timestamp": datetime.datetime.utcfromtimestamp(
-                    formatted_record.get("timestamp_unix")
-                ).isoformat(),
+                "env": environment,
+
             }
-            final_dict = formatted_record | custom_fields
-            """
-            'name': 'great_expectations_cloud.agent.agent',
-     'msg': 'GX Agent version: 0.0.47.dev0',
-     'args': (),
-     'levelname': 'ERROR',
-     'levelno': 40,
-     'pathname': '/Users/r/py/cloud/great_expectations_cloud/agent/agent.py',
-     'filename': 'agent.py',
-     'module': 'agent',
-     'exc_info': None,
-     'exc_text': None,
-     'stack_info': None,
-     'lineno': 91,
-     'funcName': '__init__',
-     'created': 1713292929.1121202,
-     'msecs': 112.0,
-     'relativeCreated': 5210.726261138916,
-     'thread': 8276975872,
-     'threadName': 'MainThread',
-     'processName': 'MainProcess',
-     'process': 44923}
-     """
+            if (time_unix_s:= record.created):
+                custom_fields["timestamp"] = datetime.utcfromtimestamp(
+                time_unix_s
+            ).isoformat(),
+
+            complete_dict = formatted_record | custom_fields
+
             if json_log:
-                return json.dumps(final_dict)
-            return final_dict
+                return json.dumps(complete_dict)
+            return complete_dict
 
     config_2 = {
         "version": 1,
@@ -157,16 +163,7 @@ def configure_logger(
 
     logging.config.dictConfig(config_2)
 
-    return
-    if log_cfg_file:
-        _load_cfg_from_file(log_cfg_file)
-        return
-
     root = logging.getLogger()
-    root.setLevel(log_level.numeric_level)
-
-    structured_log_handler = _get_structured_log_handler(json_log, environment)
-    root.addHandler(structured_log_handler)
 
     if not skip_log_file:
         file_handler = _get_file_handler()
@@ -190,30 +187,6 @@ def _get_file_handler() -> logging.handlers.TimedRotatingFileHandler:
     return file_handler
 
 
-def _get_structured_log_handler(json_log: bool, environment: str) -> logging.StreamHandler[TextIO]:
-    def _add_our_custom_fields(
-        logger: structlog.types.WrappedLogger,
-        method_name: str,
-        event_dict: MutableMapping[str, Any],
-    ) -> MutableMapping[str, Any]:
-        event_dict["service"] = SERVICE_NAME
-        event_dict["env"] = environment
-        # TODO Add org id
-
-        return event_dict
-
-    handler = logging.StreamHandler()
-
-    custom_fmt_processors: list[Processor] = [_add_our_custom_fields]
-
-    formatter = structlog.stdlib.ProcessorFormatter(
-        foreign_pre_chain=_build_pre_processors(custom_fmt_processors),
-        processors=_select_final_output(json_log),
-    )
-    handler.setFormatter(formatter)
-    return handler
-
-
 def _load_cfg_from_file(log_cfg_file: pathlib.Path) -> None:
     if not log_cfg_file.exists():
         raise FileNotFoundError(  # noqa: TRY003 # one off error
@@ -222,42 +195,3 @@ def _load_cfg_from_file(log_cfg_file: pathlib.Path) -> None:
     dict_config = json.loads(log_cfg_file.read_text())
     logging.config.dictConfig(dict_config)
     LOGGER.info(f"Configured agent_logging from file {log_cfg_file}")
-
-
-def _select_final_output(json_log: bool) -> Sequence[Processor]:
-    # remove_processors_meta cleans up the event dict
-    processors: list[Processor] = [structlog.stdlib.ProcessorFormatter.remove_processors_meta]
-    if json_log:
-        processors.append(structlog.processors.JSONRenderer())
-    else:
-        processors.append(structlog.dev.ConsoleRenderer())
-    return processors
-
-
-# Wow the order of these processors is important
-# https://www.structlog.org/en/stable/standard-library.html#processors
-# tl;dr: The processors modify the logger kwargs in sequential order
-#
-def _build_pre_processors(custom_processors: list[Processor]) -> list[Processor]:
-    return [
-        # Append the logger name to event dict argument
-        #   .warn("something bad", ..., logger="thatclass")
-        structlog.stdlib.add_logger_name,
-        # Add log level to event dict
-        #   .warn("something bad", ..., level="warn")
-        structlog.stdlib.add_log_level,
-        # Append timestamp
-        #   .warn("something bad",..., timestamp=<timestamp>)
-        structlog.processors.TimeStamper(fmt="iso"),
-        # If present, add stack trace
-        #   .warn("something bad", ..., stack=<stack_trace>)
-        structlog.processors.StackInfoRenderer(),
-        # If present, add exception
-        #   .warn("something bad", ..., exception=<exception>)
-        structlog.processors.format_exc_info,
-        # Convert all key values to unicode format
-        structlog.processors.UnicodeDecoder(),
-        # adds our custom environment vars
-        #   .warn("something bad", ..., service="gx-agent", env="production")
-        *custom_processors,
-    ]
