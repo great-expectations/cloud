@@ -120,6 +120,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
+            greatexpectations/agent:dev
             greatexpectations/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
             258143015559.dkr.ecr.us-east-1.amazonaws.com/gx/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
 
@@ -131,6 +132,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
+            greatexpectations/agent:dev
             greatexpectations/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
             greatexpectations/agent:latest
             greatexpectations/agent:stable
