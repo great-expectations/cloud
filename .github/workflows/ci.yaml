@@ -81,6 +81,34 @@ jobs:
           slug: great-expectations/cloud
           flags: ${{ matrix.python-version }}
 
+  test-docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache-dependency-path: poetry.lock
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.local # the path depends on the OS
+          key: poetry-3.10 # increment to reset cache
+
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: poetry install --sync
+
+      - run: poetry run invoke docker
+
   check-if-agent-changed:
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'schedule' }}
