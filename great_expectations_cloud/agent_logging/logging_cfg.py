@@ -6,6 +6,7 @@ import logging
 import logging.config
 import logging.handlers
 import pathlib
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, Final, MutableMapping, Sequence, TextIO
 
 import structlog
@@ -48,35 +49,58 @@ class LogLevel(str, enum.Enum):
     # 1. The logger formatter dictConfig must detch by import
     # 2. The formatter must be parametrized in a way not supported by dictConfig
 
+
+def configure_logger(
+    log_level: LogLevel,
+    skip_log_file: bool,
+    json_log: bool,
+    environment: str,
+    log_cfg_file: pathlib.Path | None,
+) -> None:
+    """
+    Configure the root logger for the application.
+    If a log configuration file is provided, other arguments are ignored.
+
+    See the documentation for the agent_logging.config.dictConfig method for details.
+    https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
+
+    Note: this method should only be called once in the lifecycle of the application.
+    """
+
     # Custom formatter for precise format
     class MyCustomFormatter(logging.Formatter):
         def __init__(self, fmt=None, datefmt=None, style="%", validate=True, *args, defaults=None):
             super().__init__(fmt, datefmt, style, validate)
 
-        # def __init__(self, env, json_log):
-        #     super().__init__()
-        #     self.env = env
-        #     self.json_log = json_log
-
         @override
         def format(self, record):
             # message = super().format(record)
             # formatted_message = f"{message} [env: {self.env}]"
-            # return "IS IT WORKKING"
+
+            # TODO Better way to get this
+            # dict() causing errors
             full_record = record.__dict__
+
             # {"event": "send_request_body.started request=<Request [b'GET']>", "logger": "httpcore.http11", "level": "debug",
             #  "timestamp": "2024-04-18T10:17:56.411405Z", "service": "unset", "logging_version": "0.2.0", "env": "robs",
             #  "dd.trace_id": "0", "dd.span_id": "0"}
+
+            # TODO Use map with fallbacks
             formatted_record = {
                 "msg": full_record.get("msg"),
                 "event": full_record.get("msg"),
                 "level": full_record.get("levelname"),
                 "logger": full_record.get("name"),
+                # TODO Required to be ISO?
+                "timestamp_unix": full_record.get("created"),
             }
             custom_fields = {
                 "service": SERVICE_NAME,
                 "env": "lala2",
                 "organization_id": "TODO",
+                "timestamp": datetime.datetime.utcfromtimestamp(
+                    formatted_record.get("timestamp_unix")
+                ).isoformat(),
             }
             final_dict = formatted_record | custom_fields
             """
@@ -101,27 +125,9 @@ class LogLevel(str, enum.Enum):
      'processName': 'MainProcess',
      'process': 44923}
      """
-            if True:
+            if json_log:
                 return json.dumps(final_dict)
             return final_dict
-
-
-def configure_logger(
-    log_level: LogLevel,
-    skip_log_file: bool,
-    json_log: bool,
-    environment: str,
-    log_cfg_file: pathlib.Path | None,
-) -> None:
-    """
-    Configure the root logger for the application.
-    If a log configuration file is provided, other arguments are ignored.
-
-    See the documentation for the agent_logging.config.dictConfig method for details.
-    https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
-
-    Note: this method should only be called once in the lifecycle of the application.
-    """
 
     config_2 = {
         "version": 1,
@@ -129,13 +135,12 @@ def configure_logger(
         "formatters": {
             "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
             "super": {
-                "class": "great_expectations_cloud.agent_logging.logging_cfg.MyCustomFormatter",
-                # 'env': 'the_moon'
+                "()": MyCustomFormatter,
             },
         },
         "handlers": {
             "default": {
-                "level": "INFO",
+                "level": log_level.value,
                 "formatter": "super",
                 "class": "logging.StreamHandler",
                 "stream": "ext://sys.stdout",  # Default is stderr
@@ -144,7 +149,7 @@ def configure_logger(
         "loggers": {
             "": {  # root logger
                 "handlers": ["default"],
-                "level": "WARNING",
+                "level": log_level.value,
                 "propagate": False,
             },
         },
