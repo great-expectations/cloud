@@ -19,8 +19,7 @@ ENV PYTHONUNBUFFERED=1
 ENV POETRY_CACHE_DIR=/tmp/pypoetry
 
 # Required for arm64, for building psutil
-RUN apt-get update && apt-get install --no-install-recommends gcc=4:12.2.0-3 -y && rm -rf /var/lib/apt/lists/*
-RUN apt-get install --no-install-recommends python-dev build-essential
+RUN apt-get update && apt-get install --no-install-recommends python3-dev gcc=4:12.2.0-3 -y && rm -rf /var/lib/apt/lists/*
 
 RUN pip --no-cache-dir install poetry==1.8.2
 
