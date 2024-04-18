@@ -80,6 +80,7 @@ def lint(ctx: Context, check: bool = False, unsafe_fixes: bool = False) -> None:
     help={
         "check": "Lint Dockerfile using hadolint tool",
         "run": "Run the Docker container. Inject .env file",
+        "pty": "Use a pseudo-terminal for the Docker command (default: True)",
     },
 )
 def docker(
