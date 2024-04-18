@@ -107,7 +107,7 @@ jobs:
       - name: Install dependencies
         run: poetry install --sync --only dev
 
-      - run: poetry run invoke docker  --no-pty
+      - run: poetry run invoke docker --no-pty
 
   check-if-agent-changed:
     runs-on: ubuntu-latest
