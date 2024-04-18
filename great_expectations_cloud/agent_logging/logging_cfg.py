@@ -133,17 +133,20 @@ def configure_logger(
 
             if json_log:
                 return json.dumps(complete_dict)
-            return complete_dict
+            "%(levelname)s:%(name)s:%(message)s"
+            return f"%(record.created)s [%(levelname)s] %(name)s: %(message)s"
+
+    formatter_json = {
+                "()": MyCustomFormatter,
+            }
+    formatter_stdout = {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"}
+    formatter = formatter_json if json_log else formatter_stdout
 
     config_2 = {
         "version": 1,
         "disable_existing_loggers": False,
-        "formatters": {
-            "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
-            "super": {
-                "()": MyCustomFormatter,
-            },
-        },
+        "formatters": {"super": formatter}
+        ,
         "handlers": {
             "default": {
                 "level": log_level.value,
