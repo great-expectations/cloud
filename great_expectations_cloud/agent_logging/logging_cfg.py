@@ -7,13 +7,9 @@ import logging.config
 import logging.handlers
 import pathlib
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Final, MutableMapping, Sequence, TextIO
+from typing import Final
 
-import structlog
 from typing_extensions import override
-
-if TYPE_CHECKING:
-    from structlog.typing import Processor
 
 LOGGER = logging.getLogger(__name__)
 SERVICE_NAME: Final[str] = "gx-agent"
@@ -48,6 +44,7 @@ class LogLevel(str, enum.Enum):
     # This is required because:
     # 1. The logger formatter dictConfig must detch by import
     # 2. The formatter must be parametrized in a way not supported by dictConfig
+
 
 # TODO Add org ID
 def configure_logger(
@@ -98,13 +95,13 @@ def configure_logger(
          'threadName': 'MainThread',
          'processName': 'MainProcess',
          'process': 44923}
-         """
+        """
+
         def __init__(self, fmt=None, datefmt=None, style="%", validate=True, *args, defaults=None):
             super().__init__(fmt, datefmt, style, validate)
 
         @override
         def format(self, record):
-
             # TODO Better way to get this
             # dict() causing error: 'LogRecord' object is not iterable
             # dict(record)
@@ -122,12 +119,9 @@ def configure_logger(
             custom_fields = {
                 "service": SERVICE_NAME,
                 "env": environment,
-
             }
-            if (time_unix_s:= record.created):
-                custom_fields["timestamp"] = datetime.utcfromtimestamp(
-                time_unix_s
-            ).isoformat(),
+            if time_unix_s := record.created:
+                custom_fields["timestamp"] = (datetime.utcfromtimestamp(time_unix_s).isoformat(),)
 
             complete_dict = formatted_record | custom_fields
 
