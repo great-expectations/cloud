@@ -184,7 +184,7 @@ jobs:
         run: gh pr checkout ${{ github.event.pull_request.number }}
 
       - name: Bump pre-release version
-        run: invoke pre-release
+        run: poetry run invoke pre-release
 
       - name: Push changes to PR
         env:
