@@ -87,6 +87,7 @@ def docker(
     check: bool = False,
     run: bool = False,
     tag: str = "greatexpectations/agent:develop",
+    pty: bool = True,
 ) -> None:
     """
     Docker tasks
@@ -114,7 +115,7 @@ def docker(
     else:
         cmds = ["docker", "build", "-f", DOCKERFILE_PATH, "-t", tag, "."]
 
-    ctx.run(" ".join(cmds), echo=True, pty=True)
+    ctx.run(" ".join(cmds), echo=True, pty=pty)
 
 
 @invoke.task(
