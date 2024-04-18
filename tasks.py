@@ -87,7 +87,6 @@ def docker(
     ctx: Context,
     check: bool = False,
     run: bool = False,
-    it: bool = False,
     tag: str = "greatexpectations/agent:develop",
     pty: bool = True,
 ) -> None:
