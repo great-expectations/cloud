@@ -3575,22 +3575,22 @@ secure-local-storage = ["keyring (>=23.1.0,<25.0.0)"]
 
 [[package]]
 name = "snowflake-sqlalchemy"
-version = "1.5.1"
+version = "1.5.3"
 description = "Snowflake SQLAlchemy Dialect"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "snowflake-sqlalchemy-1.5.1.tar.gz", hash = "sha256:4f1383402ffc89311974bd810dee22003aef4af0f312a0fdb55778333ad1abf7"},
-    {file = "snowflake_sqlalchemy-1.5.1-py2.py3-none-any.whl", hash = "sha256:df022fb73bc04d68dfb3216ebf7a1bfbd14d22def9c38bbe05275beb258adcd0"},
+    {file = "snowflake_sqlalchemy-1.5.3-py3-none-any.whl", hash = "sha256:0a4aa3f391797b22dd7658892f906191fd1d44870503ae7ca9278cddce6e5b89"},
+    {file = "snowflake_sqlalchemy-1.5.3.tar.gz", hash = "sha256:79191ec3febfb32bcffecd66f2a7dd561bd571345ea4bccbf41cc1fb5c0682ff"},
 ]
 
 [package.dependencies]
 snowflake-connector-python = "<4.0.0"
-sqlalchemy = ">=1.4.0,<2.0.0"
+sqlalchemy = ">=1.4.19,<2.0.0"
 
 [package.extras]
-development = ["mock", "numpy", "pytest", "pytest-cov", "pytest-rerunfailures", "pytest-timeout", "pytz"]
-pandas = ["snowflake-connector-python[pandas] (<4.0.0)"]
+development = ["mock", "numpy", "pre-commit", "pytest", "pytest-cov", "pytest-rerunfailures", "pytest-timeout", "pytz"]
+pandas = ["snowflake-connector-python[pandas]"]
 
 [[package]]
 name = "sortedcontainers"
