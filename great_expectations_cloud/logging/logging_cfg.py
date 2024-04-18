@@ -69,7 +69,7 @@ def configure_logger(
         return
 
     # Custom formatter for precise format
-    class MyCustomFormatter(logging.Formatter):
+    class JSONFormatter(logging.Formatter):
         """
         All custom formatting is done through subclassing this Formatter class
         Note: Defined within fn bc parametrization of Formatters is not supported by dictConfig
@@ -127,15 +127,12 @@ def configure_logger(
 
             complete_dict = formatted_record | custom_fields
 
-            if json_log:
-                return json.dumps(complete_dict)
-            "%(levelname)s:%(name)s:%(message)s"
-            return f"%(record.created)s [%(levelname)s] %(name)s: %(message)s"
+            return json.dumps(complete_dict)
 
     formatter_json = {
-                "()": MyCustomFormatter,
-            }
-    formatter_stdout = {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"}
+        "()": JSONFormatter,
+    }
+    formatter_stdout = {"format": "[%(levelname)s] %(name)s: %(message)s"}
     formatter = formatter_json if json_log else formatter_stdout
 
     config_2 = {
