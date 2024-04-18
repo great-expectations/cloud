@@ -58,7 +58,7 @@ def configure_logger(
     Configure the root logger for the application.
     If a log configuration file is provided, other arguments are ignored.
 
-    See the documentation for the agent_logging.config.dictConfig method for details.
+    See the documentation for the logging.config.dictConfig method for details.
     https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
 
     Note: this method should only be called once in the lifecycle of the application.
@@ -128,19 +128,18 @@ def configure_logger(
             if json_log:
                 return json.dumps(complete_dict)
             "%(levelname)s:%(name)s:%(message)s"
-            return f"%(record.created)s [%(levelname)s] %(name)s: %(message)s"
+            return "%(record.created)s [%(levelname)s] %(name)s: %(message)s"
 
     formatter_json = {
-                "()": MyCustomFormatter,
-            }
-    formatter_stdout = {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"}
+        "()": MyCustomFormatter,
+    }
+    formatter_stdout = {"format": "[%(levelname)s] %(name)s: %(message)s"}
     formatter = formatter_json if json_log else formatter_stdout
 
     config_2 = {
         "version": 1,
         "disable_existing_loggers": False,
-        "formatters": {"super": formatter}
-        ,
+        "formatters": {"super": formatter},
         "handlers": {
             "default": {
                 "level": log_level.value,
@@ -191,4 +190,4 @@ def _load_cfg_from_file(log_cfg_file: pathlib.Path) -> None:
         )
     dict_config = json.loads(log_cfg_file.read_text())
     logging.config.dictConfig(dict_config)
-    LOGGER.info(f"Configured agent_logging from file {log_cfg_file}")
+    LOGGER.info(f"Configured logging from file {log_cfg_file}")
