@@ -6,7 +6,7 @@ import logging
 import logging.config
 import logging.handlers
 import pathlib
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Final
 
 from typing_extensions import override
@@ -53,7 +53,7 @@ def configure_logger(
     json_log: bool,
     environment: str,
     log_cfg_file: pathlib.Path | None,
-) -> None:
+) -> None:  # TODO Simplify args
     """
     Configure the root logger for the application.
     If a log configuration file is provided, other arguments are ignored.
@@ -121,7 +121,9 @@ def configure_logger(
                 "env": environment,
             }
             if time_unix_s := record.created:
-                custom_fields["timestamp"] = (datetime.utcfromtimestamp(time_unix_s).isoformat(),)
+                custom_fields["timestamp"] = datetime.fromtimestamp(
+                    time_unix_s, tz=timezone.utc
+                ).isoformat()
 
             complete_dict = formatted_record | custom_fields
 
