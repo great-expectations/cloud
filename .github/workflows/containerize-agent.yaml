@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+
 jobs:
   containerize-agent:
     runs-on: ubuntu-latest
@@ -103,40 +104,40 @@ jobs:
           AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
           GE_USAGE_STATISTICS_URL: ${{ secrets.GE_USAGE_STATISTICS_URL }}
 
-      # - name: Get version from pyproject.toml
-      #   id: get_version
-      #   run: echo "POETRY_VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
+      - name: Get version from pyproject.toml
+        id: get_version
+        run: echo "POETRY_VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
 
-      # - name: Get is_release from pyproject.toml
-      #   id: get_is_release
-      #   run: echo "IS_RELEASE=$(poetry version -s | grep -q 'dev' && echo false || echo true)" >> $GITHUB_OUTPUT
+      - name: Get is_release from pyproject.toml
+        id: get_is_release
+        run: echo "IS_RELEASE=$(poetry version -s | grep -q 'dev' && echo false || echo true)" >> $GITHUB_OUTPUT
 
-      # # Uses the version from pyproject.toml for the tag
-      # - name: Push Pre-Release to Docker Hub and Internal ECR
-      #   if: ${{ steps.get_is_release.outputs.IS_RELEASE == 'false' }}
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: .
-      #     platforms: linux/amd64,linux/arm64
-      #     push: true
-      #     tags: |
-      #       greatexpectations/agent:dev
-      #       greatexpectations/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
-      #       258143015559.dkr.ecr.us-east-1.amazonaws.com/gx/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
+      # Uses the version from pyproject.toml for the tag
+      - name: Push Pre-Release to Docker Hub and Internal ECR
+        if: ${{ steps.get_is_release.outputs.IS_RELEASE == 'false' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            greatexpectations/agent:dev
+            greatexpectations/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
+            258143015559.dkr.ecr.us-east-1.amazonaws.com/gx/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
 
-      # - name: Push Release to Docker Hub and Internal ECR
-      #   if: ${{ steps.get_is_release.outputs.IS_RELEASE == 'true' }}
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: .
-      #     platforms: linux/amd64,linux/arm64
-      #     push: true
-      #     tags: |
-      #       greatexpectations/agent:dev
-      #       greatexpectations/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
-      #       greatexpectations/agent:latest
-      #       greatexpectations/agent:stable
-      #       258143015559.dkr.ecr.us-east-1.amazonaws.com/gx/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
+      - name: Push Release to Docker Hub and Internal ECR
+        if: ${{ steps.get_is_release.outputs.IS_RELEASE == 'true' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            greatexpectations/agent:dev
+            greatexpectations/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
+            greatexpectations/agent:latest
+            greatexpectations/agent:stable
+            258143015559.dkr.ecr.us-east-1.amazonaws.com/gx/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
 
       - name: Show logs, if failure
         if: failure()
