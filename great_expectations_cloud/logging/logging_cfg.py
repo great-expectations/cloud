@@ -120,20 +120,20 @@ def configure_logger(
 
             return json.dumps(complete_dict)
 
-    formatter_json = {
-        "()": JSONFormatter,
+    # Add json formatter
+    json_formatter = {
+        "json": {
+            "()": JSONFormatter,
+        }
     }
-    formatter_stdout = {"format": "[%(levelname)s] %(name)s: %(message)s"}
-    formatter = formatter_json if json_log else formatter_stdout
-
-    config_2 = {
+    # change 'default' handler formatter to 'json'
+    config = {
         "version": 1,
         "disable_existing_loggers": False,
-        "formatters": {"super": formatter},
+        "formatters": {"default": {"format": "[%(levelname)s] %(name)s: %(message)s"}},
         "handlers": {
             "default": {
-                "level": log_level.value,
-                "formatter": "super",
+                "formatter": "default",
                 "class": "logging.StreamHandler",
                 "stream": "ext://sys.stdout",  # Default is stderr
             },
@@ -141,16 +141,20 @@ def configure_logger(
         "loggers": {
             "": {  # root logger
                 "handlers": ["default"],
-                "level": log_level.value,
+                "level": "WARNING",
                 "propagate": False,
             },
         },
     }
 
-    logging.config.dictConfig(config_2)
+    logging.config.dictConfig(config)
 
     # TODO Define file loggers as dictConfig as well
     root = logging.getLogger()
+    # TODO Safer way to get handler
+    if json_log:
+        root.handlers[0].setFormatter(JSONFormatter())
+    root.setLevel(log_level.numeric_level)
 
     if not skip_log_file:
         file_handler = _get_file_handler()
