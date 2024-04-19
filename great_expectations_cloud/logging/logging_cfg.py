@@ -16,6 +16,7 @@ SERVICE_NAME: Final[str] = "gx-agent"
 DEFAULT_FILE_LOGGING_LEVEL: Final[int] = logging.DEBUG
 
 
+
 class LogLevel(str, enum.Enum):
     DEBUG = "DEBUG"
     INFO = "INFO"
@@ -64,58 +65,7 @@ def configure_logger(
         _load_cfg_from_file(log_cfg_file)
         return
 
-    class JSONFormatter(logging.Formatter):
-        """
-        All custom formatting is done through subclassing this Formatter class
-        Note: Defined within fn bc parametrization of Formatters is not supported by dictConfig
 
-        LogRecord attribute:
-        'name': 'great_expectations_cloud.agent.agent',
-         'msg': 'GX Agent version: 0.0.47.dev0',
-         'args': (),
-         'levelname': 'ERROR',
-         'levelno': 40,
-         'pathname': '/Users/r/py/cloud/great_expectations_cloud/agent/agent.py',
-         'filename': 'agent.py',
-         'module': 'agent',
-         'exc_info': None,
-         'exc_text': None,
-         'stack_info': None,
-         'lineno': 91,
-         'funcName': '__init__',
-         'created': 1713292929.1121202,
-         'msecs': 112.0,
-         'relativeCreated': 5210.726261138916,
-         'thread': 8276975872,
-         'threadName': 'MainThread',
-         'processName': 'MainProcess',
-         'process': 44923}
-        """
-
-        def __init__(self, fmt=None, datefmt=None, style="%", custom_tags: dict[str,Any]={}, validate=True, *args, defaults=None):
-            super().__init__(fmt, datefmt, style, validate)
-            self.custom_tags = custom_tags
-
-        @override
-        def format(self, record):
-            # DD ref:
-            # {"event": "send_request_body.started request=<Request [b'GET']>", "logger": "httpcore.http11", "level": "debug",
-            #  "timestamp": "2024-04-18T10:17:56.411405Z", "service": "unset", "logging_version": "0.2.0", "env": "robs",
-            #  "dd.trace_id": "0", "dd.span_id": "0"}
-
-            formatted_record = {
-                "event": record.msg,
-                "level": record.levelname,
-                "logger": record.name,
-                "timestamp": datetime.fromtimestamp(
-                record.created, tz=timezone.utc
-            ).isoformat()
-            }
-            # TODO add exc, stack
-
-            complete_dict = {**formatted_record,**self.custom_tags}
-
-            return json.dumps(complete_dict)
 
     # change 'default' handler formatter to 'json'
     config = {
@@ -177,3 +127,56 @@ def _load_cfg_from_file(log_cfg_file: pathlib.Path) -> None:
     dict_config = json.loads(log_cfg_file.read_text())
     logging.config.dictConfig(dict_config)
     LOGGER.info(f"Configured logging from file {log_cfg_file}")
+
+class JSONFormatter(logging.Formatter):
+    """
+    All custom formatting is done through subclassing this Formatter class
+    Note: Defined within fn bc parametrization of Formatters is not supported by dictConfig
+
+    LogRecord attribute:
+    'name': 'great_expectations_cloud.agent.agent',
+     'msg': 'GX Agent version: 0.0.47.dev0',
+     'args': (),
+     'levelname': 'ERROR',
+     'levelno': 40,
+     'pathname': '/Users/r/py/cloud/great_expectations_cloud/agent/agent.py',
+     'filename': 'agent.py',
+     'module': 'agent',
+     'exc_info': None,
+     'exc_text': None,
+     'stack_info': None,
+     'lineno': 91,
+     'funcName': '__init__',
+     'created': 1713292929.1121202,
+     'msecs': 112.0,
+     'relativeCreated': 5210.726261138916,
+     'thread': 8276975872,
+     'threadName': 'MainThread',
+     'processName': 'MainProcess',
+     'process': 44923}
+    """
+
+    def __init__(self, fmt=None, datefmt=None, style="%", custom_tags: dict[str,Any]={}, validate=True, *args, defaults=None):
+        super().__init__(fmt, datefmt, style, validate)
+        self.custom_tags = custom_tags
+
+    @override
+    def format(self, record):
+        # DD ref:
+        # {"event": "send_request_body.started request=<Request [b'GET']>", "logger": "httpcore.http11", "level": "debug",
+        #  "timestamp": "2024-04-18T10:17:56.411405Z", "service": "unset", "logging_version": "0.2.0", "env": "robs",
+        #  "dd.trace_id": "0", "dd.span_id": "0"}
+
+        formatted_record = {
+            "event": record.msg,
+            "level": record.levelname,
+            "logger": record.name,
+            "timestamp": datetime.fromtimestamp(
+            record.created, tz=timezone.utc
+        ).isoformat()
+        }
+        # TODO add exc, stack
+
+        complete_dict = {**formatted_record,**self.custom_tags}
+
+        return json.dumps(complete_dict)
