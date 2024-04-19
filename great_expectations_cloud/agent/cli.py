@@ -44,7 +44,7 @@ def _parse_args() -> Arguments:
         "--json-log",
         help="Output logs in JSON format. Defaults to False.",
         default=False,
-        action='store_true',
+        action="store_true",
     )
     parser.add_argument(
         "--log-cfg-file",
@@ -73,11 +73,12 @@ def main() -> None:
     # lazy imports ensure our cli is fast and responsive
     args: Arguments = _parse_args()
     try:
-        custom_tags:dict[str,Any] = json.loads(args.custom_log_tags)
+        custom_tags: dict[str, Any] = json.loads(args.custom_log_tags)
     except json.JSONDecodeError as e:
         print(f"Failed to parse custom tags {args.custom_log_tags} due to {e}")
         custom_tags = {}
         import sys
+
         sys.exit(1)
     configure_logger(
         log_level=args.log_level,
