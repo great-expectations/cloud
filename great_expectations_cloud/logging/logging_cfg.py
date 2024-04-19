@@ -130,17 +130,17 @@ def configure_logger(
     config = {
         "version": 1,
         "disable_existing_loggers": False,
-        "formatters": {"default": {"format": "[%(levelname)s] %(name)s: %(message)s"}},
+        "formatters": {"default_fmt": {"format": "[%(levelname)s] %(name)s: %(message)s"}},
         "handlers": {
-            "default": {
-                "formatter": "default",
+            "default_handler": {
+                "formatter": "default_fmt",
                 "class": "logging.StreamHandler",
-                "stream": "ext://sys.stdout",  # Default is stderr
+                "stream": "ext://sys.stdout",
             },
         },
         "loggers": {
             "": {  # root logger
-                "handlers": ["default"],
+                "handlers": ["default_handler"],
                 "level": "WARNING",
                 "propagate": False,
             },
