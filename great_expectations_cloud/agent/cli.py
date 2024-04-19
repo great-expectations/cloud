@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses as dc
+import json
 import logging
 import pathlib
 from typing import Any
@@ -72,10 +73,8 @@ def main() -> None:
     # lazy imports ensure our cli is fast and responsive
     args: Arguments = _parse_args()
     try:
-        import json
         custom_tags:dict[str,Any] = json.loads(args.custom_log_tags)
     except json.JSONDecodeError as e:
-        print(args.custom_log_tags)
         print(f"Failed to parse custom tags {args.custom_log_tags} due to {e}")
         custom_tags = {}
         import sys
