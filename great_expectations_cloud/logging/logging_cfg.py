@@ -7,14 +7,13 @@ import logging.config
 import logging.handlers
 import pathlib
 from datetime import datetime, timezone
-from typing import Final, Any
+from typing import Any, Final
 
 from typing_extensions import override
 
 LOGGER = logging.getLogger(__name__)
 SERVICE_NAME: Final[str] = "gx-agent"
 DEFAULT_FILE_LOGGING_LEVEL: Final[int] = logging.DEBUG
-
 
 
 class LogLevel(str, enum.Enum):
@@ -48,7 +47,7 @@ def configure_logger(
     log_level: LogLevel,
     skip_log_file: bool,
     json_log: bool,
-    custom_tags: dict[str,Any],
+    custom_tags: dict[str, Any],
     log_cfg_file: pathlib.Path | None,
 ) -> None:  # TODO Simplify args
     """
@@ -64,8 +63,6 @@ def configure_logger(
     if log_cfg_file:
         _load_cfg_from_file(log_cfg_file)
         return
-
-
 
     # change 'default' handler formatter to 'json'
     config = {
@@ -128,6 +125,7 @@ def _load_cfg_from_file(log_cfg_file: pathlib.Path) -> None:
     logging.config.dictConfig(dict_config)
     LOGGER.info(f"Configured logging from file {log_cfg_file}")
 
+
 class JSONFormatter(logging.Formatter):
     """
     All custom formatting is done through subclassing this Formatter class
@@ -156,7 +154,16 @@ class JSONFormatter(logging.Formatter):
      'process': 44923}
     """
 
-    def __init__(self, fmt=None, datefmt=None, style="%", custom_tags: dict[str,Any]={}, validate=True, *args, defaults=None):
+    def __init__(
+        self,
+        fmt=None,
+        datefmt=None,
+        style="%",
+        custom_tags: dict[str, Any] = {},
+        validate=True,
+        *args,
+        defaults=None,
+    ):
         super().__init__(fmt, datefmt, style, validate)
         self.custom_tags = custom_tags
 
@@ -171,12 +178,10 @@ class JSONFormatter(logging.Formatter):
             "event": record.msg,
             "level": record.levelname,
             "logger": record.name,
-            "timestamp": datetime.fromtimestamp(
-            record.created, tz=timezone.utc
-        ).isoformat()
+            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
         }
         # TODO add exc, stack
 
-        complete_dict = {**formatted_record,**self.custom_tags}
+        complete_dict = {**formatted_record, **self.custom_tags}
 
         return json.dumps(complete_dict)
