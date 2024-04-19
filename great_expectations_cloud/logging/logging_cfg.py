@@ -14,6 +14,25 @@ from typing_extensions import override
 LOGGER = logging.getLogger(__name__)
 SERVICE_NAME: Final[str] = "gx-agent"
 DEFAULT_FILE_LOGGING_LEVEL: Final[int] = logging.DEBUG
+DEFAULT_LOGGING_CFG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"default_fmt": {"format": "[%(levelname)s] %(name)s: %(message)s"}},
+    "handlers": {
+        "default_handler": {
+            "formatter": "default_fmt",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
+        },
+    },
+    "loggers": {
+        "": {
+            "handlers": ["default_handler"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+    },
+}
 
 
 class LogLevel(str, enum.Enum):
@@ -64,36 +83,17 @@ def configure_logger(
         _load_cfg_from_file(log_cfg_file)
         return
 
-    # change 'default' handler formatter to 'json'
-    config = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {"default_fmt": {"format": "[%(levelname)s] %(name)s: %(message)s"}},
-        "handlers": {
-            "default_handler": {
-                "formatter": "default_fmt",
-                "class": "logging.StreamHandler",
-                "stream": "ext://sys.stdout",
-            },
-        },
-        "loggers": {
-            "": {  # root logger
-                "handlers": ["default_handler"],
-                "level": "WARNING",
-                "propagate": False,
-            },
-        },
-    }
+    logging.config.dictConfig(DEFAULT_LOGGING_CFG)
 
-    logging.config.dictConfig(config)
-
-    # TODO Define file loggers as dictConfig as well
     root = logging.getLogger()
     # TODO Safer way to get handler
-    if json_log:
-        root.handlers[0].setFormatter(JSONFormatter(custom_tags=custom_tags))
+    if json_log and len(root.handlers) == 1:
+        fmt = JSONFormatter(custom_tags=custom_tags)
+        root.handlers[0].setFormatter(fmt)
+
     root.setLevel(log_level.numeric_level)
 
+    # TODO Define file loggers as dictConfig as well
     if not skip_log_file:
         file_handler = _get_file_handler()
         root.addHandler(file_handler)
@@ -156,10 +156,10 @@ class JSONFormatter(logging.Formatter):
 
     def __init__(
         self,
+        custom_tags: dict[str, Any],
         fmt=None,
         datefmt=None,
         style="%",
-        custom_tags: dict[str, Any] = {},
         validate=True,
         *args,
         defaults=None,
