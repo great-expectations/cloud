@@ -7,7 +7,7 @@ import logging.config
 import logging.handlers
 import pathlib
 from datetime import datetime, timezone
-from typing import Final
+from typing import Final, Any
 
 from typing_extensions import override
 
@@ -47,7 +47,7 @@ def configure_logger(
     log_level: LogLevel,
     skip_log_file: bool,
     json_log: bool,
-    environment: str,
+    custom_tags: dict[str,Any],
     log_cfg_file: pathlib.Path | None,
 ) -> None:  # TODO Simplify args
     """
@@ -92,8 +92,9 @@ def configure_logger(
          'process': 44923}
         """
 
-        def __init__(self, fmt=None, datefmt=None, style="%", validate=True, *args, defaults=None):
+        def __init__(self, fmt=None, datefmt=None, style="%", custom_tags: dict[str,Any]={}, validate=True, *args, defaults=None):
             super().__init__(fmt, datefmt, style, validate)
+            self.custom_tags = custom_tags
 
         @override
         def format(self, record):
@@ -106,26 +107,16 @@ def configure_logger(
                 "event": record.msg,
                 "level": record.levelname,
                 "logger": record.name,
+                "timestamp": datetime.fromtimestamp(
+                record.created, tz=timezone.utc
+            ).isoformat()
             }
-            custom_fields = {
-                "service": SERVICE_NAME,
-                "env": environment,
-            }
-            if time_unix_s := record.created:
-                custom_fields["timestamp"] = datetime.fromtimestamp(
-                    time_unix_s, tz=timezone.utc
-                ).isoformat()
+            # TODO add exc, stack
 
-            complete_dict = formatted_record | custom_fields
+            complete_dict = {**formatted_record,**self.custom_tags}
 
             return json.dumps(complete_dict)
 
-    # Add json formatter
-    json_formatter = {
-        "json": {
-            "()": JSONFormatter,
-        }
-    }
     # change 'default' handler formatter to 'json'
     config = {
         "version": 1,
@@ -153,7 +144,7 @@ def configure_logger(
     root = logging.getLogger()
     # TODO Safer way to get handler
     if json_log:
-        root.handlers[0].setFormatter(JSONFormatter())
+        root.handlers[0].setFormatter(JSONFormatter(custom_tags=custom_tags))
     root.setLevel(log_level.numeric_level)
 
     if not skip_log_file:

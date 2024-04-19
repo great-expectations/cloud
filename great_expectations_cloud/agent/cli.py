@@ -4,6 +4,7 @@ import argparse
 import dataclasses as dc
 import logging
 import pathlib
+from typing import Any
 
 from great_expectations_cloud.logging.logging_cfg import LogLevel, configure_logger
 
@@ -17,7 +18,7 @@ class Arguments:
     json_log: bool
     log_cfg_file: pathlib.Path | None
     version: bool
-    environment: str
+    custom_log_tags: str
 
 
 def _parse_args() -> Arguments:
@@ -42,6 +43,7 @@ def _parse_args() -> Arguments:
         "--json-log",
         help="Output logs in JSON format. Defaults to False.",
         default=False,
+        action='store_true',
     )
     parser.add_argument(
         "--log-cfg-file",
@@ -49,10 +51,10 @@ def _parse_args() -> Arguments:
         type=pathlib.Path,
     )
     parser.add_argument(
-        "--environment",
-        help="The environment in which agent is running",
+        "--custom-log-tags",
+        help="Additional tags for logs in form of key-value pairs",
         type=str,
-        default="production",
+        default="{}",
     )
     parser.add_argument("--version", help="Show the gx agent version.", action="store_true")
     args = parser.parse_args()
@@ -62,19 +64,28 @@ def _parse_args() -> Arguments:
         log_cfg_file=args.log_cfg_file,
         version=args.version,
         json_log=args.json_log,
-        environment=args.environment,
+        custom_log_tags=args.custom_log_tags,
     )
 
 
 def main() -> None:
     # lazy imports ensure our cli is fast and responsive
     args: Arguments = _parse_args()
+    try:
+        import json
+        custom_tags:dict[str,Any] = json.loads(args.custom_log_tags)
+    except json.JSONDecodeError as e:
+        print(args.custom_log_tags)
+        print(f"Failed to parse custom tags {args.custom_log_tags} due to {e}")
+        custom_tags = {}
+        import sys
+        sys.exit(1)
     configure_logger(
         log_level=args.log_level,
         skip_log_file=args.skip_log_file,
         log_cfg_file=args.log_cfg_file,
         json_log=args.json_log,
-        environment=args.environment,
+        custom_tags=custom_tags,
     )
 
     if args.version:
