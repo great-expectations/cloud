@@ -6,6 +6,9 @@ from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
 
 import pytest
+from great_expectations.experimental.metric_repository.metrics import (
+    MetricTypes,
+)
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import (
@@ -13,6 +16,7 @@ from great_expectations_cloud.agent.actions import (
     AgentAction,
     DraftDatasourceConfigAction,
     ListTableNamesAction,
+    MetricListAction,
     RunCheckpointAction,
     RunMissingnessDataAssistantAction,
     RunOnboardingDataAssistantAction,
@@ -32,6 +36,7 @@ from great_expectations_cloud.agent.models import (
     EventBase,
     ListTableNamesEvent,
     RunCheckpointEvent,
+    RunMetricListEvent,
     RunMissingnessDataAssistantEvent,
     RunOnboardingDataAssistantEvent,
     UnknownEvent,
@@ -98,13 +103,15 @@ class TestEventHandler:
                 ListTableNamesEvent(datasource_name="test-datasource"),
                 ListTableNamesAction,
             ),
-            # (
-            #     "RunColumnDescriptiveMetricsEvent",
-            #     RunColumnDescriptiveMetricsEvent(
-            #         datasource_name="test-datasource", data_asset_name="test-data-asset"
-            #     ),
-            #     ColumnDescriptiveMetricsAction,
-            # ),
+            (
+                "RunMetricListEvent",
+                RunMetricListEvent(
+                    datasource_name="test-datasource",
+                    data_asset_name="test-data-asset",
+                    metrics=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+                ),
+                MetricListAction,
+            ),
         ],
     )
     def test_event_handler_handles_all_events(
