@@ -174,14 +174,19 @@ class JSONFormatter(logging.Formatter):
         #  "timestamp": "2024-04-18T10:17:56.411405Z", "service": "unset", "logging_version": "0.2.0", "env": "robs",
         #  "dd.trace_id": "0", "dd.span_id": "0"}
 
-        formatted_record = {
+        optionals = {}
+
+        base_tags = {
             "event": record.msg,
             "level": record.levelname,
             "logger": record.name,
             "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
         }
-        # TODO add exc, stack
+        if record.exc_info:
+            optionals["exc_info"] = str(record.exc_info)
+        if record.stack_info:
+            optionals["stack_info"] = record.stack_info
 
-        complete_dict = {**formatted_record, **self.custom_tags}
+        complete_dict = {**base_tags, **self.custom_tags, **optionals}
 
         return json.dumps(complete_dict)
