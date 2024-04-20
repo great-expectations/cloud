@@ -36,7 +36,7 @@ from great_expectations_cloud.agent.models import (
     EventBase,
     ListTableNamesEvent,
     RunCheckpointEvent,
-    RunMetricListEvent,
+    RunMetricsListEvent,
     RunMissingnessDataAssistantEvent,
     RunOnboardingDataAssistantEvent,
     UnknownEvent,
@@ -104,8 +104,8 @@ class TestEventHandler:
                 ListTableNamesAction,
             ),
             (
-                "RunMetricListEvent",
-                RunMetricListEvent(
+                "RunMetricsListEvent",
+                RunMetricsListEvent(
                     datasource_name="test-datasource",
                     data_asset_name="test-data-asset",
                     metrics=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
