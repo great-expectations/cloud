@@ -108,7 +108,7 @@ class TestEventHandler:
                 RunMetricsListEvent(
                     datasource_name="test-datasource",
                     data_asset_name="test-data-asset",
-                    metrics=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+                    metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
                 ),
                 MetricListAction,
             ),
