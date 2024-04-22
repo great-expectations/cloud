@@ -55,9 +55,7 @@ gx-agent
 
 [Building and running the Agent with Docker](#building-and-running-the-gx-agent-image)
 
-## Information for Developers
-
-### Dev Setup
+## Dev Setup
 
 See also [CONTRIBUTING.md](/CONTRIBUTING.MD)
 
@@ -87,7 +85,7 @@ invoke deps
 
 #### Updating `poetry.lock` dependencies
 
-The dependencies installed in our CI and the docker build step are determined by the [poetry.lock file](https://python-poetry.org/docs/basic-usage/#installing-with-poetrylock).
+The dependencies installed in our CI and the Docker build step are determined by the [poetry.lock file](https://python-poetry.org/docs/basic-usage/#installing-with-poetrylock).
 
 [To update only a specific dependency](https://python-poetry.org/docs/cli/#update) (such as `great_expectations`) ...
 
@@ -129,7 +127,7 @@ Now go into GX Cloud and issue commands for the GX Agent to run, such as generat
 
 #### Example Data
 
-The contents from [/examples/agent/data](/examples/agent/data/) will be copied to `/data` for the docker container.
+The contents from [/examples/agent/data](/examples/agent/data/) will be copied to `/data` for the Docker container.
 
 #### Adding an action to the agent
 
@@ -197,7 +195,7 @@ invoke pre-release
 ```
 
 This will create a new pre-release version. On the next merge to `main`, the release will be uploaded to PyPi.
-A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
+A new Docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
 
 #### Releases
 
@@ -211,7 +209,7 @@ invoke release
 ```
 
 This will create a new release version. On the next merge to `main`, the release will be uploaded to PyPi.
-A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent). In addition, releases will be tagged with `stable` and `latest` tags.
+A new Docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent). In addition, releases will be tagged with `stable` and `latest` tags.
 
 #### GitHub Workflow for releasing
 
@@ -219,7 +217,7 @@ We use the GitHub Actions workflow to automate the release and pre-release proce
 
 1. [CI](./.github/workflows/ci.yml) - This workflow runs on each pull request and will update the version in `pyproject.toml` to the pre-release version if the version is not already manually updated in the PR. It will also run the tests and linting.
 
-2. [Containerize Agent](./.github/workflows/containerize-agent.yml) - This workflows runs on merge with `main` and will create a new docker image and push it to Docker Hub and PyPi. It uses the version in `pyproject.toml`.
+2. [Containerize Agent](./.github/workflows/containerize-agent.yml) - This workflows runs on merge with `main` and will create a new Docker image and push it to Docker Hub and PyPi. It uses the version in `pyproject.toml`.
 
 A visual representation of the workflow is shown [here](./.github/workflows/agent_release_workflows.png)
 
