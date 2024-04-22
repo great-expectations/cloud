@@ -48,7 +48,7 @@ def _parse_args() -> Arguments:
     )
     parser.add_argument(
         "--log-cfg-file",
-        help="Path to a logging configuration json file. Supersedes --log-level and --skip-log-file.",
+        help="Path to a logging configuration file in JSON format. Supersedes --log-level and --skip-log-file.",
         type=pathlib.Path,
     )
     parser.add_argument(
