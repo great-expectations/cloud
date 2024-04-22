@@ -12,6 +12,9 @@ from typing import Any, Final
 from typing_extensions import override
 
 LOGGER = logging.getLogger(__name__)
+
+DEFAULT_LOG_FILE : Final[str] = "logfile"
+DEFAULT_LOG_DIR = "logs"
 SERVICE_NAME: Final[str] = "gx-agent"
 DEFAULT_FILE_LOGGING_LEVEL: Final[int] = logging.DEBUG
 DEFAULT_LOGGING_CFG = {
@@ -82,7 +85,6 @@ def configure_logger(
     if log_cfg_file:
         _load_cfg_from_file(log_cfg_file)
         return
-
     logging.config.dictConfig(DEFAULT_LOGGING_CFG)
 
     root = logging.getLogger()
@@ -103,12 +105,12 @@ def _get_file_handler() -> logging.handlers.TimedRotatingFileHandler:
     formatter = logging.Formatter(
         "%(asctime)s | %(name)s | line: %(lineno)d | %(levelname)s: %(message)s"
     )
-    log_dir = pathlib.Path("logs")
+    log_dir = pathlib.Path(DEFAULT_LOG_DIR)
     if not log_dir.exists():
         pathlib.Path(log_dir).mkdir()
     # The FileHandler writes all logs to a local file
     file_handler = logging.handlers.TimedRotatingFileHandler(
-        filename=log_dir / "logfile", when="midnight", backupCount=30
+        filename=log_dir / DEFAULT_LOG_FILE, when="midnight", backupCount=30
     )  # creates a new file every day; keeps 30 days of logs at most
     file_handler.setFormatter(formatter)
     file_handler.setLevel(DEFAULT_FILE_LOGGING_LEVEL)
@@ -156,7 +158,7 @@ class JSONFormatter(logging.Formatter):
 
     def __init__(
         self,
-        custom_tags: dict[str, Any],
+        custom_tags: dict[str, Any] | None = None,
         fmt=None,
         datefmt=None,
         style="%",
@@ -165,7 +167,7 @@ class JSONFormatter(logging.Formatter):
         defaults=None,
     ):
         super().__init__(fmt, datefmt, style, validate)
-        self.custom_tags = custom_tags
+        self.custom_tags = custom_tags if custom_tags else {}
 
     @override
     def format(self, record):
