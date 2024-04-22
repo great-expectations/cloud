@@ -219,7 +219,7 @@ We use the GitHub Actions workflow to automate the release and pre-release proce
 
 1. [CI](./.github/workflows/ci.yml) - This workflow runs on each pull request and will update the version in `pyproject.toml` to the pre-release version if the version is not already manually updated in the PR. It will also run the tests and linting.
 
-2. [Containerize Agent](./.github/workflows/containerize-agent.yml) - This workflows runs on merge with `main` and will create a new docker image and push it to DockerHub and PyPi. It uses the version in `pyproject.toml`.
+2. [Containerize Agent](./.github/workflows/containerize-agent.yml) - This workflows runs on merge with `main` and will create a new docker image and push it to Docker Hub and PyPi. It uses the version in `pyproject.toml`.
 
 A visual representation of the workflow is shown [here](./.github/workflows/agent_release_workflows.png)
 
