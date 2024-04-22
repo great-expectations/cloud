@@ -14,6 +14,7 @@ from great_expectations_cloud.logging.logging_cfg import (
     DEFAULT_LOG_FILE,
     JSONFormatter,
     LogLevel,
+    LogSettings,
     configure_logger,
 )
 
@@ -71,7 +72,7 @@ class TestLogLevel:
 @pytest.mark.parametrize("custom_tags", [{}, {"environment": "jungle"}])
 @freezegun.freeze_time(TIMESTAMP)
 def test_json_formatter(custom_tags):
-    fmt = JSONFormatter(custom_tags)
+    fmt = JSONFormatter(custom_tags=custom_tags)
     out_str = fmt.format(logging.makeLogRecord(default_log_emitted))
     actual = json.loads(out_str)
 
@@ -105,7 +106,8 @@ def test_logfile(fs, logfile_path):
     fs sets up a fake fs
     """
     assert not Path.exists(logfile_path)
-    configure_logger(LogLevel.DEBUG, False, False, {}, None)
+
+    configure_logger(LogSettings(LogLevel.DEBUG, False, False, {}, None))
     id_in_log = str(uuid.uuid4())
     logging.getLogger().fatal(id_in_log)
     assert Path.exists(logfile_path)
@@ -119,7 +121,7 @@ def test_logfile_skip_log_file(fs, logfile_path):
     """
     assert not Path.exists(logfile_path)
     disable_log_file = True
-    configure_logger(LogLevel.DEBUG, disable_log_file, False, {}, None)
+    configure_logger(LogSettings(LogLevel.DEBUG, disable_log_file, False, {}, None))
     logging.getLogger().fatal("very bad")
     assert not Path.exists(logfile_path)
 
@@ -129,7 +131,7 @@ def test_logger_json():
     fs sets up a fake fs
     """
     json_log = True
-    configure_logger(LogLevel.DEBUG, False, json_log, {}, None)
+    configure_logger(LogSettings(LogLevel.DEBUG, False, json_log, {}, None))
     handlers = logging.getLogger().handlers
     formatter_types = [type(x.formatter) for x in handlers]
     assert JSONFormatter in formatter_types
@@ -161,14 +163,14 @@ def test_load_logging_cfg():
     with open(config_path, "wb") as f:
         f.write(config_str.encode())
     assert Path.exists(Path(config_path))
-    configure_logger(LogLevel.DEBUG, False, False, {}, Path(config_path))
+    configure_logger(LogSettings(LogLevel.DEBUG, False, False, {}, Path(config_path)))
     handlers = logging.getLogger().handlers
     assert "config_handler" in [x.name for x in handlers]
 
 
 def test_log_cfg_file_not_found():
     with pytest.raises(FileNotFoundError):
-        configure_logger(LogLevel.DEBUG, False, False, {}, Path("nowhere"))
+        configure_logger(LogSettings(LogLevel.DEBUG, False, False, {}, Path("nowhere")))
 
 
 if __name__ == "__main__":
