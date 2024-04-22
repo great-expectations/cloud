@@ -44,9 +44,11 @@ sqlalchemy-redshift = { version = "^0.8.8", python = "<3.11" }
 psycopg2-binary = "^2.9.9"
 
 [tool.poetry.group.dev.dependencies]
+freezegun = "^1.4.0"
 invoke = "^2.2.0"
 mypy = "1.9"
 pre-commit = "^3.3.3"
+pyfakefs = "^5.4.1"
 pytest = ">=7.4,<9.0"
 pytest-cov = ">=4.1,<6.0"
 pytest-icdiff = "*"
