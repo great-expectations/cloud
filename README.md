@@ -55,7 +55,9 @@ gx-agent
 
 [Building and running the Agent with Docker](#building-and-running-the-gx-agent-image)
 
-## Dev Setup
+## Information for Developers
+
+### Dev Setup
 
 See also [CONTRIBUTING.md](/CONTRIBUTING.MD)
 
@@ -137,11 +139,17 @@ The contents from [/examples/agent/data](/examples/agent/data/) will be copied t
 
 Note: The agent is core-version specific but this registration mechanism allows us to preemptively work on actions for future versions of GX Core while still supporting the existing latest major version.
 
+### Dependabot
+
+We use GitHub's Dependabot to automate the dependency update process and proactively address any potential security concerns.
+
+
+
 ### Release Process
 
 #### Versioning
 
-This is the version that will be used for the docker image tag as well.
+This is the version that will be used for the Docker image tag as well.
 
 _Standard Release_:
 The versioning scheme is `YYYYMMDD.{release_number}` where:
@@ -153,7 +161,7 @@ The versioning scheme is `YYYYMMDD.{release_number}` where:
 For example: `20240403.0`
 
 _Pre-release_:
-The versioing scheme is `YYYYMMDD.{release_number}.dev{dev_number}`
+The versioning scheme is `YYYYMMDD.{release_number}.dev{dev_number}`
 
 - the date is the date of the release
 - the dev number starts at 0 for the first pre-release of the day
@@ -176,7 +184,7 @@ There can be days with no standard releases, only pre-releases or days with no p
 
 Pre-releases are completed automatically with each merge to the `main` branch.
 The version is updated in `pyproject.toml` and a pre-release is created on PyPi.
-A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
+A new Docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
 
 **Manual Pre-releases**
 
@@ -203,14 +211,23 @@ invoke release
 ```
 
 This will create a new release version. On the next merge to `main`, the release will be uploaded to PyPi.
-A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
+A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent). In addition, releases will be tagged with `stable` and `latest` tags.
 
-#### Github Workflow for releasing
+#### GitHub Workflow for releasing
 
 We use the GitHub Actions workflow to automate the release and pre-release process. There are two workflows involved:
 
 1. [CI](./.github/workflows/ci.yml) - This workflow runs on each pull request and will update the version in `pyproject.toml` to the pre-release version if the version is not already manually updated in the PR. It will also run the tests and linting.
 
-2. [Containerize Agent](./.github/workflows/containerize-agent.yml) - This workflows runs on merge with `main` and will create a new docker image and push it to Docker Hub and PyPi. It uses the version in `pyproject.toml`.
+2. [Containerize Agent](./.github/workflows/containerize-agent.yml) - This workflows runs on merge with `main` and will create a new docker image and push it to DockerHub and PyPi. It uses the version in `pyproject.toml`.
 
 A visual representation of the workflow is shown [here](./.github/workflows/agent_release_workflows.png)
+
+### Dependabot and Releases/Pre-releases
+GitHub's Dependabot regularly checks our dependencies for vulnerabilty-based updates and proposes PRs to update dependency version numbers accordingly.
+
+Dependabot may only update the `poetry.lock` file. Before merging Dependabot suggestions, we should also ensure that `pyproject.toml` is aligned with version locked in the `poetry.lock` file by following the instructions above at [Updating `poetry.lock` dependencies](#updating-poetry.lock-dependencies).
+
+Note: if Dependabot suggests an update to a tool in the `[tool.poetry.group.dev.dependencies]` group in `pyproject.toml`, these changes can be merged in a pre-release version (i.e., a standard release is not required). While doing this, make sure any version references in the pre-commit config `.pre-commit-config.yaml` are kept in sync (e.g., ruff).
+
+For other dependency updates, a new release should be orchestrated.
