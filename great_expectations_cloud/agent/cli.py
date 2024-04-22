@@ -7,7 +7,7 @@ import logging
 import pathlib
 from typing import Any
 
-from great_expectations_cloud.logging.logging_cfg import LogLevel, configure_logger
+from great_expectations_cloud.logging.logging_cfg import LogLevel, LogSettings, configure_logger
 
 LOGGER = logging.getLogger(__name__)
 
@@ -80,12 +80,15 @@ def main() -> None:
         import sys
 
         sys.exit(1)
+
     configure_logger(
-        log_level=args.log_level,
-        skip_log_file=args.skip_log_file,
-        log_cfg_file=args.log_cfg_file,
-        json_log=args.json_log,
-        custom_tags=custom_tags,
+        LogSettings(
+            log_level=args.log_level,
+            skip_log_file=args.skip_log_file,
+            log_cfg_file=args.log_cfg_file,
+            json_log=args.json_log,
+            custom_tags=custom_tags,
+        )
     )
 
     if args.version:
