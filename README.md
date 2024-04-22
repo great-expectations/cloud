@@ -137,12 +137,6 @@ The contents from [/examples/agent/data](/examples/agent/data/) will be copied t
 
 Note: The agent is core-version specific but this registration mechanism allows us to preemptively work on actions for future versions of GX Core while still supporting the existing latest major version.
 
-### Dependabot
-
-We use GitHub's Dependabot to automate the dependency update process and proactively address any potential security concerns.
-
-
-
 ### Release Process
 
 #### Versioning
