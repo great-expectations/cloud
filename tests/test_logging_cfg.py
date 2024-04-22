@@ -110,11 +110,11 @@ def test_logfile(fs, logfile_path):
     """
     fs sets up a fake fs
     """
-    assert not os.path.exists(logfile_path)
+    assert not Path.exists(logfile_path)
     configure_logger(LogLevel.DEBUG, False, False, {}, None)
     id_in_log = str(uuid.uuid4())
     logging.getLogger().fatal(id_in_log)
-    assert os.path.exists(logfile_path)
+    assert Path.exists(logfile_path)
     with open(logfile_path) as f:
         assert id_in_log in f.read()
 
@@ -123,11 +123,11 @@ def test_logfile_skip_log_file(fs, logfile_path):
     """
     fs sets up a fake fs
     """
-    assert not os.path.exists(logfile_path)
+    assert not Path.exists(logfile_path)
     disable_log_file = True
     configure_logger(LogLevel.DEBUG, disable_log_file, False, {}, None)
     logging.getLogger().fatal("very bad")
-    assert not os.path.exists(logfile_path)
+    assert not Path.exists(logfile_path)
 
 
 def test_logger_json():
@@ -166,7 +166,7 @@ def test_load_logging_cfg():
     config_path = "log.config"
     with open(config_path, "wb") as f:
         f.write(config_str.encode())
-    assert os.path.exists(config_path)
+    assert Path.exists(Path(config_path))
     configure_logger(LogLevel.DEBUG, False, False, {}, Path(config_path))
     handlers = logging.getLogger().handlers
     assert "config_handler" in [x.name for x in handlers]
