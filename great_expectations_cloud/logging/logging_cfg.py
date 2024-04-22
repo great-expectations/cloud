@@ -8,7 +8,7 @@ import logging.config
 import logging.handlers
 import pathlib
 from datetime import datetime, timezone
-from typing import Any, Final
+from typing import Any, Final, Literal
 
 from typing_extensions import override
 
@@ -164,11 +164,11 @@ class JSONFormatter(logging.Formatter):
 
     def __init__(
         self,
-        fmt=None,
-        datefmt=None,
-        style="%",
-        validate=True,
-        **kwargs,
+        fmt: str | None = None,
+        datefmt: str | None = None,
+        style: Literal["%", "{", "$"] = "%",
+        validate: bool = True,
+        **kwargs: dict[str, Any],
     ):  # Must impl logging Formatter
         super().__init__(fmt, datefmt, style, validate)
         if custom_tags := kwargs.get("custom_tags"):
@@ -177,7 +177,7 @@ class JSONFormatter(logging.Formatter):
             self.custom_tags = {}
 
     @override
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         # DD ref:
         # {"event": "send_request_body.started request=<Request [b'GET']>", "logger": "httpcore.http11", "level": "debug",
         #  "timestamp": "2024-04-18T10:17:56.411405Z", "service": "unset", "logging_version": "0.2.0", "env": "robs",
