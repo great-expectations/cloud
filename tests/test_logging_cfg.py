@@ -137,8 +137,7 @@ def test_logger_json():
     assert JSONFormatter in formatter_types
 
 
-# Re enable fs fake
-def test_load_logging_cfg():
+def test_load_logging_cfg(fs):
     config_dict = {
         "version": 1,
         "disable_existing_loggers": False,
