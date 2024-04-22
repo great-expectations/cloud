@@ -5,6 +5,7 @@ import dataclasses as dc
 import json
 import logging
 import pathlib
+import sys
 from typing import Any
 
 from great_expectations_cloud.logging.logging_cfg import LogLevel, LogSettings, configure_logger
@@ -72,13 +73,11 @@ def _parse_args() -> Arguments:
 def main() -> None:
     # lazy imports ensure our cli is fast and responsive
     args: Arguments = _parse_args()
+    custom_tags: dict[str, Any] = {}
     try:
-        custom_tags: dict[str, Any] = json.loads(args.custom_log_tags)
+        custom_tags = json.loads(args.custom_log_tags)
     except json.JSONDecodeError as e:
         print(f"Failed to parse custom tags {args.custom_log_tags} due to {e}")
-        custom_tags = {}
-        import sys
-
         sys.exit(1)
 
     configure_logger(

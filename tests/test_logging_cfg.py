@@ -18,6 +18,10 @@ from great_expectations_cloud.logging.logging_cfg import (
     configure_logger,
 )
 
+"""
+Note: fs fixture sets up a fake fs
+"""
+
 TIMESTAMP = "2024-01-01T00:00:00+00:00"
 
 default_log_formatted = {
@@ -28,8 +32,6 @@ default_log_formatted = {
 }
 
 default_log_emitted = {"msg": "hello", "name": "root", "levelname": "DEBUG"}
-
-# JSON_FIELDS = (
 
 
 @pytest.fixture
@@ -102,9 +104,6 @@ def test_json_formatter_stack_info():
 
 
 def test_logfile(fs, logfile_path):
-    """
-    fs sets up a fake fs
-    """
     assert not Path.exists(logfile_path)
 
     configure_logger(LogSettings(LogLevel.DEBUG, False, False, {}, None))
@@ -116,9 +115,6 @@ def test_logfile(fs, logfile_path):
 
 
 def test_logfile_skip_log_file(fs, logfile_path):
-    """
-    fs sets up a fake fs
-    """
     assert not Path.exists(logfile_path)
     disable_log_file = True
     configure_logger(LogSettings(LogLevel.DEBUG, disable_log_file, False, {}, None))
@@ -127,9 +123,6 @@ def test_logfile_skip_log_file(fs, logfile_path):
 
 
 def test_logger_json():
-    """
-    fs sets up a fake fs
-    """
     json_log = True
     configure_logger(LogSettings(LogLevel.DEBUG, False, json_log, {}, None))
     handlers = logging.getLogger().handlers

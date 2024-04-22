@@ -77,7 +77,7 @@ class LogLevel(str, enum.Enum):
 
 
 # TODO Add org ID
-def configure_logger(log_settings: LogSettings) -> None:  # TODO Simplify args
+def configure_logger(log_settings: LogSettings) -> None:
     """
     Configure the root logger for the application.
     If a log configuration file is provided, other arguments are ignored.
@@ -94,7 +94,6 @@ def configure_logger(log_settings: LogSettings) -> None:  # TODO Simplify args
     logging.config.dictConfig(DEFAULT_LOGGING_CFG)
 
     root = logging.getLogger()
-    # TODO Safer way to get handler
     if log_settings.json_log and len(root.handlers) == 1:
         fmt = JSONFormatter(custom_tags=log_settings.custom_tags)
         root.handlers[0].setFormatter(fmt)
@@ -138,28 +137,6 @@ class JSONFormatter(logging.Formatter):
     """
     All custom formatting is done through subclassing this Formatter class
     Note: Defined within fn bc parametrization of Formatters is not supported by dictConfig
-
-    LogRecord attribute:
-    'name': 'great_expectations_cloud.agent.agent',
-     'msg': 'GX Agent version: 0.0.47.dev0',
-     'args': (),
-     'levelname': 'ERROR',
-     'levelno': 40,
-     'pathname': '/Users/r/py/cloud/great_expectations_cloud/agent/agent.py',
-     'filename': 'agent.py',
-     'module': 'agent',
-     'exc_info': None,
-     'exc_text': None,
-     'stack_info': None,
-     'lineno': 91,
-     'funcName': '__init__',
-     'created': 1713292929.1121202,
-     'msecs': 112.0,
-     'relativeCreated': 5210.726261138916,
-     'thread': 8276975872,
-     'threadName': 'MainThread',
-     'processName': 'MainProcess',
-     'process': 44923}
     """
 
     def __init__(
@@ -169,7 +146,7 @@ class JSONFormatter(logging.Formatter):
         style: Literal["%", "{", "$"] = "%",
         validate: bool = True,
         **kwargs: dict[str, Any],
-    ):  # Must impl logging Formatter
+    ):
         super().__init__(fmt, datefmt, style, validate)
         if custom_tags := kwargs.get("custom_tags"):
             self.custom_tags = custom_tags
@@ -178,11 +155,6 @@ class JSONFormatter(logging.Formatter):
 
     @override
     def format(self, record: logging.LogRecord) -> str:
-        # DD ref:
-        # {"event": "send_request_body.started request=<Request [b'GET']>", "logger": "httpcore.http11", "level": "debug",
-        #  "timestamp": "2024-04-18T10:17:56.411405Z", "service": "unset", "logging_version": "0.2.0", "env": "robs",
-        #  "dd.trace_id": "0", "dd.span_id": "0"}
-
         optionals = {}
 
         base_tags = {
