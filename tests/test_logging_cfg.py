@@ -1,8 +1,7 @@
 from __future__ import annotations
-import logging
 
-from great_expectations_cloud.logging.logging_cfg import configure_logger
 import json
+import logging
 import uuid
 from logging import makeLogRecord
 from pathlib import Path
@@ -15,6 +14,7 @@ from great_expectations_cloud.logging.logging_cfg import (
     DEFAULT_LOG_FILE,
     JSONFormatter,
     LogLevel,
+    configure_logger,
 )
 
 TIMESTAMP = "2024-01-01T00:00:00+00:00"
@@ -68,9 +68,6 @@ class TestLogLevel:
         assert LogLevel.CRITICAL.numeric_level == 50
 
 
-
-
-
 @pytest.mark.parametrize("custom_tags", [{}, {"environment": "jungle"}])
 @freezegun.freeze_time(TIMESTAMP)
 def test_json_formatter(custom_tags):
@@ -101,9 +98,6 @@ def test_json_formatter_stack_info():
     out_str = fmt.format(log_record)
     actual = json.loads(out_str)
     assert actual == expected
-
-
-import os
 
 
 def test_logfile(fs, logfile_path):
