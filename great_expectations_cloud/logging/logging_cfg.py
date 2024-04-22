@@ -18,6 +18,8 @@ DEFAULT_LOG_FILE: Final[str] = "logfile"
 DEFAULT_LOG_DIR = "logs"
 SERVICE_NAME: Final[str] = "gx-agent"
 DEFAULT_FILE_LOGGING_LEVEL: Final[int] = logging.DEBUG
+
+# Consider moving to file
 DEFAULT_LOGGING_CFG = {
     "version": 1,
     "disable_existing_loggers": False,
