@@ -1,5 +1,7 @@
 from __future__ import annotations
+import logging
 
+from great_expectations_cloud.logging.logging_cfg import configure_logger
 import json
 import uuid
 from logging import makeLogRecord
@@ -66,9 +68,7 @@ class TestLogLevel:
         assert LogLevel.CRITICAL.numeric_level == 50
 
 
-import logging
 
-from great_expectations_cloud.logging.logging_cfg import configure_logger
 
 
 @pytest.mark.parametrize("custom_tags", [{}, {"environment": "jungle"}])
