@@ -222,4 +222,8 @@ Dependabot may only update the `poetry.lock` file. Before merging Dependabot sug
 
 Note: if Dependabot suggests an update to a tool in the `[tool.poetry.group.dev.dependencies]` group in `pyproject.toml`, these changes can be merged in a pre-release version (i.e., a standard release is not required). While doing this, make sure any version references in the pre-commit config `.pre-commit-config.yaml` are kept in sync (e.g., ruff).
 
-For other dependency updates, a new release should be orchestrated.
+For other dependency updates, a new release should be orchestrated. This includes updates in the following sections:
+
+- `[tool.poetry.dependencies]`
+- `[tool.poetry.group.*.dependencies]` where `*` is the name of the group (not including the `dev` group)
+
