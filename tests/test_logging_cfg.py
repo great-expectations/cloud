@@ -95,9 +95,10 @@ def test_json_formatter_exc_info():
 
 @freezegun.freeze_time(TIMESTAMP)
 def test_json_formatter_stack_info():
-    expected = {**default_log_formatted, "stack_info": "what is this?"}
+    stack_info = 'File "abc.py", line 553, in <module> ...'
+    expected = {**default_log_formatted, "stack_info": stack_info}
     fmt = JSONFormatter()
-    log_record = makeLogRecord({**default_log_emitted, "stack_info": "what is this?"})
+    log_record = makeLogRecord({**default_log_emitted, "stack_info": stack_info})
     out_str = fmt.format(log_record)
     actual = json.loads(out_str)
     assert actual == expected
