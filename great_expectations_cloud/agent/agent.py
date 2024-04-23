@@ -242,7 +242,7 @@ class GXAgent:
                     error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to latest.",
                 )
                 LOGGER.error(
-                    f"Job completed with error: {event_context.event.type} ({event_context.correlation_id}). Ensure agent is up-to-date."
+                    "Job completed with error. Ensure agent is up-to-date.", extra= {"event_type": event_context.event.type, "id":event_context.correlation_id}
                 )
             else:
                 status = JobCompleted(
@@ -345,7 +345,7 @@ class GXAgent:
             job_id: job identifier, also known as correlation_id
             status: pydantic model encapsulating the current status
         """
-        LOGGER.debug("Updating status", extra={"job_id": job_id, "status": status})
+        LOGGER.info("Updating status", extra={"job_id": job_id, "status": status})
         agent_sessions_url = (
             f"{self._config.gx_cloud_base_url}/organizations/{self._config.gx_cloud_organization_id}"
             + f"/agent-jobs/{job_id}"
