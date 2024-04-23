@@ -38,7 +38,7 @@ great-expectations = { version = "^0.18.4", extras = [
     "sqlalchemy1",
 ] }
 snowflake-sqlalchemy = ">=1.5.0"
-snowflake-connector-python = ">=3.9.0"
+snowflake-connector-python = ">=3.3.1"
 # TODO: Remove the python constraint once this PR is merged - https://github.com/sqlalchemy-redshift/sqlalchemy-redshift/pull/288
 sqlalchemy-redshift = { version = "^0.8.8", python = "<3.11" }
 psycopg2-binary = "^2.9.9"
