@@ -242,7 +242,11 @@ class GXAgent:
                     error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to latest.",
                 )
                 LOGGER.error(
-                    "Job completed with error. Ensure agent is up-to-date.", extra= {"event_type": event_context.event.type, "id":event_context.correlation_id}
+                    "Job completed with error. Ensure agent is up-to-date.",
+                    extra={
+                        "event_type": event_context.event.type,
+                        "id": event_context.correlation_id,
+                    },
                 )
             else:
                 status = JobCompleted(
