@@ -20,5 +20,13 @@ def test_command_retuns_zero_exit_code(cmd: str):
     assert cmplt_process.returncode == 0
 
 
+def test_custom_log_tags_failure():
+    cli_cmds = ["gx-agent", "--custom-log-tags", "{'badJSON"]
+    print(f"Testing command:\n  {' '.join(cli_cmds)}\n")
+    cmplt_process = subprocess.run(cli_cmds, check=False, timeout=6.0)  # noqa: S603 # trusted input
+    print(cmplt_process.stdout)
+    assert cmplt_process.returncode != 0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-vv"])
