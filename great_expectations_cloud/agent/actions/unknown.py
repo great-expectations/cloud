@@ -9,10 +9,10 @@ from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
+from great_expectations_cloud.agent.agent_warnings import warn_unknown_event
 from great_expectations_cloud.agent.models import (
     UnknownEvent,
 )
-from great_expectations_cloud.agent.warnings import warn_unknown_event
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
