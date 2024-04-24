@@ -21,6 +21,7 @@ from great_expectations_cloud.agent.actions import (
     RunMissingnessDataAssistantAction,
     RunOnboardingDataAssistantAction,
 )
+from great_expectations_cloud.agent.agent_warnings import GXAgentUserWarning
 from great_expectations_cloud.agent.event_handler import (
     _EVENT_ACTION_MAP,
     EventAlreadyRegisteredError,
@@ -41,7 +42,6 @@ from great_expectations_cloud.agent.models import (
     RunOnboardingDataAssistantEvent,
     UnknownEvent,
 )
-from great_expectations_cloud.agent.warnings import GXAgentUserWarning
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
