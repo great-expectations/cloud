@@ -51,12 +51,12 @@ def in_memory_batch_request_missing_dataframe_error_type() -> type[Exception]:
 
 
 @pytest.fixture(scope="module")
-def get_missing_expectation_suite_error_type() -> type[gx_exceptions.DataContextError]:
+def get_missing_expectation_suite_error_type() -> type[Exception]:  # type: ignore[no-any-return] # for testing only
     return gx_exceptions.DataContextError
 
 
 @pytest.fixture(scope="module")
-def get_missing_checkpoint_error_type() -> type[gx_exceptions.DataContextError]:
+def get_missing_checkpoint_error_type() -> type[Exception]:  # type: ignore[no-any-return] # for testing only
     return gx_exceptions.DataContextError
 
 
