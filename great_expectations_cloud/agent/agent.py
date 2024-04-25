@@ -87,9 +87,7 @@ class GXAgent:
 
     def __init__(self: Self):
         agent_version: str = self.get_current_gx_agent_version()
-        great_expectations_version: str = self._get_current_great_expectations_version()
         print(f"GX Agent version: {agent_version}")
-        print(f"Great Expectations version: {great_expectations_version}")
         print("Initializing the GX Agent.")
         self._set_http_session_headers()
         self._config = self._get_config()
@@ -156,11 +154,6 @@ class GXAgent:
     @classmethod
     def get_current_gx_agent_version(cls) -> str:
         version: str = metadata_version(cls._PYPI_GX_AGENT_PACKAGE_NAME)
-        return version
-
-    @classmethod
-    def _get_current_great_expectations_version(cls) -> str:
-        version: str = metadata_version(cls._PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME)
         return version
 
     def _handle_event_as_thread_enter(self, event_context: EventContext) -> None:
