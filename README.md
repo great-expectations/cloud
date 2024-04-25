@@ -218,11 +218,11 @@ A visual representation of the workflow is shown [here](./.github/workflows/agen
 ### Dependabot and Releases/Pre-releases
 GitHub's Dependabot regularly checks our dependencies for vulnerabilty-based updates and proposes PRs to update dependency version numbers accordingly.
 
-Dependabot may only update the `poetry.lock` file. Before merging Dependabot suggestions, we should also ensure that `pyproject.toml` is aligned with version locked in the `poetry.lock` file by following the instructions above at [Updating `poetry.lock` dependencies](#updating-poetry.lock-dependencies).
+Dependabot may only update the `poetry.lock` file. If only changes to `poetry.lock` are made, this may be done in a pre-release.
 
-Note: if Dependabot suggests an update to a tool in the `[tool.poetry.group.dev.dependencies]` group in `pyproject.toml`, these changes can be merged in a pre-release version (i.e., a standard release is not required). While doing this, make sure any version references in the pre-commit config `.pre-commit-config.yaml` are kept in sync (e.g., ruff).
-
-For other dependency updates, a new release should be orchestrated. This includes updates in the following sections:
-
-- `[tool.poetry.dependencies]`
-- `[tool.poetry.group.*.dependencies]` where `*` is the name of the group (not including the `dev` group)
+For changes to the `pyproject.toml` file:
+- If the version of a tool in the `[tool.poetry.group.dev.dependencies]` group is updated, this may be done in a pre-release.
+   -  While doing this, make sure any version references in the pre-commit config `.pre-commit-config.yaml` are kept in sync (e.g., ruff).
+- For other dependency updates, a new release should be orchestrated. This includes updates in the following sections:
+  - `[tool.poetry.dependencies]`
+  - `[tool.poetry.group.*.dependencies]` where `*` is the name of the group (not including the `dev` group)
