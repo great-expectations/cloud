@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import traceback
 import warnings
 from collections import defaultdict
@@ -68,7 +69,7 @@ class GXAgentConfig(AgentBaseModel):
     queue: str
     connection_string: AmqpDsn
     # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
+    gx_cloud_base_url: AnyUrl = os.getenv("GX_CLOUD_BASE_URL", CLOUD_DEFAULT_BASE_URL)
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
 
