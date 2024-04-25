@@ -16,7 +16,4 @@ from great_expectations_cloud.agent.actions.draft_datasource_config_action impor
 )
 from great_expectations_cloud.agent.actions.list_table_names import ListTableNamesAction
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
-from great_expectations_cloud.agent.actions.run_column_descriptive_metrics_action import (
-    ColumnDescriptiveMetricsAction,
-)
 from great_expectations_cloud.agent.actions.run_metric_list_action import MetricListAction
