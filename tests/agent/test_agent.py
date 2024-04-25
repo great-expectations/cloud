@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
@@ -91,12 +92,14 @@ def gx_agent_config_missing_org_id(
 
 @pytest.fixture
 def org_id():
-    return "4ea2985c-4fb7-4c53-9f8e-07b7e0506c3e"
+    # return "4ea2985c-4fb7-4c53-9f8e-07b7e0506c3e"
+    return (os.environ.get("GX_CLOUD_ORGANIZATION_ID"),)
 
 
 @pytest.fixture
 def token():
-    return "MTg0NDkyYmYtNTBiOS00ZDc1LTk3MmMtYjQ0M2NhZDA2NjJk"
+    # return "MTg0NDkyYmYtNTBiOS00ZDc1LTk3MmMtYjQ0M2NhZDA2NjJk"
+    return (os.environ.get("GX_CLOUD_ACCESS_TOKEN"),)
 
 
 @pytest.fixture
