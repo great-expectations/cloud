@@ -174,7 +174,6 @@ class JSONFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         log_full = record.__dict__
 
-        # TODO Handle in log ingestor?
         log_full["event"] = record.msg
         log_full["level"] = record.levelname
         log_full["logger"] = record.name
