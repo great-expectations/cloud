@@ -51,12 +51,12 @@ def in_memory_batch_request_missing_dataframe_error_type() -> type[Exception]:
 
 
 @pytest.fixture(scope="module")
-def get_missing_expectation_suite_error_type() -> type[Exception]:  # type: ignore[no-any-return] # for testing only
+def get_missing_expectation_suite_error_type():
     return gx_exceptions.DataContextError
 
 
 @pytest.fixture(scope="module")
-def get_missing_checkpoint_error_type() -> type[Exception]:  # type: ignore[no-any-return] # for testing only
+def get_missing_checkpoint_error_type():
     return gx_exceptions.DataContextError
 
 
@@ -106,7 +106,7 @@ def batch_request(
     data_asset: DataFrameAsset,
     pandas_test_df: pd.DataFrame,
     in_memory_batch_request_missing_dataframe_error_type: type[Exception],
-) -> BatchRequest:
+):
     with pytest.raises(in_memory_batch_request_missing_dataframe_error_type):
         data_asset.build_batch_request()
     return data_asset.build_batch_request(dataframe=pandas_test_df)
