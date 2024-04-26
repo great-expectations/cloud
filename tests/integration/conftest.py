@@ -6,8 +6,6 @@ from typing import TYPE_CHECKING, Final
 import great_expectations as gx
 import pytest
 
-# import pact
-
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
@@ -15,12 +13,29 @@ LOGGER: Final = logging.getLogger("tests")
 
 
 @pytest.fixture(scope="module")
-def context() -> CloudDataContext:
+def cloud_base_url() -> str:
+    return "http://localhost:5000"
+
+
+@pytest.fixture(scope="module")
+def cloud_organization_id() -> str:
+    return "0ccac18e-7631-4bdd-8a42-3c35cce574c6"
+
+
+@pytest.fixture(scope="module")
+def cloud_access_token() -> str:
+    return "ad2a171fe8134d3f90ecd8af16abf3c5.V1.6syarSNu5a3UNJcnPJsj87TKzKflZr3zwz9ChNCevHSLJ06TmrFY9d1gGpIC67lezYQq99dBgK9iYu2xSS_X5A"
+
+
+@pytest.fixture(scope="module")
+def context(
+    cloud_base_url: str, cloud_organization_id: str, cloud_access_token: str
+) -> CloudDataContext:
     context = gx.get_context(
         cloud_mode=True,
-        cloud_base_url="http://localhost:5000",
-        cloud_organization_id="0ccac18e-7631-4bdd-8a42-3c35cce574c6",
-        cloud_access_token="8e6abae3cbb34784a8e9d6da79da18f2.V1.QWeOmYzYppaQ8SqD2KuxQhC-pFEtUv84U0lfCc-dtilPcjsI2DRXCxNvuDPu2lTw2-G18RADeiEGYwaPAeeeTw",
+        cloud_base_url=cloud_base_url,
+        cloud_organization_id=cloud_organization_id,
+        cloud_access_token=cloud_access_token,
         # cloud_base_url=os.environ.get("GX_CLOUD_BASE_URL"),
         # cloud_organization_id=os.environ.get("GX_CLOUD_ORGANIZATION_ID"),
         # cloud_access_token=os.environ.get("GX_CLOUD_ACCESS_TOKEN"),

@@ -7,6 +7,7 @@ import great_expectations.exceptions as gx_exceptions
 import pandas as pd
 import pytest
 from great_expectations.core import ExpectationConfiguration
+from great_expectations.core.http import create_session
 from great_expectations.data_context import CloudDataContext
 
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
@@ -206,9 +207,30 @@ def test_loading_context(context):
     assert isinstance(context, CloudDataContext)
 
 
-def test_running_checkpoint_action(context, checkpoint_event):
+def test_running_checkpoint_action(
+    context,
+    checkpoint_event,
+    cloud_base_url: str,
+    cloud_organization_id: str,
+    cloud_access_token: str,
+):
     action = RunCheckpointAction(context=context)
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     action_result = action.run(event=checkpoint_event, id=event_id)
     assert action_result.type == checkpoint_event.type
     assert action_result.id == event_id
+
+    # Also get the resulting validation result
+    validation_result_id = action_result.created_resources[0].resource_id
+
+    resource_url = (
+        f"{cloud_base_url}/organizations/"
+        f"{cloud_organization_id}/validation-results/{validation_result_id}"
+    )
+    session = create_session(access_token=cloud_access_token)
+    response = session.get(resource_url)
+    data = response.json()
+
+    validation_result = data["data"]["attributes"]["validation_result"]
+
+    assert validation_result["success"]
