@@ -57,9 +57,6 @@ jobs:
       AUTH0_API_AUDIENCE: ${{secrets.AUTH0_API_AUDIENCE}}
       AUTH0_MERCURY_API_CLIENT_ID: ${{secrets.AUTH0_MERCURY_API_CLIENT_ID}}
       AUTH0_MERCURY_API_CLIENT_SECRET: ${{secrets.AUTH0_MERCURY_API_CLIENT_SECRET}}
-      #PACT_DO_NOT_TRACK: true
-      #SNOWFLAKE_CI_ACCOUNT: ${{secrets.SNOWFLAKE_CI_ACCOUNT}}
-      #SNOWFLAKE_CI_USER_PASSWORD: ${{secrets.SNOWFLAKE_CI_USER_PASSWORD}}
       LOGGING_LEVEL: DEBUG
       ENVIRONMENT: local
 
@@ -108,7 +105,7 @@ jobs:
 
       - name: Run tests
 
-        run: poetry run pytest -m "not agentjobs" --cov-report xml
+        run: poetry run pytest -m "not agentjobs" -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
