@@ -6,13 +6,26 @@ from typing import Final
 
 import great_expectations as gx
 import pytest
+import requests
 from great_expectations.data_context import CloudDataContext
 
 LOGGER: Final = logging.getLogger("tests")
 
 
+def ping_server(address: str):
+    try:
+        requests.get(address, timeout=1)
+    except requests.exceptions.ConnectTimeout:
+        print("HI HI HI HI")
+        return False
+    return True
+
+
 @pytest.fixture(scope="module")
 def context() -> CloudDataContext:
+    yes = ping_server("http://localhost:5000/")
+    print(f"answer: {yes}")
+
     context = gx.get_context(
         mode="cloud",
         cloud_base_url="http://localhost:5000/",
