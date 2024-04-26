@@ -15,7 +15,7 @@ LOGGER: Final = logging.getLogger("tests")
 def context() -> CloudDataContext:
     context = gx.get_context(
         mode="cloud",
-        cloud_base_url="http://localhost:5000",
+        cloud_base_url="http://localhost:5000/",
         # cloud_organization_id=os.environ.get("GX_CLOUD_ORGANIZATION_ID"),
         cloud_organization_id="0ccac18e-7631-4bdd-8a42-3c35cce574c6",
         cloud_access_token=os.environ.get("GX_CLOUD_ACCESS_TOKEN"),
