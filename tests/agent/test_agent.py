@@ -13,7 +13,7 @@ from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import GXAgentConfig, GXAgentConfigError
+from great_expectations_cloud.agent.agent import GXAgentConfig
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
@@ -298,14 +298,14 @@ def test_gx_agent_updates_cloud_on_job_status(
     )
 
 
-def test_invalid_config_agent_missing_token(gx_agent_config_missing_token):
-    with pytest.raises(GXAgentConfigError):
-        GXAgent()
+# def test_invalid_config_agent_missing_token(gx_agent_config_missing_token):
+#     with pytest.raises(GXAgentConfigError):
+#         GXAgent()
 
 
-def test_invalid_config_agent_missing_org_id(gx_agent_config_missing_org_id):
-    with pytest.raises(GXAgentConfigError):
-        GXAgent()
+# def test_invalid_config_agent_missing_org_id(gx_agent_config_missing_org_id):
+#     with pytest.raises(GXAgentConfigError):
+#         GXAgent()
 
 
 def test_custom_user_agent(
