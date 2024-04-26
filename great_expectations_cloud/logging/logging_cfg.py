@@ -8,7 +8,7 @@ import logging.config
 import logging.handlers
 import pathlib
 from datetime import datetime, timezone
-from typing import Any, Final, Literal
+from typing import Any, ClassVar, Final, Literal
 
 from typing_extensions import override
 
@@ -140,7 +140,7 @@ class JSONFormatter(logging.Formatter):
 
     """
 
-    _SKIP_KEYS = [
+    _SKIP_KEYS: ClassVar[frozenset[str]] = [
         "exc_text",
         "levelno",
         "lineno",
