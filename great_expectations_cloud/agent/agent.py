@@ -55,6 +55,7 @@ if TYPE_CHECKING:
     from great_expectations_cloud.agent.actions.agent_action import ActionResult
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
+LOGGER.setLevel(logging.INFO)
 HandlerMap = Dict[str, OnMessageCallback]
 
 
@@ -200,6 +201,7 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
         self._update_status(job_id=event_context.correlation_id, status=JobStarted())
+        print(f"Starting job {event_context.event.type} ({event_context.correlation_id}) ")
         LOGGER.info(
             "Starting job",
             extra={
@@ -342,7 +344,7 @@ class GXAgent:
             job_id: job identifier, also known as correlation_id
             status: pydantic model encapsulating the current status
         """
-        LOGGER.info("Updating status", extra={"job_id": job_id, "status": status})
+        LOGGER.info("Updating status", extra={"job_id": job_id, "status": str(status)})
         agent_sessions_url = (
             f"{self._config.gx_cloud_base_url}/organizations/{self._config.gx_cloud_organization_id}"
             + f"/agent-jobs/{job_id}"
