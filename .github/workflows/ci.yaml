@@ -87,6 +87,11 @@ jobs:
         run: |
           docker compose -f assets/mercury/docker-compose.yml up -d --quiet-pull --wait --wait-timeout 150
 
+      - name: Show logs for debugging
+        if: failure()
+        run: |
+          docker compose -f assets/mercury/docker-compose.yml logs
+
       - name: Run tests
         env:
           GX_CLOUD_ACCESS_TOKEN: ${{ secrets.GX_CLOUD_ACCESS_TOKEN }}
