@@ -173,9 +173,9 @@ class JSONFormatter(logging.Formatter):
         log_full = record.__dict__
 
         # TODO Handle in log ingestor?
-        log_full["event"] = (record.msg,)
-        log_full["level"] = (record.levelname,)
-        log_full["logger"] = (record.name,)
+        log_full["event"] = record.msg
+        log_full["level"] = record.levelname
+        log_full["logger"] = record.name
         log_full["timestamp"] = datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat()
 
         if record.exc_info:
@@ -184,7 +184,7 @@ class JSONFormatter(logging.Formatter):
         log_subset = {
             key: value
             for key, value in log_full.items()
-            if key is not None or key not in self._SKIP_KEYS
+            if key is not None and key not in self._SKIP_KEYS
         }
 
         complete_dict = {
