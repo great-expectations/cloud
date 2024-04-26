@@ -47,7 +47,7 @@ services:
     ports:
       - 5000:5000
     environment:
-      LOGGING_LEVEL: ${LOGGING_LEVEL}
+      LOGGING_LEVEL: DEBUG
       ENVIRONMENT: ${ENVIRONMENT}
       MERCURY_DIALECT: postgresql
       MERCURY_USER: gx_mercury_user
