@@ -182,6 +182,9 @@ class JSONFormatter(logging.Formatter):
         if record.exc_info:
             log_full["exc_info"] = str(record.exc_info)
 
+        if record.args:
+            log_full["args"] = str(record.args)
+
         log_subset = {
             key: value
             for key, value in log_full.items()
