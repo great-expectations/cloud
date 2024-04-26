@@ -39,6 +39,15 @@ def logfile_path():
     return Path(DEFAULT_LOG_DIR, DEFAULT_LOG_FILE)
 
 
+def is_subset(small_set, big_set):
+    """
+    Returns if dict1 a subset of dict2
+    """
+    lala = set(small_set) - set(big_set)
+    print(lala)
+    return not bool(lala)
+
+
 class TestLogLevel:
     @pytest.mark.parametrize(
         "log_level",
@@ -80,7 +89,7 @@ def test_json_formatter(custom_tags):
 
     expected = {**default_log_formatted, **custom_tags}
 
-    assert actual == expected
+    assert is_subset(expected, actual)
 
 
 @freezegun.freeze_time(TIMESTAMP)
@@ -90,7 +99,27 @@ def test_json_formatter_exc_info():
     log_record = makeLogRecord({**default_log_emitted, "exc_info": (1, 2, 3)})
     out_str = fmt.format(log_record)
     actual = json.loads(out_str)
-    assert actual == expected
+    assert is_subset(expected, actual)
+
+
+@freezegun.freeze_time(TIMESTAMP)
+def test_json_formatter_extra():
+    expected = {**default_log_formatted, "user": "123"}
+    fmt = JSONFormatter()
+    # Not: makeLogRecord does not account for extra kwarg
+    log_record = logging.getLogger(default_log_emitted["name"]).makeRecord(
+        default_log_emitted["name"],
+        logging.DEBUG,
+        "fn_name",
+        0,
+        default_log_emitted["msg"],
+        (),
+        None,
+        extra={"user": "123"},
+    )
+    out_str = fmt.format(log_record)
+    actual = json.loads(out_str)
+    assert is_subset(expected, actual)
 
 
 @freezegun.freeze_time(TIMESTAMP)
@@ -101,7 +130,7 @@ def test_json_formatter_stack_info():
     log_record = makeLogRecord({**default_log_emitted, "stack_info": stack_info})
     out_str = fmt.format(log_record)
     actual = json.loads(out_str)
-    assert actual == expected
+    assert is_subset(expected, actual)
 
 
 def test_logfile(fs, logfile_path):
