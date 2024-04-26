@@ -44,9 +44,7 @@ def is_subset(small_set: dict[str, Any], big_set: dict[str, Any]):
     """
     Returns if dict1 a subset of dict2
     """
-    lala = set(small_set) - set(big_set)
-    print(lala)
-    return not bool(lala)
+    return not bool(set(small_set) - set(big_set))
 
 
 class TestLogLevel:
