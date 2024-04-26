@@ -195,6 +195,3 @@ class JSONFormatter(logging.Formatter):
         }
 
         return json.dumps(complete_dict)
-
-
-# toto formattime native
