@@ -140,19 +140,21 @@ class JSONFormatter(logging.Formatter):
 
     """
 
-    _SKIP_KEYS: ClassVar[frozenset[str]] = [
-        "exc_text",
-        "levelno",
-        "lineno",
-        "msecs",
-        "msg",
-        "name",
-        "pathname",
-        "process",
-        "processName",
-        "thread",
-        "threadName",
-    ]
+    _SKIP_KEYS: ClassVar[frozenset[str]] = frozenset(
+        [
+            "exc_text",
+            "levelno",
+            "lineno",
+            "msecs",
+            "msg",
+            "name",
+            "pathname",
+            "process",
+            "processName",
+            "thread",
+            "threadName",
+        ]
+    )
 
     def __init__(
         self,

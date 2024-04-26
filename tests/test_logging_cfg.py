@@ -5,6 +5,7 @@ import logging
 import uuid
 from logging import makeLogRecord
 from pathlib import Path
+from typing import Any
 
 import freezegun
 import pytest
@@ -39,7 +40,7 @@ def logfile_path():
     return Path(DEFAULT_LOG_DIR, DEFAULT_LOG_FILE)
 
 
-def is_subset(small_set, big_set):
+def is_subset(small_set: dict[str, Any], big_set: dict[str, Any]):
     """
     Returns if dict1 a subset of dict2
     """
