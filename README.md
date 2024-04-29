@@ -57,7 +57,7 @@ gx-agent
 
 ## Dev Setup
 
-See also [CONTRIBUTING.md](/CONTRIBUTING.MD)
+See also [CONTRIBUTING.md](https://github.com/great-expectations/cloud/blob/main/CONTRIBUTING.md)
 
 1. [Install `poetry`](https://python-poetry.org/docs/#installation)
    - [`pipx install poetry`](https://python-poetry.org/docs/#installing-with-pipx)
@@ -127,7 +127,7 @@ Now go into GX Cloud and issue commands for the GX Agent to run, such as generat
 
 #### Example Data
 
-The contents from [/examples/agent/data](/examples/agent/data/) will be copied to `/data` for the Docker container.
+The contents from [/examples/agent/data](https://github.com/great-expectations/cloud/tree/main/examples/agent/data) will be copied to `/data` for the Docker container.
 
 #### Adding an action to the agent
 
@@ -150,7 +150,7 @@ The versioning scheme is `YYYYMMDD.{release_number}` where:
 - the release number starts at 0 for the first release of the day
 - the release number is incremented for each release within the same day
 
-For example: `20240403.0`
+For example: `20240402.0`
 
 _Pre-release_:
 The versioning scheme is `YYYYMMDD.{release_number}.dev{dev_number}`
@@ -209,11 +209,11 @@ A new Docker tag will also be generated and pushed to [Docker Hub](https://hub.d
 
 We use the GitHub Actions workflow to automate the release and pre-release process. There are two workflows involved:
 
-1. [CI](./.github/workflows/ci.yml) - This workflow runs on each pull request and will update the version in `pyproject.toml` to the pre-release version if the version is not already manually updated in the PR. It will also run the tests and linting.
+1. [CI](https://github.com/great-expectations/cloud/blob/main/.github/workflows/ci.yaml) - This workflow runs on each pull request and will update the version in `pyproject.toml` to the pre-release version if the version is not already manually updated in the PR. It will also run the tests and linting.
 
-2. [Containerize Agent](./.github/workflows/containerize-agent.yml) - This workflows runs on merge with `main` and will create a new Docker image and push it to Docker Hub and PyPi. It uses the version in `pyproject.toml`.
+2. [Containerize Agent](https://github.com/great-expectations/cloud/blob/main/.github/workflows/containerize-agent.yaml) - This workflows runs on merge with `main` and will create a new Docker image and push it to Docker Hub and PyPi. It uses the version in `pyproject.toml`.
 
-A visual representation of the workflow is shown [here](./.github/workflows/agent_release_workflows.png)
+A visual representation of the workflow is shown [here](https://github.com/great-expectations/cloud/blob/main/.github/workflows/agent_release_workflows.png)
 
 ### Dependabot and Releases/Pre-releases
 GitHub's Dependabot regularly checks our dependencies for vulnerabilty-based updates and proposes PRs to update dependency version numbers accordingly.
