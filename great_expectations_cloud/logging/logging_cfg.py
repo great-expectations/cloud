@@ -8,7 +8,7 @@ import logging.config
 import logging.handlers
 import pathlib
 from datetime import datetime, timezone
-from typing import Any, Final, Literal
+from typing import Any, ClassVar, Final, Literal
 
 from typing_extensions import override
 
@@ -137,7 +137,24 @@ class JSONFormatter(logging.Formatter):
     """
     All custom formatting is done through subclassing this Formatter class
     Note: Defined within fn bc parametrization of Formatters is not supported by dictConfig
+
     """
+
+    _SKIP_KEYS: ClassVar[frozenset[str]] = frozenset(
+        [
+            "exc_text",
+            "levelno",
+            "lineno",
+            "msecs",
+            "msg",
+            "name",
+            "pathname",
+            "process",
+            "processName",
+            "thread",
+            "threadName",
+        ]
+    )
 
     def __init__(
         self,
@@ -155,19 +172,28 @@ class JSONFormatter(logging.Formatter):
 
     @override
     def format(self, record: logging.LogRecord) -> str:
-        optionals = {}
+        log_full = record.__dict__
 
-        base_tags = {
-            "event": record.msg,
-            "level": record.levelname,
-            "logger": record.name,
-            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
-        }
+        log_full["event"] = record.msg
+        log_full["level"] = record.levelname
+        log_full["logger"] = record.name
+        log_full["timestamp"] = datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat()
+
         if record.exc_info:
-            optionals["exc_info"] = str(record.exc_info)
-        if record.stack_info:
-            optionals["stack_info"] = record.stack_info
+            log_full["exc_info"] = str(record.exc_info)
 
-        complete_dict = {**base_tags, **self.custom_tags, **optionals}
+        if record.args:
+            log_full["args"] = str(record.args)
+
+        log_subset = {
+            key: value
+            for key, value in log_full.items()
+            if key is not None and key not in self._SKIP_KEYS
+        }
+
+        complete_dict = {
+            **log_subset,
+            **self.custom_tags,
+        }
 
         return json.dumps(complete_dict)
