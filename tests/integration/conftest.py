@@ -81,7 +81,6 @@ def datasource(
     get_missing_datasource_error_type: type[Exception],
 ) -> Iterator[PandasDatasource]:
     datasource_name = f"i{uuid.uuid4().hex}"
-    # it doesn't like this part
     datasource = context.sources.add_pandas(
         name=datasource_name,
     )
@@ -219,9 +218,6 @@ def checkpoint_event(checkpoint, datasource_names_to_asset_names):
 
 @pytest.fixture(scope="module")
 def context() -> CloudDataContext:
-    yes = ping_server("http://localhost:5000/")
-    print(f"answer: {yes}")
-
     context = gx.get_context(
         mode="cloud",
         cloud_base_url="http://localhost:5000/",
