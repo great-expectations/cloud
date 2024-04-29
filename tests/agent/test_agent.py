@@ -12,6 +12,7 @@ from great_expectations.compatibility.pydantic import (
     ValidationError,
 )
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
+from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from tenacity import RetryError
 
@@ -166,6 +167,12 @@ def create_session(mocker, queue, connection_string):
 def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config):
     agent = GXAgent()
     assert agent._config == gx_agent_config
+
+
+def test_gx_agent_incorrect_token(monkeypatch):
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "incorrect_token")
+    with pytest.raises(gx_exception.GXCloudError):
+        GXAgent()
 
 
 def test_gx_agent_gets_default_base_url_if_not_provided(get_context, localhost, monkeypatch):
