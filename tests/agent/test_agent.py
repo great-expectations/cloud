@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
@@ -105,16 +106,12 @@ def localhost():
 
 @pytest.fixture
 def org_id():
-    # return "4ea2985c-4fb7-4c53-9f8e-07b7e0506c3e"
-    return "0ccac18e-7631-4bdd-8a42-3c35cce574c6"
-    # return os.environ.get("GX_CLOUD_ORGANIZATION_ID")
+    return os.environ.get("GX_CLOUD_ORGANIZATION_ID")
 
 
 @pytest.fixture
 def token():
-    # return "MTg0NDkyYmYtNTBiOS00ZDc1LTk3MmMtYjQ0M2NhZDA2NjJk"
-    # return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
-    return "3d178eceb99a4a2f84f028fb8d5ec939.V1.QWcHH5cPk4_pxXiGS8kPQ_4x1THSFnRiIcpN8msA5Z-QQrRQ6IzY-EQ_WZxnduJwB3elHqqp_t5cB6AcSC7hnA"
+    return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
 
 
 @pytest.fixture
@@ -144,7 +141,8 @@ def event_handler(mocker):
 
 
 @pytest.fixture
-def checkpoint(mocker):
+def patched_checkpoint(mocker):
+    """Patch for agent.RunCheckpointAction.run"""
     checkpoint = mocker.patch("great_expectations_cloud.agent.actions.RunCheckpointAction.run")
     return checkpoint
 
@@ -391,22 +389,14 @@ def ds_config_factory() -> Callable[[str], dict[Literal["name", "type", "connect
     return _factory
 
 
-def mocked_gx_agent_config(gx_agent_config):
-    return gx_agent_config
-
-
-def mocked_listener(gx_agent):
-    return
-
-
 def test_correlation_id_header(
     set_required_env_vars: None,
     mock_gx_version_check: None,
+    patched_checkpoint: None,
     data_context_config: DataContextConfigTD,
     ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
     fake_subscriber: FakeSubscriber,
-    checkpoint,
 ):
     """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
     agent_job_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
