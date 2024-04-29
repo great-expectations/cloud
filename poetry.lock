@@ -850,13 +850,13 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "0.18.12"
+version = "0.18.13"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "great_expectations-0.18.12-py3-none-any.whl", hash = "sha256:e73b28939579b2ce040751eeeadcc74a7151c41b889a109d7790a6248397e036"},
-    {file = "great_expectations-0.18.12.tar.gz", hash = "sha256:31bf08795cdbd993ca1d2fa974f905bca9a1729cb0ea46517f116205f4d4452d"},
+    {file = "great_expectations-0.18.13-py3-none-any.whl", hash = "sha256:298597205fd6c09e75f5b93620570c143d58d405fd13c328d77e9a27139615c4"},
+    {file = "great_expectations-0.18.13.tar.gz", hash = "sha256:0e70a4ebabaaf9b47ae4640e0068c90fa416929a1c862704cd1077d73020dcaa"},
 ]
 
 [package.dependencies]
@@ -907,7 +907,7 @@ azure = ["azure-identity (>=1.10.0)", "azure-keyvault-secrets (>=4.0.0)", "azure
 azure-secrets = ["azure-identity (>=1.10.0)", "azure-keyvault-secrets (>=4.0.0)", "azure-storage-blob (>=12.5.0)"]
 bigquery = ["gcsfs (>=0.5.1)", "google-cloud-bigquery (>=3.3.6)", "google-cloud-bigquery-storage (>=2.20.0)", "google-cloud-secret-manager (>=1.0.0)", "google-cloud-storage (>=1.28.0)", "google-cloud-storage (>=2.10.0)", "sqlalchemy (<2.0.0)", "sqlalchemy-bigquery (>=1.3.0)"]
 clickhouse = ["clickhouse-sqlalchemy (>=0.2.2)", "pandas (<2.2.0)", "sqlalchemy (<2.0.0)"]
-cloud = ["great-expectations-cloud (>=0.0.3.dev5)", "orjson (>=3.9.7)"]
+cloud = ["orjson (>=3.9.7)"]
 databricks = ["databricks-sql-connector (>=2.0.0)", "sqlalchemy (>=1.4.0)"]
 dremio = ["pyodbc (>=4.0.30)", "sqlalchemy (>=1.4.0)", "sqlalchemy-dremio (==1.2.1)"]
 excel = ["openpyxl (>=3.0.7)", "xlrd (>=1.1.0,<2.0.0)"]
