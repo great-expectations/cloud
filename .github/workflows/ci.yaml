@@ -124,6 +124,7 @@ jobs:
             agent:
               - 'great_expectations_cloud/agent/**'
               - 'poetry.lock'
+              - 'pyproject.toml'
 
   check-version-is-bumped:
     # This job checks that the version in the PR is different from the version in main if the agent has changed.
@@ -218,6 +219,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          git config --global user.email "team@greatexpectations.io"
+          git config --global user.name "Great Expectations"
           git add .
           git commit -m "Pre-release version bump"
           git push
