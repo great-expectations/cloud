@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
@@ -8,6 +7,9 @@ from unittest.mock import call
 
 import pytest
 import responses
+from great_expectations.compatibility.pydantic import (
+    ValidationError,
+)
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from tenacity import RetryError
 
@@ -36,19 +38,22 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def set_required_env_vars(monkeypatch, org_id, token):
+def set_required_env_vars(monkeypatch, org_id, token, localhost):
     monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
+    monkeypatch.setenv("GX_CLOUD_BASE_URL", localhost)
 
 
 @pytest.fixture
-def set_required_env_vars_missing_token(monkeypatch, org_id):
+def set_required_env_vars_missing_token(monkeypatch, org_id, localhost):
     monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
+    monkeypatch.setenv("GX_CLOUD_BASE_URL", localhost)
 
 
 @pytest.fixture
-def set_required_env_vars_missing_org_id(monkeypatch, token):
+def set_required_env_vars_missing_org_id(monkeypatch, token, localhost):
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
+    monkeypatch.setenv("GX_CLOUD_BASE_URL", localhost)
 
 
 @pytest.fixture
@@ -60,19 +65,21 @@ def gx_agent_config(
         connection_string=connection_string,
         gx_cloud_access_token=token,
         gx_cloud_organization_id=org_id,
+        gx_cloud_base_url="http://localhost:5000",
     )
     return config
 
 
 @pytest.fixture
 def gx_agent_config_missing_token(
-    set_required_env_vars_missing_token, queue, connection_string, org_id, token
+    set_required_env_vars_missing_token, queue, connection_string, org_id, token, localhost
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_access_token=token,
         gx_cloud_organization_id=org_id,
+        token=token,
+        gx_cloud_base_url=localhost,
     )
     return config
 
@@ -85,21 +92,29 @@ def gx_agent_config_missing_org_id(
         queue=queue,
         connection_string=connection_string,
         gx_cloud_access_token=token,
-        gx_cloud_organization_id=org_id,
+        org_id=org_id,
+        gx_cloud_base_url="http://localhost:5000",
     )
     return config
 
 
 @pytest.fixture
+def localhost():
+    return "http://localhost:5000"
+
+
+@pytest.fixture
 def org_id():
     # return "4ea2985c-4fb7-4c53-9f8e-07b7e0506c3e"
-    return os.environ.get("GX_CLOUD_ORGANIZATION_ID")
+    return "0ccac18e-7631-4bdd-8a42-3c35cce574c6"
+    # return os.environ.get("GX_CLOUD_ORGANIZATION_ID")
 
 
 @pytest.fixture
 def token():
     # return "MTg0NDkyYmYtNTBiOS00ZDc1LTk3MmMtYjQ0M2NhZDA2NjJk"
-    return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
+    # return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
+    return "3d178eceb99a4a2f84f028fb8d5ec939.V1.QWcHH5cPk4_pxXiGS8kPQ_4x1THSFnRiIcpN8msA5Z-QQrRQ6IzY-EQ_WZxnduJwB3elHqqp_t5cB6AcSC7hnA"
 
 
 @pytest.fixture
@@ -126,6 +141,12 @@ def subscriber(mocker):
 def event_handler(mocker):
     event_handler = mocker.patch("great_expectations_cloud.agent.agent.EventHandler")
     return event_handler
+
+
+@pytest.fixture
+def checkpoint(mocker):
+    checkpoint = mocker.patch("great_expectations_cloud.agent.actions.RunCheckpointAction.run")
+    return checkpoint
 
 
 @pytest.fixture
@@ -298,14 +319,26 @@ def test_gx_agent_updates_cloud_on_job_status(
     )
 
 
-# def test_invalid_config_agent_missing_token(gx_agent_config_missing_token):
-#     with pytest.raises(GXAgentConfigError):
-#         GXAgent()
+def test_invalid_config_agent_missing_token(set_required_env_vars_missing_token):
+    with pytest.raises(ValidationError):
+        GXAgentConfig(
+            queue=queue,
+            connection_string=connection_string,
+            gx_cloud_organization_id=org_id,
+            token=token,
+            gx_cloud_base_url=localhost,
+        )
 
 
-# def test_invalid_config_agent_missing_org_id(gx_agent_config_missing_org_id):
-#     with pytest.raises(GXAgentConfigError):
-#         GXAgent()
+def test_invalid_config_agent_missing_org_id(set_required_env_vars_missing_org_id):
+    with pytest.raises(ValidationError):
+        GXAgentConfig(
+            queue=queue,
+            connection_string=connection_string,
+            gx_cloud_organization_id=org_id,
+            token=token,
+            gx_cloud_base_url=localhost,
+        )
 
 
 def test_custom_user_agent(
@@ -358,13 +391,22 @@ def ds_config_factory() -> Callable[[str], dict[Literal["name", "type", "connect
     return _factory
 
 
+def mocked_gx_agent_config(gx_agent_config):
+    return gx_agent_config
+
+
+def mocked_listener(gx_agent):
+    return
+
+
 def test_correlation_id_header(
-    mock_gx_version_check: None,
     set_required_env_vars: None,
+    mock_gx_version_check: None,
     data_context_config: DataContextConfigTD,
     ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
     fake_subscriber: FakeSubscriber,
+    checkpoint,
 ):
     """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
     agent_job_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
@@ -382,7 +424,6 @@ def test_correlation_id_header(
             ),
         ]
     )
-
     base_url = gx_agent_config.gx_cloud_base_url
     org_id = gx_agent_config.gx_cloud_organization_id
     with responses.RequestsMock() as rsps:
@@ -404,13 +445,6 @@ def test_correlation_id_header(
             json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-2")}}},
             # match will fail if correlation-id header is not set
             match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[1]})],
-        )
-        rsps.add(
-            responses.GET,
-            f"{base_url}organizations/{org_id}/checkpoints/{checkpoint_id}",
-            json={"data": {}},
-            # match will fail if correlation-id header is not set
-            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[2]})],
         )
         agent = GXAgent()
         agent.run()
