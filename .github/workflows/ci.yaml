@@ -124,6 +124,7 @@ jobs:
             agent:
               - 'great_expectations_cloud/agent/**'
               - 'poetry.lock'
+              - 'pyproject.toml'
 
   check-version-is-bumped:
     # This job checks that the version in the PR is different from the version in main if the agent has changed.
