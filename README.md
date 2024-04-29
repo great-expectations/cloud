@@ -150,7 +150,7 @@ The versioning scheme is `YYYYMMDD.{release_number}` where:
 - the release number starts at 0 for the first release of the day
 - the release number is incremented for each release within the same day
 
-For example: `20240403.0`
+For example: `20240402.0`
 
 _Pre-release_:
 The versioning scheme is `YYYYMMDD.{release_number}.dev{dev_number}`
