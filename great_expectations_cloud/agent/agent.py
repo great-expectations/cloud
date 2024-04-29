@@ -274,7 +274,7 @@ class GXAgent:
         self._current_task = None
 
     def _can_accept_new_task(self) -> bool:
-        """Are we currently processing a task, or are we free to take a new one?"""
+        """Are we currently processing a task or are we free to take a new one?"""
         return self._current_task is None or self._current_task.done()
 
     def _reject_correlation_id(self, id: str) -> bool:
