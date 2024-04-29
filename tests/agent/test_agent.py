@@ -87,21 +87,21 @@ def gx_agent_config_missing_token(
 
 @pytest.fixture
 def gx_agent_config_missing_org_id(
-    set_required_env_vars_missing_org_id, queue, connection_string, org_id, token
+    set_required_env_vars_missing_org_id, queue, connection_string, org_id, token, localhost
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
         gx_cloud_access_token=token,
         org_id=org_id,
-        gx_cloud_base_url="http://localhost:5000",
+        gx_cloud_base_url=localhost,
     )
     return config
 
 
 @pytest.fixture
 def localhost():
-    return "http://localhost:5000"
+    return "http://localhost:5000/"
 
 
 @pytest.fixture
@@ -138,13 +138,6 @@ def subscriber(mocker):
 def event_handler(mocker):
     event_handler = mocker.patch("great_expectations_cloud.agent.agent.EventHandler")
     return event_handler
-
-
-@pytest.fixture
-def patched_checkpoint(mocker):
-    """Patch for agent.RunCheckpointAction.run"""
-    checkpoint = mocker.patch("great_expectations_cloud.agent.actions.RunCheckpointAction.run")
-    return checkpoint
 
 
 @pytest.fixture
@@ -392,7 +385,6 @@ def ds_config_factory() -> Callable[[str], dict[Literal["name", "type", "connect
 def test_correlation_id_header(
     set_required_env_vars: None,
     mock_gx_version_check: None,
-    patched_checkpoint: None,
     data_context_config: DataContextConfigTD,
     ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
@@ -435,6 +427,13 @@ def test_correlation_id_header(
             json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-2")}}},
             # match will fail if correlation-id header is not set
             match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[1]})],
+        )
+        rsps.add(
+            responses.GET,
+            f"{base_url}organizations/{org_id}/checkpoints/{checkpoint_id}",
+            json={"data": {}},
+            # match will fail if correlation-id header is not set
+            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[2]})],
         )
         agent = GXAgent()
         agent.run()
