@@ -116,7 +116,7 @@ class GXAgent:
 
         print("Opening connection to GX Cloud.")
         self._listen()
-        print("Connection to GX Cloud has been closed.")
+        print("The connection to GX Cloud has been closed.")
 
     # ZEL-505: A race condition can occur if two or more agents are started at the same time
     #          due to the generation of passwords for rabbitMQ queues. This can be mitigated
@@ -141,9 +141,9 @@ class GXAgent:
                 on_message=self._handle_event_as_thread_enter,
             )
         except KeyboardInterrupt:
-            print("Received request to shutdown.")
+            print("Received request to shut down.")
         except (SubscriberError, ClientError):
-            print("Connection to GX Cloud has encountered an error.")
+            print("The connection to GX Cloud has encountered an error.")
         except (AuthenticationError, ProbableAuthenticationError):
             # Retry with new credentials
             self._config = self._get_config()
@@ -235,7 +235,7 @@ class GXAgent:
                 status = JobCompleted(
                     success=False,
                     created_resources=[],
-                    error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to latest.",
+                    error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
                 )
                 LOGGER.error(
                     "Job completed with error. Ensure agent is up-to-date.",
@@ -274,7 +274,7 @@ class GXAgent:
         self._current_task = None
 
     def _can_accept_new_task(self) -> bool:
-        """Are we currently processing a task, or are we free to take a new one?"""
+        """Are we currently processing a task or are we free to take a new one?"""
         return self._current_task is None or self._current_task.done()
 
     def _reject_correlation_id(self, id: str) -> bool:

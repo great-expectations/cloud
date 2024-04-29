@@ -218,6 +218,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          git config --global user.email "team@greatexpectations.io"
+          git config --global user.name "Great Expectations"
           git add .
           git commit -m "Pre-release version bump"
           git push
