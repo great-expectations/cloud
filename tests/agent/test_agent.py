@@ -59,14 +59,14 @@ def set_required_env_vars_missing_org_id(monkeypatch, token, localhost):
 
 @pytest.fixture
 def gx_agent_config(
-    set_required_env_vars, queue, connection_string, org_id, token
+    set_required_env_vars, queue, connection_string, org_id, token, localhost
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
         gx_cloud_access_token=token,
         gx_cloud_organization_id=org_id,
-        gx_cloud_base_url="http://localhost:5000",
+        gx_cloud_base_url=localhost,
     )
     return config
 

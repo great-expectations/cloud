@@ -31,7 +31,6 @@ def ping_server(address: str):
     try:
         requests.get(address, timeout=1)
     except requests.exceptions.ConnectTimeout:
-        print("HI HI HI HI")
         return False
     return True
 
@@ -220,7 +219,7 @@ def checkpoint_event(checkpoint, datasource_names_to_asset_names):
 def context() -> CloudDataContext:
     context = gx.get_context(
         mode="cloud",
-        cloud_base_url="http://localhost:5000/",
+        cloud_base_url=os.environ.get("GX_CLOUD_BASE_URL"),
         cloud_organization_id=os.environ.get("GX_CLOUD_ORGANIZATION_ID"),
         cloud_access_token=os.environ.get("GX_CLOUD_ACCESS_TOKEN"),
     )
