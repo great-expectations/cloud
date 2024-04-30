@@ -11,6 +11,8 @@ from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
+pytestmark = pytest.mark.integration
+
 
 def test_running_draft_datasource_config_action(
     context: CloudDataContext,
