@@ -7,8 +7,8 @@ from collections import deque
 from typing import TYPE_CHECKING, Any, Iterable, NamedTuple, TypedDict
 
 import pytest
-from great_expectations import (
-    __version__ as gx_version,  # type: ignore[attr-defined] # TODO: fix this?
+from great_expectations import (  # type: ignore[attr-defined] # TODO: fix this?
+    __version__ as gx_version,
 )
 from great_expectations.data_context import CloudDataContext
 from packaging.version import Version
