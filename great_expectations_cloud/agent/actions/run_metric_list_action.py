@@ -24,6 +24,7 @@ from great_expectations_cloud.agent.models import (
 )
 
 if TYPE_CHECKING:
+    from great_expectations.core.batch import BatchRequest
     from great_expectations.data_context import CloudDataContext
     from great_expectations.experimental.metric_repository.metrics import MetricRun
 
@@ -44,12 +45,15 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
         )
 
     @override
-    def run(self, event: RunMetricsListEvent, id: str) -> ActionResult:
+    def run(
+        self, event: RunMetricsListEvent, id: str, batch_request: BatchRequest | None = None
+    ) -> ActionResult:
         datasource = self._context.get_datasource(event.datasource_name)
         data_asset = datasource.get_asset(event.data_asset_name)
         data_asset.test_connection()  # raises `TestConnectionError` on failure
 
-        batch_request = data_asset.build_batch_request()
+        if not batch_request:
+            batch_request = data_asset.build_batch_request()
 
         metric_run = self._batch_inspector.compute_metric_list_run(
             data_asset_id=data_asset.id,
