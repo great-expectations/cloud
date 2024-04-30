@@ -64,7 +64,9 @@ jobs:
           platforms: linux/arm64
           push: false
           load: false
-          tags: greatexpectations/agent:latest
+          tags: |
+            greatexpectations/agent:latest
+            greatexpectations/agent:stable
 
       # https://docs.docker.com/build/ci/github-actions/test-before-push/
       - name: Build amd64, With Load, No Push
@@ -74,10 +76,12 @@ jobs:
           platforms: linux/amd64
           push: false
           load: true
-          tags: greatexpectations/agent:latest
+          tags: |
+            greatexpectations/agent:latest
+            greatexpectations/agent:stable
 
       - name: Smoke Test the Image
-        run: docker run --rm greatexpectations/agent:latest poetry run gx-agent -h
+        run: docker run --rm greatexpectations/agent:stable poetry run gx-agent -h
 
       # Uses local image built in previous step
       - name: Test New amd64 Agent Image
@@ -103,16 +107,35 @@ jobs:
         id: get_version
         run: echo "POETRY_VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
 
+      - name: Get is_release from pyproject.toml
+        id: get_is_release
+        run: echo "IS_RELEASE=$(poetry version -s | grep -q 'dev' && echo false || echo true)" >> $GITHUB_OUTPUT
+
       # Uses the version from pyproject.toml for the tag
-      - name: Push to Docker Hub and Internal ECR
+      - name: Push Pre-Release to Docker Hub and Internal ECR
+        if: ${{ steps.get_is_release.outputs.IS_RELEASE == 'false' }}
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
+            greatexpectations/agent:dev
+            greatexpectations/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
+            258143015559.dkr.ecr.us-east-1.amazonaws.com/gx/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
+
+      - name: Push Release to Docker Hub and Internal ECR
+        if: ${{ steps.get_is_release.outputs.IS_RELEASE == 'true' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            greatexpectations/agent:dev
             greatexpectations/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
             greatexpectations/agent:latest
+            greatexpectations/agent:stable
             258143015559.dkr.ecr.us-east-1.amazonaws.com/gx/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
 
       - name: Show logs, if failure

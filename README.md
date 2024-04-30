@@ -57,7 +57,7 @@ gx-agent
 
 ## Dev Setup
 
-See also [CONTRIBUTING.md](/CONTRIBUTING.MD)
+See also [CONTRIBUTING.md](https://github.com/great-expectations/cloud/blob/main/CONTRIBUTING.md)
 
 1. [Install `poetry`](https://python-poetry.org/docs/#installation)
    - [`pipx install poetry`](https://python-poetry.org/docs/#installing-with-pipx)
@@ -85,7 +85,7 @@ invoke deps
 
 #### Updating `poetry.lock` dependencies
 
-The dependencies installed in our CI and the docker build step are determined by the [poetry.lock file](https://python-poetry.org/docs/basic-usage/#installing-with-poetrylock).
+The dependencies installed in our CI and the Docker build step are determined by the [poetry.lock file](https://python-poetry.org/docs/basic-usage/#installing-with-poetrylock).
 
 [To update only a specific dependency](https://python-poetry.org/docs/cli/#update) (such as `great_expectations`) ...
 
@@ -127,7 +127,7 @@ Now go into GX Cloud and issue commands for the GX Agent to run, such as generat
 
 #### Example Data
 
-The contents from [/examples/agent/data](/examples/agent/data/) will be copied to `/data` for the docker container.
+The contents from [/examples/agent/data](https://github.com/great-expectations/cloud/tree/main/examples/agent/data) will be copied to `/data` for the Docker container.
 
 #### Adding an action to the agent
 
@@ -141,7 +141,7 @@ Note: The agent is core-version specific but this registration mechanism allows 
 
 #### Versioning
 
-This is the version that will be used for the docker image tag as well.
+This is the version that will be used for the Docker image tag as well.
 
 _Standard Release_:
 The versioning scheme is `YYYYMMDD.{release_number}` where:
@@ -150,10 +150,10 @@ The versioning scheme is `YYYYMMDD.{release_number}` where:
 - the release number starts at 0 for the first release of the day
 - the release number is incremented for each release within the same day
 
-For example: `20240403.0`
+For example: `20240402.0`
 
 _Pre-release_:
-The versioing scheme is `YYYYMMDD.{release_number}.dev{dev_number}`
+The versioning scheme is `YYYYMMDD.{release_number}.dev{dev_number}`
 
 - the date is the date of the release
 - the dev number starts at 0 for the first pre-release of the day
@@ -174,25 +174,55 @@ There can be days with no standard releases, only pre-releases or days with no p
 
 #### Pre-releases
 
-Pre-releases will be completed automatically with each merge to the main branch
-in the future. For now, to create a pre-release, run the following command:
+Pre-releases are completed automatically with each merge to the `main` branch.
+The version is updated in `pyproject.toml` and a pre-release is created on PyPi.
+A new Docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
+
+**Manual Pre-releases**
+
+NOTE: CI will automatically create pre-releases on merges to `main`. Instead of manually creating pre-releases, consider using the CI process. This is only for exceptional cases.
+
+To manually create a pre-release, run the following command to update the version in `pyproject.toml` and then merge it to `main` in a standalone PR:
 
 ```console
 invoke pre-release
 ```
 
-This will create a new pre-release version and push it to PyPi.
-A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
+This will create a new pre-release version. On the next merge to `main`, the release will be uploaded to PyPi.
+A new Docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
 
 #### Releases
 
 Releases will be completed on a regular basis by the maintainers of the project and with any release of [GX Core](https://github.com/great-expectations/great_expectations)
 
-For maintainers, to create a release, run the following command:
+For maintainers, to create a release, run the following command to update the version in `pyproject.toml` and then
+merge it to `main` in a standalone PR:
 
 ```console
 invoke release
 ```
 
-This will create a new release version and push it to PyPi.
-A new docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent)
+This will create a new release version. On the next merge to `main`, the release will be uploaded to PyPi.
+A new Docker tag will also be generated and pushed to [Docker Hub](https://hub.docker.com/r/greatexpectations/agent). In addition, releases will be tagged with `stable` and `latest` tags.
+
+#### GitHub Workflow for releasing
+
+We use the GitHub Actions workflow to automate the release and pre-release process. There are two workflows involved:
+
+1. [CI](https://github.com/great-expectations/cloud/blob/main/.github/workflows/ci.yaml) - This workflow runs on each pull request and will update the version in `pyproject.toml` to the pre-release version if the version is not already manually updated in the PR. It will also run the tests and linting.
+
+2. [Containerize Agent](https://github.com/great-expectations/cloud/blob/main/.github/workflows/containerize-agent.yaml) - This workflows runs on merge with `main` and will create a new Docker image and push it to Docker Hub and PyPi. It uses the version in `pyproject.toml`.
+
+A visual representation of the workflow is shown [here](https://github.com/great-expectations/cloud/blob/main/.github/workflows/agent_release_workflows.png)
+
+### Dependabot and Releases/Pre-releases
+GitHub's Dependabot regularly checks our dependencies for vulnerabilty-based updates and proposes PRs to update dependency version numbers accordingly.
+
+Dependabot may only update the `poetry.lock` file. If only changes to `poetry.lock` are made, this may be done in a pre-release.
+
+For changes to the `pyproject.toml` file:
+- If the version of a tool in the `[tool.poetry.group.dev.dependencies]` group is updated, this may be done in a pre-release.
+   -  While doing this, make sure any version references in the pre-commit config `.pre-commit-config.yaml` are kept in sync (e.g., ruff).
+- For other dependency updates, a new release should be orchestrated. This includes updates in the following sections:
+  - `[tool.poetry.dependencies]`
+  - `[tool.poetry.group.*.dependencies]` where `*` is the name of the group (not including the `dev` group)

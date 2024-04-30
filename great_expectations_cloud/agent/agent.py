@@ -55,6 +55,8 @@ if TYPE_CHECKING:
     from great_expectations_cloud.agent.actions.agent_action import ActionResult
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
+# TODO Set in log dict
+LOGGER.setLevel(logging.INFO)
 HandlerMap = Dict[str, OnMessageCallback]
 
 
@@ -87,9 +89,7 @@ class GXAgent:
 
     def __init__(self: Self):
         agent_version: str = self.get_current_gx_agent_version()
-        great_expectations_version: str = self._get_current_great_expectations_version()
         print(f"GX Agent version: {agent_version}")
-        print(f"Great Expectations version: {great_expectations_version}")
         print("Initializing the GX Agent.")
         self._set_http_session_headers()
         self._config = self._get_config()
@@ -116,7 +116,7 @@ class GXAgent:
 
         print("Opening connection to GX Cloud.")
         self._listen()
-        print("Connection to GX Cloud has been closed.")
+        print("The connection to GX Cloud has been closed.")
 
     # ZEL-505: A race condition can occur if two or more agents are started at the same time
     #          due to the generation of passwords for rabbitMQ queues. This can be mitigated
@@ -141,9 +141,9 @@ class GXAgent:
                 on_message=self._handle_event_as_thread_enter,
             )
         except KeyboardInterrupt:
-            print("Received request to shutdown.")
+            print("Received request to shut down.")
         except (SubscriberError, ClientError):
-            print("Connection to GX Cloud has encountered an error.")
+            print("The connection to GX Cloud has encountered an error.")
         except (AuthenticationError, ProbableAuthenticationError):
             # Retry with new credentials
             self._config = self._get_config()
@@ -156,11 +156,6 @@ class GXAgent:
     @classmethod
     def get_current_gx_agent_version(cls) -> str:
         version: str = metadata_version(cls._PYPI_GX_AGENT_PACKAGE_NAME)
-        return version
-
-    @classmethod
-    def _get_current_great_expectations_version(cls) -> str:
-        version: str = metadata_version(cls._PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME)
         return version
 
     def _handle_event_as_thread_enter(self, event_context: EventContext) -> None:
@@ -208,6 +203,13 @@ class GXAgent:
         # warning:  this method will not be executed in the main thread
         self._update_status(job_id=event_context.correlation_id, status=JobStarted())
         print(f"Starting job {event_context.event.type} ({event_context.correlation_id}) ")
+        LOGGER.info(
+            "Starting job",
+            extra={
+                "event_type": event_context.event.type,
+                "correlation_id": event_context.correlation_id,
+            },
+        )
         handler = EventHandler(context=self._context)
         # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
         result = handler.handle_event(event=event_context.event, id=event_context.correlation_id)
@@ -233,22 +235,36 @@ class GXAgent:
                 status = JobCompleted(
                     success=False,
                     created_resources=[],
-                    error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to latest.",
+                    error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
                 )
-                print(
-                    f"Job completed with error: {event_context.event.type} ({event_context.correlation_id}). Ensure agent is up-to-date."
+                LOGGER.error(
+                    "Job completed with error. Ensure agent is up-to-date.",
+                    extra={
+                        "event_type": event_context.event.type,
+                        "id": event_context.correlation_id,
+                    },
                 )
             else:
                 status = JobCompleted(
                     success=True,
                     created_resources=result.created_resources,
                 )
-                print(f"Completed job: {event_context.event.type} ({event_context.correlation_id})")
+                LOGGER.info(
+                    "Completed job",
+                    extra={
+                        "event_type": event_context.event.type,
+                        "correlation_id": event_context.correlation_id,
+                    },
+                )
         else:
             status = build_failed_job_completed_status(error)
-            print(traceback.format_exc())
-            print(
-                f"Job completed with error: {event_context.event.type} ({event_context.correlation_id})"
+            LOGGER.info(traceback.format_exc())
+            LOGGER.info(
+                "Job completed with error",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                },
             )
 
         self._update_status(job_id=event_context.correlation_id, status=status)
@@ -258,7 +274,7 @@ class GXAgent:
         self._current_task = None
 
     def _can_accept_new_task(self) -> bool:
-        """Are we currently processing a task, or are we free to take a new one?"""
+        """Are we currently processing a task or are we free to take a new one?"""
         return self._current_task is None or self._current_task.done()
 
     def _reject_correlation_id(self, id: str) -> bool:
@@ -290,7 +306,6 @@ class GXAgent:
             ) from validation_err
 
         # obtain the broker url and queue name from Cloud
-
         agent_sessions_url = (
             f"{env_vars.gx_cloud_base_url}/organizations/"
             f"{env_vars.gx_cloud_organization_id}/agent-sessions"
@@ -329,7 +344,7 @@ class GXAgent:
             job_id: job identifier, also known as correlation_id
             status: pydantic model encapsulating the current status
         """
-        LOGGER.info(f"Updating status: {job_id} - {status}")
+        LOGGER.info("Updating status", extra={"job_id": job_id, "status": str(status)})
         agent_sessions_url = (
             f"{self._config.gx_cloud_base_url}/organizations/{self._config.gx_cloud_organization_id}"
             + f"/agent-jobs/{job_id}"
@@ -356,13 +371,23 @@ class GXAgent:
         ):
             # TODO: public API should be available in v1
             LOGGER.info(
-                f"Unable to set {HeaderName.USER_AGENT} or {HeaderName.AGENT_JOB_ID} header for requests to GX Cloud"
+                "Unable to set header for requests to GX Cloud",
+                extra={
+                    "user_agent": HeaderName.USER_AGENT,
+                    "agent_job_id": HeaderName.AGENT_JOB_ID,
+                },
             )
             return
 
         agent_version = self.get_current_gx_agent_version()
         LOGGER.debug(
-            f"Setting session headers for GX Cloud. {HeaderName.USER_AGENT}:{agent_version} {HeaderName.AGENT_JOB_ID}:{correlation_id}"
+            "Setting session headers for GX Cloud",
+            extra={
+                "user_agent": HeaderName.USER_AGENT,
+                "agent_version": agent_version,
+                "job_id": HeaderName.AGENT_JOB_ID,
+                "correlation_id": correlation_id,
+            },
         )
 
         if correlation_id:
