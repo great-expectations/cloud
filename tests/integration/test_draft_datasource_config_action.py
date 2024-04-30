@@ -1,31 +1,32 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 
 from great_expectations_cloud.agent.actions import DraftDatasourceConfigAction
 from great_expectations_cloud.agent.exceptions import GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
+if TYPE_CHECKING:
+    from great_expectations.data_context import CloudDataContext
+
 
 def test_running_draft_datasource_config_action(
-    context,
-    cloud_base_url: str,
-    cloud_organization_id: str,
-    cloud_access_token: str,
+    context: CloudDataContext,
 ):
     # Arrange
-    # create a draft datasource config
-    # We may have to just create this directly in the db if there isn't an API endpoint to create it
-    # Or add to the seed data (preferred)
-    # TODO: Add draft config to seed data
+    # Draft config is loaded in mercury seed data
 
     # Act
     action = DraftDatasourceConfigAction(context=context)
-    # local_mercury_db:
-    datasource_id_for_connect_successfully = "2ccfea7f-3f91-47f2-804e-2106aa07ef24"
+
+    draft_datasource_id_for_connect_successfully = (
+        "2512c2d8-a212-4295-b01b-2bb2ac066f04"  # local_mercury_db
+    )
     draft_datasource_config_event = DraftDatasourceConfigEvent(
         type="test_datasource_config",
-        config_id=datasource_id_for_connect_successfully,
+        config_id=draft_datasource_id_for_connect_successfully,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     result = action.run(event=draft_datasource_config_event, id=event_id)
@@ -33,21 +34,22 @@ def test_running_draft_datasource_config_action(
     # Assert
     # Check that the action was successful e.g. that we can connect to the datasource
     assert result
+    assert result.id == event_id
+    assert result.type == draft_datasource_config_event.type
+    assert result.created_resources == []
 
 
 def test_running_draft_datasource_config_action_fails_for_unreachable_datasource(
-    context,
-    cloud_base_url: str,
-    cloud_organization_id: str,
-    cloud_access_token: str,
+    context: CloudDataContext,
 ):
     # Arrange
-    # TODO: Add a datasource draft that is unreachable to seed data and use here.
+    # Draft config is loaded in mercury seed data
 
     # Act
     action = DraftDatasourceConfigAction(context=context)
-    # my_pandas_filesystem_ds:
-    datasource_id_for_connect_successfully = ""  # TODO: Retrieve this id from the seed data
+    datasource_id_for_connect_successfully = (
+        "e47a5059-a6bb-4de7-9286-6ea600a0c53a"  # local_mercury_db_bad_password
+    )
     draft_datasource_config_event = DraftDatasourceConfigEvent(
         type="test_datasource_config",
         config_id=datasource_id_for_connect_successfully,
