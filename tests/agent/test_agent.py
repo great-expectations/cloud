@@ -41,15 +41,15 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def set_required_env_vars(monkeypatch, org_id, token, local_mercury):
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
+def set_required_env_vars(monkeypatch, org_id_env_var, token, local_mercury):
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id_env_var)
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
     monkeypatch.setenv("GX_CLOUD_BASE_URL", local_mercury)
 
 
 @pytest.fixture
-def set_required_env_vars_missing_token(monkeypatch, org_id, local_mercury):
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
+def set_required_env_vars_missing_token(monkeypatch, org_id_env_var, local_mercury):
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id_env_var)
     monkeypatch.setenv("GX_CLOUD_BASE_URL", local_mercury)
 
 
@@ -61,13 +61,13 @@ def set_required_env_vars_missing_org_id(monkeypatch, token, local_mercury):
 
 @pytest.fixture
 def gx_agent_config(
-    set_required_env_vars, queue, connection_string, org_id, token, local_mercury
+    set_required_env_vars, queue, connection_string, org_id_env_var, token, local_mercury
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
         gx_cloud_access_token=token,
-        gx_cloud_organization_id=org_id,
+        gx_cloud_organization_id=org_id_env_var,
         gx_cloud_base_url=local_mercury,
     )
     return config
@@ -75,12 +75,17 @@ def gx_agent_config(
 
 @pytest.fixture
 def gx_agent_config_missing_token(
-    set_required_env_vars_missing_token, queue, connection_string, org_id, token, local_mercury
+    set_required_env_vars_missing_token,
+    queue,
+    connection_string,
+    org_id_env_var,
+    token,
+    local_mercury,
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_organization_id=org_id,
+        gx_cloud_organization_id=org_id_env_var,
         token=token,
         gx_cloud_base_url=local_mercury,
     )
@@ -89,13 +94,18 @@ def gx_agent_config_missing_token(
 
 @pytest.fixture
 def gx_agent_config_missing_org_id(
-    set_required_env_vars_missing_org_id, queue, connection_string, org_id, token, local_mercury
+    set_required_env_vars_missing_org_id,
+    queue,
+    connection_string,
+    org_id_env_var,
+    token,
+    local_mercury,
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
         gx_cloud_access_token=token,
-        org_id=org_id,
+        org_id=org_id_env_var,
         gx_cloud_base_url=local_mercury,
     )
     return config
