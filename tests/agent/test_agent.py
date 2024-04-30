@@ -107,7 +107,7 @@ def localhost():
 
 
 @pytest.fixture
-def org_id():
+def org_id_env_var():
     return os.environ.get("GX_CLOUD_ORGANIZATION_ID")
 
 
