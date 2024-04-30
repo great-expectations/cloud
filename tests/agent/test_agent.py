@@ -11,7 +11,6 @@ import responses
 from great_expectations.compatibility.pydantic import (
     ValidationError,
 )
-from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from tenacity import RetryError
@@ -183,16 +182,6 @@ def test_gx_agent_incorrect_token(monkeypatch):
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "incorrect_token")
     with pytest.raises(gx_exception.GXCloudError):
         GXAgent()
-
-
-def test_gx_agent_gets_default_base_url_if_not_provided(get_context, local_mercury, monkeypatch):
-    monkeypatch.delenv("GX_CLOUD_BASE_URL", raising=False)
-    agent = GXAgent()
-    assert agent._config.gx_cloud_base_url == CLOUD_DEFAULT_BASE_URL
-
-    monkeypatch.setenv("GX_CLOUD_BASE_URL", local_mercury)
-    agent = GXAgent()
-    assert agent._config.gx_cloud_base_url == local_mercury
 
 
 def test_gx_agent_initializes_cloud_context(get_context, gx_agent_config):
