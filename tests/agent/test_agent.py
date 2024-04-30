@@ -47,18 +47,6 @@ def set_required_env_vars(monkeypatch, org_id_env_var, token, local_mercury):
 
 
 @pytest.fixture
-def set_required_env_vars_missing_token(monkeypatch, org_id_env_var, local_mercury):
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id_env_var)
-    monkeypatch.setenv("GX_CLOUD_BASE_URL", local_mercury)
-
-
-@pytest.fixture
-def set_required_env_vars_missing_org_id(monkeypatch, token, local_mercury):
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
-    monkeypatch.setenv("GX_CLOUD_BASE_URL", local_mercury)
-
-
-@pytest.fixture
 def gx_agent_config(
     set_required_env_vars, queue, connection_string, org_id_env_var, token, local_mercury
 ) -> GXAgentConfig:
@@ -74,13 +62,15 @@ def gx_agent_config(
 
 @pytest.fixture
 def gx_agent_config_missing_token(
-    set_required_env_vars_missing_token,
+    set_required_env_vars,
     queue,
     connection_string,
     org_id_env_var,
     token,
     local_mercury,
+    monkeypatch,
 ) -> GXAgentConfig:
+    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
@@ -93,13 +83,15 @@ def gx_agent_config_missing_token(
 
 @pytest.fixture
 def gx_agent_config_missing_org_id(
-    set_required_env_vars_missing_org_id,
+    set_required_env_vars,
     queue,
     connection_string,
     org_id_env_var,
     token,
     local_mercury,
+    monkeypatch,
 ) -> GXAgentConfig:
+    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
@@ -327,7 +319,8 @@ def test_gx_agent_updates_cloud_on_job_status(
     )
 
 
-def test_invalid_config_agent_missing_token(set_required_env_vars_missing_token):
+def test_invalid_config_agent_missing_token(set_required_env_vars, monkeypatch):
+    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
     with pytest.raises(ValidationError):
         GXAgentConfig(
             queue=queue,
@@ -338,7 +331,8 @@ def test_invalid_config_agent_missing_token(set_required_env_vars_missing_token)
         )
 
 
-def test_invalid_config_agent_missing_org_id(set_required_env_vars_missing_org_id):
+def test_invalid_config_agent_missing_org_id(set_required_env_vars, monkeypatch):
+    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
     with pytest.raises(ValidationError):
         GXAgentConfig(
             queue=queue,
