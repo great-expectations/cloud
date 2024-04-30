@@ -12,8 +12,14 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d mercury'"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
   mq:
     image: rabbitmq:3.10.20-management
+    hostname: gx-bunny
     environment:
       RABBITMQ_DEFAULT_USER: gx_prod
       RABBITMQ_DEFAULT_PASS: password
@@ -22,8 +28,10 @@ services:
       - 5672:5672
   db-provisioner:
     image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/provisioner:0.4.1
+    platform: linux/amd64
     environment:
       PGPASSWORD: postgres
+      APP_DB_API_USER: postgres
       APP_DB_API_USER_PASSWORD: postgres
       APP_DB_ADDR: db
     # Note: We are overwriting the existing command, just adding a retry
@@ -31,7 +39,8 @@ services:
     #       In local, the DB needs a few seconds to boot up and listen
     command: 'bash -c "until ./init-db.sh; do sleep 5; done;"'
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   mq-wait:
     image: debian
@@ -43,7 +52,8 @@ services:
       - mq
 
   mercury-service-api:
-    image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api
+    image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api:latest
+    platform: linux/amd64
     restart: always
     volumes:
       - ./services/ge_cloud/:/code
