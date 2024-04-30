@@ -306,8 +306,6 @@ class GXAgent:
             ) from validation_err
 
         # obtain the broker url and queue name from Cloud
-        breakpoint()
-
         agent_sessions_url = (
             f"{env_vars.gx_cloud_base_url}/organizations/"
             f"{env_vars.gx_cloud_organization_id}/agent-sessions"
