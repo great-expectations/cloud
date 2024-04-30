@@ -41,7 +41,7 @@ def min_gx_version() -> Version:
 def test_great_expectations_is_installed(min_gx_version):
     import great_expectations
 
-    assert Version(great_expectations.__version__) >= min_gx_version
+    assert Version(great_expectations.__version__) >= min_gx_version  # type: ignore[attr-defined] # TODO: fix this?
 
 
 @pytest.fixture
