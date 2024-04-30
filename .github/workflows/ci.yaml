@@ -78,7 +78,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: great-expectations/cloud
-          flags: ${{ matrix.python-version }}
+          flags: ${{ matrix.python-version }},unit
 
   integration-tests:
     strategy:
@@ -160,7 +160,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: great-expectations/cloud
-          flags: ${{ matrix.python-version }}
+          flags: ${{ matrix.python-version }},integration
 
   test-docker-build:
     runs-on: ubuntu-latest
