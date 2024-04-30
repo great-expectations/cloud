@@ -117,12 +117,12 @@ services:
     depends_on:
       - mq
 
-  # gx-agent:
-  #   image: greatexpectations/agent:latest
-  #   restart: always
-  #   environment:
-  #     GX_CLOUD_ACCESS_TOKEN: ${GX_CLOUD_ACCESS_TOKEN}
-  #     GX_CLOUD_ORGANIZATION_ID: ${GX_CLOUD_ORGANIZATION_ID}
-  #     GX_CLOUD_BASE_URL: ${GX_CLOUD_BASE_URL}
-  #   depends_on:
-  #     - mercury-service-api
+  gx-agent:
+    image: greatexpectations/agent:latest
+    restart: always
+    environment:
+      GX_CLOUD_ACCESS_TOKEN: ${GX_CLOUD_ACCESS_TOKEN}
+      GX_CLOUD_ORGANIZATION_ID: ${GX_CLOUD_ORGANIZATION_ID}
+      GX_CLOUD_BASE_URL: ${GX_CLOUD_BASE_URL}
+    depends_on:
+      - mercury-service-api

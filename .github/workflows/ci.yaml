@@ -98,7 +98,11 @@ jobs:
 
       - name: Start services
         run: |
-          docker compose -f docker-compose.yml up -d --quiet-pull --wait --wait-timeout 150
+          docker compose up db mq -d
+          docker compose run db-provisioner
+          docker compose run db-seeder
+          docker compose run mq-wait
+          docker compose up mercury-service-api -d
 
       - name: Show logs for debugging
         if: failure()
