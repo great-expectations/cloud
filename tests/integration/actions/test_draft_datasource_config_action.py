@@ -16,9 +16,8 @@ def test_running_draft_datasource_config_action(
     context: CloudDataContext,
 ):
     # Arrange
-    # Draft config is loaded in mercury seed data
+    # Note: Draft config is loaded in mercury seed data
 
-    # Act
     action = DraftDatasourceConfigAction(context=context)
 
     draft_datasource_id_for_connect_successfully = (
@@ -29,6 +28,8 @@ def test_running_draft_datasource_config_action(
         config_id=draft_datasource_id_for_connect_successfully,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
+
+    # Act
     result = action.run(event=draft_datasource_config_event, id=event_id)
 
     # Assert
@@ -43,9 +44,8 @@ def test_running_draft_datasource_config_action_fails_for_unreachable_datasource
     context: CloudDataContext,
 ):
     # Arrange
-    # Draft config is loaded in mercury seed data
+    # Note: Draft config is loaded in mercury seed data
 
-    # Act
     action = DraftDatasourceConfigAction(context=context)
     datasource_id_for_connect_successfully = (
         "e47a5059-a6bb-4de7-9286-6ea600a0c53a"  # local_mercury_db_bad_password
@@ -55,6 +55,7 @@ def test_running_draft_datasource_config_action_fails_for_unreachable_datasource
         config_id=datasource_id_for_connect_successfully,
     )
 
+    # Act & Assert
     # Check that the action was unsuccessful and an error was raised.
     with pytest.raises(GXCoreError):
         action.run(event=draft_datasource_config_event, id="test_id")
