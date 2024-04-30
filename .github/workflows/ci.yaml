@@ -98,12 +98,12 @@ jobs:
 
       - name: Start services
         run: |
-          docker compose -f assets/mercury/docker-compose.yml up -d --quiet-pull --wait --wait-timeout 150
+          docker compose -f docker-compose.yml up -d --quiet-pull --wait --wait-timeout 150
 
       - name: Show logs for debugging
         if: failure()
         run: |
-          docker compose -f assets/mercury/docker-compose.yml logs
+          docker compose -f docker-compose.yml logs
 
       - name: Run tests
 
