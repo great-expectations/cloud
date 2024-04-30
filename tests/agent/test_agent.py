@@ -11,14 +11,13 @@ import responses
 from great_expectations.compatibility.pydantic import (
     ValidationError,
 )
-from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import GXAgentConfig
+from great_expectations_cloud.agent.agent import GXAgentConfig, GXAgentConfigError
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
@@ -41,73 +40,75 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def set_required_env_vars(monkeypatch, org_id, token, localhost):
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
+def set_required_env_vars(monkeypatch, org_id_env_var, token, local_mercury):
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id_env_var)
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
-    monkeypatch.setenv("GX_CLOUD_BASE_URL", localhost)
-
-
-@pytest.fixture
-def set_required_env_vars_missing_token(monkeypatch, org_id, localhost):
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
-    monkeypatch.setenv("GX_CLOUD_BASE_URL", localhost)
-
-
-@pytest.fixture
-def set_required_env_vars_missing_org_id(monkeypatch, token, localhost):
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
-    monkeypatch.setenv("GX_CLOUD_BASE_URL", localhost)
+    monkeypatch.setenv("GX_CLOUD_BASE_URL", local_mercury)
 
 
 @pytest.fixture
 def gx_agent_config(
-    set_required_env_vars, queue, connection_string, org_id, token, localhost
+    set_required_env_vars, queue, connection_string, org_id_env_var, token, local_mercury
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
         gx_cloud_access_token=token,
-        gx_cloud_organization_id=org_id,
-        gx_cloud_base_url=localhost,
+        gx_cloud_organization_id=org_id_env_var,
+        gx_cloud_base_url=local_mercury,
     )
     return config
 
 
 @pytest.fixture
 def gx_agent_config_missing_token(
-    set_required_env_vars_missing_token, queue, connection_string, org_id, token, localhost
+    set_required_env_vars,
+    queue,
+    connection_string,
+    org_id_env_var,
+    token,
+    local_mercury,
+    monkeypatch,
 ) -> GXAgentConfig:
+    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_organization_id=org_id,
+        gx_cloud_organization_id=org_id_env_var,
         token=token,
-        gx_cloud_base_url=localhost,
+        gx_cloud_base_url=local_mercury,
     )
     return config
 
 
 @pytest.fixture
 def gx_agent_config_missing_org_id(
-    set_required_env_vars_missing_org_id, queue, connection_string, org_id, token, localhost
+    set_required_env_vars,
+    queue,
+    connection_string,
+    org_id_env_var,
+    token,
+    local_mercury,
+    monkeypatch,
 ) -> GXAgentConfig:
+    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
         gx_cloud_access_token=token,
-        org_id=org_id,
-        gx_cloud_base_url=localhost,
+        org_id=org_id_env_var,
+        gx_cloud_base_url=local_mercury,
     )
     return config
 
 
 @pytest.fixture
-def localhost():
+def local_mercury():
     return "http://localhost:5000/"
 
 
 @pytest.fixture
-def org_id():
+def org_id_env_var():
     return os.environ.get("GX_CLOUD_ORGANIZATION_ID")
 
 
@@ -173,16 +174,6 @@ def test_gx_agent_incorrect_token(monkeypatch):
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "incorrect_token")
     with pytest.raises(gx_exception.GXCloudError):
         GXAgent()
-
-
-def test_gx_agent_gets_default_base_url_if_not_provided(get_context, localhost, monkeypatch):
-    monkeypatch.delenv("GX_CLOUD_BASE_URL", raising=False)
-    agent = GXAgent()
-    assert agent._config.gx_cloud_base_url == CLOUD_DEFAULT_BASE_URL
-
-    monkeypatch.setenv("GX_CLOUD_BASE_URL", localhost)
-    agent = GXAgent()
-    assert agent._config.gx_cloud_base_url == localhost
 
 
 def test_gx_agent_initializes_cloud_context(get_context, gx_agent_config):
@@ -328,25 +319,39 @@ def test_gx_agent_updates_cloud_on_job_status(
     )
 
 
-def test_invalid_config_agent_missing_token(set_required_env_vars_missing_token):
+def test_invalid_env_variables_missing_token(set_required_env_vars, monkeypatch):
+    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
+    with pytest.raises(GXAgentConfigError):
+        GXAgent()
+
+
+def test_invalid_env_variables_missing_org_id(set_required_env_vars, monkeypatch):
+    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
+    with pytest.raises(GXAgentConfigError):
+        GXAgent()
+
+
+def test_invalid_config_agent_missing_token(set_required_env_vars, monkeypatch):
+    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
     with pytest.raises(ValidationError):
         GXAgentConfig(
             queue=queue,
             connection_string=connection_string,
-            gx_cloud_organization_id=org_id,
+            gx_cloud_organization_id=org_id_env_var,
             token=token,
-            gx_cloud_base_url=localhost,
+            gx_cloud_base_url=local_mercury,
         )
 
 
-def test_invalid_config_agent_missing_org_id(set_required_env_vars_missing_org_id):
+def test_invalid_config_agent_missing_org_id(set_required_env_vars, monkeypatch):
+    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
     with pytest.raises(ValidationError):
         GXAgentConfig(
             queue=queue,
             connection_string=connection_string,
-            gx_cloud_organization_id=org_id,
+            gx_cloud_organization_id=org_id_env_var,
             token=token,
-            gx_cloud_base_url=localhost,
+            gx_cloud_base_url=local_mercury,
         )
 
 
