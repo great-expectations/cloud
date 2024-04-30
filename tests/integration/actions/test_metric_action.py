@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Iterator
 
 import pytest
 from great_expectations.core import ExpectationConfiguration
-from great_expectations.core.http import create_session
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
 
 from great_expectations_cloud.agent.actions import MetricListAction
@@ -79,9 +78,9 @@ def test_running_metric_list_action(
     action_result = action.run(event=metric_list_event, id=event_id, batch_request=batch_request)
     assert action_result.type == metric_list_event.type
     assert action_result.id == event_id
-    metric_run_event_id = action_result.created_resources[0].resource_id
-    resource_url = f"{cloud_base_url}/organizations/" f"{org_id}/metric-runs/{metric_run_event_id}"
-    session = create_session(access_token=token)
-    response = session.get(resource_url)
-    data = response.json()
-    print(data)
+    # metric_run_event_id = action_result.created_resources[0].resource_id
+    # resource_url = f"{cloud_base_url}/organizations/" f"{org_id}/metric-runs/{metric_run_event_id}"
+    # session = create_session(access_token=token)
+    # response = session.get(resource_url)
+    # data = response.json()
+    # print(data)
