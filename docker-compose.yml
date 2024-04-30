@@ -14,7 +14,6 @@ services:
       - 5432:5432
   mq:
     image: rabbitmq:3.10.20-management
-    hostname: gx-bunny
     environment:
       RABBITMQ_DEFAULT_USER: gx_prod
       RABBITMQ_DEFAULT_PASS: password
@@ -23,10 +22,8 @@ services:
       - 5672:5672
   db-provisioner:
     image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/provisioner:0.4.1
-    platform: linux/amd64
     environment:
       PGPASSWORD: postgres
-      APP_DB_API_USER: postgres
       APP_DB_API_USER_PASSWORD: postgres
       APP_DB_ADDR: db
     # Note: We are overwriting the existing command, just adding a retry
@@ -46,8 +43,7 @@ services:
       - mq
 
   mercury-service-api:
-    image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api:latest
-    platform: linux/amd64
+    image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api
     restart: always
     volumes:
       - ./services/ge_cloud/:/code
@@ -61,19 +57,19 @@ services:
       MERCURY_PASSWORD: postgres
       MERCURY_HOST: db
       MERCURY_DATABASE: mercury
-      GE_USAGE_STATISTICS_URL: https://qa.stats.greatexpectations.io/great_expectations/v1/usage_statistics
+      GE_USAGE_STATISTICS_URL: ${GE_USAGE_STATISTICS_URL}
       AMQP_CONNECTION_STRING: amqp://gx_prod:password@mq:5672
       AMQP_REST_PORT: 15672
       AUTH0_DOMAIN: ${AUTH0_DOMAIN}
       AUTH0_API_AUDIENCE: ${AUTH0_API_AUDIENCE}
       AUTH0_MERCURY_API_CLIENT_ID: ${AUTH0_MERCURY_API_CLIENT_ID}
       AUTH0_MERCURY_API_CLIENT_SECRET: ${AUTH0_MERCURY_API_CLIENT_SECRET}
-      #SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET}
-      #SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
-      #SLACK_REDIRECT_URI: ${SLACK_REDIRECT_URI}
-      #SLACK_CLIENT_ID: ${SLACK_CLIENT_ID}
-      #SENDGRID_API_KEY: ${SENDGRID_API_KEY}
-      #LD_SDK_KEY: ${LD_SDK_KEY}
+      SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      SLACK_REDIRECT_URI: ${SLACK_REDIRECT_URI}
+      SLACK_CLIENT_ID: ${SLACK_CLIENT_ID}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      LD_SDK_KEY: ${LD_SDK_KEY}
 
   db-seeder:
     image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api
@@ -91,29 +87,27 @@ services:
       # Set to localhost since network_mode: host
       MERCURY_HOST: localhost
       MERCURY_DATABASE: mercury
-      GE_USAGE_STATISTICS_URL: https://qa.stats.greatexpectations.io/great_expectations/v1/usage_statistics
+      GE_USAGE_STATISTICS_URL: ${GE_USAGE_STATISTICS_URL}
       AMQP_CONNECTION_STRING: amqp://gx_prod:password@mq:5672
       AMQP_REST_PORT: 15672
       AUTH0_DOMAIN: ${AUTH0_DOMAIN}
       AUTH0_API_AUDIENCE: ${AUTH0_API_AUDIENCE}
       AUTH0_MERCURY_API_CLIENT_ID: ${AUTH0_MERCURY_API_CLIENT_ID}
       AUTH0_MERCURY_API_CLIENT_SECRET: ${AUTH0_MERCURY_API_CLIENT_SECRET}
-      # SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET}
-      # SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
-      # SLACK_REDIRECT_URI: ${SLACK_REDIRECT_URI}
-      # SLACK_CLIENT_ID: ${SLACK_CLIENT_ID}
-      # SENDGRID_API_KEY: ${SENDGRID_API_KEY}
-      # LD_SDK_KEY: ${LD_SDK_KEY}
+      SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      SLACK_REDIRECT_URI: ${SLACK_REDIRECT_URI}
+      SLACK_CLIENT_ID: ${SLACK_CLIENT_ID}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      LD_SDK_KEY: ${LD_SDK_KEY}
     entrypoint: /bin/bash
     command:
       - -c
       - |
-        sed -i 's/localhost/db/g' /app/services/ge_cloud/mercury/alembic.ini
         cd /app/services/ge_cloud/mercury
         alembic upgrade head
         cd /app/services/ge_cloud
         python -m tests.utils.dev_db_seed_script
-        gunicorn mercury.api:get_app\(\) --config ./gunicorn.conf.py --workers=1
     depends_on:
       - mq
 
