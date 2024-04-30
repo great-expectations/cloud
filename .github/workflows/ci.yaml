@@ -111,7 +111,89 @@ jobs:
 
       - name: Run tests
 
-        run: poetry run pytest -m "not agentjobs" -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml
+        run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml
+
+      # upload coverage report to codecov
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.1.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: great-expectations/cloud
+          flags: ${{ matrix.python-version }}
+
+  integration-tests:
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+    runs-on: ubuntu-latest
+
+    env:
+      # GX Agent
+      GX_CLOUD_ACCESS_TOKEN: ${{ secrets.GX_CLOUD_ACCESS_TOKEN }}
+      GX_CLOUD_ORGANIZATION_ID: ${{ secrets.GX_CLOUD_ORGANIZATION_ID }}
+      GX_CLOUD_BASE_URL: "http://localhost:5000"
+      # GX Cloud
+      AUTH0_DOMAIN: ${{secrets.AUTH0_DOMAIN}}
+      AUTH0_API_AUDIENCE: ${{secrets.AUTH0_API_AUDIENCE}}
+      AUTH0_MERCURY_API_CLIENT_ID: ${{secrets.AUTH0_MERCURY_API_CLIENT_ID}}
+      AUTH0_MERCURY_API_CLIENT_SECRET: ${{secrets.AUTH0_MERCURY_API_CLIENT_SECRET}}
+      LOGGING_LEVEL: DEBUG
+      ENVIRONMENT: local
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache-dependency-path: poetry.lock
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.local # the path depends on the OS
+          key: poetry-${{ matrix.python-version  }} # increment to reset cache
+
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: poetry install --sync
+
+      - name: Configure ECR AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::258143015559:role/github-amazonec2containerregistryreadonly
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Start services
+        run: |
+          docker compose up db mq -d
+          docker compose run db-provisioner
+          docker compose run db-seeder
+          docker compose run mq-wait
+          docker compose up mercury-service-api -d
+
+      - name: Show logs for debugging
+        if: failure()
+        run: |
+          docker compose -f docker-compose.yml logs
+
+      - name: Run tests
+
+        run: poetry run pytest -m integration -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
