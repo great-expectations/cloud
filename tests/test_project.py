@@ -9,7 +9,6 @@ from pprint import pformat as pf
 from typing import TYPE_CHECKING, Any, Final, Iterable, Mapping
 
 import pytest
-import tomli
 import tomlkit
 from packaging.version import Version
 from pytest import param
@@ -30,11 +29,13 @@ CODECOV_YML: Final = PROJECT_ROOT / "codecov.yml"
 
 @pytest.fixture
 def min_gx_version() -> Version:
-    pyproject_dict = tomli.loads(PYPROJECT_TOML.read_text())
-    gx_version: str = pyproject_dict["tool"]["poetry"]["dependencies"][
-        "great-expectations"
-    ].replace("^", "")
-    return Version(gx_version)
+    # TODO: add this back once gx is pinned again
+    # pyproject_dict = tomli.loads(PYPROJECT_TOML.read_text())
+    # gx_version: str = pyproject_dict["tool"]["poetry"]["dependencies"][
+    #     "great-expectations"
+    # ].replace("^", "")
+    # return Version(gx_version)
+    return Version("0.17.19")
 
 
 def test_great_expectations_is_installed(min_gx_version):
