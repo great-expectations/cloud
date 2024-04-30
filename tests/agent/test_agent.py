@@ -102,7 +102,7 @@ def gx_agent_config_missing_org_id(
 
 
 @pytest.fixture
-def localhost():
+def local_mercury():
     return "http://localhost:5000/"
 
 
