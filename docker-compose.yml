@@ -12,11 +12,6 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - 5432:5432
-    healthcheck:
-      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d mercury'"]
-      interval: 5s
-      timeout: 2s
-      retries: 5
   mq:
     image: rabbitmq:3.10.20-management
     hostname: gx-bunny
@@ -39,8 +34,7 @@ services:
     #       In local, the DB needs a few seconds to boot up and listen
     command: 'bash -c "until ./init-db.sh; do sleep 5; done;"'
     depends_on:
-      db:
-        condition: service_healthy
+      - db
 
   mq-wait:
     image: debian
