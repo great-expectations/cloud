@@ -18,7 +18,6 @@ classifiers = [
 ]
 
 #Testing check-no-version-bump-label
-#Testing check-no-version-bump-label x2
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
