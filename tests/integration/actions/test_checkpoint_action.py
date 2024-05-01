@@ -23,11 +23,6 @@ from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointA
 
 
 @pytest.fixture(scope="module")
-def in_memory_batch_request_missing_dataframe_error_type() -> type[Exception]:
-    return ValueError
-
-
-@pytest.fixture(scope="module")
 def get_missing_checkpoint_error_type():
     return gx_exceptions.DataContextError
 

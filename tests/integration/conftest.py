@@ -22,6 +22,11 @@ LOGGER: Final = logging.getLogger("tests")
 
 
 @pytest.fixture(scope="module")
+def in_memory_batch_request_missing_dataframe_error_type() -> type[Exception]:
+    return ValueError
+
+
+@pytest.fixture(scope="module")
 def get_missing_expectation_suite_error_type():
     return gx_exceptions.DataContextError
 
