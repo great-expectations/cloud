@@ -199,7 +199,7 @@ addopts = "--cov=great_expectations_cloud --cov-config=.coveragerc"
 markers = [
     "agentjobs",
     "unit: mark a test as a unit test i.e. no external dependencies.",
-    "integration: test that relies on a running GX Cloud instance.",
+    "integration: test that relies on a running GX Cloud and mercury instance.",
 ]
 log_level = "info"
 filterwarnings = [
