@@ -14,7 +14,8 @@ from great_expectations_cloud.agent.models import (
 
 @pytest.fixture
 def user_api_token_headers_org_admin_sc_org():
-    api_token: str = "d47995c6872540429c98f94d6182b5c4.V1.6CmUs5x39flxrKpltY9PYRYiN8DUjNy8vZSaB70nztPpWMg-80LeyjSl-yQvDnxnoNwJeXlBc-fB3HhosVPa7A"
+    # api_token: str = "d47995c6872540429c98f94d6182b5c4.V1.6CmUs5x39flxrKpltY9PYRYiN8DUjNy8vZSaB70nztPpWMg-80LeyjSl-yQvDnxnoNwJeXlBc-fB3HhosVPa7A"
+    api_token: str = "808d6f9e99c94caaaf70baac1a4581ee.V1.kPujCIKZZDLdhw8xUuTb8ZX7oIRhIQY0MgrxRS8sPlX6Dp8121jSTcMlmPwhIMgciNIqkXrTMkgZ5invhUfuFg"
     return {
         "Authorization": f"Bearer {api_token}",
         "Content-Type": "application/vnd.api+json",
@@ -137,6 +138,11 @@ def test_running_metric_list_action(
                 MetricTypes.TABLE_COLUMN_TYPES,
                 MetricTypes.TABLE_COLUMNS,
                 MetricTypes.TABLE_ROW_COUNT,
+                MetricTypes.COLUMN_NULL_COUNT,
+                MetricTypes.COLUMN_MAX,
+                MetricTypes.COLUMN_MIN,
+                MetricTypes.COLUMN_MEAN,
+                MetricTypes.COLUMN_MEDIAN,
             ],
         ),
         id="test-id",
@@ -152,6 +158,8 @@ def test_running_metric_list_action(
             "assetId": data_asset.name,
         },
     )
+    print(result)
+
     raise Exception(result)  # noqa: TRY002
     # metric_run_event_id = action_result.created_resources[0].resource_id
     # resource_url = f"{cloud_base_url}/organizations/" f"{org_id}/metric-runs"
