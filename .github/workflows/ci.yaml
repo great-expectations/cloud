@@ -160,7 +160,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: great-expectations/cloud
-          flags: integration-${{ matrix.python-version }}
+          flags: integration
 
   test-docker-build:
     runs-on: ubuntu-latest
