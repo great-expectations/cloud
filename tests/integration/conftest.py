@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING, Final, Iterator
 
 import great_expectations as gx
 import great_expectations.exceptions as gx_exceptions
+import pandas as pd
 import pytest
 from great_expectations.core import ExpectationConfiguration
 from great_expectations.data_context import CloudDataContext
 
 if TYPE_CHECKING:
-    import pandas as pd
     from great_expectations.core import ExpectationSuite
     from great_expectations.datasource.fluent import BatchRequest, PandasDatasource
     from great_expectations.datasource.fluent.pandas_datasource import DataFrameAsset
@@ -49,6 +49,20 @@ def org_id():
 @pytest.fixture
 def token():
     return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
+
+
+@pytest.fixture(scope="module")
+def pandas_test_df() -> pd.DataFrame:
+    d = {
+        "string": ["a", "b", "c"],
+        "datetime": [
+            pd.to_datetime("2020-01-01"),
+            pd.to_datetime("2020-01-02"),
+            pd.to_datetime("2020-01-03"),
+        ],
+    }
+    df = pd.DataFrame(data=d)
+    return df
 
 
 @pytest.fixture(scope="module")

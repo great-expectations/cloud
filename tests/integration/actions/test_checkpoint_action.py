@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Iterator
 
 import great_expectations.exceptions as gx_exceptions
-import pandas as pd
 import pytest
 
 from great_expectations_cloud.agent.models import (
@@ -21,20 +20,6 @@ if TYPE_CHECKING:
 from great_expectations.core.http import create_session
 
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
-
-
-@pytest.fixture(scope="module")
-def pandas_test_df() -> pd.DataFrame:
-    d = {
-        "string": ["a", "b", "c"],
-        "datetime": [
-            pd.to_datetime("2020-01-01"),
-            pd.to_datetime("2020-01-02"),
-            pd.to_datetime("2020-01-03"),
-        ],
-    }
-    df = pd.DataFrame(data=d)
-    return df
 
 
 @pytest.fixture(scope="module")
