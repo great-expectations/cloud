@@ -11,7 +11,7 @@ from functools import partial
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Dict, Final
 
-from great_expectations import get_context  # type: ignore[attr-defined] # TODO: fix this?
+from great_expectations import get_context
 from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
 from great_expectations.core.http import create_session
@@ -362,7 +362,7 @@ class GXAgent:
         Note: the Agent-Job-Id header value will be set for all GX Cloud request until this method is
         called again.
         """
-        from great_expectations import __version__
+        from great_expectations import __version__  # type: ignore[attr-defined] # TODO: fix this?
         from great_expectations.core import http
         from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend
 
