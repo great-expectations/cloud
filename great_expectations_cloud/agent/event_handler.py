@@ -121,7 +121,7 @@ def _get_major_version(version: str) -> str:
     return str(parsed.major)
 
 
-version = gx.__version__  # type: ignore[attr-defined] # TODO: fix this?
+version = gx.__version__  # type: ignore[attr-defined] # TODO: fix this
 _GX_MAJOR_VERSION = _get_major_version(str(version))
 
 
