@@ -152,9 +152,7 @@ def test_running_metric_list_action(
             "assetId": data_asset.name,
         },
     )
-
-    print(result)
-
+    raise Exception(result)  # noqa: TRY002
     # metric_run_event_id = action_result.created_resources[0].resource_id
     # resource_url = f"{cloud_base_url}/organizations/" f"{org_id}/metric-runs"
     # print(resource_url)
