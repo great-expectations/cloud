@@ -70,6 +70,9 @@ def pandas_test_df() -> pd.DataFrame:
     return df
 
 
+# TODO make a data asset that we can actually calculate these metrics from?
+
+
 @pytest.fixture(scope="module")
 def expectation_suite(
     context: CloudDataContext,
