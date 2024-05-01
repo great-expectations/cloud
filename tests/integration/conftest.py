@@ -105,12 +105,12 @@ def datasource(
     context: CloudDataContext,
     get_missing_datasource_error_type: type[Exception],
 ) -> Iterator[PandasDatasource]:
-    datasource_name = f"i{uuid.uuid4().hex}"
+    datasource_name = f"{uuid.uuid4()}"
     datasource = context.sources.add_pandas(
         name=datasource_name,
     )
     assert datasource.name == datasource_name
-    datasource_name = f"i{uuid.uuid4().hex}"
+    datasource_name = f"{uuid.uuid4()}"
     datasource.name = datasource_name
     datasource = context.sources.add_or_update_pandas(
         datasource=datasource,
@@ -129,7 +129,7 @@ def data_asset(
     datasource: PandasDatasource,
     get_missing_data_asset_error_type: type[Exception],
 ) -> Iterator[DataFrameAsset]:
-    asset_name = f"{uuid.uuid4().hex}"
+    asset_name = f"{uuid.uuid4()}"
     _ = datasource.add_dataframe_asset(
         name=asset_name,
     )
