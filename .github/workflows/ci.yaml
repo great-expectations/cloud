@@ -273,8 +273,10 @@ jobs:
         id: check_no_version_bump_label_exists
         run: |
           if [[ "${{ steps.get_pr_labels.outputs.LABELS }}" == *"no version bump"* ]]; then
+            echo "Setting NO_VERSION_BUMP_LABEL to true"
             echo "NO_VERSION_BUMP_LABEL=true" >> $GITHUB_OUTPUT
           else
+            echo "Setting NO_VERSION_BUMP_LABEL to false"
             echo "NO_VERSION_BUMP_LABEL=false" >> $GITHUB_OUTPUT
           fi
 
