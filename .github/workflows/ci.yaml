@@ -262,7 +262,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'schedule' }}
     outputs:
-      check_no_version_bump_label: ${{ steps.check_no_version_bump_label.outputs.NO_VERSION_BUMP_LABEL }}
+      check_no_version_bump_label_exists: ${{ steps.check_no_version_bump_label_exists.outputs.NO_VERSION_BUMP_LABEL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -270,7 +270,7 @@ jobs:
         id: get_pr_labels
         run: echo "LABELS=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[].name')" >> $GITHUB_OUTPUT
       - name: Check if PR has "no version bump" label
-        id: check_no_version_bump_label
+        id: check_no_version_bump_label_exists
         run: |
           if [[ "${{ steps.get_pr_labels.outputs.LABELS }}" == *"no version bump"* ]]; then
             echo "NO_VERSION_BUMP_LABEL=true" >> $GITHUB_OUTPUT
@@ -283,7 +283,7 @@ jobs:
       contents: write # Allow us to write to the repository
     needs: [check-version-is-bumped, check-no-version-bump-label]
     runs-on: ubuntu-latest
-    if: ${{ needs.check-version-is-bumped.outputs.is_version_bumped == 'false' && needs.check-no-version-bump-label.outputs.check_no_version_bump_label && github.event_name != 'schedule' }}
+    if: ${{ needs.check-version-is-bumped.outputs.is_version_bumped == 'false' && needs.check-no-version-bump-label.outputs.check_no_version_bump_label_exists == 'false' && github.event_name != 'schedule' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
