@@ -129,7 +129,7 @@ def data_asset(
     datasource: PandasDatasource,
     get_missing_data_asset_error_type: type[Exception],
 ) -> Iterator[DataFrameAsset]:
-    asset_name = f"i{uuid.uuid4().hex}"
+    asset_name = f"{uuid.uuid4().hex}"
     _ = datasource.add_dataframe_asset(
         name=asset_name,
     )
