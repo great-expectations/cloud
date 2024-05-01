@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Iterator
 
 import pytest
 import requests
-from great_expectations.core import ExpectationConfiguration
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
 
 from great_expectations_cloud.agent.actions import MetricListAction
@@ -103,42 +101,6 @@ def graphql_test_client(
             return res.json()
 
     return GraphQlTestClient()
-
-
-if TYPE_CHECKING:
-    from great_expectations.core import ExpectationSuite
-    from great_expectations.data_context import CloudDataContext
-    from great_expectations.datasource.fluent.pandas_datasource import DataFrameAsset
-
-
-@pytest.fixture(scope="module")
-def expectation_suite(
-    context: CloudDataContext,
-    data_asset: DataFrameAsset,
-    get_missing_expectation_suite_error_type: type[Exception],
-) -> Iterator[ExpectationSuite]:
-    expectation_suite_name = f"{data_asset.datasource.name} | {data_asset.name}"
-    expectation_suite = context.add_expectation_suite(
-        expectation_suite_name=expectation_suite_name,
-    )
-    expectation_suite.add_expectation(
-        expectation_configuration=ExpectationConfiguration(
-            expectation_type="expect_column_values_to_not_be_null",
-            kwargs={
-                "column": "string",
-                "mostly": 1,
-            },
-        )
-    )
-    _ = context.add_or_update_expectation_suite(expectation_suite=expectation_suite)
-    expectation_suite = context.get_expectation_suite(expectation_suite_name=expectation_suite_name)
-    assert (
-        len(expectation_suite.expectations) == 1
-    ), "Expectation Suite was not updated in the previous method call."
-    yield expectation_suite
-    context.delete_expectation_suite(expectation_suite_name=expectation_suite_name)
-    with pytest.raises(get_missing_expectation_suite_error_type):
-        context.get_expectation_suite(expectation_suite_name=expectation_suite_name)
 
 
 @pytest.fixture
