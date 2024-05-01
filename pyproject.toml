@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20240430.0"
+version = "20240501.0.dev0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -196,7 +196,11 @@ max-complexity = 10
 
 [tool.pytest.ini_options]
 addopts = "--cov=great_expectations_cloud --cov-config=.coveragerc"
-markers = ["agentjobs", "unit"]
+markers = [
+    "agentjobs",
+    "unit: mark a test as a unit test i.e. no external dependencies.",
+    "integration: test that relies on a running GX Cloud and mercury instance.",
+]
 log_level = "info"
 filterwarnings = [
     "error", # Turn all warnings not explicitly filtered below into errors

@@ -43,6 +43,47 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache-dependency-path: poetry.lock
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.local # the path depends on the OS
+          key: poetry-${{ matrix.python-version  }} # increment to reset cache
+
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: poetry install --sync
+
+      - name: Run tests
+        run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml
+
+      # upload coverage report to codecov
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.1.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: great-expectations/cloud
+          flags: ${{ matrix.python-version }}
+
+  integration-tests:
+    strategy:
+      matrix:
+        python-version: ["3.10"]
     permissions:
       id-token: write
       contents: read
@@ -111,7 +152,7 @@ jobs:
 
       - name: Run tests
 
-        run: poetry run pytest -m "not agentjobs" -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml
+        run: poetry run pytest -vv -m integration -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
@@ -119,7 +160,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: great-expectations/cloud
-          flags: ${{ matrix.python-version }}
+          flags: integration
 
   test-docker-build:
     runs-on: ubuntu-latest
