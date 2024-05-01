@@ -39,6 +39,7 @@ if TYPE_CHECKING:
     from tests.agent.conftest import DataContextConfigTD
 
 
+# TODO: This should be marked as unit tests after fixing the tests to mock outgoing calls
 pytestmark = pytest.mark.integration
 
 
