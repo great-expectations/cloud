@@ -196,7 +196,11 @@ max-complexity = 10
 
 [tool.pytest.ini_options]
 addopts = "--cov=great_expectations_cloud --cov-config=.coveragerc"
-markers = ["agentjobs", "unit", "integration"]
+markers = [
+    "agentjobs",
+    "unit: mark a test as a unit test i.e. no external dependencies.",
+    "integration: test that relies on a running GX Cloud instance.",
+]
 log_level = "info"
 filterwarnings = [
     "error", # Turn all warnings not explicitly filtered below into errors
