@@ -43,6 +43,47 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache-dependency-path: poetry.lock
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.local # the path depends on the OS
+          key: poetry-${{ matrix.python-version  }} # increment to reset cache
+
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: poetry install --sync
+
+      - name: Run tests
+        run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml
+
+      # upload coverage report to codecov
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.1.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: great-expectations/cloud
+          flags: ${{ matrix.python-version }}
+
+  integration-tests:
+    strategy:
+      matrix:
+        python-version: ["3.10"]
     permissions:
       id-token: write
       contents: read
@@ -111,7 +152,7 @@ jobs:
 
       - name: Run tests
 
-        run: poetry run pytest -m "not agentjobs" -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml
+        run: poetry run pytest -vv -m integration -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
@@ -119,7 +160,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: great-expectations/cloud
-          flags: ${{ matrix.python-version }}
+          flags: integration
 
   test-docker-build:
     runs-on: ubuntu-latest
@@ -151,7 +192,7 @@ jobs:
 
   check-if-agent-changed:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'schedule' }}
+    if: ${{ github.event_name != 'schedule' && !contains(github.event.pull_request.labels.*.name, 'no version bump') }}
     outputs:
       agent_changed: ${{ steps.filter.outputs.agent }}
     steps:
@@ -170,7 +211,7 @@ jobs:
     # This job checks that the version in the PR is different from the version in main if the agent has changed.
     needs: check-if-agent-changed
     runs-on: ubuntu-latest
-    if: ${{ needs.check-if-agent-changed.outputs.agent_changed == 'true' && github.event_name != 'schedule' }}
+    if: ${{ needs.check-if-agent-changed.outputs.agent_changed == 'true' && !contains(github.event.pull_request.labels.*.name, 'no version bump') && github.event_name != 'schedule' }}
     outputs:
       is_version_bumped: ${{ steps.is_version_bumped.outputs.IS_VERSION_BUMPED }}
 
@@ -222,7 +263,7 @@ jobs:
       contents: write # Allow us to write to the repository
     needs: check-version-is-bumped
     runs-on: ubuntu-latest
-    if: ${{ needs.check-version-is-bumped.outputs.is_version_bumped == 'false' && github.event_name != 'schedule' }}
+    if: ${{ needs.check-version-is-bumped.outputs.is_version_bumped == 'false' && !contains(github.event.pull_request.labels.*.name, 'no version bump') && github.event_name != 'schedule' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

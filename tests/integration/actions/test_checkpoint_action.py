@@ -21,6 +21,8 @@ from great_expectations.core.http import create_session
 
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture(scope="module")
 def get_missing_checkpoint_error_type():

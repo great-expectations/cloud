@@ -156,7 +156,7 @@ def batch_request(
 
 @pytest.fixture(scope="module")
 def context() -> CloudDataContext:
-    context = gx.get_context(
+    context = gx.get_context(  # type: ignore[attr-defined] # TODO: fix this
         mode="cloud",
         cloud_base_url=os.environ.get("GX_CLOUD_BASE_URL"),
         cloud_organization_id=os.environ.get("GX_CLOUD_ORGANIZATION_ID"),
