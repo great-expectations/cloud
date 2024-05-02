@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20240502.0.dev1"
+version = "20240501.0.dev0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -18,6 +18,7 @@ classifiers = [
 ]
 
 # Some change to pyproject.toml to force version bump
+# Force no version bump
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
