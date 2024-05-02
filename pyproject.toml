@@ -17,6 +17,8 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 
+# Some change to pyproject.toml to force version bump
+
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
 great-expectations = "^0.18.13"
