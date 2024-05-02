@@ -20,8 +20,8 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def user_api_token_headers_org_admin_sc_org() -> dict:
-    api_token: str = os.environ.get("GX_CLOUD_ACCESS_TOKEN")
+def user_api_token_headers_org_admin_sc_org():
+    api_token = os.environ.get("GX_CLOUD_ACCESS_TOKEN")
     return {
         "Authorization": f"Bearer {api_token}",
         "Content-Type": "application/vnd.api+json",
@@ -107,7 +107,7 @@ def local_mercury_db_organizations_table_asset(
 def test_running_metric_list_action(
     context: CloudDataContext,
     graphql_test_client,
-    user_api_token_headers_org_admin_sc_org: dict,
+    user_api_token_headers_org_admin_sc_org,
     query: str,
     local_mercury_db_datasource: PostgresDatasource,
     local_mercury_db_organizations_table_asset: TableAsset,
