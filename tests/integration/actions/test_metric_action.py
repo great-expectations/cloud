@@ -18,6 +18,8 @@ if TYPE_CHECKING:
     from great_expectations.datasource.fluent import PostgresDatasource
     from great_expectations.datasource.fluent.sql_datasource import TableAsset
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def user_api_token_headers_org_admin_sc_org():
