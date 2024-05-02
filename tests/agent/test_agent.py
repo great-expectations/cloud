@@ -44,20 +44,20 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def set_required_env_vars(monkeypatch, org_id_env_var, token, local_mercury):
+def set_required_env_vars(monkeypatch, org_id_env_var, token_env_var, local_mercury):
     monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id_env_var)
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token_env_var)
     monkeypatch.setenv("GX_CLOUD_BASE_URL", local_mercury)
 
 
 @pytest.fixture
 def gx_agent_config(
-    set_required_env_vars, queue, connection_string, org_id_env_var, token, local_mercury
+    set_required_env_vars, queue, connection_string, org_id_env_var, token_env_var, local_mercury
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_access_token=token,
+        gx_cloud_access_token=token_env_var,
         gx_cloud_organization_id=org_id_env_var,
         gx_cloud_base_url=local_mercury,
     )
@@ -70,7 +70,7 @@ def gx_agent_config_missing_token(
     queue,
     connection_string,
     org_id_env_var,
-    token,
+    token_env_var,
     local_mercury,
     monkeypatch,
 ) -> GXAgentConfig:
@@ -79,7 +79,7 @@ def gx_agent_config_missing_token(
         queue=queue,
         connection_string=connection_string,
         gx_cloud_organization_id=org_id_env_var,
-        token=token,
+        token=token_env_var,
         gx_cloud_base_url=local_mercury,
     )
     return config
@@ -91,7 +91,7 @@ def gx_agent_config_missing_org_id(
     queue,
     connection_string,
     org_id_env_var,
-    token,
+    token_env_var,
     local_mercury,
     monkeypatch,
 ) -> GXAgentConfig:
@@ -99,7 +99,7 @@ def gx_agent_config_missing_org_id(
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_access_token=token,
+        gx_cloud_access_token=token_env_var,
         org_id=org_id_env_var,
         gx_cloud_base_url=local_mercury,
     )
@@ -117,7 +117,7 @@ def org_id_env_var():
 
 
 @pytest.fixture
-def token():
+def token_env_var():
     return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
 
 
@@ -174,8 +174,8 @@ def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config):
     assert agent._config == gx_agent_config
 
 
-def test_gx_agent_incorrect_token(monkeypatch):
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "incorrect_token")
+def test_gx_agent_invalid_token(monkeypatch):
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "invalid_token")
     with pytest.raises(gx_exception.GXCloudError):
         GXAgent()
 
@@ -342,7 +342,7 @@ def test_invalid_config_agent_missing_token(set_required_env_vars, monkeypatch):
             queue=queue,
             connection_string=connection_string,
             gx_cloud_organization_id=org_id_env_var,
-            token=token,
+            token=token_env_var,
             gx_cloud_base_url=local_mercury,
         )
 
@@ -354,7 +354,7 @@ def test_invalid_config_agent_missing_org_id(set_required_env_vars, monkeypatch)
             queue=queue,
             connection_string=connection_string,
             gx_cloud_organization_id=org_id_env_var,
-            token=token,
+            token=token_env_var,
             gx_cloud_base_url=local_mercury,
         )
 
