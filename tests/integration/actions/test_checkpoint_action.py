@@ -212,13 +212,17 @@ def test_running_checkpoint_action(
 ):
     action = RunCheckpointAction(context=context)
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
+
+    # Act
     action_result = action.run(event=checkpoint_event, id=event_id)
+
+    # Assert
+    # Check that the action was successful, and we have received correct checkpoint event.
     assert action_result.type == checkpoint_event.type
     assert action_result.id == event_id
 
-    # Also get the resulting validation result
+    # Check that the checkpoint was successful by querying the DB.
     validation_result_id = action_result.created_resources[0].resource_id
-
     resource_url = (
         f"{cloud_base_url}/organizations/" f"{org_id}/validation-results/{validation_result_id}"
     )

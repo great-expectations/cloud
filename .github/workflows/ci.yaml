@@ -192,7 +192,7 @@ jobs:
 
   check-if-agent-changed:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'schedule' }}
+    if: ${{ github.event_name != 'schedule' && !contains(github.event.pull_request.labels.*.name, 'no version bump') }}
     outputs:
       agent_changed: ${{ steps.filter.outputs.agent }}
     steps:
@@ -211,7 +211,7 @@ jobs:
     # This job checks that the version in the PR is different from the version in main if the agent has changed.
     needs: check-if-agent-changed
     runs-on: ubuntu-latest
-    if: ${{ needs.check-if-agent-changed.outputs.agent_changed == 'true' && github.event_name != 'schedule' }}
+    if: ${{ needs.check-if-agent-changed.outputs.agent_changed == 'true' && !contains(github.event.pull_request.labels.*.name, 'no version bump') && github.event_name != 'schedule' }}
     outputs:
       is_version_bumped: ${{ steps.is_version_bumped.outputs.IS_VERSION_BUMPED }}
 
@@ -263,7 +263,7 @@ jobs:
       contents: write # Allow us to write to the repository
     needs: check-version-is-bumped
     runs-on: ubuntu-latest
-    if: ${{ needs.check-version-is-bumped.outputs.is_version_bumped == 'false' && github.event_name != 'schedule' }}
+    if: ${{ needs.check-version-is-bumped.outputs.is_version_bumped == 'false' && !contains(github.event.pull_request.labels.*.name, 'no version bump') && github.event_name != 'schedule' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
