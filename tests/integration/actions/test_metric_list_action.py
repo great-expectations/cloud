@@ -114,6 +114,7 @@ def test_running_metric_list_action(
     local_mercury_db_datasource: PostgresDatasource,
     local_mercury_db_organizations_table_asset: TableAsset,
 ):
+    # MetricListEvent with only the Table Metrics requested
     metrics_list_event = RunMetricsListEvent(
         type="metrics_list_request.received",
         datasource_name=local_mercury_db_datasource.name,
@@ -127,13 +128,20 @@ def test_running_metric_list_action(
 
     action = MetricListAction(context=context)
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
+
+    # Act
     action.run(
         event=metrics_list_event,
         id="test-id",
     )
     action_result = action.run(event=metrics_list_event, id=event_id)
+
+    # Assert
+    # Check that the action was successful e.g. that we can create metrics_list_request action
     assert action_result.type == metrics_list_event.type
     assert action_result.id == event_id
+
+    # Check that metrics_list_request was successful by querying DB.
     result = graphql_test_client.execute(
         query,
         headers=user_api_token_headers_org_admin_sc_org,
