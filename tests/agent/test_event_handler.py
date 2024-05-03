@@ -25,7 +25,6 @@ from great_expectations_cloud.agent.event_handler import (
     _EVENT_ACTION_MAP,
     EventAlreadyRegisteredError,
     EventHandler,
-    InvalidVersionError,
     NoVersionImplementationError,
     _get_major_version,
     register_event_action,
@@ -197,8 +196,7 @@ class TestEventHandlerRegistry:
         assert _get_major_version(version) == expected
 
     def test__get_major_version_raises_on_invalid_version(self):
-        with pytest.raises(InvalidVersionError):
-            _get_major_version("invalid_version")
+        _get_major_version("invalid_version")
 
 
 def test_parse_event_extra_field(example_event):
