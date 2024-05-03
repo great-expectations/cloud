@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
@@ -8,6 +9,10 @@ from unittest.mock import call
 
 import pytest
 import responses
+from great_expectations.compatibility.pydantic import (
+    ValidationError,
+)
+from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from tenacity import RetryError
 
@@ -35,69 +40,86 @@ if TYPE_CHECKING:
     from tests.agent.conftest import DataContextConfigTD
 
 
-@pytest.fixture
-def set_required_env_vars(monkeypatch, org_id, token):
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
+# TODO: This should be marked as unit tests after fixing the tests to mock outgoing calls
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def set_required_env_vars_missing_token(monkeypatch, org_id):
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
-
-
-@pytest.fixture
-def set_required_env_vars_missing_org_id(monkeypatch, token):
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
+def set_required_env_vars(monkeypatch, org_id_env_var, token_env_var, local_mercury):
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id_env_var)
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token_env_var)
+    monkeypatch.setenv("GX_CLOUD_BASE_URL", local_mercury)
 
 
 @pytest.fixture
 def gx_agent_config(
-    set_required_env_vars, queue, connection_string, org_id, token
+    set_required_env_vars, queue, connection_string, org_id_env_var, token_env_var, local_mercury
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_access_token=token,
-        gx_cloud_organization_id=org_id,
+        gx_cloud_access_token=token_env_var,
+        gx_cloud_organization_id=org_id_env_var,
+        gx_cloud_base_url=local_mercury,
     )
     return config
 
 
 @pytest.fixture
 def gx_agent_config_missing_token(
-    set_required_env_vars_missing_token, queue, connection_string, org_id, token
+    set_required_env_vars,
+    queue,
+    connection_string,
+    org_id_env_var,
+    token_env_var,
+    local_mercury,
+    monkeypatch,
 ) -> GXAgentConfig:
+    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_access_token=token,
-        gx_cloud_organization_id=org_id,
+        gx_cloud_organization_id=org_id_env_var,
+        token=token_env_var,
+        gx_cloud_base_url=local_mercury,
     )
     return config
 
 
 @pytest.fixture
 def gx_agent_config_missing_org_id(
-    set_required_env_vars_missing_org_id, queue, connection_string, org_id, token
+    set_required_env_vars,
+    queue,
+    connection_string,
+    org_id_env_var,
+    token_env_var,
+    local_mercury,
+    monkeypatch,
 ) -> GXAgentConfig:
+    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_access_token=token,
-        gx_cloud_organization_id=org_id,
+        gx_cloud_access_token=token_env_var,
+        org_id=org_id_env_var,
+        gx_cloud_base_url=local_mercury,
     )
     return config
 
 
 @pytest.fixture
-def org_id():
-    return "4ea2985c-4fb7-4c53-9f8e-07b7e0506c3e"
+def local_mercury():
+    return "http://localhost:5000/"
 
 
 @pytest.fixture
-def token():
-    return "MTg0NDkyYmYtNTBiOS00ZDc1LTk3MmMtYjQ0M2NhZDA2NjJk"
+def org_id_env_var():
+    return os.environ.get("GX_CLOUD_ORGANIZATION_ID")
+
+
+@pytest.fixture
+def token_env_var():
+    return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
 
 
 @pytest.fixture
@@ -156,6 +178,12 @@ def create_session(mocker, queue, connection_string):
 def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config, logger):
     agent = GXAgent(logger)
     assert agent._config == gx_agent_config
+
+
+def test_gx_agent_invalid_token(monkeypatch, logger):
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "invalid_token")
+    with pytest.raises(gx_exception.GXCloudError):
+        GXAgent(logger)
 
 
 def test_gx_agent_initializes_cloud_context(get_context, gx_agent_config, logger):
@@ -301,14 +329,40 @@ def test_gx_agent_updates_cloud_on_job_status(
     )
 
 
-def test_invalid_config_agent_missing_token(gx_agent_config_missing_token, logger):
+def test_invalid_env_variables_missing_token(set_required_env_vars, monkeypatch, logger):
+    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
     with pytest.raises(GXAgentConfigError):
         GXAgent(logger)
 
 
-def test_invalid_config_agent_missing_org_id(gx_agent_config_missing_org_id, logger):
+def test_invalid_env_variables_missing_org_id(set_required_env_vars, monkeypatch, logger):
+    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
     with pytest.raises(GXAgentConfigError):
         GXAgent(logger)
+
+
+def test_invalid_config_agent_missing_token(set_required_env_vars, monkeypatch):
+    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
+    with pytest.raises(ValidationError):
+        GXAgentConfig(
+            queue=queue,
+            connection_string=connection_string,
+            gx_cloud_organization_id=org_id_env_var,
+            token=token_env_var,
+            gx_cloud_base_url=local_mercury,
+        )
+
+
+def test_invalid_config_agent_missing_org_id(set_required_env_vars, monkeypatch):
+    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
+    with pytest.raises(ValidationError):
+        GXAgentConfig(
+            queue=queue,
+            connection_string=connection_string,
+            gx_cloud_organization_id=org_id_env_var,
+            token=token_env_var,
+            gx_cloud_base_url=local_mercury,
+        )
 
 
 def test_custom_user_agent(
@@ -360,8 +414,8 @@ def ds_config_factory() -> Callable[[str], dict[Literal["name", "type", "connect
 
 
 def test_correlation_id_header(
-    mock_gx_version_check: None,
     set_required_env_vars: None,
+    mock_gx_version_check: None,
     data_context_config: DataContextConfigTD,
     ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
@@ -384,7 +438,6 @@ def test_correlation_id_header(
             ),
         ]
     )
-
     base_url = gx_agent_config.gx_cloud_base_url
     org_id = gx_agent_config.gx_cloud_organization_id
     with responses.RequestsMock() as rsps:

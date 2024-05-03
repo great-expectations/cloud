@@ -121,7 +121,8 @@ def _get_major_version(version: str) -> str:
     return str(parsed.major)
 
 
-_GX_MAJOR_VERSION = _get_major_version(str(gx.__version__))
+version = gx.__version__  # type: ignore[attr-defined] # TODO: fix this
+_GX_MAJOR_VERSION = _get_major_version(str(version))
 
 
 def _get_event_name(event: Event) -> str:

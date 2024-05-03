@@ -11,7 +11,7 @@ from functools import partial
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Dict
 
-from great_expectations import get_context
+from great_expectations import get_context  # type: ignore[attr-defined] # TODO: fix this
 from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
 from great_expectations.core.http import create_session
@@ -304,7 +304,6 @@ class GXAgent:
             ) from validation_err
 
         # obtain the broker url and queue name from Cloud
-
         agent_sessions_url = (
             f"{env_vars.gx_cloud_base_url}/organizations/"
             f"{env_vars.gx_cloud_organization_id}/agent-sessions"
@@ -363,7 +362,7 @@ class GXAgent:
         Note: the Agent-Job-Id header value will be set for all GX Cloud request until this method is
         called again.
         """
-        from great_expectations import __version__
+        from great_expectations import __version__  # type: ignore[attr-defined] # TODO: fix this
         from great_expectations.core import http
         from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend
 
