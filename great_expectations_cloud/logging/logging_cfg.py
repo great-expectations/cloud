@@ -23,10 +23,18 @@ DEFAULT_FILE_LOGGING_LEVEL: Final[int] = logging.DEBUG
 DEFAULT_LOGGING_CFG = {
     "version": 1,
     "disable_existing_loggers": False,
-    "formatters": {"default_fmt": {"format": "[%(levelname)s] %(name)s: %(message)s"}},
+    "formatters": {
+        "default_fmt": {"format": "[%(levelname)s] %(name)s: %(message)s"},
+        "msg_only_fmt": {"format": "%(message)s"},
+    },
     "handlers": {
         "default_handler": {
             "formatter": "default_fmt",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
+        },
+        "msg_only_handler": {
+            "formatter": "msg_only_fmt",
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stdout",
         },
@@ -35,6 +43,11 @@ DEFAULT_LOGGING_CFG = {
         "": {
             "handlers": ["default_handler"],
             "level": "WARNING",
+            "propagate": False,
+        },
+        "agent_progress": {
+            "handlers": ["msg_only_handler"],
+            "level": "INFO",
             "propagate": False,
         },
     },

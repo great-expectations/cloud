@@ -9,10 +9,10 @@ from great_expectations_cloud.agent.agent import GXAgentConfigError
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
 
-def run_agent() -> None:
+def run_agent(logger: logging.Logger) -> None:
     """Run an instance of the GX Agent."""
     try:
-        agent = GXAgent()
+        agent = GXAgent(logger)
         agent.run()
     except GXAgentConfigError as error:
         # catch error to avoid stacktrace printout
