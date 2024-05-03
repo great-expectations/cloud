@@ -90,6 +90,10 @@ def main() -> None:
         )
     )
 
+    agent_logger = logging.getLogger(
+        "agent_progress" if not args.json_log else "great_expectations_cloud.agent.agent"
+    )
+
     if args.version:
         from great_expectations_cloud.agent import get_version
 
@@ -98,7 +102,7 @@ def main() -> None:
 
     from great_expectations_cloud.agent import run_agent
 
-    run_agent()
+    run_agent(agent_logger)
 
 
 if __name__ == "__main__":
