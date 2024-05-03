@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
@@ -135,6 +136,11 @@ def connection_string():
     return "amqps://user:pass@great_expectations.io:5671"
 
 
+@pytest.fixture
+def logger():
+    return logging.getLogger(__name__)
+
+
 @pytest.fixture(autouse=True)
 def create_session(mocker, queue, connection_string):
     """Patch for great_expectations.core.http.create_session"""
@@ -147,27 +153,27 @@ def create_session(mocker, queue, connection_string):
     return create_session
 
 
-def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config):
-    agent = GXAgent()
+def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config, logger):
+    agent = GXAgent(logger)
     assert agent._config == gx_agent_config
 
 
-def test_gx_agent_initializes_cloud_context(get_context, gx_agent_config):
-    GXAgent()
+def test_gx_agent_initializes_cloud_context(get_context, gx_agent_config, logger):
+    GXAgent(logger)
     get_context.assert_called_with(cloud_mode=True)
 
 
-def test_gx_agent_run_starts_subscriber(get_context, subscriber, client, gx_agent_config):
+def test_gx_agent_run_starts_subscriber(get_context, subscriber, client, gx_agent_config, logger):
     """Expect GXAgent.run to invoke the Subscriber class with the correct arguments."""
-    agent = GXAgent()
+    agent = GXAgent(logger)
     agent.run()
 
     subscriber.assert_called_with(client=client())
 
 
-def test_gx_agent_run_invokes_consume(get_context, subscriber, client, gx_agent_config):
+def test_gx_agent_run_invokes_consume(get_context, subscriber, client, gx_agent_config, logger):
     """Expect GXAgent.run to invoke subscriber.consume with the correct arguments."""
-    agent = GXAgent()
+    agent = GXAgent(logger)
     agent.run()
 
     subscriber().consume.assert_called_with(
@@ -176,66 +182,66 @@ def test_gx_agent_run_invokes_consume(get_context, subscriber, client, gx_agent_
     )
 
 
-def test_gx_agent_run_closes_subscriber(get_context, subscriber, client, gx_agent_config):
+def test_gx_agent_run_closes_subscriber(get_context, subscriber, client, gx_agent_config, logger):
     """Expect GXAgent.run to invoke subscriber.close."""
-    agent = GXAgent()
+    agent = GXAgent(logger)
     agent.run()
 
     subscriber().close.assert_called_with()
 
 
 def test_gx_agent_run_handles_client_error_on_init(
-    get_context, subscriber, client, gx_agent_config
+    get_context, subscriber, client, gx_agent_config, logger
 ):
     client.side_effect = ClientError
-    agent = GXAgent()
+    agent = GXAgent(logger)
     agent.run()
 
 
 def test_gx_agent_run_handles_subscriber_error_on_init(
-    get_context, subscriber, client, gx_agent_config
+    get_context, subscriber, client, gx_agent_config, logger
 ):
     subscriber.side_effect = SubscriberError
-    agent = GXAgent()
+    agent = GXAgent(logger)
     agent.run()
 
 
 def test_gx_agent_run_handles_subscriber_error_on_consume(
-    get_context, subscriber, client, gx_agent_config
+    get_context, subscriber, client, gx_agent_config, logger
 ):
     subscriber.consume.side_effect = SubscriberError
-    agent = GXAgent()
+    agent = GXAgent(logger)
     agent.run()
 
 
 def test_gx_agent_run_handles_client_authentication_error_on_init(
-    get_context, subscriber, client, gx_agent_config
+    get_context, subscriber, client, gx_agent_config, logger
 ):
     with pytest.raises((AuthenticationError, RetryError)):
         client.side_effect = AuthenticationError
-        agent = GXAgent()
+        agent = GXAgent(logger)
         agent.run()
 
 
 def test_gx_agent_run_handles_client_probable_authentication_error_on_init(
-    get_context, subscriber, client, gx_agent_config
+    get_context, subscriber, client, gx_agent_config, logger
 ):
     with pytest.raises((ProbableAuthenticationError, RetryError)):
         client.side_effect = ProbableAuthenticationError
-        agent = GXAgent()
+        agent = GXAgent(logger)
         agent.run()
 
 
 def test_gx_agent_run_handles_subscriber_error_on_close(
-    get_context, subscriber, client, gx_agent_config
+    get_context, subscriber, client, gx_agent_config, logger
 ):
     subscriber.close.side_effect = SubscriberError
-    agent = GXAgent()
+    agent = GXAgent(logger)
     agent.run()
 
 
 def test_gx_agent_updates_cloud_on_job_status(
-    subscriber, create_session, get_context, client, gx_agent_config, event_handler
+    subscriber, create_session, get_context, client, gx_agent_config, event_handler, logger
 ):
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
     url = (
@@ -284,7 +290,7 @@ def test_gx_agent_updates_cloud_on_job_status(
 
     subscriber().consume = consume
 
-    agent = GXAgent()
+    agent = GXAgent(logger)
     agent.run()
 
     create_session.return_value.patch.assert_has_calls(
@@ -295,20 +301,18 @@ def test_gx_agent_updates_cloud_on_job_status(
     )
 
 
-def test_invalid_config_agent_missing_token(gx_agent_config_missing_token):
+def test_invalid_config_agent_missing_token(gx_agent_config_missing_token, logger):
     with pytest.raises(GXAgentConfigError):
-        GXAgent()
+        GXAgent(logger)
 
 
-def test_invalid_config_agent_missing_org_id(gx_agent_config_missing_org_id):
+def test_invalid_config_agent_missing_org_id(gx_agent_config_missing_org_id, logger):
     with pytest.raises(GXAgentConfigError):
-        GXAgent()
+        GXAgent(logger)
 
 
 def test_custom_user_agent(
-    mock_gx_version_check: None,
-    set_required_env_vars: None,
-    gx_agent_config: GXAgentConfig,
+    mock_gx_version_check: None, set_required_env_vars: None, gx_agent_config: GXAgentConfig, logger
 ):
     """Ensure custom User-Agent header is set on GX Cloud api calls."""
     base_url = gx_agent_config.gx_cloud_base_url
@@ -334,7 +338,7 @@ def test_custom_user_agent(
                 )
             ],
         )
-        GXAgent()
+        GXAgent(logger)
 
 
 @pytest.fixture
@@ -362,6 +366,7 @@ def test_correlation_id_header(
     ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
     fake_subscriber: FakeSubscriber,
+    logger,
 ):
     """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
     agent_job_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
@@ -409,5 +414,5 @@ def test_correlation_id_header(
             # match will fail if correlation-id header is not set
             match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[2]})],
         )
-        agent = GXAgent()
+        agent = GXAgent(logger)
         agent.run()
