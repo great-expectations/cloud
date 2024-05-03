@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import warnings
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
 
@@ -199,13 +198,7 @@ class TestEventHandlerRegistry:
 
     def test__get_major_version_raises_on_invalid_version(self):
         with pytest.raises(InvalidVersionError):
-            with warnings.catch_warnings():
-                # Filter Deprecation warnings about LegacyVersion
-                warnings.filterwarnings(
-                    "ignore",
-                    message="Creating a LegacyVersion has been deprecated and will be removed in the next major release",
-                )
-                _get_major_version("invalid_version")
+            _get_major_version("invalid_version")
 
 
 def test_parse_event_extra_field(example_event):
