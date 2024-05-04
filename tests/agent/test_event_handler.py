@@ -4,6 +4,7 @@ import json
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
 
+import packaging.version
 import pytest
 from great_expectations.experimental.metric_repository.metrics import (
     MetricTypes,
@@ -196,7 +197,8 @@ class TestEventHandlerRegistry:
         assert _get_major_version(version) == expected
 
     def test__get_major_version_raises_on_invalid_version(self):
-        _get_major_version("invalid_version")
+        with pytest.raises(packaging.version.InvalidVersion):
+            _get_major_version("invalid_version")
 
 
 def test_parse_event_extra_field(example_event):
