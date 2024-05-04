@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 import great_expectations as gx
 from great_expectations.compatibility import pydantic
-from packaging.version import LegacyVersion, Version
+from packaging.version import Version
 from packaging.version import parse as parse_version
 
 from great_expectations_cloud.agent.actions.unknown import UnknownEventAction
@@ -115,13 +115,14 @@ class EventAlreadyRegisteredError(EventError):
 
 def _get_major_version(version: str) -> str:
     """Get major version as a string from version as a string. For example, "0.18.0" -> "0"."""
-    parsed: Version | LegacyVersion = parse_version(version)
+    parsed: Version = parse_version(version)
     if not isinstance(parsed, Version):
         raise InvalidVersionError(version)
     return str(parsed.major)
 
 
-_GX_MAJOR_VERSION = _get_major_version(str(gx.__version__))
+version = gx.__version__  # type: ignore[attr-defined] # TODO: fix this
+_GX_MAJOR_VERSION = _get_major_version(str(version))
 
 
 def _get_event_name(event: Event) -> str:
