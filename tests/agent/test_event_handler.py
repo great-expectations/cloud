@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import json
-import warnings
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
 
+import packaging.version
 import pytest
 from great_expectations.experimental.metric_repository.metrics import (
     MetricTypes,
@@ -26,7 +26,6 @@ from great_expectations_cloud.agent.event_handler import (
     _EVENT_ACTION_MAP,
     EventAlreadyRegisteredError,
     EventHandler,
-    InvalidVersionError,
     NoVersionImplementationError,
     _get_major_version,
     register_event_action,
@@ -198,14 +197,8 @@ class TestEventHandlerRegistry:
         assert _get_major_version(version) == expected
 
     def test__get_major_version_raises_on_invalid_version(self):
-        with pytest.raises(InvalidVersionError):
-            with warnings.catch_warnings():
-                # Filter Deprecation warnings about LegacyVersion
-                warnings.filterwarnings(
-                    "ignore",
-                    message="Creating a LegacyVersion has been deprecated and will be removed in the next major release",
-                )
-                _get_major_version("invalid_version")
+        with pytest.raises(packaging.version.InvalidVersion):
+            _get_major_version("invalid_version")
 
 
 def test_parse_event_extra_field(example_event):
