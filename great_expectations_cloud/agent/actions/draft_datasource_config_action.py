@@ -15,7 +15,7 @@ from great_expectations_cloud.agent.config import (
 )
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.exceptions import ErrorCode, raise_with_error_code
-from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
+from great_expectations_cloud.agent.models import CreatedResource, DraftDatasourceConfigEvent
 
 
 class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
@@ -40,6 +40,10 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         self, event: DraftDatasourceConfigEvent, id: str
     ) -> ActionResult:
         draft_config = self.get_draft_config(config_id=event.config_id)
+        created_resource = CreatedResource(
+            resource_id=str(event.config_id),
+            type="DraftDatasourceConfig",
+        )
         datasource_type = draft_config.get("type", None)
         if datasource_type is None:
             raise TypeError(  # noqa: TRY003 # one off error
@@ -55,7 +59,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         datasource = datasource_cls(**draft_config)
         datasource._data_context = self._context
         datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
-        return ActionResult(id=id, type=event.type, created_resources=[])
+        return ActionResult(id=id, type=event.type, created_resources=[created_resource])
 
     def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
         try:
