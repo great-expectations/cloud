@@ -19,7 +19,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
-great-expectations = "^0.18.13"
+great-expectations = "1.0.0a3"
 pydantic = "<3"
 pika = "^1.3.1"
 # needed for metrics serialization
@@ -33,10 +33,10 @@ snowflake = ["snowflake-sqlalchemy"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
 
 [tool.poetry.group.sql.dependencies]
-great-expectations = { version = "^0.18.4", extras = [
-    "databricks",
-    "sqlalchemy1",
-] }
+# great-expectations = { version = "^0.18.4", extras = [
+#     "databricks",
+#     "sqlalchemy1",
+# ] }
 snowflake-sqlalchemy = ">=1.5.0"
 snowflake-connector-python = ">=3.3.1"
 # TODO: Remove the python constraint once this PR is merged - https://github.com/sqlalchemy-redshift/sqlalchemy-redshift/pull/288
