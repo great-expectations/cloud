@@ -1,10 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-<<<<<<< dependabot/pip/tomlkit-0.12.5
-version = "20240515.1.dev0"
-=======
-version = "20240516.0.dev0"
->>>>>>> main
+version = "20240516.1.dev0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
