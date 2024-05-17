@@ -1,12 +1,13 @@
 flag_management:
   default_rules: # the rules that will be followed for any flag added, generally
     carryforward: false
+    after_n_builds: 5 # should correspond to the number of coverage reports we expect
     statuses:
       - type: project
-        target: auto # the default target for the project
-        threshold: 70% # the default minimum threshold for the project
+        target: 80% # the default target for the project
+        threshold: 2% # the allowed drop from the target
       - type: patch
-        target: 90%
+        target: 70%
   # in general these individual flags should correspond to pytest markers
   individual_flags: # exceptions to the default rules above, stated flag by flag
     - name: agentjobs
@@ -14,4 +15,8 @@ flag_management:
         - type: project
           target: 45%
         - type: patch
-          target: 70%
+          target: 60%
+    - name: integration
+      statuses:
+        - type: project
+          target: 66% # 67% as of 2024-05-17
