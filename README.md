@@ -35,7 +35,7 @@ optional arguments:
                         Skip writing debug logs to a file. Defaults to False. Does not affect logging to stdout/stderr.
   --log-cfg-file LOG_CFG_FILE
                         Path to a logging configuration json file. Supersedes --log-level and --skip-log-file.
-  --version             Show the gx agent version.
+  --version             Show the GX Agent version.
 ```
 
 #### Set env variables
@@ -45,7 +45,7 @@ optional arguments:
 
 ### Start the Agent
 
-If you intend to run the agent against local services (Cloud backend or datasources) run the agent outside of the container.
+If you intend to run the Agent against local services (Cloud backend or datasources) run the Agent outside of the container.
 
 ```
 gx-agent
@@ -129,13 +129,13 @@ Now go into GX Cloud and issue commands for the GX Agent to run, such as generat
 
 The contents from [/examples/agent/data](https://github.com/great-expectations/cloud/tree/main/examples/agent/data) will be copied to `/data` for the Docker container.
 
-#### Adding an action to the agent
+#### Adding an action to the Agent
 
 1. Make a new action in `great_expectations_cloud/agent/actions/` in a separate file.
 2. Register your action in the file it was created in using `great_expectations_cloud.agent.event_handler.register_event_action()`. Register for the major version of GX Core that the action applies to, e.g. `register_event_action("1", RunCheckpointEvent, RunCheckpointAction)` registers the action for major version 1 of GX Core (e.g. 1.0.0).
 3. Import your action in `great_expectations_cloud/agent/actions/__init__.py`
 
-Note: The agent is core-version specific but this registration mechanism allows us to preemptively work on actions for future versions of GX Core while still supporting the existing latest major version.
+Note: The Agent is core-version specific but this registration mechanism allows us to preemptively work on actions for future versions of GX Core while still supporting the existing latest major version.
 
 ### Release Process
 
