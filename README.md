@@ -61,9 +61,9 @@ See also [CONTRIBUTING.md](https://github.com/great-expectations/cloud/blob/main
 
 1. [Install `poetry`](https://python-poetry.org/docs/#installation)
    - [`pipx install poetry`](https://python-poetry.org/docs/#installing-with-pipx)
-2. Set up virtual environment and install dependencies.
+2. Set up virtual environment and install dependencies
    - `poetry install --sync`
-3. Activate your virtual environment.
+3. Activate your virtual environment
    - `poetry shell`
 4. Set up precommit hooks
    - `pre-commit install`
