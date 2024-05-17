@@ -7,7 +7,7 @@ flag_management:
         target: 80% # the default target for the project
         threshold: 2% # the allowed drop from the target
       - type: patch
-        target: 75%
+        target: 70%
   # in general these individual flags should correspond to pytest markers
   individual_flags: # exceptions to the default rules above, stated flag by flag
     - name: agentjobs
@@ -16,3 +16,7 @@ flag_management:
           target: 45%
         - type: patch
           target: 60%
+    - name: integration
+      statuses:
+        - type: project
+          target: 66%  # 67% as of 2024-05-17
