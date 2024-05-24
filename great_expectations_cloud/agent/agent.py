@@ -73,6 +73,7 @@ class GXAgentConfig(AgentBaseModel):
     gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
+    custom_params: dict[str, Any] | None = None
 
 
 class GXAgent:
@@ -132,7 +133,9 @@ class GXAgent:
         """Manage connection lifecycle."""
         subscriber = None
         try:
-            client = AsyncRabbitMQClient(url=str(self._config.connection_string))
+            client = AsyncRabbitMQClient(
+                url=str(self._config.connection_string), custom_params=self._config.custom_params
+            )
             subscriber = Subscriber(client=client)
             print("The GX Agent is ready.")
             # Open a connection until encountering a shutdown event
@@ -322,6 +325,7 @@ class GXAgent:
         json_response = response.json()
         queue = json_response["queue"]
         connection_string = json_response["connection_string"]
+        custom_params = {"stack_timeout": env_vars.amqp_stack_timeout}
 
         try:
             # pydantic will coerce the url to the correct type
@@ -331,6 +335,7 @@ class GXAgent:
                 gx_cloud_base_url=env_vars.gx_cloud_base_url,
                 gx_cloud_organization_id=env_vars.gx_cloud_organization_id,
                 gx_cloud_access_token=env_vars.gx_cloud_access_token,
+                custom_params=custom_params,
             )
         except pydantic.ValidationError as validation_err:
             raise GXAgentConfigError(
