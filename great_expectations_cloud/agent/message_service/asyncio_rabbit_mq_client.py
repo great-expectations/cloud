@@ -5,7 +5,8 @@ import ssl
 from asyncio import AbstractEventLoop
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Callable, Protocol
+from typing import TYPE_CHECKING, Any, Callable, Protocol
+from urllib import parse
 
 import pika
 from pika.adapters.asyncio_connection import AsyncioConnection
@@ -34,8 +35,8 @@ class OnMessageFn(Protocol):
 class AsyncRabbitMQClient:
     """Configuration for a particular AMQP client library."""
 
-    def __init__(self, url: str):
-        self._parameters = self._build_client_parameters(url=url)
+    def __init__(self, url: str, custom_params: dict[str, Any] | None = None):
+        self._parameters = self._build_client_parameters(url=url, custom_params=custom_params)
         self.should_reconnect = False
         self.was_consuming = False
         self._connection = None
@@ -228,8 +229,16 @@ class AsyncRabbitMQClient:
         """Callback invoked after the broker closes the channel."""
         self._close_connection()
 
-    def _build_client_parameters(self, url: str) -> pika.URLParameters:
+    def _build_client_parameters(
+        self, url: str, custom_params: dict[str, Any] | None = None
+    ) -> pika.URLParameters:
         """Configure parameters used to connect to the broker."""
+        if custom_params:
+            url_parts = list(parse.urlparse(url))
+            query = {**dict(parse.parse_qsl(url_parts[4])), **custom_params}
+            url_parts[4] = parse.urlencode(query)
+            url = parse.urlunparse(url_parts)
+
         parameters = pika.URLParameters(url)
         # only enable SSL if connection string calls for it
         if url.startswith("amqps://"):
