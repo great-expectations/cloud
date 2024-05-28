@@ -16,6 +16,10 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
     "Topic :: Software Development :: Testing",
 ]
+# package data
+include = [
+    "py.typed", # exporting types https://peps.python.org/pep-0561/
+]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
