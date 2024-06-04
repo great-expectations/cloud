@@ -192,7 +192,7 @@ jobs:
 
   check-if-agent-changed:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'schedule' && !contains(github.event.pull_request.labels.*.name, 'no version bump') && !contains(github.event.pull_request.labels.*.name, 'dependencies') }}
+    if: ${{ github.event_name != 'schedule' && !contains(github.event.pull_request.labels.*.name, 'no version bump') }}
     outputs:
       agent_changed: ${{ steps.filter.outputs.agent }}
     steps:
@@ -263,7 +263,7 @@ jobs:
       contents: write # Allow us to write to the repository
     needs: check-version-is-bumped
     runs-on: ubuntu-latest
-    if: ${{ needs.check-version-is-bumped.outputs.is_version_bumped == 'false' && !contains(github.event.pull_request.labels.*.name, 'no version bump') && github.event_name != 'schedule' }}
+    if: ${{ needs.check-version-is-bumped.outputs.is_version_bumped == 'false' && !contains(github.event.pull_request.labels.*.name, 'no version bump') && !contains(github.event.pull_request.labels.*.name, 'dependencies') && github.event_name != 'schedule' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
