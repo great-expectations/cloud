@@ -18,7 +18,9 @@ WORKDIR /app/
 ENV PYTHONUNBUFFERED=1
 ENV POETRY_CACHE_DIR=/tmp/pypoetry
 
-# Required for arm64, for building psutil
+# Linux deps and why:
+#   python3-dev: required by build tools
+#   gcc: required to build psutil for arm64
 RUN apt-get update && apt-get install --no-install-recommends python3-dev=3.11.2-1+b1 gcc=4:12.2.0-3 -y && rm -rf /var/lib/apt/lists/*
 
 RUN pip --no-cache-dir install poetry==1.8.2
@@ -35,5 +37,8 @@ COPY great_expectations_cloud great_expectations_cloud
 COPY examples/agent/data data
 
 RUN poetry install --only-root && rm -rf POETRY_CACHE_DIR
+
+# Clean up all non-runtime linux deps
+RUN apt-get remove python3-dev gcc -y
 
 ENTRYPOINT ["poetry", "run", "gx-agent"]
