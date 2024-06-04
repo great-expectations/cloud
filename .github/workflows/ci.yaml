@@ -192,7 +192,7 @@ jobs:
 
   check-if-agent-changed:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'schedule' && !contains(github.event.pull_request.labels.*.name, 'no version bump') }}
+    if: ${{ github.event_name != 'schedule' && !contains(github.event.pull_request.labels.*.name, 'no version bump') && !contains(github.event.pull_request.labels.*.name, 'dependencies') }}
     outputs:
       agent_changed: ${{ steps.filter.outputs.agent }}
     steps:
