@@ -160,8 +160,6 @@ class GXAgent:
         version: str = metadata_version(cls._PYPI_GX_AGENT_PACKAGE_NAME)
         return version
 
-
-
     @classmethod
     def _get_current_great_expectations_version(cls) -> str:
         version: str = metadata_version(cls._PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME)
