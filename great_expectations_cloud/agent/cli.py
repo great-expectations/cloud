@@ -77,17 +77,33 @@ def _parse_args() -> Arguments:
         custom_log_tags=args.custom_log_tags,
     )
 
+def load_dotenv(env_file: pathlib.Path) -> set[str]:
+    """
+    Load environment variables from a file.
+
+    Returns a set of the environment variables that were loaded.
+    """
+    import os
+    # throw error if file does not exist
+    initial_vars: set[str] = set(os.environ.keys())  # noqa: TID251 # we aren't actually using these vars
+
+    env_file.resolve(strict=True)
+    from dotenv import load_dotenv
+
+    load_dotenv(env_file)
+
+    return set(os.environ.keys()) - initial_vars  # noqa: TID251 # we aren't actually using these vars
+
+
 
 def main() -> None:
     # lazy imports ensure our cli is fast and responsive
     args: Arguments = _parse_args()
 
     if args.env_file:
-        from dotenv import load_dotenv
         print(f"Loading environment variables from {args.env_file}")
-        # throw error if file does not exist
-        args.env_file.resolve(strict=True)
-        load_dotenv(args.env_file)
+        loaded_env_vars = load_dotenv(args.env_file)
+        LOGGER.info(f"Loaded {len(loaded_env_vars)} environment variables.")
 
     custom_tags: dict[str, Any] = {}
     try:
