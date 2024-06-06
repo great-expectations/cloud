@@ -47,15 +47,14 @@ class RunCheckpointEvent(EventBase):
     splitter_options: Optional[Dict[str, Any]] = None
 
 
-# TODO: Do we add optional schedule_id to RunCheckpointEvent? Or create RunScheduledCheckpointEvent?
-#  Leaning towards creating a new event type for scheduled checkpoints.
 class RunScheduledCheckpointEvent(EventBase):
     type: Literal["run_scheduled_checkpoint.received"] = "run_scheduled_checkpoint.received"
-    datasource_names_to_asset_names: Dict[str, Set[str]]
+    datasource_names_to_asset_names: Dict[
+        str, Set[str]
+    ]  # TODO: Maybe we can get this from mercury?
     checkpoint_id: uuid.UUID
     splitter_options: Optional[Dict[str, Any]] = None
     schedule_id: Optional[uuid.UUID]
-    raise NotImplementedError  # TODO: See TODO above.
 
 
 class RunColumnDescriptiveMetricsEvent(EventBase):
