@@ -49,9 +49,7 @@ class RunCheckpointEvent(EventBase):
 
 class RunScheduledCheckpointEvent(EventBase):
     type: Literal["run_scheduled_checkpoint.received"] = "run_scheduled_checkpoint.received"
-    datasource_names_to_asset_names: Dict[
-        str, Set[str]
-    ]  # TODO: Maybe we can get this from mercury?
+    datasource_names_to_asset_names: Dict[str, Set[str]]
     checkpoint_id: uuid.UUID
     splitter_options: Optional[Dict[str, Any]] = None
     schedule_id: Optional[uuid.UUID]
