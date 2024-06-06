@@ -15,6 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 @dc.dataclass(frozen=True)
 class Arguments:
+    env_file: pathlib.Path | None
     log_level: LogLevel
     skip_log_file: bool
     json_log: bool
@@ -29,6 +30,12 @@ def _parse_args() -> Arguments:
     `Arguments` dataclass.
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--env-file",
+        help="Path to an environment file to load environment variables from. Defaults to None.",
+        default=None,
+        type=pathlib.Path,
+    )
     parser.add_argument(
         "--log-level",
         help="Level of logging to use. Defaults to WARNING.",
@@ -61,6 +68,7 @@ def _parse_args() -> Arguments:
     parser.add_argument("--version", help="Show the gx agent version.", action="store_true")
     args = parser.parse_args()
     return Arguments(
+        env_file=args.env_file,
         log_level=args.log_level,
         skip_log_file=args.skip_log_file,
         log_cfg_file=args.log_cfg_file,
@@ -73,6 +81,14 @@ def _parse_args() -> Arguments:
 def main() -> None:
     # lazy imports ensure our cli is fast and responsive
     args: Arguments = _parse_args()
+
+    if args.env_file:
+        from dotenv import load_dotenv
+        print(f"Loading environment variables from {args.env_file}")
+        # throw error if file does not exist
+        args.env_file.resolve(strict=True)
+        load_dotenv(args.env_file)
+
     custom_tags: dict[str, Any] = {}
     try:
         custom_tags = json.loads(args.custom_log_tags)
