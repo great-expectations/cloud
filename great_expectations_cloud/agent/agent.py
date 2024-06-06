@@ -208,7 +208,14 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         # warning:  this method will not be executed in the main thread
-        self._update_status(job_id=event_context.correlation_id, status=JobStarted())
+        # TODO: Check if job exists. If not create it. This is for scheduled jobs. Filter on JobType?
+        # TODO: Pass the schedule ID to the event from the eventbridge scheduler through the lambda to the agent.
+        if event_context.event.type == "run_scheduled_checkpoint.received":
+            self._create_or_update_scheduled_checkpoint_run_job(
+                job_id=event_context.correlation_id, schedule_id=event_context.event.schedule_id
+            )
+        else:
+            self._update_status(job_id=event_context.correlation_id, status=JobStarted())
         print(f"Starting job {event_context.event.type} ({event_context.correlation_id}) ")
         LOGGER.info(
             "Starting job",
@@ -359,6 +366,30 @@ class GXAgent:
         session = create_session(access_token=self._config.gx_cloud_access_token)
         data = status.json()
         session.patch(agent_sessions_url, data=data)
+
+    def _create_or_update_scheduled_checkpoint_run_job(self, job_id: str, schedule_id: str) -> None:
+        """Create a job in GX Cloud for scheduled checkpoint events or update if the job exists.
+
+        Args:
+            job_id: job identifier, also known as correlation_id
+            schedule_id: schedule identifier
+        """
+        # TODO: Enhance logger message
+        LOGGER.info(
+            "Creating or updating job", extra={"job_id": job_id, "schedule_id": schedule_id}
+        )
+
+        agent_sessions_url = (
+            f"{self._config.gx_cloud_base_url}/organizations/{self._config.gx_cloud_organization_id}"
+            + "/agent-jobs"
+        )
+        session = create_session(access_token=self._config.gx_cloud_access_token)
+        data = {"job_id": job_id, "schedule_id": schedule_id}  # TODO: What else do we need to pass?
+        job = session.post(agent_sessions_url, data=data)
+        # TODO: check if job was created successfully
+        # TODO: What should the post request return - job data or job ID? Probably just the ID but verify.
+        raise NotImplementedError
+        return job
 
     def _set_http_session_headers(self, correlation_id: str | None = None) -> None:
         """
