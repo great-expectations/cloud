@@ -45,8 +45,17 @@ optional arguments:
 
 #### Set env variables
 
+Set the following environment variables, either directly or with an environment file.
+
+Note: The access token should have the `Editor` role.
+
 `GX_CLOUD_ACCESS_TOKEN`
 `GX_CLOUD_ORGANIZATION_ID`
+
+These can be found in the [GX Cloud](https://app.greatexpectations.io/) Settings -> Users section page.
+
+![Sidebar](/examples/agent/imgs/sidebar.png)
+
 
 ### Start the Agent
 
