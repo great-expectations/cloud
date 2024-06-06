@@ -34,7 +34,15 @@ def clean_gx_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.mark.parametrize(
-    "args", [("--version",), ("--env-file", "example.env")], ids=lambda x: " ".join(x)
+    "args",
+    [
+        ("--help",),
+        ("--version",),
+        ("--env-file", "example.env"),
+        ("--log-level", "DEBUG"),
+        ("--json-log",),
+    ],
+    ids=lambda x: " ".join(x),
 )
 def test_main(monkeypatch: pytest.MonkeyPatch, mock_agent_run: MockType, args: tuple[str, ...]):
     """Ensure that the main function runs without error."""
