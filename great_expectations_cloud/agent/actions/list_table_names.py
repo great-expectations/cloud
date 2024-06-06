@@ -27,6 +27,9 @@ if TYPE_CHECKING:
 
 
 class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
+    # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
+    #  This action is registered for v0, see register_event_action()
+
     @override
     def run(self, event: ListTableNamesEvent, id: str) -> ActionResult:
         datasource_name: str = event.datasource_name
