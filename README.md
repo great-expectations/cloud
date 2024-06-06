@@ -25,17 +25,22 @@ pip install 'great_expectations_cloud[sql]'
 
 ```console
 $ gx-agent --help
-usage: gx-agent [-h] [--log-level LOG_LEVEL] [--skip-log-file SKIP_LOG_FILE] [--log-cfg-file LOG_CFG_FILE] [--version]
+usage: gx-agent [-h] [--env-file ENV_FILE] [--log-level LOG_LEVEL] [--skip-log-file SKIP_LOG_FILE] [--json-log] [--log-cfg-file LOG_CFG_FILE]
+                [--custom-log-tags CUSTOM_LOG_TAGS] [--version]
 
 optional arguments:
   -h, --help            show this help message and exit
+  --env-file ENV_FILE   Path to an environment file to load environment variables from. Defaults to None.
   --log-level LOG_LEVEL
                         Level of logging to use. Defaults to WARNING.
   --skip-log-file SKIP_LOG_FILE
                         Skip writing debug logs to a file. Defaults to False. Does not affect logging to stdout/stderr.
+  --json-log            Output logs in JSON format. Defaults to False.
   --log-cfg-file LOG_CFG_FILE
-                        Path to a logging configuration json file. Supersedes --log-level and --skip-log-file.
-  --version             Show the GX Agent version.
+                        Path to a logging configuration file in JSON format. Supersedes --log-level and --skip-log-file.
+  --custom-log-tags CUSTOM_LOG_TAGS
+                        Additional tags for logs in form of key-value pairs
+  --version             Show the gx agent version.
 ```
 
 #### Set env variables
