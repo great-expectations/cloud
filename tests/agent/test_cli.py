@@ -12,10 +12,12 @@ from great_expectations_cloud.agent.cli import load_dotenv, main
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture, MockType
 
+
 @pytest.fixture
 def mock_agent_run(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> MockType:
     run_patch = mocker.patch("great_expectations_cloud.agent.run_agent")
     return run_patch
+
 
 @pytest.fixture
 def clean_gx_env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -31,7 +33,9 @@ def clean_gx_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("GX_BASE_URL", raising=False)
 
 
-@pytest.mark.parametrize("args", [("--version",), ("--env-file", "example.env")], ids=lambda x: " ".join(x))
+@pytest.mark.parametrize(
+    "args", [("--version",), ("--env-file", "example.env")], ids=lambda x: " ".join(x)
+)
 def test_main(monkeypatch: pytest.MonkeyPatch, mock_agent_run: MockType, args: tuple[str, ...]):
     """Ensure that the main function runs without error."""
     monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN", raising=False)
