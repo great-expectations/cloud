@@ -14,6 +14,9 @@ from great_expectations_cloud.agent.models import (
 
 
 class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
+    # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
+    #  This action is registered for v0, see register_event_action()
+
     @override
     def run(self, event: RunCheckpointEvent, id: str) -> ActionResult:
         # TODO: move connection testing into OSS; there isn't really a reason it can't be done there
