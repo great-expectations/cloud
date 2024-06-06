@@ -77,6 +77,7 @@ def _parse_args() -> Arguments:
         custom_log_tags=args.custom_log_tags,
     )
 
+
 def load_dotenv(env_file: pathlib.Path) -> set[str]:
     """
     Load environment variables from a file.
@@ -84,6 +85,7 @@ def load_dotenv(env_file: pathlib.Path) -> set[str]:
     Returns a set of the environment variables that were loaded.
     """
     import os
+
     # throw error if file does not exist
     initial_vars: set[str] = set(os.environ.keys())  # noqa: TID251 # we aren't actually using these vars
 
@@ -93,7 +95,6 @@ def load_dotenv(env_file: pathlib.Path) -> set[str]:
     load_dotenv(env_file)
 
     return set(os.environ.keys()) - initial_vars  # noqa: TID251 # we aren't actually using these vars
-
 
 
 def main() -> None:

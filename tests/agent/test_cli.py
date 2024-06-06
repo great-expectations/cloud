@@ -44,5 +44,6 @@ def test_load_dotenv(monkeypatch: pytest.MonkeyPatch):
     assert os.environ["GX_CLOUD_ACCESS_TOKEN"] == "<YOUR_ACCESS_TOKEN>"
     assert os.environ["GX_CLOUD_ORGANIZATION_ID"] == "<YOUR_ORGANIZATION_ID>"
 
+
 if __name__ == "__main__":
     pytest.main([__file__, "-vv"])
