@@ -45,7 +45,7 @@ optional arguments:
 
 #### Set env variables
 
-Set the following environment variables, either directly or with an environment file.
+Set the following environment variables, either directly or with an [environment file](/example.env).
 
 Note: The access token should have the `Editor` role.
 
