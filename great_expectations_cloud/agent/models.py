@@ -45,7 +45,6 @@ class RunCheckpointEvent(EventBase):
     datasource_names_to_asset_names: Dict[str, Set[str]]
     checkpoint_id: uuid.UUID
     splitter_options: Optional[Dict[str, Any]] = None
-    schedule_id: Optional[uuid.UUID] = None
 
 
 # TODO: Do we add optional schedule_id to RunCheckpointEvent? Or create RunScheduledCheckpointEvent?
