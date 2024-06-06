@@ -34,8 +34,8 @@ def test_custom_log_tags_failure():
 
 
 def test_load_dotenv(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
-    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
+    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN", raising=False)
+    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID", raising=False)
 
     env_file = pathlib.Path("example.env")
     loaded_env_vars = load_dotenv(env_file)
