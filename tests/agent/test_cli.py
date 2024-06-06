@@ -3,10 +3,43 @@ from __future__ import annotations
 import os
 import pathlib
 import subprocess
+from typing import TYPE_CHECKING
 
 import pytest
 
-from great_expectations_cloud.agent.cli import load_dotenv
+from great_expectations_cloud.agent.cli import load_dotenv, main
+
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture, MockType
+
+@pytest.fixture
+def mock_agent_run(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> MockType:
+    run_patch = mocker.patch("great_expectations_cloud.agent.run_agent")
+    return run_patch
+
+@pytest.fixture
+def clean_gx_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    Cleanup the GX_CLOUD environment variables.
+
+    GX_CLOUD_ACCESS_TOKEN
+    GX_CLOUD_ORGANIZATION_ID
+    GX_BASE_URL
+    """
+    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN", raising=False)
+    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID", raising=False)
+    monkeypatch.delenv("GX_BASE_URL", raising=False)
+
+
+@pytest.mark.parametrize("args", [("--version",), ("--env-file", "example.env")], ids=lambda x: " ".join(x))
+def test_main(monkeypatch: pytest.MonkeyPatch, mock_agent_run: MockType, args: tuple[str, ...]):
+    """Ensure that the main function runs without error."""
+    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN", raising=False)
+    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID", raising=False)
+
+    monkeypatch.setattr("sys.argv", ["gx-agent", *args])
+
+    main()
 
 
 @pytest.mark.parametrize(
@@ -33,10 +66,7 @@ def test_custom_log_tags_failure():
     assert cmplt_process.returncode != 0
 
 
-def test_load_dotenv(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN", raising=False)
-    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID", raising=False)
-
+def test_load_dotenv(clean_gx_env: None):
     env_file = pathlib.Path("example.env")
     loaded_env_vars = load_dotenv(env_file)
     assert loaded_env_vars == {"GX_CLOUD_ACCESS_TOKEN", "GX_CLOUD_ORGANIZATION_ID"}
