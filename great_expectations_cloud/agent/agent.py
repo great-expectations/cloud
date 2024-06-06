@@ -367,15 +367,22 @@ class GXAgent:
         """Create a job in GX Cloud for scheduled checkpoint events or update if the job exists.
 
         Args:
-            job_id: job identifier, also known as correlation_id
-            schedule_id: schedule identifier
+            event_context: event with related properties and actions.
         """
         correlation_id = event_context.correlation_id
         schedule_id = event_context.event.schedule_id
-        # TODO: Enhance logger message
+        job_type = event_context.event.type
+        event_body = (
+            event_context.event.dict()
+        )  # TODO: Is this the correct way to serialize event_body? Or need to convert to json?
         LOGGER.info(
             "Creating scheduled job and setting started",
-            extra={"correlation_id": correlation_id, "schedule_id": schedule_id},
+            extra={
+                "correlation_id": correlation_id,
+                "schedule_id": schedule_id,
+                "job_type": job_type,
+                "event_body": event_body,
+            },
         )
 
         agent_sessions_url = (
@@ -385,13 +392,10 @@ class GXAgent:
         session = create_session(access_token=self._config.gx_cloud_access_token)
         data = {
             "correlation_id": correlation_id,
-            "schedule_id": schedule_id,
-        }  # TODO: What else do we need to pass?
-        job = session.post(agent_sessions_url, data=data)
-        # TODO: check if job was created successfully
-        # TODO: What should the post request return - job data or job ID? Probably just the ID but verify.
-        raise NotImplementedError
-        return job  # TODO: What should the return value be? Job or job ID?
+            "job_type": job_type,
+            "event_body": event_body,
+        }
+        session.post(agent_sessions_url, data=data)
 
     def _set_http_session_headers(self, correlation_id: str | None = None) -> None:
         """
