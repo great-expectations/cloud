@@ -90,6 +90,7 @@ def load_dotenv(env_file: pathlib.Path) -> set[str]:
     initial_vars: set[str] = set(os.environ.keys())  # noqa: TID251 # we aren't actually using these vars
 
     env_file.resolve(strict=True)
+    # lazy import to keep the cli fast
     from dotenv import load_dotenv
 
     load_dotenv(env_file)
