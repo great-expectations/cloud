@@ -87,15 +87,18 @@ def load_dotenv(env_file: pathlib.Path) -> set[str]:
     import os
 
     # throw error if file does not exist
-    initial_vars: set[str] = set(os.environ.keys())  # noqa: TID251 # we aren't actually using these vars
-
     env_file.resolve(strict=True)
     # lazy import to keep the cli fast
-    from dotenv import load_dotenv
+    from dotenv import dotenv_values
 
-    load_dotenv(env_file)
+    # os.environ does not allow None values, so we filter them out
+    loaded_values: dict[str, str] = {
+        k: v for (k, v) in dotenv_values(env_file).items() if v is not None
+    }
 
-    return set(os.environ.keys()) - initial_vars  # noqa: TID251 # we aren't actually using these vars
+    os.environ.update(loaded_values)  # noqa: TID251 # needed for OSS to pickup the env vars
+
+    return set(loaded_values.keys())
 
 
 def main() -> None:
