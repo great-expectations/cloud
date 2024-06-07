@@ -51,7 +51,11 @@ def test_main(monkeypatch: pytest.MonkeyPatch, mock_agent_run: MockType, args: t
 
     monkeypatch.setattr("sys.argv", ["gx-agent", *args])
 
-    main()
+    try:
+        main()
+    except SystemExit as exit:
+        # as long as the exit code is 0, we are good
+        assert exit.code == 0
 
 
 @pytest.mark.parametrize(
