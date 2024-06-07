@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import pathlib
 import subprocess
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -17,23 +17,6 @@ if TYPE_CHECKING:
 def mock_agent_run(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> MockType:
     run_patch = mocker.patch("great_expectations_cloud.agent.run_agent")
     return run_patch
-
-
-@pytest.fixture
-def clean_gx_env(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
-    """
-    Cleanup the GX_CLOUD environment variables before and after test run.
-
-    GX_CLOUD_ACCESS_TOKEN
-    GX_CLOUD_ORGANIZATION_ID
-    GX_BASE_URL
-    """
-    env_vars = ["GX_CLOUD_ACCESS_TOKEN", "GX_CLOUD_ORGANIZATION_ID", "GX_BASE_URL"]
-    for var in env_vars:
-        monkeypatch.delenv(var, raising=False)
-    yield None
-    for var in env_vars:
-        monkeypatch.delenv(var, raising=False)
 
 
 @pytest.mark.parametrize(

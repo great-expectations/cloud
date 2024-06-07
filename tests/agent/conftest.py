@@ -4,7 +4,7 @@ import logging
 import time
 import uuid
 from collections import deque
-from typing import TYPE_CHECKING, Any, Iterable, NamedTuple, TypedDict
+from typing import TYPE_CHECKING, Any, Generator, Iterable, NamedTuple, TypedDict
 
 import pytest
 from great_expectations import (  # type: ignore[attr-defined] # TODO: fix this
@@ -25,6 +25,23 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
 LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def clean_gx_env(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
+    """
+    Cleanup the GX_CLOUD environment variables before and after test run.
+
+    GX_CLOUD_ACCESS_TOKEN
+    GX_CLOUD_ORGANIZATION_ID
+    GX_BASE_URL
+    """
+    env_vars = ["GX_CLOUD_ACCESS_TOKEN", "GX_CLOUD_ORGANIZATION_ID", "GX_BASE_URL"]
+    for var in env_vars:
+        monkeypatch.delenv(var, raising=False)
+    yield None
+    for var in env_vars:
+        monkeypatch.delenv(var, raising=False)
 
 
 @pytest.fixture
