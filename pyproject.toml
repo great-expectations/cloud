@@ -180,7 +180,8 @@ required-imports = ["from __future__ import annotations"]
 max-complexity = 10
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
-"os.environ".msg = """Please do not use os.environ, instead use a pydantic.BaseSettings model"""
+"os.environ".msg = "Please do not use os.environ, instead use a pydantic.BaseSettings model"
+"os.getenv".msg = "Please do not use os.getenv, instead use a pydantic.BaseSettings model"
 # TODO: remove pydantic once our min version is pydantic v2
 "pydantic".msg = "Please do not import pydantic directly, import from great_expectations.compatibility.pydantic instead."
 "sqlalchemy".msg = "Please do not import sqlalchemy directly, import from great_expectations.compatibility.sqlalchemy instead."
