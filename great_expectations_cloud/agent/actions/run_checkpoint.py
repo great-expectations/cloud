@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions.agent_action import (
@@ -13,6 +15,9 @@ from great_expectations_cloud.agent.models import (
     RunScheduledCheckpointEvent,
 )
 
+if TYPE_CHECKING:
+    from great_expectations.data_context import CloudDataContext
+
 
 class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
     # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
@@ -20,11 +25,11 @@ class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
 
     @override
     def run(self, event: RunCheckpointEvent, id: str) -> ActionResult:
-        return run_checkpoint(self, event, id)
+        return run_checkpoint(self._context, event, id)
 
 
 def run_checkpoint(
-    action: AgentAction[RunCheckpointEvent] | AgentAction[RunScheduledCheckpointEvent],
+    context: CloudDataContext,
     event: RunCheckpointEvent | RunScheduledCheckpointEvent,
     id: str,
 ) -> ActionResult:
@@ -32,15 +37,15 @@ def run_checkpoint(
     the same logic can be used for both RunCheckpointEvent and RunScheduledCheckpointEvent."""
     # TODO: move connection testing into OSS; there isn't really a reason it can't be done there
     for datasource_name, data_asset_names in event.datasource_names_to_asset_names.items():
-        datasource = action._context.get_datasource(datasource_name)
+        datasource = context.get_datasource(datasource_name)
         datasource.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
         for (
             data_asset_name
         ) in data_asset_names:  # only test connection for assets that are validated in checkpoint
             asset = datasource.get_asset(data_asset_name)
             asset.test_connection()  # raises `TestConnectionError` on failure
-    checkpoint_run_result = action._context.run_checkpoint(
-        ge_cloud_id=str(event.checkpoint_id),
+    checkpoint_run_result = context.run_checkpoint(
+        ge_cloud_id=event.checkpoint_id,
         batch_request={"options": event.splitter_options} if event.splitter_options else None,
     )
 

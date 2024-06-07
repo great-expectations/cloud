@@ -16,7 +16,7 @@ from great_expectations_cloud.agent.models import (
 class RunScheduledCheckpointAction(AgentAction[RunScheduledCheckpointEvent]):
     @override
     def run(self, event: RunScheduledCheckpointEvent, id: str) -> ActionResult:
-        return run_checkpoint(self, event, id)
+        return run_checkpoint(self._context, event, id)
 
 
 register_event_action("0", RunScheduledCheckpointEvent, RunScheduledCheckpointAction)
