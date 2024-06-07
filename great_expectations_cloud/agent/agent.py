@@ -208,6 +208,7 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         # warning:  this method will not be executed in the main thread
+
         if event_context.event.type == "run_scheduled_checkpoint.received":
             self._create_scheduled_job_and_set_started(event_context)
         else:
@@ -364,14 +365,17 @@ class GXAgent:
         session.patch(agent_sessions_url, data=data)
 
     def _create_scheduled_job_and_set_started(self, event_context: EventContext) -> None:
-        """Create a job in GX Cloud for scheduled checkpoint events or update if the job exists.
+        """Create a job in GX Cloud for scheduled events.
+
+        This is because the scheduler + lambda create the event in the queue, and the agent consumes it. The agent then
+        sends a request to the agent-jobs endpoint to create the job in mercury to keep track of the job status.
+        Non-scheduled events by contrast create the job in mercury and the event in the queue at the same time.
 
         Args:
             event_context: event with related properties and actions.
         """
         data = {
             "correlation_id": event_context.correlation_id,
-            "job_type": event_context.event.type,
             "event": event_context.event.dict(),
         }
         LOGGER.info("Creating scheduled job and setting started", extra=data)
