@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import pathlib
 import subprocess
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator
 
 import pytest
 
@@ -20,17 +20,20 @@ def mock_agent_run(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> Mo
 
 
 @pytest.fixture
-def clean_gx_env(monkeypatch: pytest.MonkeyPatch) -> None:
+def clean_gx_env(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
     """
-    Cleanup the GX_CLOUD environment variables.
+    Cleanup the GX_CLOUD environment variables before and after test run.
 
     GX_CLOUD_ACCESS_TOKEN
     GX_CLOUD_ORGANIZATION_ID
     GX_BASE_URL
     """
-    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN", raising=False)
-    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID", raising=False)
-    monkeypatch.delenv("GX_BASE_URL", raising=False)
+    env_vars = ["GX_CLOUD_ACCESS_TOKEN", "GX_CLOUD_ORGANIZATION_ID", "GX_BASE_URL"]
+    for var in env_vars:
+        monkeypatch.delenv(var, raising=False)
+    yield None
+    for var in env_vars:
+        monkeypatch.delenv(var, raising=False)
 
 
 @pytest.mark.parametrize(
