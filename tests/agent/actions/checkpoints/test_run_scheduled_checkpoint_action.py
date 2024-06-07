@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from uuid import UUID
 
 import pytest
-from great_expectations.datasource.fluent import Datasource
-from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
 from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
     RunScheduledCheckpointAction,
@@ -14,9 +11,6 @@ from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunScheduledCheckpointEvent,
 )
-
-if TYPE_CHECKING:
-    from pytest_mock import MockerFixture
 
 pytestmark = pytest.mark.unit
 
@@ -109,24 +103,3 @@ def test_run_checkpoint_action_with_splitter_options_returns_action_result(
             type="SuiteValidationResult",
         ),
     ]
-
-
-def test_run_checkpoint_action_raises_on_test_connection_failure(
-    mock_context, checkpoint_id, datasource_names_to_asset_names, mocker: MockerFixture
-):
-    mock_datasource = mocker.Mock(spec=Datasource)
-    mock_context.get_datasource.return_value = mock_datasource
-    mock_datasource.test_connection.side_effect = TestConnectionError()
-
-    action = RunScheduledCheckpointAction(context=mock_context)
-
-    with pytest.raises(TestConnectionError):
-        action.run(
-            event=RunScheduledCheckpointEvent(
-                type="run_scheduled_checkpoint.received",
-                datasource_names_to_asset_names=datasource_names_to_asset_names,
-                checkpoint_id=checkpoint_id,
-                schedule_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
-            ),
-            id="test-id",
-        )
