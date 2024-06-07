@@ -28,6 +28,8 @@ def run_checkpoint(
     event: RunCheckpointEvent | RunScheduledCheckpointEvent,
     id: str,
 ) -> ActionResult:
+    """Note: the logic for this action is broken out into this function so that
+    the same logic can be used for both RunCheckpointEvent and RunScheduledCheckpointEvent."""
     # TODO: move connection testing into OSS; there isn't really a reason it can't be done there
     for datasource_name, data_asset_names in event.datasource_names_to_asset_names.items():
         datasource = action._context.get_datasource(datasource_name)

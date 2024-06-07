@@ -372,16 +372,14 @@ class GXAgent:
         correlation_id = event_context.correlation_id
         schedule_id = event_context.event.schedule_id
         job_type = event_context.event.type
-        event_body = (
-            event_context.event.dict()
-        )  # TODO: Is this the correct way to serialize event_body? Or need to convert to json?
+        event = event_context.event.dict()
         LOGGER.info(
             "Creating scheduled job and setting started",
             extra={
                 "correlation_id": correlation_id,
                 "schedule_id": schedule_id,
                 "job_type": job_type,
-                "event_body": event_body,
+                "event": event,
             },
         )
 
@@ -393,7 +391,7 @@ class GXAgent:
         data = {
             "correlation_id": correlation_id,
             "job_type": job_type,
-            "event_body": event_body,
+            "event": event,
         }
         session.post(agent_sessions_url, data=data)
 
