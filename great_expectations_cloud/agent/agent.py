@@ -43,6 +43,7 @@ from great_expectations_cloud.agent.models import (
     JobCompleted,
     JobStarted,
     JobStatus,
+    ScheduledEventBase,
     UnknownEvent,
     build_failed_job_completed_status,
 )
@@ -209,7 +210,7 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
-        if event_context.event.type == "run_scheduled_checkpoint.received":
+        if isinstance(event_context.event, ScheduledEventBase):
             self._create_scheduled_job_and_set_started(event_context)
         else:
             self._update_status(job_id=event_context.correlation_id, status=JobStarted())

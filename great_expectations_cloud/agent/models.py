@@ -21,6 +21,10 @@ class EventBase(AgentBaseModel):
     type: str
 
 
+class ScheduledEventBase(EventBase):
+    schedule_id: UUID
+
+
 class RunDataAssistantEvent(EventBase):
     type: str
     datasource_name: str
@@ -47,12 +51,11 @@ class RunCheckpointEvent(EventBase):
     splitter_options: Optional[Dict[str, Any]] = None
 
 
-class RunScheduledCheckpointEvent(EventBase):
+class RunScheduledCheckpointEvent(ScheduledEventBase):
     type: Literal["run_scheduled_checkpoint.received"] = "run_scheduled_checkpoint.received"
     datasource_names_to_asset_names: Dict[str, Set[str]]
     checkpoint_id: uuid.UUID
     splitter_options: Optional[Dict[str, Any]] = None
-    schedule_id: Optional[uuid.UUID]
 
 
 class RunColumnDescriptiveMetricsEvent(EventBase):
