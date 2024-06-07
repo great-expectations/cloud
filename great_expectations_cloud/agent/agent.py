@@ -369,30 +369,18 @@ class GXAgent:
         Args:
             event_context: event with related properties and actions.
         """
-        correlation_id = event_context.correlation_id
-        schedule_id = event_context.event.schedule_id
-        job_type = event_context.event.type
-        event = event_context.event.dict()
-        LOGGER.info(
-            "Creating scheduled job and setting started",
-            extra={
-                "correlation_id": correlation_id,
-                "schedule_id": schedule_id,
-                "job_type": job_type,
-                "event": event,
-            },
-        )
+        data = {
+            "correlation_id": event_context.correlation_id,
+            "job_type": event_context.event.type,
+            "event": event_context.event.dict(),
+        }
+        LOGGER.info("Creating scheduled job and setting started", extra=data)
 
         agent_sessions_url = (
             f"{self._config.gx_cloud_base_url}/organizations/{self._config.gx_cloud_organization_id}"
             + "/agent-jobs"
         )
         session = create_session(access_token=self._config.gx_cloud_access_token)
-        data = {
-            "correlation_id": correlation_id,
-            "job_type": job_type,
-            "event": event,
-        }
         session.post(agent_sessions_url, data=data)
 
     def _set_http_session_headers(self, correlation_id: str | None = None) -> None:
