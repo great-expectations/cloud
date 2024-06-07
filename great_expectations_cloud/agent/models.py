@@ -89,6 +89,7 @@ Event = Annotated[
         RunOnboardingDataAssistantEvent,
         RunMissingnessDataAssistantEvent,
         RunCheckpointEvent,
+        RunScheduledCheckpointEvent,
         RunColumnDescriptiveMetricsEvent,
         RunMetricsListEvent,
         DraftDatasourceConfigEvent,
