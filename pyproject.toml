@@ -33,7 +33,7 @@ packaging = ">=21.3,<25.0"
 tenacity = "^8.2.3"
 
 [tool.poetry.extras]
-snowflake = ["snowflake-sqlalchemy"]
+snowflake = ["snowflake-sqlalchemy", "snowflake-connector-python"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
 
 [tool.poetry.group.sql.dependencies]
