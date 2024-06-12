@@ -31,9 +31,11 @@ orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue 
 # relying on packaging in agent code so declaring it explicitly here
 packaging = ">=21.3,<25.0"
 tenacity = "^8.2.3"
+# optional dependencies
+snowflake-sqlalchemy = { version = "*", optional =true }
 
 [tool.poetry.extras]
-snowflake = ["snowflake-sqlalchemy", "snowflake-connector-python"]
+snowflake = ["snowflake-sqlalchemy"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
 
 [tool.poetry.group.sql.dependencies]
