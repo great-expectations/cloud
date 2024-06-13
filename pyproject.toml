@@ -32,9 +32,12 @@ orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue 
 packaging = ">=21.3,<25.0"
 tenacity = "^8.2.3"
 # optional dependencies
-snowflake-sqlalchemy = { version = "*", optional =true }
+snowflake-sqlalchemy = { version = "*", optional = true }
+sqlalchemy = { version = "*", optional = true }
+psycopg2-binary = { version = "*", optional = true }
 
 [tool.poetry.extras]
+# these must reference an optional dependency in the dependencies section
 snowflake = ["snowflake-sqlalchemy"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
 
