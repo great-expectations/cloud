@@ -37,6 +37,7 @@ sqlalchemy = { version = "*", optional = true }
 psycopg2-binary = { version = "*", optional = true }
 
 [tool.poetry.extras]
+# https://python-poetry.org/docs/pyproject#extras
 # these must reference an optional dependency in the dependencies section
 snowflake = ["snowflake-sqlalchemy"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
