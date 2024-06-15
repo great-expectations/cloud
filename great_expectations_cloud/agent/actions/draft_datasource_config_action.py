@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from great_expectations.compatibility import pydantic
+from great_expectations.compatibility.sqlalchemy import inspect
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 from typing_extensions import override
@@ -16,6 +17,9 @@ from great_expectations_cloud.agent.config import (
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.exceptions import ErrorCode, raise_with_error_code
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
+
+if TYPE_CHECKING:
+    from great_expectations.compatibility.sqlalchemy.engine import Inspector
 
 
 class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
@@ -59,6 +63,10 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         datasource._data_context = self._context
         datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
         return ActionResult(id=id, type=event.type, created_resources=[])
+    def _get_table_names(self, datasource: Datasource) -> list[str]:
+        inspector: Inspector = inspect(datasource.get_engine())
+        return inspector.get_table_names()
+
 
     def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
         try:
