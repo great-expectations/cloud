@@ -11,6 +11,7 @@ from functools import partial
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Dict, Final
 
+import orjson
 from great_expectations import get_context  # type: ignore[attr-defined] # TODO: fix this
 from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
@@ -74,6 +75,27 @@ class GXAgentConfig(AgentBaseModel):
     gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
+
+
+def orjson_dumps(v, *, default):
+    # orjson.dumps returns bytes, to match standard json.dumps we need to decode
+    return orjson.dumps(
+        v,
+        default=default,
+    ).decode()
+
+
+def orjson_loads(v, *args, **kwargs):
+    return orjson.loads(v)
+
+
+class Payload(AgentBaseModel):
+    data: dict[str, Any]
+
+    class Config:
+        extra = "forbid"
+        json_dumps = orjson_dumps
+        json_loads = orjson_loads
 
 
 class GXAgent:
@@ -386,7 +408,9 @@ class GXAgent:
             + "/agent-jobs"
         )
         session = create_session(access_token=self._config.gx_cloud_access_token)
-        session.post(agent_sessions_url, data=data)
+        payload = Payload(data=data)
+        session.post(agent_sessions_url, data=payload.json())
+        LOGGER.info("Created scheduled job and set started", extra=data)
 
     def _set_http_session_headers(self, correlation_id: str | None = None) -> None:
         """

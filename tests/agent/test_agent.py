@@ -17,7 +17,7 @@ from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import GXAgentConfig, GXAgentConfigError
+from great_expectations_cloud.agent.agent import GXAgentConfig, GXAgentConfigError, Payload
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
@@ -349,16 +349,13 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
         splitter_options=None,
         schedule_id=schedule_id,
     )
-    data = {
-        "correlation_id": correlation_id,
-        "event": {
-            "type": "run_scheduled_checkpoint.received",
-            "datasource_names_to_asset_names": {},
-            "checkpoint_id": checkpoint_id,
-            "splitter_options": None,
-            "schedule_id": schedule_id,
-        },
-    }
+    payload = Payload(
+        data={
+            "correlation_id": correlation_id,
+            "event": event.dict(),
+        }
+    )
+    data = payload.json()
 
     async def redeliver_message():
         return None
