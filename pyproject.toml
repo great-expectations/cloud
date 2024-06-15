@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20240611.0"
+version = "20240612.0.dev0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -31,8 +31,14 @@ orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue 
 # relying on packaging in agent code so declaring it explicitly here
 packaging = ">=21.3,<25.0"
 tenacity = "^8.2.3"
+# optional dependencies
+snowflake-sqlalchemy = { version = "*", optional = true }
+sqlalchemy = { version = "*", optional = true }
+psycopg2-binary = { version = "*", optional = true }
 
 [tool.poetry.extras]
+# https://python-poetry.org/docs/pyproject#extras
+# these must reference an optional dependency in the dependencies section
 snowflake = ["snowflake-sqlalchemy"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
 
