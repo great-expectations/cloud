@@ -6,7 +6,8 @@ from uuid import UUID
 from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.sqlalchemy import inspect
 from great_expectations.core.http import create_session
-from great_expectations.datasource.fluent.interfaces import TestConnectionError
+from great_expectations.datasource.fluent import SQLDatasource
+from great_expectations.datasource.fluent.interfaces import Datasource, TestConnectionError
 from great_expectations.exceptions import GXCloudError
 from typing_extensions import override
 
