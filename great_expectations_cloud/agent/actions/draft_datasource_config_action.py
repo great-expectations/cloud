@@ -63,7 +63,17 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         datasource = datasource_cls(**draft_config)
         datasource._data_context = self._context
         datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
-        return ActionResult(id=id, type=event.type, created_resources=[])
+
+        if isinstance(datasource, SQLDatasource):
+            table_names = self._get_table_names(datasource=datasource)
+            self._update_table_names_list(config_id=event.config_id, table_names=table_names)
+
+        return ActionResult(
+            id=id,
+            type=event.type,
+            created_resources=[],
+        )
+
     def _get_table_names(self, datasource: Datasource) -> list[str]:
         inspector: Inspector = inspect(datasource.get_engine())
         return inspector.get_table_names()
