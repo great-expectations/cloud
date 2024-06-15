@@ -90,7 +90,7 @@ def orjson_loads(v, *args, **kwargs):
 
 
 class Payload(AgentBaseModel):
-    data: dict[str, Any]
+    data: Dict[str, Any]  # noqa: UP006  # Python 3.8 requires Dict instead of dict
 
     class Config:
         extra = "forbid"
