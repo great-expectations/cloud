@@ -22,6 +22,24 @@ if TYPE_CHECKING:
 
 pytestmark = pytest.mark.unit
 
+run_checkpoint_action_class_and_event = (
+    RunCheckpointAction,
+    RunCheckpointEvent(
+        type="run_checkpoint_request",
+        datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
+        checkpoint_id="5f3814d6-a2e2-40f9-ba75-87ddf485c3a8",
+    ),
+)
+run_scheduled_checkpoint_action_class_and_event = (
+    RunScheduledCheckpointAction,
+    RunScheduledCheckpointEvent(
+        type="run_scheduled_checkpoint.received",
+        datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
+        checkpoint_id="5f3814d6-a2e2-40f9-ba75-87ddf485c3a8",
+        schedule_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
+    ),
+)
+
 
 @pytest.mark.parametrize(
     "splitter_options, batch_request",
@@ -36,25 +54,7 @@ pytestmark = pytest.mark.unit
 )
 @pytest.mark.parametrize(
     "action_class,event",
-    [
-        (
-            RunCheckpointAction,
-            RunCheckpointEvent(
-                type="run_checkpoint_request",
-                datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
-                checkpoint_id="5f3814d6-a2e2-40f9-ba75-87ddf485c3a8",
-            ),
-        ),
-        (
-            RunScheduledCheckpointAction,
-            RunScheduledCheckpointEvent(
-                type="run_scheduled_checkpoint.received",
-                datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
-                checkpoint_id="5f3814d6-a2e2-40f9-ba75-87ddf485c3a8",
-                schedule_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
-            ),
-        ),
-    ],
+    [run_checkpoint_action_class_and_event, run_scheduled_checkpoint_action_class_and_event],
 )
 def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_result(
     mock_context, action_class, event, splitter_options, batch_request
@@ -89,25 +89,7 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
 
 @pytest.mark.parametrize(
     "action_class,event",
-    [
-        (
-            RunCheckpointAction,
-            RunCheckpointEvent(
-                type="run_checkpoint_request",
-                datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
-                checkpoint_id="5f3814d6-a2e2-40f9-ba75-87ddf485c3a8",
-            ),
-        ),
-        (
-            RunScheduledCheckpointAction,
-            RunScheduledCheckpointEvent(
-                type="run_scheduled_checkpoint.received",
-                datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
-                checkpoint_id="5f3814d6-a2e2-40f9-ba75-87ddf485c3a8",
-                schedule_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
-            ),
-        ),
-    ],
+    [run_checkpoint_action_class_and_event, run_scheduled_checkpoint_action_class_and_event],
 )
 def test_run_checkpoint_action_raises_on_test_connection_failure(
     mock_context,
