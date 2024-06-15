@@ -7,6 +7,7 @@ from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.sqlalchemy import inspect
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
+from great_expectations.exceptions import GXCloudError
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
@@ -67,6 +68,28 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         inspector: Inspector = inspect(datasource.get_engine())
         return inspector.get_table_names()
 
+    def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
+        try:
+            cloud_config = GxAgentEnvVars()
+        except pydantic.ValidationError as validation_err:
+            raise RuntimeError(
+                generate_config_validation_error_text(validation_err)
+            ) from validation_err
+
+        session = create_session(access_token=cloud_config.gx_cloud_access_token)
+        response = session.patch(
+            url=f"{cloud_config.gx_cloud_base_url}/organizations/"
+            f"{cloud_config.gx_cloud_organization_id}/datasources/drafts/{config_id}",
+            json={"table_names": table_names},
+        )
+        if response.status_code != 204:  # noqa: PLR2004
+            raise GXCloudError(
+                message=f"DraftDatasourceConfigAction encountered an error while connecting to GX Cloud. "
+                f"Unable to update "
+                f"table_names for Draft Config with ID"
+                f"={config_id}.",
+                response=response,
+            )
 
     def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
         try:
