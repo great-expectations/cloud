@@ -21,6 +21,10 @@ class EventBase(AgentBaseModel):
     type: str
 
 
+class ScheduledEventBase(EventBase):
+    schedule_id: UUID
+
+
 class RunDataAssistantEvent(EventBase):
     type: str
     datasource_name: str
@@ -42,6 +46,13 @@ class RunMissingnessDataAssistantEvent(RunDataAssistantEvent):
 
 class RunCheckpointEvent(EventBase):
     type: Literal["run_checkpoint_request"] = "run_checkpoint_request"
+    datasource_names_to_asset_names: Dict[str, Set[str]]
+    checkpoint_id: uuid.UUID
+    splitter_options: Optional[Dict[str, Any]] = None
+
+
+class RunScheduledCheckpointEvent(ScheduledEventBase):
+    type: Literal["run_scheduled_checkpoint.received"] = "run_scheduled_checkpoint.received"
     datasource_names_to_asset_names: Dict[str, Set[str]]
     checkpoint_id: uuid.UUID
     splitter_options: Optional[Dict[str, Any]] = None
@@ -81,6 +92,7 @@ Event = Annotated[
         RunOnboardingDataAssistantEvent,
         RunMissingnessDataAssistantEvent,
         RunCheckpointEvent,
+        RunScheduledCheckpointEvent,
         RunColumnDescriptiveMetricsEvent,
         RunMetricsListEvent,
         DraftDatasourceConfigEvent,
