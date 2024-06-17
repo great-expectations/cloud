@@ -9,7 +9,7 @@ from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
-from typing import TYPE_CHECKING, Any, Dict, Final
+from typing import TYPE_CHECKING, Any, Callable, Dict, Final
 
 import orjson
 from great_expectations import get_context  # type: ignore[attr-defined] # TODO: fix this
@@ -77,15 +77,17 @@ class GXAgentConfig(AgentBaseModel):
     gx_cloud_access_token: str
 
 
-def orjson_dumps(v, *, default):
+def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
+    # Typing using example from https://github.com/ijl/orjson?tab=readme-ov-file#serialize
     return orjson.dumps(
         v,
         default=default,
     ).decode()
 
 
-def orjson_loads(v, *args, **kwargs):
+def orjson_loads(v: bytes | bytearray | memoryview | str) -> Any:
+    # Typing using example from https://github.com/ijl/orjson?tab=readme-ov-file#deserialize
     return orjson.loads(v)
 
 
