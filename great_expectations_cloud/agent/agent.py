@@ -9,8 +9,9 @@ from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
-from typing import TYPE_CHECKING, Any, Dict, Final
+from typing import TYPE_CHECKING, Any, Callable, Dict, Final
 
+import orjson
 from great_expectations import get_context  # type: ignore[attr-defined] # TODO: fix this
 from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
@@ -43,6 +44,7 @@ from great_expectations_cloud.agent.models import (
     JobCompleted,
     JobStarted,
     JobStatus,
+    ScheduledEventBase,
     UnknownEvent,
     build_failed_job_completed_status,
 )
@@ -73,6 +75,29 @@ class GXAgentConfig(AgentBaseModel):
     gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
+
+
+def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
+    # orjson.dumps returns bytes, to match standard json.dumps we need to decode
+    # Typing using example from https://github.com/ijl/orjson?tab=readme-ov-file#serialize
+    return orjson.dumps(
+        v,
+        default=default,
+    ).decode()
+
+
+def orjson_loads(v: bytes | bytearray | memoryview | str) -> Any:
+    # Typing using example from https://github.com/ijl/orjson?tab=readme-ov-file#deserialize
+    return orjson.loads(v)
+
+
+class Payload(AgentBaseModel):
+    data: Dict[str, Any]  # noqa: UP006  # Python 3.8 requires Dict instead of dict
+
+    class Config:
+        extra = "forbid"
+        json_dumps = orjson_dumps
+        json_loads = orjson_loads
 
 
 class GXAgent:
@@ -208,7 +233,11 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         # warning:  this method will not be executed in the main thread
-        self._update_status(job_id=event_context.correlation_id, status=JobStarted())
+
+        if isinstance(event_context.event, ScheduledEventBase):
+            self._create_scheduled_job_and_set_started(event_context)
+        else:
+            self._update_status(job_id=event_context.correlation_id, status=JobStarted())
         print(f"Starting job {event_context.event.type} ({event_context.correlation_id}) ")
         LOGGER.info(
             "Starting job",
@@ -359,6 +388,31 @@ class GXAgent:
         session = create_session(access_token=self._config.gx_cloud_access_token)
         data = status.json()
         session.patch(agent_sessions_url, data=data)
+
+    def _create_scheduled_job_and_set_started(self, event_context: EventContext) -> None:
+        """Create a job in GX Cloud for scheduled events.
+
+        This is because the scheduler + lambda create the event in the queue, and the agent consumes it. The agent then
+        sends a request to the agent-jobs endpoint to create the job in mercury to keep track of the job status.
+        Non-scheduled events by contrast create the job in mercury and the event in the queue at the same time.
+
+        Args:
+            event_context: event with related properties and actions.
+        """
+        data = {
+            "correlation_id": event_context.correlation_id,
+            "event": event_context.event.dict(),
+        }
+        LOGGER.info("Creating scheduled job and setting started", extra=data)
+
+        agent_sessions_url = (
+            f"{self._config.gx_cloud_base_url}/organizations/{self._config.gx_cloud_organization_id}"
+            + "/agent-jobs"
+        )
+        session = create_session(access_token=self._config.gx_cloud_access_token)
+        payload = Payload(data=data)
+        session.post(agent_sessions_url, data=payload.json())
+        LOGGER.info("Created scheduled job and set started", extra=data)
 
     def _set_http_session_headers(self, correlation_id: str | None = None) -> None:
         """
