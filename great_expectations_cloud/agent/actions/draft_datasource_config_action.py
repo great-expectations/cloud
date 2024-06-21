@@ -93,13 +93,12 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             f"{cloud_config.gx_cloud_organization_id}/datasources/drafts/{config_id}",
             json={"table_names": table_names},
         )
-        if response.status_code != 204:  # noqa: PLR2004
-            raise GXCloudError(
-                message=f"DraftDatasourceConfigAction encountered an error while connecting to GX Cloud. "
+        if not response.ok:  # noqa: PLR2004
+            raise RuntimeError(
+                f"DraftDatasourceConfigAction encountered an error while connecting to GX Cloud. "
                 f"Unable to update "
                 f"table_names for Draft Config with ID"
                 f"={config_id}.",
-                response=response,
             )
 
     def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
