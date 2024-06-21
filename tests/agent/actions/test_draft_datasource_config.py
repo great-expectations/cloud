@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
 import pytest
-from great_expectations.datasource.fluent import SQLDatasource
+from great_expectations.datasource.fluent import SnowflakeDatasource, SQLDatasource
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
 from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
@@ -39,7 +39,7 @@ def set_required_env_vars(monkeypatch, org_id, token) -> None:
         monkeypatch.setenv(name=key, value=val)
 
 
-def build_payload(
+def build_get_draft_config_payload(
     config: dict[str, Any], id: UUID
 ) -> dict[Literal["data"], dict[str, str | UUID | dict[str, Any]]]:
     return {
@@ -51,7 +51,7 @@ def build_payload(
     }
 
 
-def test_test_draft_datasource_config_success(
+def test_test_draft_datasource_config_success_non_sql_ds(
     mock_context, mocker: MockerFixture, set_required_env_vars: None
 ):
     datasource_config = {"type": "pandas", "name": "test-1-2-3"}
@@ -60,9 +60,9 @@ def test_test_draft_datasource_config_success(
         "great_expectations_cloud.agent.actions.draft_datasource_config_action.create_session"
     )
     session = create_session.return_value
-    response = session.get.return_value
-    response.ok = True
-    response.json.return_value = build_payload(config=datasource_config, id=config_id)
+    get_draft_config_response = session.get.return_value
+    get_draft_config_response.ok = True
+    get_draft_config_response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -93,7 +93,7 @@ def test_test_draft_datasource_config_failure(
     session = create_session.return_value
     response = session.get.return_value
     response.ok = True
-    response.json.return_value = build_payload(config=datasource_config, id=config_id)
+    response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -123,7 +123,7 @@ def test_test_draft_datasource_config_raises_for_non_fds(
     session = create_session.return_value
     response = session.get.return_value
     response.ok = True
-    response.json.return_value = build_payload(config=datasource_config, id=config_id)
+    response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -179,7 +179,7 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
     session = create_session.return_value
     response = session.get.return_value
     response.ok = True
-    response.json.return_value = build_payload(config=datasource_config, id=config_id)
+    response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -208,7 +208,7 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
     session = create_session.return_value
     response = session.get.return_value
     response.ok = False
-    response.json.return_value = build_payload(config=datasource_config, id=config_id)
+    response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
