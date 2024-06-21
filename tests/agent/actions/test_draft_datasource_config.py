@@ -84,6 +84,10 @@ def test_test_draft_datasource_config_success_non_sql_ds(
 
     session.get.assert_called_with(expected_url)
 
+    _get_table_names_spy.assert_not_called()
+    _update_table_names_list_spy.assert_not_called()
+
+
 
 def test_test_draft_datasource_config_failure(
     mock_context, mocker: MockerFixture, set_required_env_vars: None
