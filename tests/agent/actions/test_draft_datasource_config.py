@@ -164,6 +164,64 @@ def test_test_draft_datasource_config_success_sql_ds(
     )
 
 
+def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
+    mock_context, mocker: MockerFixture, set_required_env_vars: None
+):
+    """
+    Test that the action successfully tests a SQL datasource, introspects table names, and updates the table names list
+    in the draft config.
+    """
+    ds_type = "snowflake"
+    datasource_cls = mocker.Mock(spec=SnowflakeDatasource, return_value=mocker.Mock(spec=SnowflakeDatasource))
+    mock_context.sources.type_lookup = {ds_type: datasource_cls}
+
+    datasource_config = {
+        'name': 'test_snowflake_ds',
+        'connection_string': 'snowflake://test_co:F3LLo1wxyP3HkbGfwVmS@oca29081.us-east-1/demo_db/restaurants?warehouse=compute_wh&role=opendata',
+        'assets': [],
+        'create_temp_table': False,
+        'kwargs': {},
+        'type': ds_type
+    }
+    config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
+
+    create_session = mocker.patch(
+        "great_expectations_cloud.agent.actions.draft_datasource_config_action.create_session"
+    )
+    session = create_session.return_value
+    get_draft_config_response = session.get.return_value
+    get_draft_config_response.ok = True
+    get_draft_config_response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
+    patch_draft_config_response = session.patch.return_value
+    patch_draft_config_response.ok = False
+
+    # mock the sqlalchemy inspector, which is used to get table names
+    inspect = mocker.patch(
+        "great_expectations_cloud.agent.actions.draft_datasource_config_action.inspect"
+    )
+    table_names = ["table_1", "table_2", "table_3"]
+    mock_inspector = inspect.return_value
+    mock_inspector.get_table_names.return_value = table_names
+
+    env_vars = GxAgentEnvVars()
+    action = DraftDatasourceConfigAction(context=mock_context)
+
+    job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
+    event = DraftDatasourceConfigEvent(config_id=config_id)
+    expected_url: str = (
+        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/datasources/drafts/{config_id}"
+    )
+
+    with pytest.raises(RuntimeError, match="Unable to update table_names for Draft Config with ID"):
+        action.run(event=event, id=str(job_id))
+
+    session.patch.assert_called_with(
+        url=expected_url,
+        json={"table_names": table_names},
+    )
+
+
 def test_test_draft_datasource_config_failure(
     mock_context, mocker: MockerFixture, set_required_env_vars: None
 ):
