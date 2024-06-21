@@ -62,7 +62,9 @@ def test_test_draft_datasource_config_success_non_sql_ds(
     session = create_session.return_value
     get_draft_config_response = session.get.return_value
     get_draft_config_response.ok = True
-    get_draft_config_response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
+    get_draft_config_response.json.return_value = build_get_draft_config_payload(
+        config=datasource_config, id=config_id
+    )
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
 
@@ -96,16 +98,18 @@ def test_test_draft_datasource_config_success_sql_ds(
     in the draft config.
     """
     ds_type = "snowflake"
-    datasource_cls = mocker.Mock(spec=SnowflakeDatasource, return_value=mocker.Mock(spec=SnowflakeDatasource))
+    datasource_cls = mocker.Mock(
+        spec=SnowflakeDatasource, return_value=mocker.Mock(spec=SnowflakeDatasource)
+    )
     mock_context.sources.type_lookup = {ds_type: datasource_cls}
 
     datasource_config = {
-        'name': 'test_snowflake_ds',
-        'connection_string': 'snowflake://test_co:F3LLo1wxyP3HkbGfwVmS@oca29081.us-east-1/demo_db/restaurants?warehouse=compute_wh&role=opendata',
-        'assets': [],
-        'create_temp_table': False,
-        'kwargs': {},
-        'type': ds_type
+        "name": "test_snowflake_ds",
+        "connection_string": "snowflake://test_co:F3LLo1wxyP3HkbGfwVmS@oca29081.us-east-1/demo_db/restaurants?warehouse=compute_wh&role=opendata",
+        "assets": [],
+        "create_temp_table": False,
+        "kwargs": {},
+        "type": ds_type,
     }
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
@@ -115,7 +119,9 @@ def test_test_draft_datasource_config_success_sql_ds(
     session = create_session.return_value
     get_draft_config_response = session.get.return_value
     get_draft_config_response.ok = True
-    get_draft_config_response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
+    get_draft_config_response.json.return_value = build_get_draft_config_payload(
+        config=datasource_config, id=config_id
+    )
     patch_draft_config_response = session.patch.return_value
     patch_draft_config_response.ok = True
     patch_draft_config_response.status_code = 204
@@ -151,12 +157,8 @@ def test_test_draft_datasource_config_success_sql_ds(
     # assert that the action successfully fetched the draft config
     session.get.assert_called_with(expected_url)
     # assert that the action properly calls helper methods to get table names and update the draft config
-    _get_table_names_spy.assert_called_with(
-        datasource=datasource_cls(**datasource_config)
-    )
-    _update_table_names_list_spy.assert_called_with(
-        config_id=config_id, table_names=table_names
-    )
+    _get_table_names_spy.assert_called_with(datasource=datasource_cls(**datasource_config))
+    _update_table_names_list_spy.assert_called_with(config_id=config_id, table_names=table_names)
     # assert that the action successfully patched the draft config
     session.patch.assert_called_with(
         url=expected_url,
@@ -172,16 +174,18 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
     in the draft config.
     """
     ds_type = "snowflake"
-    datasource_cls = mocker.Mock(spec=SnowflakeDatasource, return_value=mocker.Mock(spec=SnowflakeDatasource))
+    datasource_cls = mocker.Mock(
+        spec=SnowflakeDatasource, return_value=mocker.Mock(spec=SnowflakeDatasource)
+    )
     mock_context.sources.type_lookup = {ds_type: datasource_cls}
 
     datasource_config = {
-        'name': 'test_snowflake_ds',
-        'connection_string': 'snowflake://test_co:F3LLo1wxyP3HkbGfwVmS@oca29081.us-east-1/demo_db/restaurants?warehouse=compute_wh&role=opendata',
-        'assets': [],
-        'create_temp_table': False,
-        'kwargs': {},
-        'type': ds_type
+        "name": "test_snowflake_ds",
+        "connection_string": "snowflake://test_co:F3LLo1wxyP3HkbGfwVmS@oca29081.us-east-1/demo_db/restaurants?warehouse=compute_wh&role=opendata",
+        "assets": [],
+        "create_temp_table": False,
+        "kwargs": {},
+        "type": ds_type,
     }
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
@@ -191,7 +195,9 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
     session = create_session.return_value
     get_draft_config_response = session.get.return_value
     get_draft_config_response.ok = True
-    get_draft_config_response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
+    get_draft_config_response.json.return_value = build_get_draft_config_payload(
+        config=datasource_config, id=config_id
+    )
     patch_draft_config_response = session.patch.return_value
     patch_draft_config_response.ok = False
 
@@ -234,7 +240,9 @@ def test_test_draft_datasource_config_failure(
     session = create_session.return_value
     response = session.get.return_value
     response.ok = True
-    response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
+    response.json.return_value = build_get_draft_config_payload(
+        config=datasource_config, id=config_id
+    )
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -264,7 +272,9 @@ def test_test_draft_datasource_config_raises_for_non_fds(
     session = create_session.return_value
     response = session.get.return_value
     response.ok = True
-    response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
+    response.json.return_value = build_get_draft_config_payload(
+        config=datasource_config, id=config_id
+    )
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -320,7 +330,9 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
     session = create_session.return_value
     response = session.get.return_value
     response.ok = True
-    response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
+    response.json.return_value = build_get_draft_config_payload(
+        config=datasource_config, id=config_id
+    )
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -349,7 +361,9 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
     session = create_session.return_value
     response = session.get.return_value
     response.ok = False
-    response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
+    response.json.return_value = build_get_draft_config_payload(
+        config=datasource_config, id=config_id
+    )
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
