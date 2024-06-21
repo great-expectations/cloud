@@ -8,7 +8,6 @@ from great_expectations.compatibility.sqlalchemy import inspect
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.datasource.fluent.interfaces import Datasource, TestConnectionError
-from great_expectations.exceptions import GXCloudError
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
@@ -93,8 +92,8 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             f"{cloud_config.gx_cloud_organization_id}/datasources/drafts/{config_id}",
             json={"table_names": table_names},
         )
-        if not response.ok:  # noqa: PLR2004
-            raise RuntimeError(
+        if not response.ok:
+            raise RuntimeError(  # noqa: TRY003 # one off error
                 f"DraftDatasourceConfigAction encountered an error while connecting to GX Cloud. "
                 f"Unable to update "
                 f"table_names for Draft Config with ID"
