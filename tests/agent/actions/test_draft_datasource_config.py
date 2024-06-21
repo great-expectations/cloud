@@ -65,6 +65,10 @@ def test_test_draft_datasource_config_success_non_sql_ds(
     get_draft_config_response.json.return_value = build_get_draft_config_payload(config=datasource_config, id=config_id)
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
+
+    _get_table_names_spy = mocker.spy(action, "_get_table_names")
+    _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
+
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id)
     expected_url: str = (
