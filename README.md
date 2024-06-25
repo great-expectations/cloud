@@ -135,7 +135,7 @@ The contents from [/examples/agent/data](https://github.com/great-expectations/c
 2. Register your action in the file it was created in using `great_expectations_cloud.agent.event_handler.register_event_action()`. Register for the major version of GX Core that the action applies to, e.g. `register_event_action("1", RunCheckpointEvent, RunCheckpointAction)` registers the action for major version 1 of GX Core (e.g. 1.0.0).
 3. Import your action in `great_expectations_cloud/agent/actions/__init__.py`
 
-Note: The GX Agent is core-version specific but this registration mechanism allows us to preemptively work on actions for future versions of GX Core while still supporting the existing latest major version.
+Note: The Agent is core-version specific but this registration mechanism allows us to preemptively work on actions for future versions of GX Core while still supporting the existing latest major version.
 
 ### Release Process
 
