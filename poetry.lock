@@ -3179,23 +3179,22 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "responses"
-version = "0.23.3"
+version = "0.25.3"
 description = "A utility library for mocking out the `requests` Python library."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "responses-0.23.3-py3-none-any.whl", hash = "sha256:e6fbcf5d82172fecc0aa1860fd91e58cbfd96cee5e96da5b63fa6eb3caa10dd3"},
-    {file = "responses-0.23.3.tar.gz", hash = "sha256:205029e1cb334c21cb4ec64fc7599be48b859a0fd381a42443cdd600bfe8b16a"},
+    {file = "responses-0.25.3-py3-none-any.whl", hash = "sha256:521efcbc82081ab8daa588e08f7e8a64ce79b91c39f6e62199b19159bea7dbcb"},
+    {file = "responses-0.25.3.tar.gz", hash = "sha256:617b9247abd9ae28313d57a75880422d55ec63c29d33d629697590a034358dba"},
 ]
 
 [package.dependencies]
 pyyaml = "*"
 requests = ">=2.30.0,<3.0"
-types-PyYAML = "*"
 urllib3 = ">=1.25.10,<3.0"
 
 [package.extras]
-tests = ["coverage (>=6.0.0)", "flake8", "mypy", "pytest (>=7.0.0)", "pytest-asyncio", "pytest-cov", "pytest-httpserver", "tomli", "tomli-w", "types-requests"]
+tests = ["coverage (>=6.0.0)", "flake8", "mypy", "pytest (>=7.0.0)", "pytest-asyncio", "pytest-cov", "pytest-httpserver", "tomli", "tomli-w", "types-PyYAML", "types-requests"]
 
 [[package]]
 name = "rfc3339-validator"
@@ -3910,17 +3909,6 @@ files = [
 ]
 
 [[package]]
-name = "types-pyyaml"
-version = "6.0.12.20240311"
-description = "Typing stubs for PyYAML"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "types-PyYAML-6.0.12.20240311.tar.gz", hash = "sha256:a9e0f0f88dc835739b0c1ca51ee90d04ca2a897a71af79de9aec5f38cb0a5342"},
-    {file = "types_PyYAML-6.0.12.20240311-py3-none-any.whl", hash = "sha256:b845b06a1c7e54b8e5b4c683043de0d9caf205e7434b3edc678ff2411979b8f6"},
-]
-
-[[package]]
 name = "types-requests"
 version = "2.31.0.6"
 description = "Typing stubs for requests"
@@ -4121,4 +4109,4 @@ snowflake = ["snowflake-sqlalchemy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "09f16e57debcf0153831723cd354140a925a8e40397a79d673532d0bdebb1c68"
+content-hash = "0400cd3b589d94c31d1954835fb9ad57d55209d99576a1bafba258c8167c7d26"
