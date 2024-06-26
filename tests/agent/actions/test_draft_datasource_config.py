@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
 import pytest
+import responses
 from great_expectations.datasource.fluent import SnowflakeDatasource, SQLDatasource
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
@@ -45,26 +46,18 @@ def build_get_draft_config_payload(
     return {
         "data": {
             "type": "draft_config",
-            "id": id,
+            "id": str(id),
             "attributes": {"draft_config": config},
         }
     }
 
 
+@responses.activate
 def test_test_draft_datasource_config_success_non_sql_ds(
     mock_context, mocker: MockerFixture, set_required_env_vars: None
 ):
     datasource_config = {"type": "pandas", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
-    create_session = mocker.patch(
-        "great_expectations_cloud.agent.actions.draft_datasource_config_action.create_session"
-    )
-    session = create_session.return_value
-    get_draft_config_response = session.get.return_value
-    get_draft_config_response.ok = True
-    get_draft_config_response.json.return_value = build_get_draft_config_payload(
-        config=datasource_config, id=config_id
-    )
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
 
@@ -78,18 +71,24 @@ def test_test_draft_datasource_config_success_non_sql_ds(
         f"/datasources/drafts/{config_id}"
     )
 
+    responses.get(
+        url=expected_url,
+        json=build_get_draft_config_payload(config=datasource_config, id=config_id),
+    )
+
     action_result = action.run(event=event, id=str(job_id))
 
     assert action_result.id == str(job_id)
     assert action_result.type == event.type
     assert action_result.created_resources == []
 
-    session.get.assert_called_with(expected_url)
+    # session.get.assert_called_with(expected_url)
 
     _get_table_names_spy.assert_not_called()
     _update_table_names_list_spy.assert_not_called()
 
 
+@responses.activate
 def test_test_draft_datasource_config_success_sql_ds(
     mock_context, mocker: MockerFixture, set_required_env_vars: None
 ):
@@ -113,19 +112,6 @@ def test_test_draft_datasource_config_success_sql_ds(
     }
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
-    create_session = mocker.patch(
-        "great_expectations_cloud.agent.actions.draft_datasource_config_action.create_session"
-    )
-    session = create_session.return_value
-    get_draft_config_response = session.get.return_value
-    get_draft_config_response.ok = True
-    get_draft_config_response.json.return_value = build_get_draft_config_payload(
-        config=datasource_config, id=config_id
-    )
-    patch_draft_config_response = session.patch.return_value
-    patch_draft_config_response.ok = True
-    patch_draft_config_response.status_code = 204
-
     # mock the sqlalchemy inspector, which is used to get table names
     inspect = mocker.patch(
         "great_expectations_cloud.agent.actions.draft_datasource_config_action.inspect"
@@ -148,24 +134,29 @@ def test_test_draft_datasource_config_success_sql_ds(
         f"/datasources/drafts/{config_id}"
     )
 
+    responses.get(
+        url=expected_url,
+        json=build_get_draft_config_payload(config=datasource_config, id=config_id),
+    )
+    # match will fail if patch not called with correct json data
+    responses.patch(
+        url=expected_url,
+        status=204,
+        match=[responses.matchers.json_params_matcher({"table_names": table_names})],
+    )
+
     action_result = action.run(event=event, id=str(job_id))
 
     assert action_result.id == str(job_id)
     assert action_result.type == event.type
     assert action_result.created_resources == []
 
-    # assert that the action successfully fetched the draft config
-    session.get.assert_called_with(expected_url)
     # assert that the action properly calls helper methods to get table names and update the draft config
     _get_table_names_spy.assert_called_with(datasource=datasource_cls(**datasource_config))
     _update_table_names_list_spy.assert_called_with(config_id=config_id, table_names=table_names)
-    # assert that the action successfully patched the draft config
-    session.patch.assert_called_with(
-        url=expected_url,
-        json={"table_names": table_names},
-    )
 
 
+@responses.activate
 def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
     mock_context, mocker: MockerFixture, set_required_env_vars: None
 ):
@@ -189,18 +180,6 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
     }
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
-    create_session = mocker.patch(
-        "great_expectations_cloud.agent.actions.draft_datasource_config_action.create_session"
-    )
-    session = create_session.return_value
-    get_draft_config_response = session.get.return_value
-    get_draft_config_response.ok = True
-    get_draft_config_response.json.return_value = build_get_draft_config_payload(
-        config=datasource_config, id=config_id
-    )
-    patch_draft_config_response = session.patch.return_value
-    patch_draft_config_response.ok = False
-
     # mock the sqlalchemy inspector, which is used to get table names
     inspect = mocker.patch(
         "great_expectations_cloud.agent.actions.draft_datasource_config_action.inspect"
@@ -219,30 +198,29 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
         f"/datasources/drafts/{config_id}"
     )
 
+    responses.get(
+        url=expected_url,
+        json=build_get_draft_config_payload(config=datasource_config, id=config_id),
+    )
+    # match will fail if patch not called with correct json data
+    responses.patch(
+        url=expected_url,
+        status=404,
+        match=[responses.matchers.json_params_matcher({"table_names": table_names})],
+    )
+
     with pytest.raises(RuntimeError, match="Unable to update table_names for Draft Config with ID"):
         action.run(event=event, id=str(job_id))
 
-    session.patch.assert_called_with(
-        url=expected_url,
-        json={"table_names": table_names},
-    )
 
-
+@responses.activate
 def test_test_draft_datasource_config_failure(
     mock_context, mocker: MockerFixture, set_required_env_vars: None
 ):
     ds_type = "sql"
     datasource_config = {"type": ds_type, "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
-    create_session = mocker.patch(
-        "great_expectations_cloud.agent.actions.draft_datasource_config_action.create_session"
-    )
-    session = create_session.return_value
-    response = session.get.return_value
-    response.ok = True
-    response.json.return_value = build_get_draft_config_payload(
-        config=datasource_config, id=config_id
-    )
+
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -255,26 +233,20 @@ def test_test_draft_datasource_config_failure(
     mock_context.sources.type_lookup = {ds_type: datasource_cls}
     datasource_cls.return_value.test_connection.side_effect = TestConnectionError
 
+    responses.get(
+        url=expected_url,
+        json=build_get_draft_config_payload(config=datasource_config, id=config_id),
+    )
+
     with pytest.raises(GXCoreError):
         action.run(event=event, id=str(job_id))
 
-    session.get.assert_called_with(expected_url)
 
-
-def test_test_draft_datasource_config_raises_for_non_fds(
-    mock_context, mocker: MockerFixture, set_required_env_vars: None
-):
+@responses.activate
+def test_test_draft_datasource_config_raises_for_non_fds(mock_context, set_required_env_vars: None):
     datasource_config = {"name": "test-1-2-3", "connection_string": ""}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
-    create_session = mocker.patch(
-        "great_expectations_cloud.agent.actions.draft_datasource_config_action.create_session"
-    )
-    session = create_session.return_value
-    response = session.get.return_value
-    response.ok = True
-    response.json.return_value = build_get_draft_config_payload(
-        config=datasource_config, id=config_id
-    )
+
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -283,10 +255,12 @@ def test_test_draft_datasource_config_raises_for_non_fds(
         f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
         f"/datasources/drafts/{config_id}"
     )
+    responses.get(
+        url=expected_url,
+        json=build_get_draft_config_payload(config=datasource_config, id=config_id),
+    )
     with pytest.raises(TypeError, match="fluent-style Data Source"):
         action.run(event=event, id=str(job_id))
-
-    session.get.assert_called_with(expected_url)
 
 
 @pytest.mark.parametrize(
@@ -319,20 +293,13 @@ def test_draft_datasource_config_failure_raises_correct_gx_core_error(
     assert e.value.get_error_params() == {}
 
 
+@responses.activate
 def test_test_draft_datasource_config_raises_for_unknown_type(
-    mock_context, mocker: MockerFixture, set_required_env_vars: None
+    mock_context, set_required_env_vars: None
 ):
     datasource_config = {"type": "not a datasource", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
-    create_session = mocker.patch(
-        "great_expectations_cloud.agent.actions.draft_datasource_config_action.create_session"
-    )
-    session = create_session.return_value
-    response = session.get.return_value
-    response.ok = True
-    response.json.return_value = build_get_draft_config_payload(
-        config=datasource_config, id=config_id
-    )
+
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -344,26 +311,22 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
 
     mock_context.sources.type_lookup = {}
 
+    responses.get(
+        url=expected_url,
+        json=build_get_draft_config_payload(config=datasource_config, id=config_id),
+    )
+
     with pytest.raises(TypeError, match="unknown Data Source type"):
         action.run(event=event, id=str(job_id))
 
-    session.get.assert_called_with(expected_url)
 
-
+@responses.activate
 def test_test_draft_datasource_config_raises_for_cloud_backend_error(
-    mock_context, mocker: MockerFixture, set_required_env_vars: None
+    mock_context, set_required_env_vars: None
 ):
     datasource_config = {"type": "not a datasource", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
-    create_session = mocker.patch(
-        "great_expectations_cloud.agent.actions.draft_datasource_config_action.create_session"
-    )
-    session = create_session.return_value
-    response = session.get.return_value
-    response.ok = False
-    response.json.return_value = build_get_draft_config_payload(
-        config=datasource_config, id=config_id
-    )
+
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(context=mock_context)
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -373,7 +336,11 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
         f"/datasources/drafts/{config_id}"
     )
 
+    responses.get(
+        url=expected_url,
+        json=build_get_draft_config_payload(config=datasource_config, id=config_id),
+        status=404,
+    )
+
     with pytest.raises(RuntimeError, match="error while connecting to GX Cloud"):
         action.run(event=event, id=str(job_id))
-
-    session.get.assert_called_with(expected_url)
