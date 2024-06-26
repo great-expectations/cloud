@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 import pytest
 
@@ -10,13 +11,12 @@ from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
+    from pytest_mock import MockerFixture
 
 pytestmark = pytest.mark.integration
 
 
-def test_running_draft_datasource_config_action(
-    context: CloudDataContext,
-):
+def test_running_draft_datasource_config_action(context: CloudDataContext, mocker: MockerFixture):
     # Arrange
     # Note: Draft config is loaded in mercury seed data
 
@@ -31,6 +31,39 @@ def test_running_draft_datasource_config_action(
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
+    expected_table_names = [
+        "alembic_version",
+        "agent_job_created_resources",
+        "agent_job_source_resources",
+        "agent_jobs",
+        "asset_refs",
+        "expectations",
+        "expectation_changes",
+        "checkpoint_job_schedules",
+        "draft_configs",
+        "user_api_tokens",
+        "organization_api_tokens",
+        "suite_validation_results",
+        "metrics",
+        "batch_definitions",
+        "expectation_suites",
+        "data_context_variables",
+        "system_users",
+        "checkpoints",
+        "latest_suite_validation_results",
+        "organizations",
+        "metric_runs",
+        "users",
+        "auth0_users",
+        "datasources",
+        "organization_users",
+        "api_tokens",
+        "validations",
+    ]
+    # add spies to the action methods
+    _get_table_names_spy = mocker.spy(action, "_get_table_names")
+    _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
+
     # Act
     result = action.run(event=draft_datasource_config_event, id=event_id)
 
@@ -40,6 +73,17 @@ def test_running_draft_datasource_config_action(
     assert result.id == event_id
     assert result.type == draft_datasource_config_event.type
     assert result.created_resources == []
+
+    # Ensure table name introspection was successful and that the table names were updated on the draft config
+    assert sorted(_get_table_names_spy.spy_return) == sorted(expected_table_names)
+
+    # assert _update_table_names_list was called with the correct arguments
+    assert _update_table_names_list_spy.call_args.kwargs.get("config_id") == UUID(
+        draft_datasource_id_for_connect_successfully
+    )
+    assert sorted(_update_table_names_list_spy.call_args.kwargs.get("table_names")) == sorted(
+        expected_table_names
+    )
 
 
 def test_running_draft_datasource_config_action_fails_for_unreachable_datasource(
