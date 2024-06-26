@@ -76,7 +76,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
 
     def _get_table_names(self, datasource: Datasource) -> list[str]:
         inspector: Inspector = inspect(datasource.get_engine())
-        return inspector.get_table_names()
+        return inspector.get_table_names()  # type: ignore[no-any-return] # method returns a list of strings
 
     def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
         try:
