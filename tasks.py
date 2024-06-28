@@ -26,7 +26,7 @@ DOCKERFILE_PATH: Final[str] = "./Dockerfile"
 
 @functools.lru_cache(maxsize=8)
 def _get_pyproject_tool_dict(
-    tool_key: Literal["poetry", "black", "ruff", "mypy"] | None = None,
+    tool_key: Literal["poetry", "ruff", "mypy"] | None = None,
 ) -> MutableMapping[str, Any]:
     """
     Load the pyproject.toml file as a dict. Optional return the config of a specific tool.
@@ -67,7 +67,7 @@ def fmt(ctx: Context, check: bool = False) -> None:
 )
 def lint(ctx: Context, check: bool = False, unsafe_fixes: bool = False) -> None:
     """Lint and fix code with ruff"""
-    cmds = ["ruff", "."]
+    cmds = ["ruff", "check", "."]
     if not check:
         cmds.append("--fix")
     if unsafe_fixes:
