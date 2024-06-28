@@ -850,13 +850,13 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "0.18.16"
+version = "0.18.17"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "great_expectations-0.18.16-py3-none-any.whl", hash = "sha256:df302fed194b978603b8e2553cf051f5f20594420a4973670b063387c620a4b9"},
-    {file = "great_expectations-0.18.16.tar.gz", hash = "sha256:513cd16daad20920f7df3ddac40b041002397a9839890950931ce5700ebd207a"},
+    {file = "great_expectations-0.18.17-py3-none-any.whl", hash = "sha256:ad9552d3f7ade2f56709d153fe2c9e06ad7b74fc6d8b82fd4c3933fede868492"},
+    {file = "great_expectations-0.18.17.tar.gz", hash = "sha256:afd94113488a83a0e42d30cd5b1cc656ddb121d22de18ee845a928a15b101efd"},
 ]
 
 [package.dependencies]
@@ -4106,4 +4106,5 @@ snowflake = ["snowflake-sqlalchemy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
+
 content-hash = "f8d97e3aab3790bc14087dcad27d4c560b2beb5ee1e61c56565e2ef77a1b78ae"
