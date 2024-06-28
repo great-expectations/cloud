@@ -43,7 +43,7 @@ snowflake = ["snowflake-sqlalchemy"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
 
 [tool.poetry.group.sql.dependencies]
-great-expectations = { version = "^0.18.6", extras = [
+great-expectations = { version = "^0.18.7", extras = [
     "databricks",
     "sqlalchemy1",
 ] }
