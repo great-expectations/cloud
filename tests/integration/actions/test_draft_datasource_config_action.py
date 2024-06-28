@@ -50,7 +50,6 @@ def test_running_draft_datasource_config_action(context: CloudDataContext, mocke
         "data_context_variables",
         "system_users",
         "checkpoints",
-        "latest_suite_validation_results",
         "organizations",
         "metric_runs",
         "users",
