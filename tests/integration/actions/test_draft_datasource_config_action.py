@@ -50,15 +50,14 @@ def test_running_draft_datasource_config_action(context: CloudDataContext, mocke
         "data_context_variables",
         "system_users",
         "checkpoints",
-        "latest_suite_validation_results",
         "organizations",
         "metric_runs",
         "users",
         "auth0_users",
         "datasources",
         "organization_users",
-        "api_tokens",
         "validations",
+        "api_tokens",
     ]
     # add spies to the action methods
     _get_table_names_spy = mocker.spy(action, "_get_table_names")
