@@ -27,7 +27,10 @@ def token():
 
 
 @pytest.fixture(scope="module")
-def context() -> CloudDataContext:
+def context(monkeypatch, cloud_base_url, org_id, token) -> CloudDataContext:
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id)
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token)
+    monkeypatch.setenv("GX_CLOUD_BASE_URL", cloud_base_url)
     context = gx.get_context(  # type: ignore[attr-defined] # TODO: fix this
         mode="cloud",
         cloud_base_url=os.environ.get("GX_CLOUD_BASE_URL"),

@@ -175,7 +175,7 @@ def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config):
     assert agent._config == gx_agent_config
 
 
-def test_gx_agent_invalid_token(monkeypatch):
+def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "invalid_token")
     with pytest.raises(gx_exception.GXCloudError):
         GXAgent()
