@@ -216,7 +216,7 @@ We use the GitHub Actions workflow to automate the release and pre-release proce
 A visual representation of the workflow is shown [here](https://github.com/great-expectations/cloud/blob/main/.github/workflows/agent_release_workflows.png)
 
 ### Dependabot and Releases/Pre-releases
-GitHub's Dependabot regularly checks our dependencies for vulnerabilty-based updates and proposes PRs to update dependency version numbers accordingly.
+GitHub's Dependabot tool regularly checks our dependencies for vulnerabilty-based updates and proposes PRs to update dependency version numbers accordingly.
 
 Dependabot may only update the `poetry.lock` file. If only changes to `poetry.lock` are made, this may be done in a pre-release.
 
