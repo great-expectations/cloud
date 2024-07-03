@@ -46,21 +46,21 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def set_required_env_vars(monkeypatch, random_org_id, random_string, local_mercury):
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", random_org_id)
+def set_required_env_vars(monkeypatch, random_uuid, random_string, local_mercury):
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", random_uuid)
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", random_string)
     monkeypatch.setenv("GX_CLOUD_BASE_URL", local_mercury)
 
 
 @pytest.fixture
 def gx_agent_config(
-    set_required_env_vars, queue, connection_string, random_org_id, random_string, local_mercury
+    set_required_env_vars, queue, connection_string, random_uuid, random_string, local_mercury
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
         gx_cloud_access_token=random_string,
-        gx_cloud_organization_id=random_org_id,
+        gx_cloud_organization_id=random_uuid,
         gx_cloud_base_url=local_mercury,
     )
     return config
@@ -71,7 +71,7 @@ def gx_agent_config_missing_token(
     set_required_env_vars,
     queue,
     connection_string,
-    random_org_id,
+    random_uuid,
     random_string,
     local_mercury,
     monkeypatch,
@@ -80,7 +80,7 @@ def gx_agent_config_missing_token(
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_organization_id=random_org_id,
+        gx_cloud_organization_id=random_uuid,
         token=random_string,
         gx_cloud_base_url=local_mercury,
     )
@@ -92,7 +92,7 @@ def gx_agent_config_missing_org_id(
     set_required_env_vars,
     queue,
     connection_string,
-    random_org_id,
+    random_uuid,
     random_string,
     local_mercury,
     monkeypatch,
@@ -102,7 +102,7 @@ def gx_agent_config_missing_org_id(
         queue=queue,
         connection_string=connection_string,
         gx_cloud_access_token=random_string,
-        org_id=random_org_id,
+        org_id=random_uuid,
         gx_cloud_base_url=local_mercury,
     )
     return config
@@ -114,7 +114,7 @@ def local_mercury():
 
 
 @pytest.fixture
-def random_org_id() -> str:
+def random_uuid() -> str:
     return str(uuid.uuid4())
 
 
@@ -418,7 +418,7 @@ def test_invalid_config_agent_missing_token(set_required_env_vars, monkeypatch):
         GXAgentConfig(
             queue=queue,
             connection_string=connection_string,
-            gx_cloud_organization_id=random_org_id,
+            gx_cloud_organization_id=random_uuid,
             token=random_string,
             gx_cloud_base_url=local_mercury,
         )
@@ -430,7 +430,7 @@ def test_invalid_config_agent_missing_org_id(set_required_env_vars, monkeypatch)
         GXAgentConfig(
             queue=queue,
             connection_string=connection_string,
-            gx_cloud_organization_id=random_org_id,
+            gx_cloud_organization_id=random_uuid,
             token=random_string,
             gx_cloud_base_url=local_mercury,
         )
