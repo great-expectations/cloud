@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, Extra, Literal, Optional, Sequence, Set, Union
+from typing import Any, Dict, Literal, Optional, Sequence, Set, Union
 from uuid import UUID
 
 from great_expectations.compatibility.pydantic import BaseModel, ConfigDict, Field
@@ -12,13 +12,12 @@ from great_expectations_cloud.agent.exceptions import GXCoreError
 
 
 class AgentBaseModel(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
-    class Config:
-        # 2024-03-04: ZEL-501 Strictly enforce models for handling outdated APIs
-        extra: str = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 
 class EventBase(AgentBaseModel):
     type: str
+    # ignoring extra fields in Action messages
     model_config = ConfigDict(extra="ignore")
 
 
