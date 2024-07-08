@@ -279,7 +279,9 @@ def test_gx_agent_updates_cloud_on_job_status(
     async def redeliver_message():
         return None
 
-    event = RunOnboardingDataAssistantEvent(datasource_name="test-ds", data_asset_name="test-da")
+    event = RunOnboardingDataAssistantEvent(
+        datasource_name="test-ds", data_asset_name="test-da", organization_id=uuid.uuid4()
+    )
 
     end_test = False
 
@@ -349,6 +351,7 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
         datasource_names_to_asset_names={},
         splitter_options=None,
         schedule_id=schedule_id,
+        organization_id=uuid.uuid4(),
     )
     payload = Payload(
         data={
@@ -502,10 +505,24 @@ def test_correlation_id_header(
     # seed the fake queue with an event that will be consumed by the agent
     fake_subscriber.test_queue.extendleft(
         [
-            (DraftDatasourceConfigEvent(config_id=datasource_config_id_1), agent_job_ids[0]),
-            (DraftDatasourceConfigEvent(config_id=datasource_config_id_2), agent_job_ids[1]),
             (
-                RunCheckpointEvent(checkpoint_id=checkpoint_id, datasource_names_to_asset_names={}),
+                DraftDatasourceConfigEvent(
+                    config_id=datasource_config_id_1, organization_id=uuid.uuid4()
+                ),
+                agent_job_ids[0],
+            ),
+            (
+                DraftDatasourceConfigEvent(
+                    config_id=datasource_config_id_2, organization_id=uuid.uuid4()
+                ),
+                agent_job_ids[1],
+            ),
+            (
+                RunCheckpointEvent(
+                    checkpoint_id=checkpoint_id,
+                    datasource_names_to_asset_names={},
+                    organization_id=uuid.uuid4(),
+                ),
                 agent_job_ids[2],
             ),
         ]
