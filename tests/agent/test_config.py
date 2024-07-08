@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from great_expectations.compatibility.pydantic import (
+from pydantic.v1 import (
     BaseModel,
     ValidationError,
 )

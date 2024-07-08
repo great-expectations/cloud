@@ -9,11 +9,11 @@ from unittest.mock import call
 
 import pytest
 import responses
-from great_expectations.compatibility.pydantic import (
-    ValidationError,
-)
 from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
+from pydantic.v1 import (
+    ValidationError,
+)
 from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent

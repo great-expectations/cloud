@@ -6,9 +6,9 @@ from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, Final
 
 import great_expectations as gx
-from great_expectations.compatibility import pydantic
 from packaging.version import Version
 from packaging.version import parse as parse_version
+from pydantic import v1 as pydantic_v1
 
 from great_expectations_cloud.agent.actions.unknown import UnknownEventAction
 from great_expectations_cloud.agent.models import (
@@ -81,8 +81,8 @@ class EventHandler:
     @classmethod
     def parse_event_from(cls, msg_body: bytes) -> Event:
         try:
-            event: Event = pydantic.parse_raw_as(Event, msg_body)
-        except (pydantic.ValidationError, JSONDecodeError):
+            event: Event = pydantic_v1.parse_raw_as(Event, msg_body)
+        except (pydantic_v1.ValidationError, JSONDecodeError):
             # Log as bytes
             LOGGER.exception("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
             return UnknownEvent()

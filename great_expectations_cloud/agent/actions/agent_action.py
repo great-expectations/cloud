@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, Sequence, TypeVar
 
-from great_expectations.compatibility.pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from great_expectations_cloud.agent.models import CreatedResource, Event
 

@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.sqlalchemy import inspect
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.exceptions import GXCloudError
+from pydantic import v1 as pydantic_v1
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions.agent_action import (
@@ -55,7 +55,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
     def _add_or_update_table_names_list(self, datasource_id: str, table_names: list[str]) -> None:
         try:
             cloud_config = GxAgentEnvVars()
-        except pydantic.ValidationError as validation_err:
+        except pydantic_v1.ValidationError as validation_err:
             raise RuntimeError(
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
