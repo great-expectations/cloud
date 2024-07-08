@@ -201,13 +201,14 @@ class TestEventHandlerRegistry:
             _get_major_version("invalid_version")
 
 
-def test_parse_event_extra_field(example_event):
+def test_parse_event_extra_field_is_ignored(example_event):
     event_dict = example_event.dict()
     event_dict["new_field"] = "surprise!"
     serialized_bytes = json.dumps(dict(event_dict), indent=2).encode("utf-8")
     event = EventHandler.parse_event_from(serialized_bytes)
 
-    assert event.type == "unknown_event"
+    # Extra field is ignored, which allows request to still be received - ZELDA-770
+    assert event.type == "onboarding_data_assistant_request.received"
 
 
 def test_parse_event_missing_required_field(example_event):

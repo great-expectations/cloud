@@ -20,6 +20,9 @@ class AgentBaseModel(BaseModel):  # type: ignore[misc] # BaseSettings is has Any
 class EventBase(AgentBaseModel):
     type: str
 
+    class Config:
+        extra: str = Extra.ignore
+
 
 class ScheduledEventBase(EventBase):
     schedule_id: UUID
