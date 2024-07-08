@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-import os
+import random
+import string
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
@@ -45,21 +46,21 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def set_required_env_vars(monkeypatch, org_id_env_var, token_env_var, local_mercury):
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id_env_var)
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token_env_var)
+def set_required_env_vars(monkeypatch, random_uuid, random_string, local_mercury):
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", random_uuid)
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", random_string)
     monkeypatch.setenv("GX_CLOUD_BASE_URL", local_mercury)
 
 
 @pytest.fixture
 def gx_agent_config(
-    set_required_env_vars, queue, connection_string, org_id_env_var, token_env_var, local_mercury
+    set_required_env_vars, queue, connection_string, random_uuid, random_string, local_mercury
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_access_token=token_env_var,
-        gx_cloud_organization_id=org_id_env_var,
+        gx_cloud_access_token=random_string,
+        gx_cloud_organization_id=random_uuid,
         gx_cloud_base_url=local_mercury,
     )
     return config
@@ -70,8 +71,8 @@ def gx_agent_config_missing_token(
     set_required_env_vars,
     queue,
     connection_string,
-    org_id_env_var,
-    token_env_var,
+    random_uuid,
+    random_string,
     local_mercury,
     monkeypatch,
 ) -> GXAgentConfig:
@@ -79,8 +80,8 @@ def gx_agent_config_missing_token(
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_organization_id=org_id_env_var,
-        token=token_env_var,
+        gx_cloud_organization_id=random_uuid,
+        token=random_string,
         gx_cloud_base_url=local_mercury,
     )
     return config
@@ -91,8 +92,8 @@ def gx_agent_config_missing_org_id(
     set_required_env_vars,
     queue,
     connection_string,
-    org_id_env_var,
-    token_env_var,
+    random_uuid,
+    random_string,
     local_mercury,
     monkeypatch,
 ) -> GXAgentConfig:
@@ -100,8 +101,8 @@ def gx_agent_config_missing_org_id(
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_access_token=token_env_var,
-        org_id=org_id_env_var,
+        gx_cloud_access_token=random_string,
+        org_id=random_uuid,
         gx_cloud_base_url=local_mercury,
     )
     return config
@@ -113,13 +114,13 @@ def local_mercury():
 
 
 @pytest.fixture
-def org_id_env_var():
-    return os.environ.get("GX_CLOUD_ORGANIZATION_ID")
+def random_uuid() -> str:
+    return str(uuid.uuid4())
 
 
 @pytest.fixture
-def token_env_var():
-    return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
+def random_string() -> str:
+    return "".join(random.choices(string.ascii_letters + string.digits, k=20))
 
 
 @pytest.fixture
@@ -175,7 +176,7 @@ def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config):
     assert agent._config == gx_agent_config
 
 
-def test_gx_agent_invalid_token(monkeypatch):
+def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "invalid_token")
     with pytest.raises(gx_exception.GXCloudError):
         GXAgent()
@@ -417,8 +418,8 @@ def test_invalid_config_agent_missing_token(set_required_env_vars, monkeypatch):
         GXAgentConfig(
             queue=queue,
             connection_string=connection_string,
-            gx_cloud_organization_id=org_id_env_var,
-            token=token_env_var,
+            gx_cloud_organization_id=random_uuid,
+            token=random_string,
             gx_cloud_base_url=local_mercury,
         )
 
@@ -429,8 +430,8 @@ def test_invalid_config_agent_missing_org_id(set_required_env_vars, monkeypatch)
         GXAgentConfig(
             queue=queue,
             connection_string=connection_string,
-            gx_cloud_organization_id=org_id_env_var,
-            token=token_env_var,
+            gx_cloud_organization_id=random_uuid,
+            token=random_string,
             gx_cloud_base_url=local_mercury,
         )
 

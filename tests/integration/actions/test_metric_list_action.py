@@ -57,7 +57,7 @@ def query():
 
 @pytest.fixture
 def graphql_test_client(
-    org_id,
+    org_id_env_var,
 ):
     mercury_api_host = "localhost"
     mercury_api_port = 5000
@@ -75,7 +75,8 @@ def graphql_test_client(
             payload = json.dumps(payload_dict)
 
             res = self.client.post(
-                f"http://{mercury_api_host}:{mercury_api_port}/organizations" f"/{org_id}/graphql",
+                f"http://{mercury_api_host}:{mercury_api_port}/organizations"
+                f"/{org_id_env_var}/graphql",
                 data=payload,
                 headers=headers,
             )
