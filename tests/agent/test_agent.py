@@ -496,6 +496,7 @@ def test_correlation_id_header(
     ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
     fake_subscriber: FakeSubscriber,
+    random_uuid: Callable[[], str],
 ):
     """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
     agent_job_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
@@ -507,13 +508,13 @@ def test_correlation_id_header(
         [
             (
                 DraftDatasourceConfigEvent(
-                    config_id=datasource_config_id_1, organization_id=uuid.uuid4()
+                    config_id=datasource_config_id_1, organization_id=random_uuid
                 ),
                 agent_job_ids[0],
             ),
             (
                 DraftDatasourceConfigEvent(
-                    config_id=datasource_config_id_2, organization_id=uuid.uuid4()
+                    config_id=datasource_config_id_2, organization_id=random_uuid
                 ),
                 agent_job_ids[1],
             ),
@@ -521,7 +522,7 @@ def test_correlation_id_header(
                 RunCheckpointEvent(
                     checkpoint_id=checkpoint_id,
                     datasource_names_to_asset_names={},
-                    organization_id=uuid.uuid4(),
+                    organization_id=random_uuid,
                 ),
                 agent_job_ids[2],
             ),
