@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20240708.2.dev0"
+version = "20240708.2.dev1"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -31,6 +31,7 @@ orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue 
 # relying on packaging in agent code so declaring it explicitly here
 packaging = ">=21.3,<25.0"
 tenacity = "^8.2.3"
+python-dotenv = "^1.0.1"
 # optional dependencies
 snowflake-sqlalchemy = { version = "<1.6", optional = true } # TODO: remove pin once we have tested with sqlalchemy 2.0 & snowflake
 sqlalchemy = { version = "<2.0", optional = true }  # TODO: see above ^
@@ -185,7 +186,8 @@ required-imports = ["from __future__ import annotations"]
 max-complexity = 10
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
-"os.environ".msg = """Please do not use os.environ, instead use a pydantic.BaseSettings model"""
+"os.environ".msg = "Please do not use os.environ, instead use a pydantic.BaseSettings model"
+"os.getenv".msg = "Please do not use os.getenv, instead use a pydantic.BaseSettings model"
 # TODO: remove pydantic once our min version is pydantic v2
 "pydantic".msg = "Please do not import pydantic directly, import from great_expectations.compatibility.pydantic instead."
 "sqlalchemy".msg = "Please do not import sqlalchemy directly, import from great_expectations.compatibility.sqlalchemy instead."

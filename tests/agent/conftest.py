@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 import uuid
 from collections import deque
-from typing import TYPE_CHECKING, Any, Iterable, NamedTuple, TypedDict
+from typing import TYPE_CHECKING, Any, Generator, Iterable, NamedTuple, TypedDict
 
 import pytest
 from great_expectations import (  # type: ignore[attr-defined] # TODO: fix this
@@ -25,6 +26,32 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
 LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def clean_gx_env(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
+    """
+    Cleanup the GX_CLOUD environment variables before and after test run.
+
+    If the environment variables are already set, save their values and restore them after the test run.
+
+    GX_CLOUD_ACCESS_TOKEN
+    GX_CLOUD_ORGANIZATION_ID
+    GX_BASE_URL
+    """
+    env_vars = ["GX_CLOUD_ACCESS_TOKEN", "GX_CLOUD_ORGANIZATION_ID", "GX_BASE_URL"]
+    prior_values = {var: os.environ[var] for var in env_vars if var in os.environ}
+
+    for var in env_vars:
+        monkeypatch.delenv(var, raising=False)
+    yield None
+    for var in env_vars:
+        monkeypatch.delenv(var, raising=False)
+
+    # TODO: remove the action of restoring the environment variables once our tests are no longer
+    # relying on prior state of the environment variables.
+    if prior_values:
+        os.environ.update(prior_values)
 
 
 @pytest.fixture
