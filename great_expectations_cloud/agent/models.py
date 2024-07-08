@@ -87,7 +87,7 @@ class DraftDatasourceConfigEvent(EventBase):
     config_id: UUID
 
 
-class UnknownEvent(EventBase):
+class UnknownEvent(AgentBaseModel):
     type: Literal["unknown_event"] = "unknown_event"
 
 
