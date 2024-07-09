@@ -174,7 +174,8 @@ runtime-evaluated-base-classes = [
     # NOTE: ruff is unable to detect that these are subclasses of pydantic.BaseModel
     "pydantic.BaseModel",
     "pydantic.v1.BaseModel",
-    "great_expectations_cloud.agent.models.AgentBaseModel",
+    "great_expectations_cloud.agent.models.AgentBaseExtraForbid",
+    "great_expectations_cloud.agent.models.AgentBaseExtraIgnore",
     "great_expectations_cloud.agent.models.EventBase",
     "great_expectations.datasource.fluent.fluent_base_model.FluentBaseModel",
     "great_expectations.datasource.fluent.interfaces.Datasource",
