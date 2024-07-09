@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import uuid
 from typing import TYPE_CHECKING
 
 import pytest
@@ -114,6 +115,7 @@ def test_running_metric_list_action(
     query: str,
     local_mercury_db_datasource: PostgresDatasource,
     local_mercury_db_organizations_table_asset: TableAsset,
+    org_id_env_var: str,
 ):
     # MetricListEvent with only the Table Metrics requested
     metrics_list_event = RunMetricsListEvent(
@@ -125,6 +127,7 @@ def test_running_metric_list_action(
             MetricTypes.TABLE_COLUMNS,
             MetricTypes.TABLE_ROW_COUNT,
         ],
+        organization_id=uuid.UUID(org_id_env_var),
     )
 
     action = MetricListAction(context=context)

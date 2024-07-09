@@ -11,17 +11,21 @@ from typing_extensions import Annotated
 from great_expectations_cloud.agent.exceptions import GXCoreError
 
 
-class AgentBaseModel(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
+class AgentBaseExtraForbid(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
     class Config:
         # 2024-03-04: ZEL-501 Strictly enforce models for handling outdated APIs
         extra: str = Extra.forbid
 
 
-class EventBase(AgentBaseModel):
-    type: str
-
+class AgentBaseExtraIgnore(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
     class Config:
+        # Extra fields on Events are not strictly enforced
         extra: str = Extra.ignore
+
+
+class EventBase(AgentBaseExtraIgnore):
+    type: str
+    organization_id: UUID
 
 
 class ScheduledEventBase(EventBase):
@@ -86,7 +90,7 @@ class DraftDatasourceConfigEvent(EventBase):
     config_id: UUID
 
 
-class UnknownEvent(EventBase):
+class UnknownEvent(AgentBaseExtraForbid):
     type: Literal["unknown_event"] = "unknown_event"
 
 
@@ -106,16 +110,16 @@ Event = Annotated[
 ]
 
 
-class CreatedResource(AgentBaseModel):
+class CreatedResource(AgentBaseExtraForbid):
     resource_id: str
     type: str
 
 
-class JobStarted(AgentBaseModel):
+class JobStarted(AgentBaseExtraForbid):
     status: Literal["started"] = "started"
 
 
-class JobCompleted(AgentBaseModel):
+class JobCompleted(AgentBaseExtraForbid):
     status: Literal["completed"] = "completed"
     success: bool
     created_resources: Sequence[CreatedResource] = []
