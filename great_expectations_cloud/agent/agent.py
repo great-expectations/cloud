@@ -388,6 +388,7 @@ class GXAgent:
         session = create_session(access_token=self._config.gx_cloud_access_token)
         data = status.json()
         session.patch(agent_sessions_url, data=data)
+        LOGGER.info("Status updated", extra={"job_id": job_id, "status": str(status)})
 
     def _create_scheduled_job_and_set_started(self, event_context: EventContext) -> None:
         """Create a job in GX Cloud for scheduled events.
