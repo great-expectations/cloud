@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Final
 import orjson
 from great_expectations import get_context  # type: ignore[attr-defined] # TODO: fix this
 from great_expectations.compatibility import pydantic
-from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from packaging.version import Version
@@ -40,7 +39,7 @@ from great_expectations_cloud.agent.message_service.subscriber import (
     SubscriberError,
 )
 from great_expectations_cloud.agent.models import (
-    AgentBaseModel,
+    AgentBaseExtraForbid,
     JobCompleted,
     JobStarted,
     JobStatus,
@@ -51,6 +50,7 @@ from great_expectations_cloud.agent.models import (
 
 if TYPE_CHECKING:
     import requests
+    from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
     from great_expectations.data_context import CloudDataContext
     from typing_extensions import Self
 
@@ -62,7 +62,7 @@ LOGGER.setLevel(logging.INFO)
 HandlerMap = Dict[str, OnMessageCallback]
 
 
-class GXAgentConfig(AgentBaseModel):
+class GXAgentConfig(AgentBaseExtraForbid):
     """GXAgent configuration.
     Attributes:
         queue: name of queue
@@ -91,7 +91,7 @@ def orjson_loads(v: bytes | bytearray | memoryview | str) -> Any:
     return orjson.loads(v)
 
 
-class Payload(AgentBaseModel):
+class Payload(AgentBaseExtraForbid):
     data: Dict[str, Any]  # noqa: UP006  # Python 3.8 requires Dict instead of dict
 
     class Config:
