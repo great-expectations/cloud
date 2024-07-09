@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING
 
 import pytest
@@ -26,6 +27,7 @@ def missingness_event_without_expectation_suite_name():
         type="missingness_data_assistant_request.received",
         datasource_name="test-datasource",
         data_asset_name="test-data-asset",
+        organization_id=uuid.uuid4(),
     )
 
 
@@ -36,6 +38,7 @@ def missingness_event_with_expectation_suite_name():
         datasource_name="test-datasource",
         data_asset_name="test-data-asset",
         expectation_suite_name="test-expectation-suite",
+        organization_id=uuid.uuid4(),
     )
 
 

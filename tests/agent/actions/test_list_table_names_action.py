@@ -58,6 +58,7 @@ def event():
     return ListTableNamesEvent(
         type="list_table_names_request.received",
         datasource_name="test-datasource",
+        organization_id=uuid.uuid4(),
     )
 
 

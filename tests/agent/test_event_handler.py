@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
 
+import orjson
 import packaging.version
 import pytest
 from great_expectations.experimental.metric_repository.metrics import (
     MetricTypes,
 )
-from orjson import orjson
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import (
