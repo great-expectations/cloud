@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20240708.2.dev0"
+version = "20240709.0.dev0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -89,7 +89,11 @@ follow_imports = 'normal'
 warn_redundant_casts = true
 show_error_codes = true
 implicit_reexport = true                                         # enabled due to strict mode
-enable_error_code = ['ignore-without-code', 'explicit-override']
+enable_error_code = [
+    'ignore-without-code',
+    'explicit-override',
+    'possibly-undefined',
+]
 
 
 [[tool.mypy.overrides]]
