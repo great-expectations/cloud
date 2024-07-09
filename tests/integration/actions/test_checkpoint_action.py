@@ -199,11 +199,12 @@ def checkpoint(
 
 
 @pytest.fixture
-def checkpoint_event(checkpoint, datasource_names_to_asset_names):
+def checkpoint_event(checkpoint, datasource_names_to_asset_names, org_id_env_var: str):
     return RunCheckpointEvent(
         type="run_checkpoint_request",
         checkpoint_id=checkpoint.ge_cloud_id,
         datasource_names_to_asset_names=datasource_names_to_asset_names,
+        organization_id=uuid.UUID(org_id_env_var),
     )
 
 
