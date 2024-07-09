@@ -14,6 +14,10 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Final
 import orjson
 from great_expectations import get_context  # type: ignore[attr-defined] # TODO: fix this
 from great_expectations.compatibility import pydantic
+from great_expectations.compatibility.pydantic import (  # noqa: TCH002  # cannot be imported in type checking block
+    AmqpDsn,
+    AnyUrl,
+)
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from packaging.version import Version
@@ -50,7 +54,6 @@ from great_expectations_cloud.agent.models import (
 
 if TYPE_CHECKING:
     import requests
-    from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
     from great_expectations.data_context import CloudDataContext
     from typing_extensions import Self
 
