@@ -38,7 +38,7 @@ optional arguments:
   --version             Show the GX Agent version.
 ```
 
-#### Set ENV variables
+#### Set env variables
 
 `GX_CLOUD_ACCESS_TOKEN`
 `GX_CLOUD_ORGANIZATION_ID`
