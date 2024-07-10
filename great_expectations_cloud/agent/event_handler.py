@@ -81,7 +81,7 @@ class EventHandler:
     @classmethod
     def parse_event_from(cls, msg_body: bytes) -> Event:
         try:
-            event: Event = pydantic_v1.parse_raw_as(Event, msg_body)
+            event: Event = pydantic_v1.parse_raw_as(Event, msg_body)  # type: ignore[arg-type] # FIXME
         except (pydantic_v1.ValidationError, JSONDecodeError):
             # Log as bytes
             LOGGER.exception("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
@@ -127,6 +127,6 @@ _GX_MAJOR_VERSION = _get_major_version(str(version))
 
 def _get_event_name(event: Event) -> str:
     try:
-        return str(event.__name__)
+        return str(event.__name__)  # type: ignore[union-attr] # FIXME
     except AttributeError:
-        return str(event.__class__.__name__)
+        return event.__class__.__name__
