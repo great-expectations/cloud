@@ -58,7 +58,7 @@ def test_test_draft_datasource_config_success_non_sql_ds(
 ):
     datasource_config = {"type": "pandas", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
-    env_vars = GxAgentEnvVars()
+    env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # expecting env vars to be set
     action = DraftDatasourceConfigAction(context=mock_context)
 
     _get_table_names_spy = mocker.spy(action, "_get_table_names")
@@ -120,7 +120,7 @@ def test_test_draft_datasource_config_success_sql_ds(
     mock_inspector = inspect.return_value
     mock_inspector.get_table_names.return_value = table_names
 
-    env_vars = GxAgentEnvVars()
+    env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # expecting env vars to be set
     action = DraftDatasourceConfigAction(context=mock_context)
 
     # add spies to the action methods

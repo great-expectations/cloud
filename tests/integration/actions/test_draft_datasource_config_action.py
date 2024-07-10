@@ -29,7 +29,7 @@ def test_running_draft_datasource_config_action(
     )
     draft_datasource_config_event = DraftDatasourceConfigEvent(
         type="test_datasource_config",
-        config_id=draft_datasource_id_for_connect_successfully,
+        config_id=UUID(draft_datasource_id_for_connect_successfully),
         organization_id=UUID(org_id_env_var),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
