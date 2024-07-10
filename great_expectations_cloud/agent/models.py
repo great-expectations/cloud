@@ -25,7 +25,7 @@ class AgentBaseExtraIgnore(BaseModel):
 
 class EventBase(AgentBaseExtraIgnore):
     type: str
-    organization_id: UUID
+    organization_id: UUID | None = None
 
 
 class ScheduledEventBase(EventBase):
