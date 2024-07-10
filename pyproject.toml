@@ -67,7 +67,7 @@ pytest-mock = "*"
 responses = ">=0.23.1,<0.26.0"
 ruff = "0.5.1"
 tenacity = "^8.2.3"
-tomlkit = "^0.12.1"
+tomlkit = ">=0.12.1,<0.14.0"
 types-requests = "^2.31"
 typing_extensions = ">=4.4.0"
 
