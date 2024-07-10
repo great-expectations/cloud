@@ -77,7 +77,7 @@ def gx_agent_config_missing_token(
     monkeypatch,
 ) -> GXAgentConfig:
     monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
-    config = GXAgentConfig(
+    config = GXAgentConfig(  # type: ignore[call-arg]
         queue=queue,
         connection_string=connection_string,
         gx_cloud_organization_id=random_uuid,
@@ -98,7 +98,7 @@ def gx_agent_config_missing_org_id(
     monkeypatch,
 ) -> GXAgentConfig:
     monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
-    config = GXAgentConfig(
+    config = GXAgentConfig(  # type: ignore[call-arg]
         queue=queue,
         connection_string=connection_string,
         gx_cloud_access_token=random_string,
@@ -150,12 +150,12 @@ def event_handler(mocker):
 
 
 @pytest.fixture
-def queue():
+def queue() -> str:
     return "3ee9791c-4ea6-479d-9b05-98217e70d341"
 
 
 @pytest.fixture
-def connection_string():
+def connection_string() -> str:
     return "amqps://user:pass@great_expectations.io:5671"
 
 
