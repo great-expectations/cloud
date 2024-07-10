@@ -9,7 +9,7 @@ from pydantic.v1 import (
 from great_expectations_cloud.agent.config import generate_config_validation_error_text
 
 
-class LoggingUtilTestModel(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
+class LoggingUtilTestModel(BaseModel):
     string_one: str
     string_two: str
 
@@ -17,7 +17,7 @@ class LoggingUtilTestModel(BaseModel):  # type: ignore[misc] # BaseSettings is h
 @pytest.fixture
 def validation_error_missing_string_one():
     try:
-        LoggingUtilTestModel(string_one=None, string_two="i am string two")
+        LoggingUtilTestModel(string_one=None, string_two="i am string two")  # type: ignore[arg-type]
     except ValidationError as validation_error:
         return validation_error
 
@@ -25,7 +25,7 @@ def validation_error_missing_string_one():
 @pytest.fixture
 def validation_error_missing_both_strings():
     try:
-        LoggingUtilTestModel(string_one=None, string_two=None)
+        LoggingUtilTestModel(string_one=None, string_two=None)  # type: ignore[arg-type]
     except ValidationError as validation_error:
         return validation_error
 
