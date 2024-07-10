@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
 
-class ActionResult(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
+class ActionResult(BaseModel):
     id: str
     type: str
     created_resources: Sequence[CreatedResource]
