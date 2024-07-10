@@ -54,7 +54,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
 
     def _add_or_update_table_names_list(self, datasource_id: str, table_names: list[str]) -> None:
         try:
-            cloud_config = GxAgentEnvVars()
+            cloud_config = GxAgentEnvVars()  # type: ignore[call-arg] # expecting env vars to be set
         except pydantic_v1.ValidationError as validation_err:
             raise RuntimeError(
                 generate_config_validation_error_text(validation_err)

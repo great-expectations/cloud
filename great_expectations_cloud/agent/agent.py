@@ -72,7 +72,7 @@ class GXAgentConfig(AgentBaseExtraForbid):
     queue: str
     connection_string: AmqpDsn
     # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
+    gx_cloud_base_url: AnyUrl = AnyUrl(CLOUD_DEFAULT_BASE_URL)
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
 
@@ -335,7 +335,7 @@ class GXAgent:
         # ensure we have all required env variables, and provide a useful error if not
 
         try:
-            env_vars = GxAgentEnvVars()
+            env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # expecting env vars to be set
         except pydantic_v1.ValidationError as validation_err:
             raise GXAgentConfigError(
                 generate_config_validation_error_text(validation_err)
