@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from great_expectations.compatibility import pydantic
 from great_expectations.compatibility.sqlalchemy import inspect
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.datasource.fluent.interfaces import Datasource, TestConnectionError
+from pydantic import v1 as pydantic_v1
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
@@ -81,7 +81,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
     def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
         try:
             cloud_config = GxAgentEnvVars()
-        except pydantic.ValidationError as validation_err:
+        except pydantic_v1.ValidationError as validation_err:
             raise RuntimeError(
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
@@ -103,7 +103,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
     def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
         try:
             config = GxAgentEnvVars()
-        except pydantic.ValidationError as validation_err:
+        except pydantic_v1.ValidationError as validation_err:
             raise RuntimeError(
                 generate_config_validation_error_text(validation_err)
             ) from validation_err

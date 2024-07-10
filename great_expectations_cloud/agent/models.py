@@ -4,20 +4,20 @@ import uuid
 from typing import Any, Dict, Literal, Optional, Sequence, Set, Union
 from uuid import UUID
 
-from great_expectations.compatibility.pydantic import BaseModel, Extra, Field
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
+from pydantic.v1 import BaseModel, Extra, Field
 from typing_extensions import Annotated
 
 from great_expectations_cloud.agent.exceptions import GXCoreError
 
 
-class AgentBaseExtraForbid(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
+class AgentBaseExtraForbid(BaseModel):
     class Config:
         # 2024-03-04: ZEL-501 Strictly enforce models for handling outdated APIs
         extra: str = Extra.forbid
 
 
-class AgentBaseExtraIgnore(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
+class AgentBaseExtraIgnore(BaseModel):
     class Config:
         # Extra fields on Events are not strictly enforced
         extra: str = Extra.ignore

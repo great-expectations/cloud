@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20240709.0.dev1"
+version = "20240710.0.dev0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -24,7 +24,7 @@ include = [
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
 great-expectations = "^0.18.17"
-pydantic = "<3"
+pydantic = ">=2.8.1,<3"
 pika = "^1.3.1"
 # needed for metrics serialization
 orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue is resolved
@@ -191,9 +191,8 @@ max-complexity = 10
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "os.environ".msg = """Please do not use os.environ, instead use a pydantic.BaseSettings model"""
-# TODO: remove pydantic once our min version is pydantic v2
-"pydantic".msg = "Please do not import pydantic directly, import from great_expectations.compatibility.pydantic instead."
-"sqlalchemy".msg = "Please do not import sqlalchemy directly, import from great_expectations.compatibility.sqlalchemy instead."
+"great_expectations.compatibility.pydantic".msg = "Import pydantic directly."
+# TODO: ban use of the compatibility layer in favor of direct imports
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
