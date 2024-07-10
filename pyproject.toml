@@ -193,7 +193,6 @@ max-complexity = 10
 "os.environ".msg = """Please do not use os.environ, instead use a pydantic.BaseSettings model"""
 "great_expectations.compatibility.pydantic".msg = "Import pydantic directly."
 # TODO: ban use of the compatibility layer in favor of direct imports
-"sqlalchemy".msg = "Please do not import sqlalchemy directly, import from great_expectations.compatibility.sqlalchemy instead."
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [

@@ -23,7 +23,7 @@ from great_expectations_cloud.agent.models import (
 )
 
 if TYPE_CHECKING:
-    from great_expectations.compatibility.sqlalchemy.engine import Inspector
+    from sqlalchemy.engine.reflection import Inspector
 
 
 class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
