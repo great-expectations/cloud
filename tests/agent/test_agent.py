@@ -415,28 +415,32 @@ def test_invalid_env_variables_missing_org_id(set_required_env_vars, monkeypatch
         GXAgent()
 
 
-def test_invalid_config_agent_missing_token(set_required_env_vars, monkeypatch):
-    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
-    with pytest.raises(ValidationError):
-        GXAgentConfig(
+def test_invalid_config_agent_missing_token(
+    connection_string: str, queue: str, random_uuid: str, local_mercury: str
+):
+    with pytest.raises(ValidationError) as exc_info:
+        GXAgentConfig(  # type: ignore[call-arg]
             queue=queue,
-            connection_string=connection_string,
+            connection_string=connection_string,  # type: ignore[arg-type]
             gx_cloud_organization_id=random_uuid,
-            token=random_string,
-            gx_cloud_base_url=local_mercury,
+            gx_cloud_base_url=local_mercury,  # type: ignore[arg-type]
         )
+    error_locs = [error["loc"] for error in exc_info.value.errors()]
+    assert "gx_cloud_access_token" in error_locs[0]
 
 
-def test_invalid_config_agent_missing_org_id(set_required_env_vars, monkeypatch):
-    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
-    with pytest.raises(ValidationError):
-        GXAgentConfig(
+def test_invalid_config_agent_missing_org_id(
+    connection_string: str, queue: str, local_mercury: str, random_string: str
+):
+    with pytest.raises(ValidationError) as exc_info:
+        GXAgentConfig(  # type: ignore[call-arg]
             queue=queue,
-            connection_string=connection_string,
-            gx_cloud_organization_id=random_uuid,
-            token=random_string,
-            gx_cloud_base_url=local_mercury,
+            connection_string=connection_string,  # type: ignore[arg-type]
+            gx_cloud_access_token=random_string,
+            gx_cloud_base_url=local_mercury,  # type: ignore[arg-type]
         )
+    error_locs = [error["loc"] for error in exc_info.value.errors()]
+    assert "gx_cloud_organization_id" in error_locs[0]
 
 
 def test_custom_user_agent(
@@ -496,7 +500,7 @@ def test_correlation_id_header(
     ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
     fake_subscriber: FakeSubscriber,
-    random_uuid: Callable[[], str],
+    random_uuid: str,
 ):
     """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
     agent_job_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
@@ -508,13 +512,15 @@ def test_correlation_id_header(
         [
             (
                 DraftDatasourceConfigEvent(
-                    config_id=datasource_config_id_1, organization_id=random_uuid
+                    config_id=datasource_config_id_1,
+                    organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
                 ),
                 agent_job_ids[0],
             ),
             (
                 DraftDatasourceConfigEvent(
-                    config_id=datasource_config_id_2, organization_id=random_uuid
+                    config_id=datasource_config_id_2,
+                    organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
                 ),
                 agent_job_ids[1],
             ),
@@ -522,7 +528,7 @@ def test_correlation_id_header(
                 RunCheckpointEvent(
                     checkpoint_id=checkpoint_id,
                     datasource_names_to_asset_names={},
-                    organization_id=random_uuid,
+                    organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
                 ),
                 agent_job_ids[2],
             ),
