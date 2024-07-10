@@ -9,7 +9,7 @@ from great_expectations_cloud.agent.config import GxAgentEnvVars
 
 @pytest.fixture(scope="session")
 def gx_agent_vars() -> GxAgentEnvVars:
-    return GxAgentEnvVars()  # type: ignore[call-arg] # relying on env vars
+    return GxAgentEnvVars()
 
 
 @pytest.fixture(scope="session")

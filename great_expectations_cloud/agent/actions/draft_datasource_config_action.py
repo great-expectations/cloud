@@ -80,7 +80,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
 
     def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
         try:
-            cloud_config = GxAgentEnvVars()  # type: ignore[call-arg] # expecting env vars to be set
+            cloud_config = GxAgentEnvVars()
         except pydantic_v1.ValidationError as validation_err:
             raise RuntimeError(
                 generate_config_validation_error_text(validation_err)
@@ -102,7 +102,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
 
     def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
         try:
-            config = GxAgentEnvVars()  # type: ignore[call-arg] # expecting env vars to be set
+            config = GxAgentEnvVars()
         except pydantic_v1.ValidationError as validation_err:
             raise RuntimeError(
                 generate_config_validation_error_text(validation_err)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import orjson
 import packaging.version
@@ -91,7 +91,7 @@ class TestEventHandler:
             (
                 "RunCheckpointEvent",
                 RunCheckpointEvent(
-                    checkpoint_id="3ecd140b-1dd5-41f4-bdb1-c8009d4f1940",
+                    checkpoint_id=UUID("3ecd140b-1dd5-41f4-bdb1-c8009d4f1940"),
                     datasource_names_to_asset_names={"Data Source name": {"Asset name"}},
                     organization_id=uuid4(),
                 ),
@@ -176,18 +176,18 @@ class TestEventHandlerRegistry:
     )
     def test_register_event_action(self, mocker: MockerFixture, version: str):
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
-        register_event_action(version, DummyEvent, DummyAction)
+        register_event_action(version, DummyEvent, DummyAction)  # type: ignore[arg-type]
         assert _EVENT_ACTION_MAP[version][DummyEvent.__name__] == DummyAction
 
     def test_register_event_action_already_registered(self, mocker: MockerFixture):
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
-        register_event_action("0", DummyEvent, DummyAction)
+        register_event_action("0", DummyEvent, DummyAction)  # type: ignore[arg-type]
         with pytest.raises(EventAlreadyRegisteredError):
-            register_event_action("0", DummyEvent, DummyAction)
+            register_event_action("0", DummyEvent, DummyAction)  # type: ignore[arg-type]
 
     def test_event_handler_gets_correct_event_action(self, mocker: MockerFixture, mock_context):
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
-        register_event_action("0", DummyEvent, DummyAction)
+        register_event_action("0", DummyEvent, DummyAction)  # type: ignore[arg-type]
         handler = EventHandler(context=mock_context)
 
         assert isinstance(handler.get_event_action(DummyEvent), DummyAction)  # type: ignore[arg-type]  # Dummy event only used in testing

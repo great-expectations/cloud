@@ -100,7 +100,7 @@ def test_running_draft_datasource_config_action_fails_for_unreachable_datasource
     )
     draft_datasource_config_event = DraftDatasourceConfigEvent(
         type="test_datasource_config",
-        config_id=datasource_id_for_connect_failure,
+        config_id=UUID(datasource_id_for_connect_failure),
         organization_id=UUID(org_id_env_var),
     )
     event_id = "64842838-c7bf-4038-8b27-c7a32eba4b7b"

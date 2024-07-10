@@ -335,7 +335,7 @@ class GXAgent:
         # ensure we have all required env variables, and provide a useful error if not
 
         try:
-            env_vars = GxAgentEnvVars()  # type: ignore[call-arg] # expecting env vars to be set
+            env_vars = GxAgentEnvVars()
         except pydantic_v1.ValidationError as validation_err:
             raise GXAgentConfigError(
                 generate_config_validation_error_text(validation_err)
