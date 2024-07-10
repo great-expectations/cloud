@@ -102,7 +102,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
 
     def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
         try:
-            config = GxAgentEnvVars()
+            config = GxAgentEnvVars()  # type: ignore[call-arg] # expecting env vars to be set
         except pydantic_v1.ValidationError as validation_err:
             raise RuntimeError(
                 generate_config_validation_error_text(validation_err)
