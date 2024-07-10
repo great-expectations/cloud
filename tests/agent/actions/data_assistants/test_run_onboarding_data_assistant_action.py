@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING
 
 import pytest
@@ -27,6 +28,7 @@ def onboarding_event():
         type="onboarding_data_assistant_request.received",
         datasource_name="test-datasource",
         data_asset_name="test-data-asset",
+        organization_id=uuid.uuid4(),
     )
 
 

@@ -40,7 +40,7 @@ from great_expectations_cloud.agent.message_service.subscriber import (
     SubscriberError,
 )
 from great_expectations_cloud.agent.models import (
-    AgentBaseModel,
+    AgentBaseExtraForbid,
     JobCompleted,
     JobStarted,
     JobStatus,
@@ -62,7 +62,7 @@ LOGGER.setLevel(logging.INFO)
 HandlerMap = Dict[str, OnMessageCallback]
 
 
-class GXAgentConfig(AgentBaseModel):
+class GXAgentConfig(AgentBaseExtraForbid):
     """GXAgent configuration.
     Attributes:
         queue: name of queue
@@ -91,7 +91,7 @@ def orjson_loads(v: bytes | bytearray | memoryview | str) -> Any:
     return orjson.loads(v)
 
 
-class Payload(AgentBaseModel):
+class Payload(AgentBaseExtraForbid):
     data: Dict[str, Any]  # noqa: UP006  # Python 3.8 requires Dict instead of dict
 
     class Config:
@@ -388,6 +388,7 @@ class GXAgent:
         session = create_session(access_token=self._config.gx_cloud_access_token)
         data = status.json()
         session.patch(agent_sessions_url, data=data)
+        LOGGER.info("Status updated", extra={"job_id": job_id, "status": str(status)})
 
     def _create_scheduled_job_and_set_started(self, event_context: EventContext) -> None:
         """Create a job in GX Cloud for scheduled events.
