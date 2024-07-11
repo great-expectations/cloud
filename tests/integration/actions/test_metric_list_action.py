@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import uuid
 from typing import TYPE_CHECKING
 
 import pytest
@@ -57,7 +58,7 @@ def query():
 
 @pytest.fixture
 def graphql_test_client(
-    org_id,
+    org_id_env_var,
 ):
     mercury_api_host = "localhost"
     mercury_api_port = 5000
@@ -75,7 +76,8 @@ def graphql_test_client(
             payload = json.dumps(payload_dict)
 
             res = self.client.post(
-                f"http://{mercury_api_host}:{mercury_api_port}/organizations" f"/{org_id}/graphql",
+                f"http://{mercury_api_host}:{mercury_api_port}/organizations"
+                f"/{org_id_env_var}/graphql",
                 data=payload,
                 headers=headers,
             )
@@ -113,6 +115,7 @@ def test_running_metric_list_action(
     query: str,
     local_mercury_db_datasource: PostgresDatasource,
     local_mercury_db_organizations_table_asset: TableAsset,
+    org_id_env_var: str,
 ):
     # MetricListEvent with only the Table Metrics requested
     metrics_list_event = RunMetricsListEvent(
@@ -124,6 +127,7 @@ def test_running_metric_list_action(
             MetricTypes.TABLE_COLUMNS,
             MetricTypes.TABLE_ROW_COUNT,
         ],
+        organization_id=uuid.UUID(org_id_env_var),
     )
 
     action = MetricListAction(context=context)

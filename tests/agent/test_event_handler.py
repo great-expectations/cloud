@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING, Any, Literal
-from uuid import uuid4
+from uuid import UUID, uuid4
 
+import orjson
 import packaging.version
 import pytest
 from great_expectations.experimental.metric_repository.metrics import (
@@ -54,6 +54,7 @@ def example_event():
         type="onboarding_data_assistant_request.received",
         datasource_name="abc",
         data_asset_name="boo",
+        organization_id=uuid4(),
     )
 
 
@@ -74,32 +75,39 @@ class TestEventHandler:
                 RunMissingnessDataAssistantEvent(
                     datasource_name="test-datasource",
                     data_asset_name="test-data-asset",
+                    organization_id=uuid4(),
                 ),
                 RunMissingnessDataAssistantAction,
             ),
             (
                 "RunOnboardingDataAssistantEvent",
                 RunOnboardingDataAssistantEvent(
-                    datasource_name="test-datasource", data_asset_name="test-data-asset"
+                    datasource_name="test-datasource",
+                    data_asset_name="test-data-asset",
+                    organization_id=uuid4(),
                 ),
                 RunOnboardingDataAssistantAction,
             ),
             (
                 "RunCheckpointEvent",
                 RunCheckpointEvent(
-                    checkpoint_id="3ecd140b-1dd5-41f4-bdb1-c8009d4f1940",
+                    checkpoint_id=UUID("3ecd140b-1dd5-41f4-bdb1-c8009d4f1940"),
                     datasource_names_to_asset_names={"Data Source name": {"Asset name"}},
+                    organization_id=uuid4(),
                 ),
                 RunCheckpointAction,
             ),
             (
                 "DraftDatasourceConfigEvent",
-                DraftDatasourceConfigEvent(config_id=uuid4()),
+                DraftDatasourceConfigEvent(
+                    config_id=uuid4(),
+                    organization_id=uuid4(),
+                ),
                 DraftDatasourceConfigAction,
             ),
             (
                 "ListTableNamesEvent",
-                ListTableNamesEvent(datasource_name="test-datasource"),
+                ListTableNamesEvent(datasource_name="test-datasource", organization_id=uuid4()),
                 ListTableNamesAction,
             ),
             (
@@ -108,6 +116,7 @@ class TestEventHandler:
                     datasource_name="test-datasource",
                     data_asset_name="test-data-asset",
                     metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+                    organization_id=uuid4(),
                 ),
                 MetricListAction,
             ),
@@ -167,18 +176,18 @@ class TestEventHandlerRegistry:
     )
     def test_register_event_action(self, mocker: MockerFixture, version: str):
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
-        register_event_action(version, DummyEvent, DummyAction)
+        register_event_action(version, DummyEvent, DummyAction)  # type: ignore[arg-type]
         assert _EVENT_ACTION_MAP[version][DummyEvent.__name__] == DummyAction
 
     def test_register_event_action_already_registered(self, mocker: MockerFixture):
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
-        register_event_action("0", DummyEvent, DummyAction)
+        register_event_action("0", DummyEvent, DummyAction)  # type: ignore[arg-type]
         with pytest.raises(EventAlreadyRegisteredError):
-            register_event_action("0", DummyEvent, DummyAction)
+            register_event_action("0", DummyEvent, DummyAction)  # type: ignore[arg-type]
 
     def test_event_handler_gets_correct_event_action(self, mocker: MockerFixture, mock_context):
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
-        register_event_action("0", DummyEvent, DummyAction)
+        register_event_action("0", DummyEvent, DummyAction)  # type: ignore[arg-type]
         handler = EventHandler(context=mock_context)
 
         assert isinstance(handler.get_event_action(DummyEvent), DummyAction)  # type: ignore[arg-type]  # Dummy event only used in testing
@@ -204,7 +213,7 @@ class TestEventHandlerRegistry:
 def test_parse_event_extra_field_is_ignored(example_event):
     event_dict = example_event.dict()
     event_dict["new_field"] = "surprise!"
-    serialized_bytes = json.dumps(dict(event_dict), indent=2).encode("utf-8")
+    serialized_bytes = orjson.dumps(event_dict)
     event = EventHandler.parse_event_from(serialized_bytes)
 
     # Extra field is ignored, which allows request to still be received - ZELDA-770
@@ -213,7 +222,7 @@ def test_parse_event_extra_field_is_ignored(example_event):
 
 def test_parse_event_missing_required_field(example_event):
     event_dict = example_event.dict(exclude={"datasource_name"})
-    serialized_bytes = json.dumps(dict(event_dict)).encode("utf-8")
+    serialized_bytes = orjson.dumps(event_dict)
     event = EventHandler.parse_event_from(serialized_bytes)
 
     assert event.type == "unknown_event"
@@ -222,7 +231,7 @@ def test_parse_event_missing_required_field(example_event):
 def test_parse_event_invalid_json(example_event):
     event_dict = example_event.dict()
     invalid_json_addition = "}}}}"
-    serialized_bytes = (json.dumps(dict(event_dict)) + invalid_json_addition).encode("utf-8")
+    serialized_bytes = (orjson.dumps(event_dict).decode() + invalid_json_addition).encode("utf-8")
     event = EventHandler.parse_event_from(serialized_bytes)
 
     assert event.type == "unknown_event"

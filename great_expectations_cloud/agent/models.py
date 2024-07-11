@@ -4,21 +4,28 @@ import uuid
 from typing import Any, Dict, Literal, Optional, Sequence, Set, Union
 from uuid import UUID
 
-from great_expectations.compatibility.pydantic import BaseModel, ConfigDict, Field
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
+from pydantic.v1 import BaseModel, Extra, Field
 from typing_extensions import Annotated
 
 from great_expectations_cloud.agent.exceptions import GXCoreError
 
 
-class AgentBaseModel(BaseModel):  # type: ignore[misc] # BaseSettings is has Any type
-    model_config = ConfigDict(extra="forbid")
+class AgentBaseExtraForbid(BaseModel):
+    class Config:
+        # 2024-03-04: ZEL-501 Strictly enforce models for handling outdated APIs
+        extra: str = Extra.forbid
 
 
-class EventBase(AgentBaseModel):
+class AgentBaseExtraIgnore(BaseModel):
+    class Config:
+        # Extra fields on Events are not strictly enforced
+        extra: str = Extra.ignore
+
+
+class EventBase(AgentBaseExtraIgnore):
     type: str
-    # ignoring extra fields in Action messages
-    model_config = ConfigDict(extra="ignore")
+    organization_id: Optional[UUID] = None
 
 
 class ScheduledEventBase(EventBase):
@@ -83,7 +90,7 @@ class DraftDatasourceConfigEvent(EventBase):
     config_id: UUID
 
 
-class UnknownEvent(EventBase):
+class UnknownEvent(AgentBaseExtraForbid):
     type: Literal["unknown_event"] = "unknown_event"
 
 
@@ -103,16 +110,16 @@ Event = Annotated[
 ]
 
 
-class CreatedResource(AgentBaseModel):
+class CreatedResource(AgentBaseExtraForbid):
     resource_id: str
     type: str
 
 
-class JobStarted(AgentBaseModel):
+class JobStarted(AgentBaseExtraForbid):
     status: Literal["started"] = "started"
 
 
-class JobCompleted(AgentBaseModel):
+class JobCompleted(AgentBaseExtraForbid):
     status: Literal["completed"] = "completed"
     success: bool
     created_resources: Sequence[CreatedResource] = []

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-import os
+import random
+import string
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
@@ -8,11 +9,11 @@ from unittest.mock import call
 
 import pytest
 import responses
-from great_expectations.compatibility.pydantic import (
-    ValidationError,
-)
 from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
+from pydantic.v1 import (
+    ValidationError,
+)
 from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
@@ -45,21 +46,21 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def set_required_env_vars(monkeypatch, org_id_env_var, token_env_var, local_mercury):
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", org_id_env_var)
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", token_env_var)
+def set_required_env_vars(monkeypatch, random_uuid, random_string, local_mercury):
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", random_uuid)
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", random_string)
     monkeypatch.setenv("GX_CLOUD_BASE_URL", local_mercury)
 
 
 @pytest.fixture
 def gx_agent_config(
-    set_required_env_vars, queue, connection_string, org_id_env_var, token_env_var, local_mercury
+    set_required_env_vars, queue, connection_string, random_uuid, random_string, local_mercury
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_access_token=token_env_var,
-        gx_cloud_organization_id=org_id_env_var,
+        gx_cloud_access_token=random_string,
+        gx_cloud_organization_id=random_uuid,
         gx_cloud_base_url=local_mercury,
     )
     return config
@@ -70,17 +71,17 @@ def gx_agent_config_missing_token(
     set_required_env_vars,
     queue,
     connection_string,
-    org_id_env_var,
-    token_env_var,
+    random_uuid,
+    random_string,
     local_mercury,
     monkeypatch,
 ) -> GXAgentConfig:
     monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
-    config = GXAgentConfig(
+    config = GXAgentConfig(  # type: ignore[call-arg]
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_organization_id=org_id_env_var,
-        token=token_env_var,
+        gx_cloud_organization_id=random_uuid,
+        token=random_string,
         gx_cloud_base_url=local_mercury,
     )
     return config
@@ -91,17 +92,17 @@ def gx_agent_config_missing_org_id(
     set_required_env_vars,
     queue,
     connection_string,
-    org_id_env_var,
-    token_env_var,
+    random_uuid,
+    random_string,
     local_mercury,
     monkeypatch,
 ) -> GXAgentConfig:
     monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
-    config = GXAgentConfig(
+    config = GXAgentConfig(  # type: ignore[call-arg]
         queue=queue,
         connection_string=connection_string,
-        gx_cloud_access_token=token_env_var,
-        org_id=org_id_env_var,
+        gx_cloud_access_token=random_string,
+        org_id=random_uuid,
         gx_cloud_base_url=local_mercury,
     )
     return config
@@ -113,13 +114,13 @@ def local_mercury():
 
 
 @pytest.fixture
-def org_id_env_var():
-    return os.environ.get("GX_CLOUD_ORGANIZATION_ID")
+def random_uuid() -> str:
+    return str(uuid.uuid4())
 
 
 @pytest.fixture
-def token_env_var():
-    return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
+def random_string() -> str:
+    return "".join(random.choices(string.ascii_letters + string.digits, k=20))
 
 
 @pytest.fixture
@@ -149,12 +150,12 @@ def event_handler(mocker):
 
 
 @pytest.fixture
-def queue():
+def queue() -> str:
     return "3ee9791c-4ea6-479d-9b05-98217e70d341"
 
 
 @pytest.fixture
-def connection_string():
+def connection_string() -> str:
     return "amqps://user:pass@great_expectations.io:5671"
 
 
@@ -175,7 +176,7 @@ def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config):
     assert agent._config == gx_agent_config
 
 
-def test_gx_agent_invalid_token(monkeypatch):
+def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "invalid_token")
     with pytest.raises(gx_exception.GXCloudError):
         GXAgent()
@@ -278,7 +279,9 @@ def test_gx_agent_updates_cloud_on_job_status(
     async def redeliver_message():
         return None
 
-    event = RunOnboardingDataAssistantEvent(datasource_name="test-ds", data_asset_name="test-da")
+    event = RunOnboardingDataAssistantEvent(
+        datasource_name="test-ds", data_asset_name="test-da", organization_id=uuid.uuid4()
+    )
 
     end_test = False
 
@@ -348,6 +351,7 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
         datasource_names_to_asset_names={},
         splitter_options=None,
         schedule_id=schedule_id,
+        organization_id=uuid.uuid4(),
     )
     payload = Payload(
         data={
@@ -411,28 +415,32 @@ def test_invalid_env_variables_missing_org_id(set_required_env_vars, monkeypatch
         GXAgent()
 
 
-def test_invalid_config_agent_missing_token(set_required_env_vars, monkeypatch):
-    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
-    with pytest.raises(ValidationError):
-        GXAgentConfig(
+def test_invalid_config_agent_missing_token(
+    connection_string: str, queue: str, random_uuid: str, local_mercury: str
+):
+    with pytest.raises(ValidationError) as exc_info:
+        GXAgentConfig(  # type: ignore[call-arg]
             queue=queue,
-            connection_string=connection_string,
-            gx_cloud_organization_id=org_id_env_var,
-            token=token_env_var,
-            gx_cloud_base_url=local_mercury,
+            connection_string=connection_string,  # type: ignore[arg-type]
+            gx_cloud_organization_id=random_uuid,
+            gx_cloud_base_url=local_mercury,  # type: ignore[arg-type]
         )
+    error_locs = [error["loc"] for error in exc_info.value.errors()]
+    assert "gx_cloud_access_token" in error_locs[0]
 
 
-def test_invalid_config_agent_missing_org_id(set_required_env_vars, monkeypatch):
-    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
-    with pytest.raises(ValidationError):
-        GXAgentConfig(
+def test_invalid_config_agent_missing_org_id(
+    connection_string: str, queue: str, local_mercury: str, random_string: str
+):
+    with pytest.raises(ValidationError) as exc_info:
+        GXAgentConfig(  # type: ignore[call-arg]
             queue=queue,
-            connection_string=connection_string,
-            gx_cloud_organization_id=org_id_env_var,
-            token=token_env_var,
-            gx_cloud_base_url=local_mercury,
+            connection_string=connection_string,  # type: ignore[arg-type]
+            gx_cloud_access_token=random_string,
+            gx_cloud_base_url=local_mercury,  # type: ignore[arg-type]
         )
+    error_locs = [error["loc"] for error in exc_info.value.errors()]
+    assert "gx_cloud_organization_id" in error_locs[0]
 
 
 def test_custom_user_agent(
@@ -492,6 +500,7 @@ def test_correlation_id_header(
     ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
     fake_subscriber: FakeSubscriber,
+    random_uuid: str,
 ):
     """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
     agent_job_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
@@ -501,10 +510,26 @@ def test_correlation_id_header(
     # seed the fake queue with an event that will be consumed by the agent
     fake_subscriber.test_queue.extendleft(
         [
-            (DraftDatasourceConfigEvent(config_id=datasource_config_id_1), agent_job_ids[0]),
-            (DraftDatasourceConfigEvent(config_id=datasource_config_id_2), agent_job_ids[1]),
             (
-                RunCheckpointEvent(checkpoint_id=checkpoint_id, datasource_names_to_asset_names={}),
+                DraftDatasourceConfigEvent(
+                    config_id=datasource_config_id_1,
+                    organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
+                ),
+                agent_job_ids[0],
+            ),
+            (
+                DraftDatasourceConfigEvent(
+                    config_id=datasource_config_id_2,
+                    organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
+                ),
+                agent_job_ids[1],
+            ),
+            (
+                RunCheckpointEvent(
+                    checkpoint_id=checkpoint_id,
+                    datasource_names_to_asset_names={},
+                    organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
+                ),
                 agent_job_ids[2],
             ),
         ]

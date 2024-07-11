@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -27,7 +28,8 @@ run_checkpoint_action_class_and_event = (
     RunCheckpointEvent(
         type="run_checkpoint_request",
         datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
-        checkpoint_id="5f3814d6-a2e2-40f9-ba75-87ddf485c3a8",
+        checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
+        organization_id=uuid.uuid4(),
     ),
 )
 run_scheduled_checkpoint_action_class_and_event = (
@@ -35,8 +37,9 @@ run_scheduled_checkpoint_action_class_and_event = (
     RunScheduledCheckpointEvent(
         type="run_scheduled_checkpoint.received",
         datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
-        checkpoint_id="5f3814d6-a2e2-40f9-ba75-87ddf485c3a8",
+        checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
         schedule_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
+        organization_id=uuid.uuid4(),
     ),
 )
 

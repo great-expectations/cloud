@@ -16,23 +16,27 @@ def cloud_base_url() -> str:
     return "http://localhost:5000"
 
 
-@pytest.fixture
-def org_id():
-    return os.environ.get("GX_CLOUD_ORGANIZATION_ID")
-
-
-@pytest.fixture
-def token():
-    return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
+@pytest.fixture(scope="module")
+def org_id_env_var() -> str:
+    org_id = os.environ.get("GX_CLOUD_ORGANIZATION_ID")
+    assert org_id, "No GX_CLOUD_ORGANIZATION_ID env var"
+    return org_id
 
 
 @pytest.fixture(scope="module")
-def context() -> CloudDataContext:
+def token_env_var() -> str:
+    gx_token = os.environ.get("GX_CLOUD_ACCESS_TOKEN")
+    assert gx_token, "No GX_CLOUD_ACCESS_TOKEN env var"
+    return gx_token
+
+
+@pytest.fixture(scope="module")
+def context(org_id_env_var: str, token_env_var: str) -> CloudDataContext:
     context = gx.get_context(  # type: ignore[attr-defined] # TODO: fix this
         mode="cloud",
         cloud_base_url=os.environ.get("GX_CLOUD_BASE_URL"),
-        cloud_organization_id=os.environ.get("GX_CLOUD_ORGANIZATION_ID"),
-        cloud_access_token=os.environ.get("GX_CLOUD_ACCESS_TOKEN"),
+        cloud_organization_id=org_id_env_var,
+        cloud_access_token=token_env_var,
     )
     assert isinstance(context, CloudDataContext)
     return context

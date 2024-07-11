@@ -13,12 +13,12 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Final
 
 import orjson
 from great_expectations import get_context  # type: ignore[attr-defined] # TODO: fix this
-from great_expectations.compatibility import pydantic
-from great_expectations.compatibility.pydantic import AmqpDsn, AnyUrl
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from packaging.version import Version
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
+from pydantic import v1 as pydantic_v1
+from pydantic.v1 import AmqpDsn, AnyUrl
 from tenacity import after_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from great_expectations_cloud.agent.config import (
@@ -40,7 +40,7 @@ from great_expectations_cloud.agent.message_service.subscriber import (
     SubscriberError,
 )
 from great_expectations_cloud.agent.models import (
-    AgentBaseModel,
+    AgentBaseExtraForbid,
     JobCompleted,
     JobStarted,
     JobStatus,
@@ -62,7 +62,7 @@ LOGGER.setLevel(logging.INFO)
 HandlerMap = Dict[str, OnMessageCallback]
 
 
-class GXAgentConfig(AgentBaseModel):
+class GXAgentConfig(AgentBaseExtraForbid):
     """GXAgent configuration.
     Attributes:
         queue: name of queue
@@ -72,7 +72,7 @@ class GXAgentConfig(AgentBaseModel):
     queue: str
     connection_string: AmqpDsn
     # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
+    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL  # type: ignore[assignment] # pydantic will coerce
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
 
@@ -91,7 +91,7 @@ def orjson_loads(v: bytes | bytearray | memoryview | str) -> Any:
     return orjson.loads(v)
 
 
-class Payload(AgentBaseModel):
+class Payload(AgentBaseExtraForbid):
     data: Dict[str, Any]  # noqa: UP006  # Python 3.8 requires Dict instead of dict
 
     class Config:
@@ -336,7 +336,7 @@ class GXAgent:
 
         try:
             env_vars = GxAgentEnvVars()
-        except pydantic.ValidationError as validation_err:
+        except pydantic_v1.ValidationError as validation_err:
             raise GXAgentConfigError(
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
@@ -368,7 +368,7 @@ class GXAgent:
                 gx_cloud_organization_id=env_vars.gx_cloud_organization_id,
                 gx_cloud_access_token=env_vars.gx_cloud_access_token,
             )
-        except pydantic.ValidationError as validation_err:
+        except pydantic_v1.ValidationError as validation_err:
             raise GXAgentConfigError(
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
@@ -388,6 +388,7 @@ class GXAgent:
         session = create_session(access_token=self._config.gx_cloud_access_token)
         data = status.json()
         session.patch(agent_sessions_url, data=data)
+        LOGGER.info("Status updated", extra={"job_id": job_id, "status": str(status)})
 
     def _create_scheduled_job_and_set_started(self, event_context: EventContext) -> None:
         """Create a job in GX Cloud for scheduled events.
