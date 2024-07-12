@@ -290,6 +290,7 @@ class GXAgent:
                     extra={
                         "event_type": event_context.event.type,
                         "correlation_id": event_context.correlation_id,
+                        "job_duration_milliseconds": result.job_duration_milliseconds,
                     },
                 )
         else:
