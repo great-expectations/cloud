@@ -213,8 +213,11 @@ class GXAgent:
         # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
         self._set_http_session_headers(correlation_id=event_context.correlation_id)
 
-        # send this message to a thread for processing
-        self._current_task = self._executor.submit(self._handle_event, event_context=event_context)
+        self._current_task = self._executor.submit(
+            self._handle_event,
+            event_context=event_context,
+            data_context=self._get_data_context(event_context=event_context),
+        )
 
         if self._current_task is not None:
             # add a callback for when the thread exits and pass it the event context
@@ -223,7 +226,13 @@ class GXAgent:
             )
             self._current_task.add_done_callback(on_exit_callback)
 
-    def _handle_event(self, event_context: EventContext) -> ActionResult:
+    def _get_data_context(self, event_context: EventContext) -> CloudDataContext:
+        """Helper method to get a DataContext Agent. Overriden in GX-Runner."""
+        return self._context
+
+    def _handle_event(
+        self, event_context: EventContext, data_context: CloudDataContext
+    ) -> ActionResult:
         """Pass events to EventHandler.
 
         Callback passed to Subscriber.consume which forwards events to
@@ -246,7 +255,7 @@ class GXAgent:
                 "correlation_id": event_context.correlation_id,
             },
         )
-        handler = EventHandler(context=self._context)
+        handler = EventHandler(context=data_context)
         # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
         result = handler.handle_event(event=event_context.event, id=event_context.correlation_id)
         return result
