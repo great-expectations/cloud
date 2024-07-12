@@ -9,16 +9,14 @@ from great_expectations.exceptions import GXCloudError
 from pydantic import v1 as pydantic_v1
 from typing_extensions import override
 
-from great_expectations_cloud.agent.actions.agent_action import (
-    ActionResult,
-    AgentAction,
-)
+from great_expectations_cloud.agent.actions.agent_action import AgentAction
 from great_expectations_cloud.agent.config import (
     GxAgentEnvVars,
     generate_config_validation_error_text,
 )
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
+    ActionResult,
     ListTableNamesEvent,
 )
 

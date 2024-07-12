@@ -5,12 +5,10 @@ from typing import Final
 
 from typing_extensions import override
 
-from great_expectations_cloud.agent.actions.agent_action import (
-    ActionResult,
-    AgentAction,
-)
+from great_expectations_cloud.agent.actions.agent_action import AgentAction
 from great_expectations_cloud.agent.agent_warnings import warn_unknown_event
 from great_expectations_cloud.agent.models import (
+    ActionResult,
     UnknownEvent,
 )
 

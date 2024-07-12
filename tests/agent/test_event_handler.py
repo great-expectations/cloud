@@ -12,7 +12,6 @@ from great_expectations.experimental.metric_repository.metrics import (
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import (
-    ActionResult,
     AgentAction,
     DraftDatasourceConfigAction,
     ListTableNamesAction,
@@ -31,6 +30,7 @@ from great_expectations_cloud.agent.event_handler import (
     register_event_action,
 )
 from great_expectations_cloud.agent.models import (
+    ActionResult,
     DraftDatasourceConfigEvent,
     Event,
     EventBase,

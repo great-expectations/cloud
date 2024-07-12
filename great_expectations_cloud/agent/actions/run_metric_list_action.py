@@ -16,9 +16,10 @@ from great_expectations.experimental.metric_repository.metric_repository import 
 )
 from typing_extensions import override
 
-from great_expectations_cloud.agent.actions import ActionResult, AgentAction
+from great_expectations_cloud.agent.actions import AgentAction
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
+    ActionResult,
     CreatedResource,
     RunMetricsListEvent,
 )

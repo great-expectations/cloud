@@ -143,3 +143,10 @@ def build_failed_job_completed_status(error: BaseException) -> JobCompleted:
         status = JobCompleted(success=False, error_stack_trace=str(error))
 
     return status
+
+
+class ActionResult(BaseModel):
+    id: str
+    type: str
+    created_resources: Sequence[CreatedResource]
+    job_duration_milliseconds: Optional[float] = None

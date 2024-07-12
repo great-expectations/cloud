@@ -1,21 +1,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Generic, Sequence, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
-from pydantic.v1 import BaseModel
-
-from great_expectations_cloud.agent.models import CreatedResource, Event
+from great_expectations_cloud.agent.models import ActionResult, Event
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
-
-
-class ActionResult(BaseModel):
-    id: str
-    type: str
-    created_resources: Sequence[CreatedResource]
-    job_duration_milliseconds: float | None = None
 
 
 _EventT = TypeVar("_EventT", bound=Event)

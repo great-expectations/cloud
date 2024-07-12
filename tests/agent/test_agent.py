@@ -17,7 +17,6 @@ from pydantic.v1 import (
 from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
-from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.agent import GXAgentConfig, GXAgentConfigError, Payload
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
@@ -28,6 +27,7 @@ from great_expectations_cloud.agent.message_service.subscriber import (
     SubscriberError,
 )
 from great_expectations_cloud.agent.models import (
+    ActionResult,
     DraftDatasourceConfigEvent,
     JobCompleted,
     JobStarted,

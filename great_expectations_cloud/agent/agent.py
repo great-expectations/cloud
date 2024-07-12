@@ -40,6 +40,7 @@ from great_expectations_cloud.agent.message_service.subscriber import (
     SubscriberError,
 )
 from great_expectations_cloud.agent.models import (
+    ActionResult,
     AgentBaseExtraForbid,
     JobCompleted,
     JobStarted,
@@ -54,7 +55,6 @@ if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
     from typing_extensions import Self
 
-    from great_expectations_cloud.agent.actions.agent_action import ActionResult
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 # TODO Set in log dict

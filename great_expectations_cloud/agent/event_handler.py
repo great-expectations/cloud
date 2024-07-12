@@ -13,6 +13,7 @@ from pydantic import v1 as pydantic_v1
 
 from great_expectations_cloud.agent.actions.unknown import UnknownEventAction
 from great_expectations_cloud.agent.models import (
+    ActionResult,
     Event,
     UnknownEvent,
 )
@@ -20,7 +21,7 @@ from great_expectations_cloud.agent.models import (
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
-    from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
+    from great_expectations_cloud.agent.actions.agent_action import AgentAction
 
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
