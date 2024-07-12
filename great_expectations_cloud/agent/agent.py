@@ -244,6 +244,7 @@ class GXAgent:
             extra={
                 "event_type": event_context.event.type,
                 "correlation_id": event_context.correlation_id,
+                "organization_id": self._config.gx_cloud_organization_id,
             },
         )
         handler = EventHandler(context=self._context)
@@ -278,6 +279,7 @@ class GXAgent:
                     extra={
                         "event_type": event_context.event.type,
                         "id": event_context.correlation_id,
+                        "organization_id": self._config.gx_cloud_organization_id,
                     },
                 )
             else:
@@ -291,6 +293,7 @@ class GXAgent:
                         "event_type": event_context.event.type,
                         "correlation_id": event_context.correlation_id,
                         "job_duration_milliseconds": result.job_duration_milliseconds,
+                        "organization_id": self._config.gx_cloud_organization_id,
                     },
                 )
         else:
