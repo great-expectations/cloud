@@ -15,7 +15,7 @@ class ActionResult(BaseModel):
     id: str
     type: str
     created_resources: Sequence[CreatedResource]
-    job_duration_milliseconds: int
+    job_duration_milliseconds: float
 
 
 _EventT = TypeVar("_EventT", bound=Event)
