@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from great_expectations_cloud.agent.actions.agent_action import (
     AgentAction,
-    CreatedResource,
 )
 
 # Import all actions to register them:
