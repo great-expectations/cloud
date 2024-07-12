@@ -216,7 +216,7 @@ class GXAgent:
         self._current_task = self._executor.submit(
             self._handle_event,
             event_context=event_context,
-            data_context=self._get_data_context(event_context=event_context),
+            data_context=self.get_data_context(event_context=event_context),
         )
 
         if self._current_task is not None:
@@ -226,7 +226,7 @@ class GXAgent:
             )
             self._current_task.add_done_callback(on_exit_callback)
 
-    def _get_data_context(self, event_context: EventContext) -> CloudDataContext:
+    def get_data_context(self, event_context: EventContext) -> CloudDataContext:
         """Helper method to get a DataContext Agent. Overriden in GX-Runner."""
         return self._context
 
