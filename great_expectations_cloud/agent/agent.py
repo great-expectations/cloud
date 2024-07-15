@@ -75,7 +75,6 @@ class GXAgentConfig(AgentBaseExtraForbid):
     gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL  # type: ignore[assignment] # pydantic will coerce
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
-    service_name: str
 
 
 def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
@@ -344,7 +343,6 @@ class GXAgent:
             self._correlation_ids.clear()
         return should_reject
 
-    # todo: remove this method in favor of get_config
     @classmethod
     def _get_config(cls) -> GXAgentConfig:
         """Construct GXAgentConfig."""
