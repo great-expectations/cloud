@@ -15,6 +15,7 @@ from typing_extensions import override
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 
 LOGGER = logging.getLogger(__name__)
+
 DEFAULT_LOG_FILE: Final[str] = "logfile"
 DEFAULT_LOG_DIR = "logs"
 SERVICE_NAME: Final[str] = GxAgentEnvVars().service_name
