@@ -4,17 +4,14 @@ from typing import TYPE_CHECKING
 
 from typing_extensions import override
 
-from great_expectations_cloud.agent.actions.agent_action import AgentAction
+from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
 from great_expectations_cloud.agent.actions.data_assistants.utils import (
     DataAssistantType,
     build_action_result,
     build_batch_request,
 )
 from great_expectations_cloud.agent.event_handler import register_event_action
-from great_expectations_cloud.agent.models import (
-    ActionResult,
-    RunOnboardingDataAssistantEvent,
-)
+from great_expectations_cloud.agent.models import RunOnboardingDataAssistantEvent
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
