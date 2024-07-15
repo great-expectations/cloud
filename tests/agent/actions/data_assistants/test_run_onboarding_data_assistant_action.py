@@ -9,10 +9,10 @@ from great_expectations.datasource.fluent import Datasource
 from great_expectations.exceptions import DataContextError, StoreBackendError
 
 from great_expectations_cloud.agent.actions import (
+    CreatedResource,
     RunOnboardingDataAssistantAction,
 )
 from great_expectations_cloud.agent.models import (
-    CreatedResource,
     RunOnboardingDataAssistantEvent,
 )
 

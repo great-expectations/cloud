@@ -8,10 +8,10 @@ from great_expectations.datasource.fluent import Datasource
 from great_expectations.exceptions import StoreBackendError
 
 from great_expectations_cloud.agent.actions import (
+    CreatedResource,
     RunMissingnessDataAssistantAction,
 )
 from great_expectations_cloud.agent.models import (
-    CreatedResource,
     RunMissingnessDataAssistantEvent,
 )
 
