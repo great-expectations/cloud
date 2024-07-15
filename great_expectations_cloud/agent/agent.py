@@ -390,50 +390,6 @@ class GXAgent:
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
 
-    def get_config() -> GXAgentConfig:
-        """Construct GXAgentConfig."""
-
-        # ensure we have all required env variables, and provide a useful error if not
-
-        try:
-            env_vars = GxAgentEnvVars()
-        except pydantic_v1.ValidationError as validation_err:
-            raise GXAgentConfigError(
-                generate_config_validation_error_text(validation_err)
-            ) from validation_err
-
-        # obtain the broker url and queue name from Cloud
-        agent_sessions_url = (
-            f"{env_vars.gx_cloud_base_url}/organizations/"
-            f"{env_vars.gx_cloud_organization_id}/agent-sessions"
-        )
-
-        session = create_session(access_token=env_vars.gx_cloud_access_token)
-
-        response = session.post(agent_sessions_url)
-        if response.ok is not True:
-            raise GXAgentError(  # noqa: TRY003 # TODO: use AuthenticationError
-                "Unable to authenticate to GX Cloud. Please check your credentials."
-            )
-
-        json_response = response.json()
-        queue = json_response["queue"]
-        connection_string = json_response["connection_string"]
-
-        try:
-            # pydantic will coerce the url to the correct type
-            return GXAgentConfig(
-                queue=queue,
-                connection_string=connection_string,
-                gx_cloud_base_url=env_vars.gx_cloud_base_url,
-                gx_cloud_organization_id=env_vars.gx_cloud_organization_id,
-                gx_cloud_access_token=env_vars.gx_cloud_access_token,
-            )
-        except pydantic_v1.ValidationError as validation_err:
-            raise GXAgentConfigError(
-                generate_config_validation_error_text(validation_err)
-            ) from validation_err
-
     def _update_status(self, job_id: str, status: JobStatus) -> None:
         """Update GX Cloud on the status of a job.
 
