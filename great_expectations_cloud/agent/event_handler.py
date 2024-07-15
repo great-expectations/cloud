@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from datetime import datetime, timezone
 from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, Final
 
@@ -72,10 +73,13 @@ class EventHandler:
         return action_class(context=self._context)
 
     def handle_event(self, event: Event, id: str) -> ActionResult:
+        start_time = datetime.now(tz=timezone.utc)
         """Transform an Event into an ActionResult."""
         action = self.get_event_action(event=event)
         LOGGER.info(f"Handling event: {event.type} -> {action.__class__.__name__}")
         action_result = action.run(event=event, id=id)
+        end_time = datetime.now(tz=timezone.utc)
+        action_result.job_duration = end_time - start_time
         return action_result
 
     @classmethod
