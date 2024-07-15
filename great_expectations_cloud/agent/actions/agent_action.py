@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Generic, Sequence, TypeVar
+from typing import TYPE_CHECKING, Generic, Optional, Sequence, TypeVar
 
 from pydantic.v1 import BaseModel
 
@@ -15,7 +15,7 @@ class ActionResult(BaseModel):
     id: str
     type: str
     created_resources: Sequence[CreatedResource]
-    job_duration_milliseconds: float | None = None
+    job_duration_milliseconds: Optional[float] = None  # noqa: UP007  # Python 3.8 doesn't support `X | Y` for type annotations
 
 
 _EventT = TypeVar("_EventT", bound=Event)
