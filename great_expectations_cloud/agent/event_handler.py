@@ -79,7 +79,7 @@ class EventHandler:
         LOGGER.info(f"Handling event: {event.type} -> {action.__class__.__name__}")
         action_result = action.run(event=event, id=id)
         end_time = datetime.now(tz=timezone.utc)
-        action_result.job_duration_milliseconds = (end_time - start_time).total_seconds() * 1000
+        action_result.job_duration = end_time - start_time
         return action_result
 
     @classmethod

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, Optional, Sequence, TypeVar
 
@@ -15,7 +16,7 @@ class ActionResult(BaseModel):
     id: str
     type: str
     created_resources: Sequence[CreatedResource]
-    job_duration_milliseconds: Optional[float] = None  # noqa: UP007  # Python 3.8 doesn't support `X | Y` for type annotations
+    job_duration: Optional[datetime.timedelta] = None  # noqa: UP007  # Python 3.8 doesn't support `X | Y` for type annotation
 
 
 _EventT = TypeVar("_EventT", bound=Event)
