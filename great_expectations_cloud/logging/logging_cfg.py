@@ -12,11 +12,13 @@ from typing import Any, ClassVar, Final, Literal
 
 from typing_extensions import override
 
+from great_expectations_cloud.agent import GXAgent
+
 LOGGER = logging.getLogger(__name__)
 
 DEFAULT_LOG_FILE: Final[str] = "logfile"
 DEFAULT_LOG_DIR = "logs"
-SERVICE_NAME: Final[str] = "gx-agent"
+SERVICE_NAME: Final[str] = GXAgent.get_config().service_name
 DEFAULT_FILE_LOGGING_LEVEL: Final[int] = logging.DEBUG
 
 # Consider moving to file
