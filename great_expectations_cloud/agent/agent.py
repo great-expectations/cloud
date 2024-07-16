@@ -433,10 +433,10 @@ class GXAgent:
         session.post(agent_sessions_url, data=payload.json())
         LOGGER.info("Created scheduled job and set started", extra=data)
 
-    def get_header_name(self):
+    def get_header_name(self) -> type[HeaderName]:
         return HeaderName
 
-    def get_user_agent_header(self):
+    def get_user_agent_header(self) -> str:
         return USER_AGENT_HEADER
 
     def _set_http_session_headers(
