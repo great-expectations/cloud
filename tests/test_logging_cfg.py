@@ -10,6 +10,7 @@ from typing import Any
 import freezegun
 import pytest
 
+# todo: fix this. this import is erroring because the env variables for org ID and token aren't set at this point
 from great_expectations_cloud.logging.logging_cfg import (
     DEFAULT_LOG_DIR,
     DEFAULT_LOG_FILE,
