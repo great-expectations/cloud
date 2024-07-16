@@ -91,9 +91,11 @@ def build_action_result(
     )
     context.add_expectation_suite(expectation_suite=expectation_suite)
 
-    checkpoint_config = {
-        "name": checkpoint_name,
-        "validations": [
+    checkpoint = context.add_checkpoint(
+        name=checkpoint_name,
+        config_version=1.0,
+        class_name="Checkpoint",
+        validations=[
             {
                 "expectation_suite_name": expectation_suite_name,
                 "expectation_suite_ge_cloud_id": expectation_suite.ge_cloud_id,
@@ -103,11 +105,7 @@ def build_action_result(
                 },
             }
         ],
-        "config_version": 1,
-        "class_name": "Checkpoint",
-    }
-
-    checkpoint = context.add_checkpoint(**checkpoint_config)
+    )
 
     expectation_suite_id = expectation_suite.ge_cloud_id
     checkpoint_id = checkpoint.ge_cloud_id
