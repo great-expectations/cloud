@@ -365,7 +365,6 @@ class GXAgent:
             f"{env_vars.gx_cloud_organization_id}/agent-sessions"
         )
 
-        # here is this
         session = create_session(access_token=env_vars.gx_cloud_access_token)
 
         response = session.post(agent_sessions_url)
