@@ -433,6 +433,12 @@ class GXAgent:
         session.post(agent_sessions_url, data=payload.json())
         LOGGER.info("Created scheduled job and set started", extra=data)
 
+    def get_header_name(self):
+        return HeaderName
+
+    def get_user_agent_header(self):
+        return USER_AGENT_HEADER
+
     def _set_http_session_headers(
         self, data_context: CloudDataContext, correlation_id: str | None = None
     ) -> None:
@@ -448,6 +454,9 @@ class GXAgent:
         from great_expectations.core import http
         from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend
 
+        header_name = self.get_header_name()
+        user_agent_header = self.get_user_agent_header()
+
         if Version(__version__) > Version(
             "0.19"  # using 0.19 instead of 1.0 to account for pre-releases
         ):
@@ -455,8 +464,8 @@ class GXAgent:
             LOGGER.info(
                 "Unable to set header for requests to GX Cloud",
                 extra={
-                    "user_agent": HeaderName.USER_AGENT,
-                    "agent_job_id": HeaderName.AGENT_JOB_ID,
+                    "user_agent": header_name.USER_AGENT,
+                    "agent_job_id": header_name.AGENT_JOB_ID,
                 },
             )
             return
@@ -465,9 +474,9 @@ class GXAgent:
         LOGGER.debug(
             "Setting session headers for GX Cloud",
             extra={
-                "user_agent": HeaderName.USER_AGENT,
+                "user_agent": header_name.USER_AGENT,
                 "agent_version": agent_version,
-                "job_id": HeaderName.AGENT_JOB_ID,
+                "job_id": header_name.AGENT_JOB_ID,
                 "correlation_id": correlation_id,
             },
         )
@@ -477,7 +486,7 @@ class GXAgent:
             for store in data_context.stores.values():
                 backend = store._store_backend
                 if isinstance(backend, GXCloudStoreBackend):
-                    backend._session.headers[HeaderName.AGENT_JOB_ID] = correlation_id
+                    backend._session.headers[header_name.AGENT_JOB_ID] = correlation_id
 
         def _update_headers_agent_patch(
             session: requests.Session, access_token: str
@@ -489,10 +498,10 @@ class GXAgent:
                 "Content-Type": "application/vnd.api+json",
                 "Authorization": f"Bearer {access_token}",
                 "Gx-Version": __version__,
-                HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{agent_version}",
+                header_name.USER_AGENT: f"{user_agent_header}/{agent_version}",
             }
             if correlation_id:
-                headers[HeaderName.AGENT_JOB_ID] = correlation_id
+                headers[header_name.AGENT_JOB_ID] = correlation_id
             session.headers.update(headers)
             return session
 
