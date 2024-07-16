@@ -118,7 +118,6 @@ class GXAgent:
         print(f"GX Agent version: {agent_version}")
         print(f"Great Expectations version: {great_expectations_version}")
         print("Initializing the GX Agent.")
-        self._set_http_session_headers()
         self._config = self._get_config()
         print("Loading a DataContext - this might take a moment.")
 
@@ -126,8 +125,9 @@ class GXAgent:
             # suppress warnings about GX version
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
             self._context: CloudDataContext = get_context(cloud_mode=True)
-
         print("DataContext is ready.")
+
+        self._set_http_session_headers(data_context=self._context)
 
         # Create a thread pool with a single worker, so we can run long-lived
         # GX processes and maintain our connection to the broker. Note that
@@ -210,13 +210,16 @@ class GXAgent:
             self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
             return
 
+        data_context = self.get_data_context(event_context=event_context)
         # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
-        self._set_http_session_headers(correlation_id=event_context.correlation_id)
+        self._set_http_session_headers(
+            correlation_id=event_context.correlation_id, data_context=data_context
+        )
 
         self._current_task = self._executor.submit(
             self._handle_event,
             event_context=event_context,
-            data_context=self.get_data_context(event_context=event_context),
+            data_context=data_context,
         )
 
         if self._current_task is not None:
@@ -362,6 +365,7 @@ class GXAgent:
             f"{env_vars.gx_cloud_organization_id}/agent-sessions"
         )
 
+        # here is this
         session = create_session(access_token=env_vars.gx_cloud_access_token)
 
         response = session.post(agent_sessions_url)
@@ -430,7 +434,9 @@ class GXAgent:
         session.post(agent_sessions_url, data=payload.json())
         LOGGER.info("Created scheduled job and set started", extra=data)
 
-    def _set_http_session_headers(self, correlation_id: str | None = None) -> None:
+    def _set_http_session_headers(
+        self, data_context: CloudDataContext, correlation_id: str | None = None
+    ) -> None:
         """
         Set the the session headers for requests to GX Cloud.
         In particular, set the User-Agent header to identify the GX Agent and the correlation_id as
@@ -469,7 +475,7 @@ class GXAgent:
 
         if correlation_id:
             # OSS doesn't use the same session for all requests, so we need to set the header for each store
-            for store in self._context.stores.values():
+            for store in data_context.stores.values():
                 backend = store._store_backend
                 if isinstance(backend, GXCloudStoreBackend):
                     backend._session.headers[HeaderName.AGENT_JOB_ID] = correlation_id
