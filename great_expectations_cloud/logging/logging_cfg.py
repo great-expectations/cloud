@@ -18,7 +18,9 @@ LOGGER = logging.getLogger(__name__)
 
 DEFAULT_LOG_FILE: Final[str] = "logfile"
 DEFAULT_LOG_DIR = "logs"
-SERVICE_NAME: Final[str] = GxAgentEnvVars().service_name
+env_vars = GxAgentEnvVars()
+SERVICE_NAME = env_vars.service_name
+
 DEFAULT_FILE_LOGGING_LEVEL: Final[int] = logging.DEBUG
 
 # Consider moving to file

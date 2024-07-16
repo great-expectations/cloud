@@ -3,13 +3,15 @@ from __future__ import annotations
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from pydantic.v1 import AnyUrl, BaseSettings, ValidationError
 
+from great_expectations_cloud.agent.constants import SERVICE_NAME
+
 
 class GxAgentEnvVars(BaseSettings):
     # pydantic will coerce this string to AnyUrl type
     gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL  # type: ignore[assignment]
-    gx_cloud_organization_id: str = ""
-    gx_cloud_access_token: str = ""
-    service_name: str = "gx-agent"
+    service_name: str = SERVICE_NAME
+    gx_cloud_organization_id: str
+    gx_cloud_access_token: str
 
     def __init__(self, **overrides: str | AnyUrl) -> None:
         """

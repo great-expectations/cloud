@@ -9,6 +9,7 @@ class HeaderName(str, enum.Enum):
     AGENT_JOB_ID = "Agent-Job-Id"
 
 
-USER_AGENT_HEADER: Final = "gx-agent"
+USER_AGENT_HEADER: Final[str] = "gx-agent"
+SERVICE_NAME: Final[str] = "gx-agent"
 
 __all__ = ["USER_AGENT_HEADER"]
