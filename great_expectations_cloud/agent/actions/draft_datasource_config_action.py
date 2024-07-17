@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from great_expectations.compatibility.sqlalchemy import inspect
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.datasource.fluent.interfaces import Datasource, TestConnectionError
@@ -15,7 +14,7 @@ from great_expectations_cloud.agent.exceptions import ErrorCode, raise_with_erro
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 if TYPE_CHECKING:
-    from great_expectations.compatibility.sqlalchemy.engine import Inspector
+    from sqlalchemy.engine import Inspector
 
 
 class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
@@ -70,8 +69,10 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         )
 
     def _get_table_names(self, datasource: Datasource) -> list[str]:
+        from sqlalchemy import inspect
+
         inspector: Inspector = inspect(datasource.get_engine())
-        return inspector.get_table_names()  # type: ignore[no-any-return] # method returns a list of strings
+        return inspector.get_table_names()
 
     def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
         with create_session(access_token=self._auth_key) as session:
