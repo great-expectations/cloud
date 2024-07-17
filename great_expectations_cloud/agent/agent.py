@@ -10,6 +10,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Dict, Final
+from uuid import UUID
 
 import orjson
 from great_expectations import get_context  # type: ignore[attr-defined] # TODO: fix this
@@ -118,7 +119,6 @@ class GXAgent:
         print(f"GX Agent version: {agent_version}")
         print(f"Great Expectations version: {great_expectations_version}")
         print("Initializing the GX Agent.")
-        self._set_http_session_headers()
         self._config = self._get_config()
         print("Loading a DataContext - this might take a moment.")
 
@@ -126,8 +126,9 @@ class GXAgent:
             # suppress warnings about GX version
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
             self._context: CloudDataContext = get_context(cloud_mode=True)
-
         print("DataContext is ready.")
+
+        self._set_http_session_headers(data_context=self._context)
 
         # Create a thread pool with a single worker, so we can run long-lived
         # GX processes and maintain our connection to the broker. Note that
@@ -210,13 +211,16 @@ class GXAgent:
             self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
             return
 
+        data_context = self.get_data_context(event_context=event_context)
         # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
-        self._set_http_session_headers(correlation_id=event_context.correlation_id)
+        self._set_http_session_headers(
+            correlation_id=event_context.correlation_id, data_context=data_context
+        )
 
         self._current_task = self._executor.submit(
             self._handle_event,
             event_context=event_context,
-            data_context=self.get_data_context(event_context=event_context),
+            data_context=data_context,
         )
 
         if self._current_task is not None:
@@ -227,8 +231,16 @@ class GXAgent:
             self._current_task.add_done_callback(on_exit_callback)
 
     def get_data_context(self, event_context: EventContext) -> CloudDataContext:
-        """Helper method to get a DataContext Agent. Overriden in GX-Runner."""
+        """Helper method to get a DataContext Agent. Overridden in GX-Runner."""
         return self._context
+
+    def get_organization_id(self, event_context: EventContext) -> UUID:
+        """Helper method to get the organization ID. Overridden in GX-Runner."""
+        return UUID(self._config.gx_cloud_organization_id)
+
+    def get_auth_key(self) -> str:
+        """Helper method to get the auth key. Overridden in GX-Runner."""
+        return self._config.gx_cloud_access_token
 
     def _handle_event(
         self, event_context: EventContext, data_context: CloudDataContext
@@ -242,18 +254,21 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         # warning:  this method will not be executed in the main thread
+        organization_id = self.get_organization_id(event_context)
 
         if isinstance(event_context.event, ScheduledEventBase):
             self._create_scheduled_job_and_set_started(event_context)
         else:
-            self._update_status(job_id=event_context.correlation_id, status=JobStarted())
+            self._update_status(
+                job_id=event_context.correlation_id, status=JobStarted(), org_id=organization_id
+            )
         print(f"Starting job {event_context.event.type} ({event_context.correlation_id}) ")
         LOGGER.info(
             "Starting job",
             extra={
                 "event_type": event_context.event.type,
                 "correlation_id": event_context.correlation_id,
-                "organization_id": self._config.gx_cloud_organization_id,
+                "organization_id": str(organization_id),
             },
         )
         handler = EventHandler(context=data_context)
@@ -272,6 +287,8 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
+        organization_id = self.get_organization_id(event_context)
+
         # get results or errors from the thread
         error = future.exception()
         if error is None:
@@ -289,7 +306,7 @@ class GXAgent:
                     extra={
                         "event_type": event_context.event.type,
                         "id": event_context.correlation_id,
-                        "organization_id": self._config.gx_cloud_organization_id,
+                        "organization_id": str(organization_id),
                     },
                 )
             else:
@@ -306,7 +323,7 @@ class GXAgent:
                         "job_duration": result.job_duration.total_seconds()
                         if result.job_duration
                         else None,
-                        "organization_id": self._config.gx_cloud_organization_id,
+                        "organization_id": str(organization_id),
                     },
                 )
         else:
@@ -320,7 +337,9 @@ class GXAgent:
                 },
             )
 
-        self._update_status(job_id=event_context.correlation_id, status=status)
+        self._update_status(
+            job_id=event_context.correlation_id, status=status, org_id=organization_id
+        )
 
         # ack message and cleanup resources
         event_context.processed_successfully()
@@ -390,7 +409,7 @@ class GXAgent:
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
 
-    def _update_status(self, job_id: str, status: JobStatus) -> None:
+    def _update_status(self, job_id: str, status: JobStatus, org_id: UUID) -> None:
         """Update GX Cloud on the status of a job.
 
         Args:
@@ -399,10 +418,9 @@ class GXAgent:
         """
         LOGGER.info("Updating status", extra={"job_id": job_id, "status": str(status)})
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{self._config.gx_cloud_organization_id}"
-            + f"/agent-jobs/{job_id}"
+            f"{self._config.gx_cloud_base_url}/organizations/{org_id}" + f"/agent-jobs/{job_id}"
         )
-        session = create_session(access_token=self._config.gx_cloud_access_token)
+        session = create_session(access_token=self.get_auth_key())
         data = status.json()
         session.patch(agent_sessions_url, data=data)
         LOGGER.info("Status updated", extra={"job_id": job_id, "status": str(status)})
@@ -424,15 +442,23 @@ class GXAgent:
         LOGGER.info("Creating scheduled job and setting started", extra=data)
 
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{self._config.gx_cloud_organization_id}"
+            f"{self._config.gx_cloud_base_url}/organizations/{self.get_organization_id(event_context)}"
             + "/agent-jobs"
         )
-        session = create_session(access_token=self._config.gx_cloud_access_token)
+        session = create_session(access_token=self.get_auth_key())
         payload = Payload(data=data)
         session.post(agent_sessions_url, data=payload.json())
         LOGGER.info("Created scheduled job and set started", extra=data)
 
-    def _set_http_session_headers(self, correlation_id: str | None = None) -> None:
+    def get_header_name(self) -> type[HeaderName]:
+        return HeaderName
+
+    def get_user_agent_header(self) -> str:
+        return USER_AGENT_HEADER
+
+    def _set_http_session_headers(
+        self, data_context: CloudDataContext, correlation_id: str | None = None
+    ) -> None:
         """
         Set the the session headers for requests to GX Cloud.
         In particular, set the User-Agent header to identify the GX Agent and the correlation_id as
@@ -445,6 +471,9 @@ class GXAgent:
         from great_expectations.core import http
         from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend
 
+        header_name = self.get_header_name()
+        user_agent_header = self.get_user_agent_header()
+
         if Version(__version__) > Version(
             "0.19"  # using 0.19 instead of 1.0 to account for pre-releases
         ):
@@ -452,8 +481,8 @@ class GXAgent:
             LOGGER.info(
                 "Unable to set header for requests to GX Cloud",
                 extra={
-                    "user_agent": HeaderName.USER_AGENT,
-                    "agent_job_id": HeaderName.AGENT_JOB_ID,
+                    "user_agent": header_name.USER_AGENT,
+                    "agent_job_id": header_name.AGENT_JOB_ID,
                 },
             )
             return
@@ -462,19 +491,19 @@ class GXAgent:
         LOGGER.debug(
             "Setting session headers for GX Cloud",
             extra={
-                "user_agent": HeaderName.USER_AGENT,
+                "user_agent": header_name.USER_AGENT,
                 "agent_version": agent_version,
-                "job_id": HeaderName.AGENT_JOB_ID,
+                "job_id": header_name.AGENT_JOB_ID,
                 "correlation_id": correlation_id,
             },
         )
 
         if correlation_id:
             # OSS doesn't use the same session for all requests, so we need to set the header for each store
-            for store in self._context.stores.values():
+            for store in data_context.stores.values():
                 backend = store._store_backend
                 if isinstance(backend, GXCloudStoreBackend):
-                    backend._session.headers[HeaderName.AGENT_JOB_ID] = correlation_id
+                    backend._session.headers[header_name.AGENT_JOB_ID] = correlation_id
 
         def _update_headers_agent_patch(
             session: requests.Session, access_token: str
@@ -486,10 +515,10 @@ class GXAgent:
                 "Content-Type": "application/vnd.api+json",
                 "Authorization": f"Bearer {access_token}",
                 "Gx-Version": __version__,
-                HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{agent_version}",
+                header_name.USER_AGENT: f"{user_agent_header}/{agent_version}",
             }
             if correlation_id:
-                headers[HeaderName.AGENT_JOB_ID] = correlation_id
+                headers[header_name.AGENT_JOB_ID] = correlation_id
             session.headers.update(headers)
             return session
 
