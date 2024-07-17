@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID, uuid4
 
@@ -198,7 +199,12 @@ class TestEventHandlerRegistry:
         register_event_action("0", DummyEvent, DummyAction)  # type: ignore[arg-type]
         handler = EventHandler(context=mock_context)
 
-        assert isinstance(handler.get_event_action(DummyEvent), DummyAction)  # type: ignore[arg-type]  # Dummy event only used in testing
+        assert isinstance(
+            handler.get_event_action(
+                DummyEvent, base_url="", auth_key="", organization_id=uuid.uuid4()
+            ),
+            DummyAction,
+        )  # type: ignore[arg-type]  # Dummy event only used in testing
 
     @pytest.mark.parametrize(
         "version, expected",
