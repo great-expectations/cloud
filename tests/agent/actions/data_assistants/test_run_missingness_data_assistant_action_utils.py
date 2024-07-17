@@ -45,7 +45,9 @@ def missingness_event_with_expectation_suite_name():
 def test_run_missingness_data_assistant_action_without_expectation_suite_name(
     mock_context, missingness_event_without_expectation_suite_name, mocker: MockerFixture
 ):
-    action = RunMissingnessDataAssistantAction(context=mock_context)
+    action = RunMissingnessDataAssistantAction(
+        context=mock_context, base_url="", auth_key="", organization_id=uuid.uuid4()
+    )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     mock_context.get_expectation_suite.side_effect = StoreBackendError("test-message")
     mock_context.get_checkpoint.side_effect = StoreBackendError("test-message")
@@ -71,7 +73,9 @@ def test_run_missingness_data_assistant_action_without_expectation_suite_name(
 def test_run_missingness_data_assistant_action_with_expectation_suite_name(
     mock_context, missingness_event_with_expectation_suite_name, mocker: MockerFixture
 ):
-    action = RunMissingnessDataAssistantAction(context=mock_context)
+    action = RunMissingnessDataAssistantAction(
+        context=mock_context, base_url="", auth_key="", organization_id=uuid.uuid4()
+    )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     expectation_suite_id = "084a6e0f-c014-4e40-b6b7-b2f57cb9e176"
     checkpoint_id = "f5d32bbf-1392-4248-bc40-a3966fab2e0e"
