@@ -9,7 +9,7 @@ from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
-from typing import TYPE_CHECKING, Any, Callable, Dict, Final
+from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
 from uuid import UUID
 
 import orjson
@@ -345,7 +345,7 @@ class GXAgent:
         event_context.processed_successfully()
         self._current_task = None
 
-    def _get_processed_by(self) -> str:
+    def _get_processed_by(self) -> Literal["agent", "runner"]:
         """Return the name of the service that processed the event."""
         return "runner" if self._config.queue == "gx-runner" else "agent"
 
