@@ -211,7 +211,12 @@ def checkpoint_event(checkpoint, datasource_names_to_asset_names, org_id_env_var
 def test_running_checkpoint_action(
     context, checkpoint_event, cloud_base_url: str, org_id_env_var: str, token_env_var: str
 ):
-    action = RunCheckpointAction(context=context)
+    action = RunCheckpointAction(
+        context=context,
+        base_url=cloud_base_url,
+        organization_id=uuid.UUID(org_id_env_var),
+        auth_key=token_env_var,
+    )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
     # Act
