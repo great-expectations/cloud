@@ -33,6 +33,7 @@ def token():
 @pytest.fixture
 def set_required_env_vars(monkeypatch, org_id, token) -> None:
     env_vars = {
+        "GX_CLOUD_BASE_URL": "https://test-base-url",
         "GX_CLOUD_ORGANIZATION_ID": org_id,
         "GX_CLOUD_ACCESS_TOKEN": token,
     }
