@@ -32,8 +32,8 @@ orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue 
 packaging = ">=21.3,<25.0"
 tenacity = "^8.2.3"
 # optional dependencies
-snowflake-sqlalchemy = { version = "<1.6", optional = true } # TODO: remove pin once we have tested with sqlalchemy 2.0 & snowflake
-sqlalchemy = { version = "<2.0", optional = true }  # TODO: see above ^
+sqlalchemy = { version = ">=2.0", optional = true }
+snowflake-sqlalchemy = { version = ">=1.6", optional = true }
 psycopg2-binary = { version = "*", optional = true }
 
 [tool.poetry.extras]
@@ -45,12 +45,9 @@ postgres = ["sqlalchemy", "psycopg2-binary"]
 [tool.poetry.group.sql.dependencies]
 great-expectations = { version = "^0.18.19", extras = [
     "databricks",
-    "sqlalchemy1",
 ] }
-snowflake-sqlalchemy = ">=1.5.0"
+snowflake-sqlalchemy = ">=1.6"
 snowflake-connector-python = ">=3.3.1"
-# TODO: Remove the python constraint once this PR is merged - https://github.com/sqlalchemy-redshift/sqlalchemy-redshift/pull/288
-sqlalchemy-redshift = { version = "^0.8.8", python = "<3.11" }
 psycopg2-binary = "^2.9.9"
 
 [tool.poetry.group.dev.dependencies]
