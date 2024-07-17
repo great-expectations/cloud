@@ -87,8 +87,8 @@ def test_run_list_table_names_action_returns_action_result(
 ):
     action = ListTableNamesAction(
         context=mock_context,
-        base_url="https://api.greatexpectations.io/",
-        organization_id=uuid.uuid4(),
+        base_url=dummy_base_url,
+        organization_id=uuid.UUID(dummy_org_id),
         auth_key="",
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
