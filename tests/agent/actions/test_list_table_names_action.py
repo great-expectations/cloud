@@ -65,7 +65,12 @@ def event():
 def test_list_table_names_event_raises_for_non_sql_datasource(
     mock_context, event, mocker: MockerFixture
 ):
-    action = ListTableNamesAction(context=mock_context)
+    action = ListTableNamesAction(
+        context=mock_context,
+        base_url="https://api.greatexpectations.io/",
+        organization_id=uuid.uuid4(),
+        auth_key="",
+    )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     mock_context.get_expectation_suite.side_effect = StoreBackendError("test-message")
     mock_context.get_checkpoint.side_effect = StoreBackendError("test-message")
@@ -80,7 +85,12 @@ def test_list_table_names_event_raises_for_non_sql_datasource(
 def test_run_list_table_names_action_returns_action_result(
     mock_context, event, dummy_base_url, dummy_org_id, set_required_env_vars, mocker: MockerFixture
 ):
-    action = ListTableNamesAction(context=mock_context)
+    action = ListTableNamesAction(
+        context=mock_context,
+        base_url="https://api.greatexpectations.io/",
+        organization_id=uuid.uuid4(),
+        auth_key="",
+    )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
     mock_inspect = mocker.patch("great_expectations_cloud.agent.actions.list_table_names.inspect")
