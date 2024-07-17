@@ -201,10 +201,13 @@ class TestEventHandlerRegistry:
 
         assert isinstance(
             handler.get_event_action(
-                DummyEvent, base_url="", auth_key="", organization_id=uuid.uuid4()
+                DummyEvent,  # type: ignore[arg-type]  # Dummy event only used in testing
+                base_url="",
+                auth_key="",
+                organization_id=uuid.uuid4(),
             ),
             DummyAction,
-        )  # type: ignore[arg-type]  # Dummy event only used in testing
+        )
 
     @pytest.mark.parametrize(
         "version, expected",
