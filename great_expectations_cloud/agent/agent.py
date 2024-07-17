@@ -282,6 +282,7 @@ class GXAgent:
                     success=False,
                     created_resources=[],
                     error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
+                    processed_by="runner" if self._config.queue == "gx-runner" else "agent",
                 )
                 LOGGER.error(
                     "Job completed with error. Ensure agent is up-to-date.",
@@ -295,6 +296,7 @@ class GXAgent:
                 status = JobCompleted(
                     success=True,
                     created_resources=result.created_resources,
+                    processed_by="runner" if self._config.queue == "gx-runner" else "agent",
                 )
                 LOGGER.info(
                     "Completed job",

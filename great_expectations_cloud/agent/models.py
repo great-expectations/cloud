@@ -126,6 +126,7 @@ class JobCompleted(AgentBaseExtraForbid):
     error_stack_trace: Union[str, None] = None
     error_code: Union[str, None] = None
     error_params: Union[Dict[str, str], None] = None
+    processed_by: Union[Literal["agent", "runner"], None] = None
 
 
 JobStatus = Union[JobStarted, JobCompleted]
