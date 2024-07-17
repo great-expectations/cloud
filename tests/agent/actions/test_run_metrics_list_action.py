@@ -38,6 +38,9 @@ def test_run_metrics_list_computes_metric_run(
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.uuid4(),
     )
 
     action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
@@ -71,6 +74,9 @@ def test_run_metrics_list_computes_metric_run_missing_batch_inspector(
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=None,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.uuid4(),
     )
 
     action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
@@ -102,6 +108,9 @@ def test_run_metrics_list_creates_metric_run(mock_context, mocker: MockerFixture
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.uuid4(),
     )
 
     action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
@@ -132,6 +141,9 @@ def test_run_metrics_list_returns_action_result(mock_context, mocker: MockerFixt
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.uuid4(),
     )
     action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
     # mock so that we don't raise
@@ -170,6 +182,9 @@ def test_run_column_descriptive_metrics_raises_on_test_connection_to_data_asset_
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.uuid4(),
     )
 
     with pytest.raises(TestConnectionError):
@@ -223,6 +238,9 @@ def test_run_metrics_list_creates_metric_run_then_raises_on_any_metric_exception
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.uuid4(),
     )
 
     with pytest.raises(RuntimeError):
