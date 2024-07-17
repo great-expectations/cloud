@@ -62,7 +62,7 @@ def test_test_draft_datasource_config_success_non_sql_ds(
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(
         context=mock_context,
-        base_url=" https://api.greatexpectations.io/",
+        base_url="https://test-base-url",
         auth_key="",
         organization_id=org_id,
     )
@@ -130,7 +130,7 @@ def test_test_draft_datasource_config_success_sql_ds(
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
     action = DraftDatasourceConfigAction(
         context=mock_context,
-        base_url=" https://api.greatexpectations.io/",
+        base_url="https://test-base-url",
         auth_key="",
         organization_id=org_id,
     )
@@ -204,7 +204,7 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
     action = DraftDatasourceConfigAction(
         context=mock_context,
-        base_url=" https://api.greatexpectations.io/",
+        base_url="https://test-base-url",
         auth_key="",
         organization_id=org_id,
     )
@@ -240,7 +240,7 @@ def test_test_draft_datasource_config_failure(
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
     env_vars = GxAgentEnvVars()
-    base_url = " https://api.greatexpectations.io/"
+    base_url = "https://test-base-url"
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
     action = DraftDatasourceConfigAction(
         context=mock_context,
@@ -273,7 +273,7 @@ def test_test_draft_datasource_config_raises_for_non_fds(mock_context, set_requi
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
     env_vars = GxAgentEnvVars()
-    base_url = " https://api.greatexpectations.io/"
+    base_url = "https://test-base-url"
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
     action = DraftDatasourceConfigAction(
         context=mock_context,
@@ -311,7 +311,7 @@ def test_test_draft_datasource_config_raises_for_non_fds(mock_context, set_requi
 def test_draft_datasource_config_failure_raises_correct_gx_core_error(
     mock_context, mocker: MockerFixture, error_message: str, expected_error_code: str
 ):
-    base_url = " https://api.greatexpectations.io/"
+    base_url = "https://test-base-url"
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
     action = DraftDatasourceConfigAction(
         context=mock_context,
@@ -340,7 +340,7 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
     env_vars = GxAgentEnvVars()
-    base_url = " https://api.greatexpectations.io/"
+    base_url = "https://test-base-url"
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
     action = DraftDatasourceConfigAction(
         context=mock_context,
@@ -374,7 +374,7 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
     env_vars = GxAgentEnvVars()
-    base_url = " https://api.greatexpectations.io/"
+    base_url = "https://test-base-url"
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
     action = DraftDatasourceConfigAction(
         context=mock_context,
