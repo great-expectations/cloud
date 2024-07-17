@@ -231,10 +231,10 @@ class GXAgent:
             self._current_task.add_done_callback(on_exit_callback)
 
     def get_data_context(self, event_context: EventContext) -> CloudDataContext:
-        """Helper method to get a DataContext Agent. Overriden in GX-Runner."""
+        """Helper method to get a DataContext Agent. Overridden in GX-Runner."""
         return self._context
 
-    def get_organization_id(self) -> UUID:
+    def get_organization_id(self, event_context: EventContext) -> UUID:
         """Helper method to get the organization ID. Overridden in GX-Runner."""
         return UUID(self._config.gx_cloud_organization_id)
 
@@ -254,7 +254,7 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         # warning:  this method will not be executed in the main thread
-        organization_id = self.get_organization_id()
+        organization_id = self.get_organization_id(event_context)
 
         if isinstance(event_context.event, ScheduledEventBase):
             self._create_scheduled_job_and_set_started(event_context)
@@ -287,7 +287,7 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
-        organization_id = self.get_organization_id()
+        organization_id = self.get_organization_id(event_context)
 
         # get results or errors from the thread
         error = future.exception()
@@ -440,7 +440,7 @@ class GXAgent:
         LOGGER.info("Creating scheduled job and setting started", extra=data)
 
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{self.get_organization_id()}"
+            f"{self._config.gx_cloud_base_url}/organizations/{self.get_organization_id(event_context)}"
             + "/agent-jobs"
         )
         session = create_session(access_token=self.get_auth_key())
