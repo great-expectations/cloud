@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
@@ -32,13 +33,18 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
     # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
     #  This action is registered for v0, see register_event_action()
 
-    def __init__(
+    def __init__(  # noqa: PLR0913  # Refactor opportunity
         self,
         context: CloudDataContext,
+        base_url: str,
+        organization_id: UUID,
+        auth_key: str,
         metric_repository: MetricRepository | None = None,
         batch_inspector: BatchInspector | None = None,
     ):
-        super().__init__(context=context)
+        super().__init__(
+            context=context, base_url=base_url, organization_id=organization_id, auth_key=auth_key
+        )
         self._metric_repository = metric_repository or MetricRepository(
             data_store=CloudDataStore(self._context)
         )

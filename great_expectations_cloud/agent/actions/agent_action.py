@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, Optional, Sequence, TypeVar
+from uuid import UUID
 
 from pydantic.v1 import BaseModel
 
@@ -23,8 +24,13 @@ _EventT = TypeVar("_EventT", bound=Event)
 
 
 class AgentAction(Generic[_EventT]):
-    def __init__(self, context: CloudDataContext):
+    def __init__(
+        self, context: CloudDataContext, base_url: str, organization_id: UUID, auth_key: str
+    ):
         self._context = context
+        self._base_url = base_url
+        self._organization_id = organization_id
+        self._auth_key = auth_key
 
     @abstractmethod
     def run(self, event: _EventT, id: str) -> ActionResult: ...
