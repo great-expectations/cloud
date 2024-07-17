@@ -64,7 +64,9 @@ class TestEventHandler:
         correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
         handler = EventHandler(context=mock_context)
         with pytest.warns(GXAgentUserWarning):
-            result = handler.handle_event(event=event, id=correlation_id)
+            result = handler.handle_event(
+                event=event, id=correlation_id, base_url="", auth_key="", organization_id=uuid4()
+            )
         assert result.type == "unknown_event"
 
     @pytest.mark.parametrize(
@@ -137,9 +139,15 @@ class TestEventHandler:
         correlation_id = str(uuid4())
         handler = EventHandler(context=mock_context)
 
-        handler.handle_event(event=event, id=correlation_id)
+        fake_org_id = UUID("00000000-0000-0000-0000-000000000000")
 
-        action.assert_called_with(context=mock_context)
+        handler.handle_event(
+            event=event, id=correlation_id, base_url="", auth_key="", organization_id=fake_org_id
+        )
+
+        action.assert_called_with(
+            context=mock_context, base_url="", organization_id=fake_org_id, auth_key=""
+        )
         action().run.assert_called_with(event=event, id=correlation_id)
 
     def test_event_handler_raises_on_no_version_implementation(
@@ -153,7 +161,7 @@ class TestEventHandler:
         handler = EventHandler(context=mock_context)
 
         with pytest.raises(NoVersionImplementationError):
-            handler.get_event_action(DummyEvent)  # type: ignore[arg-type]  # Dummy event only used in testing
+            handler.get_event_action(DummyEvent, base_url="", auth_key="", organization_id=uuid4())  # type: ignore[arg-type]  # Dummy event only used in testing
 
 
 class DummyEvent(EventBase):
