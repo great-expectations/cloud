@@ -80,7 +80,7 @@ class EventHandler:
             auth_key=auth_key,
         )
 
-    def handle_event(  # noqa: PLR0913  # Refactor opportunity
+    def handle_event(  # Refactor opportunity
         self, event: Event, id: str, base_url: str, auth_key: str, organization_id: UUID
     ) -> ActionResult:
         start_time = datetime.now(tz=timezone.utc)

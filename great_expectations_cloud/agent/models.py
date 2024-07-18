@@ -145,4 +145,5 @@ def build_failed_job_completed_status(error: BaseException) -> JobCompleted:
 
     return status
 
+
 eval("{'foo': 'bar'}")
