@@ -33,6 +33,7 @@ def token():
 @pytest.fixture
 def set_required_env_vars(monkeypatch, org_id, token) -> None:
     env_vars = {
+        "GX_CLOUD_BASE_URL": "https://test-base-url",
         "GX_CLOUD_ORGANIZATION_ID": org_id,
         "GX_CLOUD_ACCESS_TOKEN": token,
     }
@@ -58,8 +59,14 @@ def test_test_draft_datasource_config_success_non_sql_ds(
 ):
     datasource_config = {"type": "pandas", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
+    org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
     env_vars = GxAgentEnvVars()
-    action = DraftDatasourceConfigAction(context=mock_context)
+    action = DraftDatasourceConfigAction(
+        context=mock_context,
+        base_url="https://test-base-url",
+        auth_key="",
+        organization_id=org_id,
+    )
 
     _get_table_names_spy = mocker.spy(action, "_get_table_names")
     _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
@@ -121,7 +128,13 @@ def test_test_draft_datasource_config_success_sql_ds(
     mock_inspector.get_table_names.return_value = table_names
 
     env_vars = GxAgentEnvVars()
-    action = DraftDatasourceConfigAction(context=mock_context)
+    org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    action = DraftDatasourceConfigAction(
+        context=mock_context,
+        base_url="https://test-base-url",
+        auth_key="",
+        organization_id=org_id,
+    )
 
     # add spies to the action methods
     _get_table_names_spy = mocker.spy(action, "_get_table_names")
@@ -189,7 +202,13 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
     mock_inspector.get_table_names.return_value = table_names
 
     env_vars = GxAgentEnvVars()
-    action = DraftDatasourceConfigAction(context=mock_context)
+    org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    action = DraftDatasourceConfigAction(
+        context=mock_context,
+        base_url="https://test-base-url",
+        auth_key="",
+        organization_id=org_id,
+    )
 
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
@@ -222,7 +241,14 @@ def test_test_draft_datasource_config_failure(
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
     env_vars = GxAgentEnvVars()
-    action = DraftDatasourceConfigAction(context=mock_context)
+    base_url = "https://test-base-url"
+    org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    action = DraftDatasourceConfigAction(
+        context=mock_context,
+        base_url=base_url,
+        auth_key="",
+        organization_id=org_id,
+    )
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
     expected_url = (
@@ -248,7 +274,14 @@ def test_test_draft_datasource_config_raises_for_non_fds(mock_context, set_requi
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
     env_vars = GxAgentEnvVars()
-    action = DraftDatasourceConfigAction(context=mock_context)
+    base_url = "https://test-base-url"
+    org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    action = DraftDatasourceConfigAction(
+        context=mock_context,
+        base_url=base_url,
+        auth_key="",
+        organization_id=org_id,
+    )
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
     expected_url = (
@@ -279,7 +312,14 @@ def test_test_draft_datasource_config_raises_for_non_fds(mock_context, set_requi
 def test_draft_datasource_config_failure_raises_correct_gx_core_error(
     mock_context, mocker: MockerFixture, error_message: str, expected_error_code: str
 ):
-    action = DraftDatasourceConfigAction(context=mock_context)
+    base_url = "https://test-base-url"
+    org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    action = DraftDatasourceConfigAction(
+        context=mock_context,
+        base_url=base_url,
+        auth_key="",
+        organization_id=org_id,
+    )
     mock_check_draft_datasource_config = mocker.patch(
         f"{DraftDatasourceConfigAction.__module__}.{DraftDatasourceConfigAction.__name__}.check_draft_datasource_config"
     )
@@ -301,7 +341,14 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
     env_vars = GxAgentEnvVars()
-    action = DraftDatasourceConfigAction(context=mock_context)
+    base_url = "https://test-base-url"
+    org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    action = DraftDatasourceConfigAction(
+        context=mock_context,
+        base_url=base_url,
+        auth_key="",
+        organization_id=org_id,
+    )
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
     expected_url = (
@@ -328,7 +375,14 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
     env_vars = GxAgentEnvVars()
-    action = DraftDatasourceConfigAction(context=mock_context)
+    base_url = "https://test-base-url"
+    org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    action = DraftDatasourceConfigAction(
+        context=mock_context,
+        base_url=base_url,
+        auth_key="",
+        organization_id=org_id,
+    )
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
     expected_url = (

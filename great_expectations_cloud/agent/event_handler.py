@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, Final
+from uuid import UUID
 
 import great_expectations as gx
 from packaging.version import Version
@@ -62,7 +63,9 @@ class EventHandler:
     def __init__(self, context: CloudDataContext) -> None:
         self._context = context
 
-    def get_event_action(self, event: Event) -> AgentAction[Any]:
+    def get_event_action(
+        self, event: Event, base_url: str, auth_key: str, organization_id: UUID
+    ) -> AgentAction[Any]:
         """Get the action that should be run for the given event."""
         action_map = _EVENT_ACTION_MAP.get(_GX_MAJOR_VERSION)
         if action_map is None:
@@ -70,12 +73,21 @@ class EventHandler:
         action_class = action_map.get(_get_event_name(event))
         if action_class is None:
             action_class = UnknownEventAction
-        return action_class(context=self._context)
+        return action_class(
+            context=self._context,
+            base_url=base_url,
+            organization_id=organization_id,
+            auth_key=auth_key,
+        )
 
-    def handle_event(self, event: Event, id: str) -> ActionResult:
+    def handle_event(  # noqa: PLR0913  # Refactor opportunity
+        self, event: Event, id: str, base_url: str, auth_key: str, organization_id: UUID
+    ) -> ActionResult:
         start_time = datetime.now(tz=timezone.utc)
         """Transform an Event into an ActionResult."""
-        action = self.get_event_action(event=event)
+        action = self.get_event_action(
+            event=event, base_url=base_url, auth_key=auth_key, organization_id=organization_id
+        )
         LOGGER.info(f"Handling event: {event.type} -> {action.__class__.__name__}")
         action_result = action.run(event=event, id=id)
         end_time = datetime.now(tz=timezone.utc)

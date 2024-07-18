@@ -255,6 +255,8 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
         organization_id = self.get_organization_id(event_context)
+        base_url = self._config.gx_cloud_base_url
+        auth_key = self.get_auth_key()
 
         if isinstance(event_context.event, ScheduledEventBase):
             self._create_scheduled_job_and_set_started(event_context)
@@ -273,7 +275,13 @@ class GXAgent:
         )
         handler = EventHandler(context=data_context)
         # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
-        result = handler.handle_event(event=event_context.event, id=event_context.correlation_id)
+        result = handler.handle_event(
+            event=event_context.event,
+            id=event_context.correlation_id,
+            base_url=base_url,
+            auth_key=auth_key,
+            organization_id=organization_id,
+        )
         return result
 
     def _handle_event_as_thread_exit(
