@@ -9,7 +9,7 @@ from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
-from typing import TYPE_CHECKING, Any, Callable, Dict, Final
+from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
 from uuid import UUID
 
 import orjson
@@ -307,6 +307,7 @@ class GXAgent:
                     success=False,
                     created_resources=[],
                     error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
+                    processed_by=self._get_processed_by(),
                 )
                 LOGGER.error(
                     "Job completed with error. Ensure agent is up-to-date.",
@@ -320,6 +321,7 @@ class GXAgent:
                 status = JobCompleted(
                     success=True,
                     created_resources=result.created_resources,
+                    processed_by=self._get_processed_by(),
                 )
                 LOGGER.info(
                     "Completed job",
@@ -350,6 +352,10 @@ class GXAgent:
         # ack message and cleanup resources
         event_context.processed_successfully()
         self._current_task = None
+
+    def _get_processed_by(self) -> Literal["agent", "runner"]:
+        """Return the name of the service that processed the event."""
+        return "runner" if self._config.queue == "gx-runner" else "agent"
 
     def _can_accept_new_task(self) -> bool:
         """Are we currently processing a task or are we free to take a new one?"""

@@ -273,7 +273,7 @@ def test_gx_agent_updates_cloud_on_job_status(
         f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs/{correlation_id}"
     )
     job_started_data = JobStarted().json()
-    job_completed = JobCompleted(success=True, created_resources=[])
+    job_completed = JobCompleted(success=True, created_resources=[], processed_by="agent")
     job_completed_data = job_completed.json()
 
     async def redeliver_message():
