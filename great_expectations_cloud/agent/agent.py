@@ -466,6 +466,9 @@ class GXAgent:
     def get_user_agent_header(self) -> str:
         return USER_AGENT_HEADER
 
+    def _get_version(self) -> str:
+        return self.get_current_gx_agent_version()
+
     def _set_http_session_headers(
         self, data_context: CloudDataContext, correlation_id: str | None = None
     ) -> None:
@@ -497,7 +500,7 @@ class GXAgent:
             )
             return
 
-        agent_version = self.get_current_gx_agent_version()
+        agent_version = self._get_version()
         LOGGER.debug(
             "Setting session headers for GX Cloud",
             extra={
