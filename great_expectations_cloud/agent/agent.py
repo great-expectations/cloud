@@ -211,16 +211,9 @@ class GXAgent:
             self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
             return
 
-        data_context = self.get_data_context(event_context=event_context)
-        # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
-        self._set_http_session_headers(
-            correlation_id=event_context.correlation_id, data_context=data_context
-        )
-
         self._current_task = self._executor.submit(
             self._handle_event,
             event_context=event_context,
-            data_context=data_context,
         )
 
         if self._current_task is not None:
@@ -242,9 +235,7 @@ class GXAgent:
         """Helper method to get the auth key. Overridden in GX-Runner."""
         return self._config.gx_cloud_access_token
 
-    def _handle_event(
-        self, event_context: EventContext, data_context: CloudDataContext
-    ) -> ActionResult:
+    def _handle_event(self, event_context: EventContext) -> ActionResult:
         """Pass events to EventHandler.
 
         Callback passed to Subscriber.consume which forwards events to
@@ -254,6 +245,13 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         # warning:  this method will not be executed in the main thread
+
+        data_context = self.get_data_context(event_context=event_context)
+        # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
+        self._set_http_session_headers(
+            correlation_id=event_context.correlation_id, data_context=data_context
+        )
+
         organization_id = self.get_organization_id(event_context)
         base_url = self._config.gx_cloud_base_url
         auth_key = self.get_auth_key()
@@ -468,6 +466,9 @@ class GXAgent:
     def get_user_agent_header(self) -> str:
         return USER_AGENT_HEADER
 
+    def _get_version(self) -> str:
+        return self.get_current_gx_agent_version()
+
     def _set_http_session_headers(
         self, data_context: CloudDataContext, correlation_id: str | None = None
     ) -> None:
@@ -499,7 +500,7 @@ class GXAgent:
             )
             return
 
-        agent_version = self.get_current_gx_agent_version()
+        agent_version = self._get_version()
         LOGGER.debug(
             "Setting session headers for GX Cloud",
             extra={
