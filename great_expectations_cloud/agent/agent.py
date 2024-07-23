@@ -125,6 +125,7 @@ class GXAgent:
         with warnings.catch_warnings():
             # suppress warnings about GX version
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
+            # TODO: Instantiate the context in the sub thread (_handle_event()) instead of here.
             self._context: CloudDataContext = get_context(cloud_mode=True)
         print("DataContext is ready.")
 
@@ -134,8 +135,15 @@ class GXAgent:
         # GX processes and maintain our connection to the broker. Note that
         # the CloudDataContext cached here is used by the worker, so
         # it isn't safe to increase the number of workers running GX jobs.
+        # TODO: Change to use ThreadPoolExecutor max_workers set via environment variable
+        #   with a reasonable default (maybe 1 for the agent at first)
         self._executor = ThreadPoolExecutor(max_workers=1)
+        # TODO: Convert `self._current_task` to map {correlation_id: task} to use when a thread returns
+        #  Might also be able to be used to track the number of tasks being processed instead of a count.
+        #  But count may be simpler / more performant since for tasks
+        #  we would need to count not only existence but also check status.
         self._current_task: Future[Any] | None = None
+        # TODO: These may also need to change for the multi-task case:
         self._redeliver_msg_task: asyncio.Task[Any] | None = None
         self._correlation_ids: defaultdict[str, int] = defaultdict(lambda: 0)
 
@@ -213,10 +221,15 @@ class GXAgent:
 
         data_context = self.get_data_context(event_context=event_context)
         # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
+
+        # TODO: Only set the session headers in the sub thread (_executor.submit()) - safer and more straightforward
+        #  i.e. move get_data_context() call and _set_http_session_headers() into _handle_event
         self._set_http_session_headers(
             correlation_id=event_context.correlation_id, data_context=data_context
         )
 
+        # TODO: Only stand up context in the sub thread (_executor.submit()) - safer and more straightforward
+        #  i.e. move get_data_context() into _handle_event
         self._current_task = self._executor.submit(
             self._handle_event,
             event_context=event_context,
@@ -359,6 +372,9 @@ class GXAgent:
 
     def _can_accept_new_task(self) -> bool:
         """Are we currently processing a task or are we free to take a new one?"""
+        # TODO: Change to use counter instead of boolean.
+        #  This will allow us to track the number of tasks being processed
+        #  and use the count to limit the number of tasks being processed.
         return self._current_task is None or self._current_task.done()
 
     def _reject_correlation_id(self, id: str) -> bool:
