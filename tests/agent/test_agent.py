@@ -9,6 +9,7 @@ from unittest.mock import call
 
 import pytest
 import responses
+from great_expectations.data_context.types.base import ProgressBarsConfig
 from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from pydantic.v1 import (
@@ -185,6 +186,23 @@ def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
 def test_gx_agent_initializes_cloud_context(get_context, gx_agent_config):
     GXAgent()
     get_context.assert_called_with(cloud_mode=True)
+    # By default, does not disable progress bar
+    get_context.return_value.variables.progress_bars.set.assert_not_called()
+    get_context.return_value.variables.save_config.assert_not_called()
+
+
+def test_gx_agent_initializes_with_disabled_progress_bars(get_context, gx_agent_config):
+    GXAgent(enable_progress_bars=False)
+    get_context.assert_called_with(cloud_mode=True)
+    # By default, does not disable progress bar
+    get_context.return_value.variables.progress_bars.set.assert_called_once_with(
+        ProgressBarsConfig(
+            globally=False,
+            metric_calculations=False,
+            profilers=False,
+        )
+    )
+    get_context.return_value.variables.save_config.assert_called_once()
 
 
 def test_gx_agent_run_starts_subscriber(get_context, subscriber, client, gx_agent_config):

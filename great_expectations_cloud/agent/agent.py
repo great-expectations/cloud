@@ -16,6 +16,7 @@ import orjson
 from great_expectations import get_context  # type: ignore[attr-defined] # TODO: fix this
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
+from great_expectations.data_context.types.base import ProgressBarsConfig
 from packaging.version import Version
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from pydantic import v1 as pydantic_v1
@@ -113,7 +114,7 @@ class GXAgent:
     _PYPI_GX_AGENT_PACKAGE_NAME = "great_expectations_cloud"
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
-    def __init__(self: Self):
+    def __init__(self: Self, enable_progress_bars: bool = True) -> None:
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
         print(f"GX Agent version: {agent_version}")
@@ -126,6 +127,15 @@ class GXAgent:
             # suppress warnings about GX version
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
             self._context: CloudDataContext = get_context(cloud_mode=True)
+            if not enable_progress_bars:
+                self._context.variables.progress_bars = ProgressBarsConfig(
+                    globally=False,
+                    metric_calculations=False,
+                    profilers=False,
+                )
+                self._context.variables.save_config()
+                print("Progress bars are disabled.")
+
         print("DataContext is ready.")
 
         self._set_http_session_headers(data_context=self._context)
@@ -326,9 +336,9 @@ class GXAgent:
                     extra={
                         "event_type": event_context.event.type,
                         "correlation_id": event_context.correlation_id,
-                        "job_duration": result.job_duration.total_seconds()
-                        if result.job_duration
-                        else None,
+                        "job_duration": (
+                            result.job_duration.total_seconds() if result.job_duration else None
+                        ),
                         "organization_id": str(organization_id),
                     },
                 )
