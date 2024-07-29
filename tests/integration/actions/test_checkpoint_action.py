@@ -233,9 +233,9 @@ def test_running_checkpoint_action(
         f"{cloud_base_url}/organizations/"
         f"{org_id_env_var}/validation-results/{validation_result_id}"
     )
-    session = create_session(access_token=token_env_var)
-    response = session.get(resource_url)
-    data = response.json()
+    with create_session(access_token=token_env_var) as session:
+        response = session.get(resource_url)
+        data = response.json()
 
     validation_result = data["data"]["attributes"]["validation_result"]
     assert validation_result["success"]
