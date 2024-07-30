@@ -394,7 +394,6 @@ class GXAgent:
         )
 
         session = create_session(access_token=env_vars.gx_cloud_access_token)
-
         response = session.post(agent_sessions_url)
         if response.ok is not True:
             raise GXAgentError(  # noqa: TRY003 # TODO: use AuthenticationError
@@ -430,10 +429,10 @@ class GXAgent:
         agent_sessions_url = (
             f"{self._config.gx_cloud_base_url}/organizations/{org_id}" + f"/agent-jobs/{job_id}"
         )
-        session = create_session(access_token=self.get_auth_key())
-        data = status.json()
-        session.patch(agent_sessions_url, data=data)
-        LOGGER.info("Status updated", extra={"job_id": job_id, "status": str(status)})
+        with create_session(access_token=self.get_auth_key()) as session:
+            data = status.json()
+            session.patch(agent_sessions_url, data=data)
+            LOGGER.info("Status updated", extra={"job_id": job_id, "status": str(status)})
 
     def _create_scheduled_job_and_set_started(self, event_context: EventContext) -> None:
         """Create a job in GX Cloud for scheduled events.
@@ -455,10 +454,10 @@ class GXAgent:
             f"{self._config.gx_cloud_base_url}/organizations/{self.get_organization_id(event_context)}"
             + "/agent-jobs"
         )
-        session = create_session(access_token=self.get_auth_key())
-        payload = Payload(data=data)
-        session.post(agent_sessions_url, data=payload.json())
-        LOGGER.info("Created scheduled job and set started", extra=data)
+        with create_session(access_token=self.get_auth_key()) as session:
+            payload = Payload(data=data)
+            session.post(agent_sessions_url, data=payload.json())
+            LOGGER.info("Created scheduled job and set started", extra=data)
 
     def get_header_name(self) -> type[HeaderName]:
         return HeaderName
