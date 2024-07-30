@@ -163,11 +163,11 @@ def connection_string() -> str:
 def create_session(mocker, queue, connection_string):
     """Patch for great_expectations.core.http.create_session"""
     create_session = mocker.patch("great_expectations_cloud.agent.agent.create_session")
-    create_session().post().json.return_value = {
+    create_session.return_value.__enter__.return_value.post().json.return_value = {
         "queue": queue,
         "connection_string": connection_string,
     }
-    create_session().post().ok = True
+    create_session.return_value.__enter__.return_value.post().ok = True
     return create_session
 
 
@@ -176,8 +176,9 @@ def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config):
     assert agent._config == gx_agent_config
 
 
-def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
+def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars, create_session):
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "invalid_token")
+    create_session.return_value.__enter__.return_value.post().ok = False
     with pytest.raises(gx_exception.GXCloudError):
         GXAgent()
 
@@ -319,7 +320,7 @@ def test_gx_agent_updates_cloud_on_job_status(
     agent = GXAgent()
     agent.run()
 
-    create_session.return_value.patch.assert_has_calls(
+    create_session.return_value.__enter__.return_value.patch.assert_has_calls(
         calls=[
             call(url, data=job_started_data),
             call(url, data=job_completed_data),
@@ -400,7 +401,9 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     agent = GXAgent()
     agent.run()
 
-    return create_session.return_value.post.assert_any_call(post_url, data=data)
+    return create_session.return_value.__enter__.return_value.post.assert_any_call(
+        post_url, data=data
+    )
 
 
 def test_invalid_env_variables_missing_token(set_required_env_vars, monkeypatch):
