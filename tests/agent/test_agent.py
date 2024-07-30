@@ -331,7 +331,11 @@ def test_gx_agent_updates_cloud_on_job_status(
     agent = GXAgent()
     agent.run()
 
-    create_session.return_value.patch.assert_has_calls(
+    # sessions created with context managers now, so we need to
+    # test the runtime calls rather than the return value calls.
+    # the calls also appear to store in any order, hence the any_order=True
+    create_session().__enter__().patch.assert_has_calls(
+        any_order=True,
         calls=[
             call(url, data=job_started_data),
             call(url, data=job_completed_data),
@@ -412,7 +416,9 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     agent = GXAgent()
     agent.run()
 
-    return create_session.return_value.post.assert_any_call(post_url, data=data)
+    # sessions created with context managers now, so we need to
+    # test the runtime calls rather than the return value calls
+    return create_session().__enter__().post.assert_any_call(post_url, data=data)
 
 
 def test_invalid_env_variables_missing_token(set_required_env_vars, monkeypatch):
