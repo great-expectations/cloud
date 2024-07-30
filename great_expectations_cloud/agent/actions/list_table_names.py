@@ -6,6 +6,7 @@ from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.exceptions import GXCloudError
 from typing_extensions import override
+from sqlalchemy import inspect
 
 from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
@@ -32,8 +33,6 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
             raise TypeError(  # noqa: TRY003 # one off error
                 f"This operation requires a SQL Data Source but got {type(datasource).__name__}."
             )
-
-        from sqlalchemy import inspect
 
         inspector: Inspector = inspect(datasource.get_engine())
         table_names: list[str] = inspector.get_table_names()

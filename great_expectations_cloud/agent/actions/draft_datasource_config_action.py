@@ -7,6 +7,7 @@ from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.datasource.fluent.interfaces import Datasource, TestConnectionError
 from typing_extensions import override
+from sqlalchemy import inspect
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.event_handler import register_event_action
@@ -69,8 +70,6 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         )
 
     def _get_table_names(self, datasource: Datasource) -> list[str]:
-        from sqlalchemy import inspect
-
         inspector: Inspector = inspect(datasource.get_engine())
         return inspector.get_table_names()
 
