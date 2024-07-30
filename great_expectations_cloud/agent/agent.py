@@ -393,12 +393,12 @@ class GXAgent:
             f"{env_vars.gx_cloud_organization_id}/agent-sessions"
         )
 
-        with create_session(access_token=env_vars.gx_cloud_access_token) as session:
-            response = session.post(agent_sessions_url)
-            if response.ok is not True:
-                raise GXAgentError(  # noqa: TRY003 # TODO: use AuthenticationError
-                    "Unable to authenticate to GX Cloud. Please check your credentials."
-                )
+        session = create_session(access_token=env_vars.gx_cloud_access_token)
+        response = session.post(agent_sessions_url)
+        if response.ok is not True:
+            raise GXAgentError(  # noqa: TRY003 # TODO: use AuthenticationError
+                "Unable to authenticate to GX Cloud. Please check your credentials."
+            )
 
         json_response = response.json()
         queue = json_response["queue"]

@@ -171,7 +171,19 @@ def create_session(mocker, queue, connection_string):
     return create_session
 
 
-def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config):
+@pytest.fixture(autouse=True)
+def requests_post(mocker, queue, connection_string):
+    """Patch for requests.Session.post"""
+    requests_post = mocker.patch("requests.Session.post")
+    requests_post().json.return_value = {
+        "queue": queue,
+        "connection_string": connection_string,
+    }
+    requests_post().ok = True
+    return requests_post
+
+
+def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config, requests_post):
     agent = GXAgent()
     assert agent._config == gx_agent_config
 
