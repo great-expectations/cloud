@@ -74,12 +74,12 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         return inspector.get_table_names()  # type: ignore[no-any-return] # method returns a list of strings
 
     def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
-        session = create_session(access_token=self._auth_key)
-        response = session.patch(
-            url=f"{self._base_url}/organizations/"
-            f"{self._organization_id}/datasources/drafts/{config_id}",
-            json={"table_names": table_names},
-        )
+        with create_session(access_token=self._auth_key) as session:
+            response = session.patch(
+                url=f"{self._base_url}/organizations/"
+                f"{self._organization_id}/datasources/drafts/{config_id}",
+                json={"table_names": table_names},
+            )
         if not response.ok:
             raise RuntimeError(  # noqa: TRY003 # one off error
                 f"DraftDatasourceConfigAction encountered an error while connecting to GX Cloud. "
@@ -93,12 +93,13 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             f"{self._base_url}/organizations/"
             f"{self._organization_id}/datasources/drafts/{config_id}"
         )
-        session = create_session(access_token=self._auth_key)
-        response = session.get(resource_url)
-        if not response.ok:
-            raise RuntimeError(  # noqa: TRY003 # one off error
-                "DraftDatasourceConfigAction encountered an error while " "connecting to GX Cloud"
-            )
+        with create_session(access_token=self._auth_key) as session:
+            response = session.get(resource_url)
+            if not response.ok:
+                raise RuntimeError(  # noqa: TRY003 # one off error
+                    "DraftDatasourceConfigAction encountered an error while "
+                    "connecting to GX Cloud"
+                )
         data = response.json()
         try:
             return data["data"]["attributes"]["draft_config"]  # type: ignore[no-any-return]

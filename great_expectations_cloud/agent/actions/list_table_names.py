@@ -48,12 +48,12 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
         )
 
     def _add_or_update_table_names_list(self, datasource_id: str, table_names: list[str]) -> None:
-        session = create_session(access_token=self._auth_key)
-        response = session.patch(
-            url=f"{self._base_url}/organizations/"
-            f"{self._organization_id}/datasources/{datasource_id}",
-            json={"table_names": table_names},
-        )
+        with create_session(access_token=self._auth_key) as session:
+            response = session.patch(
+                url=f"{self._base_url}/organizations/"
+                f"{self._organization_id}/datasources/{datasource_id}",
+                json={"table_names": table_names},
+            )
         if response.status_code != 204:  # noqa: PLR2004
             raise GXCloudError(
                 message=f"ListTableNamesAction encountered an error while connecting to GX Cloud. "
