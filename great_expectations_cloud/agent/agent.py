@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
 from uuid import UUID
 
 import orjson
-from great_expectations import get_context  # type: ignore[attr-defined] # TODO: fix this
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
+from great_expectations.data_context.data_context.context_factory import get_context
 from packaging.version import Version
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from pydantic import v1 as pydantic_v1
