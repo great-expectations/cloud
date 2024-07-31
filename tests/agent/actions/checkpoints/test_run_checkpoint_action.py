@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 pytestmark = pytest.mark.unit
 
+
 run_checkpoint_action_class_and_event = (
     RunCheckpointAction,
     RunCheckpointEvent(
@@ -62,7 +63,9 @@ run_scheduled_checkpoint_action_class_and_event = (
 def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_result(
     mock_context, action_class, event, splitter_options, batch_request
 ):
-    action = action_class(context=mock_context)
+    action = action_class(
+        context=mock_context, base_url="", organization_id=uuid.uuid4(), auth_key=""
+    )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     checkpoint = mock_context.run_checkpoint.return_value
     checkpoint_id_str = "5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"
@@ -104,7 +107,9 @@ def test_run_checkpoint_action_raises_on_test_connection_failure(
     mock_context.get_datasource.return_value = mock_datasource
     mock_datasource.test_connection.side_effect = TestConnectionError()
 
-    action = action_class(context=mock_context)
+    action = action_class(
+        context=mock_context, base_url="", organization_id=uuid.uuid4(), auth_key=""
+    )
 
     with pytest.raises(TestConnectionError):
         action.run(

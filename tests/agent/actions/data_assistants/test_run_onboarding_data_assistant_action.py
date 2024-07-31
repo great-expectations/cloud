@@ -35,7 +35,9 @@ def onboarding_event():
 def test_run_onboarding_data_assistant_event_raises_for_legacy_datasource(
     mock_context, onboarding_event, mocker: MockerFixture
 ):
-    action = RunOnboardingDataAssistantAction(context=mock_context)
+    action = RunOnboardingDataAssistantAction(
+        context=mock_context, base_url="", auth_key="", organization_id=uuid.uuid4()
+    )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     mock_context.get_expectation_suite.side_effect = StoreBackendError("test-message")
     mock_context.get_checkpoint.side_effect = StoreBackendError("test-message")
@@ -49,7 +51,9 @@ def test_run_onboarding_data_assistant_event_raises_for_legacy_datasource(
 def test_run_onboarding_data_assistant_event_creates_expectation_suite(
     mock_context, onboarding_event, mocker: MockerFixture
 ):
-    action = RunOnboardingDataAssistantAction(context=mock_context)
+    action = RunOnboardingDataAssistantAction(
+        context=mock_context, base_url="", auth_key="", organization_id=uuid.uuid4()
+    )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     mock_context.get_expectation_suite.side_effect = DataContextError("test-message")
     mock_context.get_checkpoint.side_effect = DataContextError("test-message")
@@ -70,7 +74,9 @@ def test_run_onboarding_data_assistant_event_creates_expectation_suite(
 def test_run_onboarding_data_assistant_event_creates_checkpoint(
     mock_context, onboarding_event, mocker: MockerFixture
 ):
-    action = RunOnboardingDataAssistantAction(context=mock_context)
+    action = RunOnboardingDataAssistantAction(
+        context=mock_context, base_url="", auth_key="", organization_id=uuid.uuid4()
+    )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     mock_context.get_expectation_suite.side_effect = DataContextError("test-message")
     mock_context.get_checkpoint.side_effect = DataContextError("test-message")
@@ -109,7 +115,9 @@ def test_run_onboarding_data_assistant_event_creates_checkpoint(
 def test_run_onboarding_data_assistant_action_returns_action_result(
     mock_context, onboarding_event, mocker: MockerFixture
 ):
-    action = RunOnboardingDataAssistantAction(context=mock_context)
+    action = RunOnboardingDataAssistantAction(
+        context=mock_context, base_url="", auth_key="", organization_id=uuid.uuid4()
+    )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     mock_context.get_expectation_suite.side_effect = StoreBackendError("test-message")
     mock_context.get_checkpoint.side_effect = StoreBackendError("test-message")

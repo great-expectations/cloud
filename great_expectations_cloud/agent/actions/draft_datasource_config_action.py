@@ -3,24 +3,19 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from great_expectations.compatibility.sqlalchemy import inspect
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.datasource.fluent.interfaces import Datasource, TestConnectionError
-from pydantic import v1 as pydantic_v1
+from sqlalchemy import inspect
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
-from great_expectations_cloud.agent.config import (
-    GxAgentEnvVars,
-    generate_config_validation_error_text,
-)
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.exceptions import ErrorCode, raise_with_error_code
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 if TYPE_CHECKING:
-    from great_expectations.compatibility.sqlalchemy.engine import Inspector
+    from sqlalchemy.engine import Inspector
 
 
 class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
@@ -76,22 +71,15 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
 
     def _get_table_names(self, datasource: Datasource) -> list[str]:
         inspector: Inspector = inspect(datasource.get_engine())
-        return inspector.get_table_names()  # type: ignore[no-any-return] # method returns a list of strings
+        return inspector.get_table_names()
 
     def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
-        try:
-            cloud_config = GxAgentEnvVars()
-        except pydantic_v1.ValidationError as validation_err:
-            raise RuntimeError(
-                generate_config_validation_error_text(validation_err)
-            ) from validation_err
-
-        session = create_session(access_token=cloud_config.gx_cloud_access_token)
-        response = session.patch(
-            url=f"{cloud_config.gx_cloud_base_url}/organizations/"
-            f"{cloud_config.gx_cloud_organization_id}/datasources/drafts/{config_id}",
-            json={"table_names": table_names},
-        )
+        with create_session(access_token=self._auth_key) as session:
+            response = session.patch(
+                url=f"{self._base_url}/organizations/"
+                f"{self._organization_id}/datasources/drafts/{config_id}",
+                json={"table_names": table_names},
+            )
         if not response.ok:
             raise RuntimeError(  # noqa: TRY003 # one off error
                 f"DraftDatasourceConfigAction encountered an error while connecting to GX Cloud. "
@@ -101,22 +89,17 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             )
 
     def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
-        try:
-            config = GxAgentEnvVars()
-        except pydantic_v1.ValidationError as validation_err:
-            raise RuntimeError(
-                generate_config_validation_error_text(validation_err)
-            ) from validation_err
         resource_url = (
-            f"{config.gx_cloud_base_url}/organizations/"
-            f"{config.gx_cloud_organization_id}/datasources/drafts/{config_id}"
+            f"{self._base_url}/organizations/"
+            f"{self._organization_id}/datasources/drafts/{config_id}"
         )
-        session = create_session(access_token=config.gx_cloud_access_token)
-        response = session.get(resource_url)
-        if not response.ok:
-            raise RuntimeError(  # noqa: TRY003 # one off error
-                "DraftDatasourceConfigAction encountered an error while " "connecting to GX Cloud"
-            )
+        with create_session(access_token=self._auth_key) as session:
+            response = session.get(resource_url)
+            if not response.ok:
+                raise RuntimeError(  # noqa: TRY003 # one off error
+                    "DraftDatasourceConfigAction encountered an error while "
+                    "connecting to GX Cloud"
+                )
         data = response.json()
         try:
             return data["data"]["attributes"]["draft_config"]  # type: ignore[no-any-return]

@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import functools
 import logging
+import os
 import pathlib
 from pprint import pformat as pf
 from typing import TYPE_CHECKING, Any, Final, Literal, MutableMapping
@@ -70,6 +71,8 @@ def lint(ctx: Context, check: bool = False, unsafe_fixes: bool = False) -> None:
     cmds = ["ruff", "check", "."]
     if not check:
         cmds.append("--fix")
+    elif os.getenv("GITHUB_ACTIONS"):
+        cmds.append("--output-format=github")
     if unsafe_fixes:
         cmds.extend(["--unsafe-fixes", "--show-fixes"])
     ctx.run(" ".join(cmds), echo=True, pty=True)

@@ -25,7 +25,7 @@ class AgentBaseExtraIgnore(BaseModel):
 
 class EventBase(AgentBaseExtraIgnore):
     type: str
-    organization_id: UUID
+    organization_id: Optional[UUID] = None
 
 
 class ScheduledEventBase(EventBase):
@@ -126,6 +126,7 @@ class JobCompleted(AgentBaseExtraForbid):
     error_stack_trace: Union[str, None] = None
     error_code: Union[str, None] = None
     error_params: Union[Dict[str, str], None] = None
+    processed_by: Union[Literal["agent", "runner"], None] = None
 
 
 JobStatus = Union[JobStarted, JobCompleted]

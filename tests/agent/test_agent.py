@@ -171,7 +171,19 @@ def create_session(mocker, queue, connection_string):
     return create_session
 
 
-def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config):
+@pytest.fixture(autouse=True)
+def requests_post(mocker, queue, connection_string):
+    """Patch for requests.Session.post"""
+    requests_post = mocker.patch("requests.Session.post")
+    requests_post().json.return_value = {
+        "queue": queue,
+        "connection_string": connection_string,
+    }
+    requests_post().ok = True
+    return requests_post
+
+
+def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config, requests_post):
     agent = GXAgent()
     assert agent._config == gx_agent_config
 
@@ -273,7 +285,7 @@ def test_gx_agent_updates_cloud_on_job_status(
         f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs/{correlation_id}"
     )
     job_started_data = JobStarted().json()
-    job_completed = JobCompleted(success=True, created_resources=[])
+    job_completed = JobCompleted(success=True, created_resources=[], processed_by="agent")
     job_completed_data = job_completed.json()
 
     async def redeliver_message():
@@ -319,7 +331,11 @@ def test_gx_agent_updates_cloud_on_job_status(
     agent = GXAgent()
     agent.run()
 
-    create_session.return_value.patch.assert_has_calls(
+    # sessions created with context managers now, so we need to
+    # test the runtime calls rather than the return value calls.
+    # the calls also appear to store in any order, hence the any_order=True
+    create_session().__enter__().patch.assert_has_calls(
+        any_order=True,
         calls=[
             call(url, data=job_started_data),
             call(url, data=job_completed_data),
@@ -400,7 +416,9 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     agent = GXAgent()
     agent.run()
 
-    return create_session.return_value.post.assert_any_call(post_url, data=data)
+    # sessions created with context managers now, so we need to
+    # test the runtime calls rather than the return value calls
+    return create_session().__enter__().post.assert_any_call(post_url, data=data)
 
 
 def test_invalid_env_variables_missing_token(set_required_env_vars, monkeypatch):

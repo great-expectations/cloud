@@ -17,12 +17,21 @@ pytestmark = pytest.mark.integration
 
 
 def test_running_draft_datasource_config_action(
-    context: CloudDataContext, org_id_env_var: str, mocker: MockerFixture
+    context: CloudDataContext,
+    cloud_base_url: str,
+    org_id_env_var: str,
+    token_env_var: str,
+    mocker: MockerFixture,
 ):
     # Arrange
     # Note: Draft config is loaded in mercury seed data
 
-    action = DraftDatasourceConfigAction(context=context)
+    action = DraftDatasourceConfigAction(
+        context=context,
+        base_url=cloud_base_url,
+        organization_id=UUID(org_id_env_var),
+        auth_key=token_env_var,
+    )
 
     draft_datasource_id_for_connect_successfully = (
         "2512c2d8-a212-4295-b01b-2bb2ac066f04"  # local_mercury_db
@@ -45,6 +54,7 @@ def test_running_draft_datasource_config_action(
         "checkpoint_job_schedules",
         "draft_configs",
         "user_api_tokens",
+        "user_asset_alerts",
         "organization_api_tokens",
         "suite_validation_results",
         "metrics",
@@ -89,12 +99,17 @@ def test_running_draft_datasource_config_action(
 
 
 def test_running_draft_datasource_config_action_fails_for_unreachable_datasource(
-    context: CloudDataContext, org_id_env_var: str
+    context: CloudDataContext, cloud_base_url: str, org_id_env_var: str, token_env_var: str
 ):
     # Arrange
     # Note: Draft config is loaded in mercury seed data
 
-    action = DraftDatasourceConfigAction(context=context)
+    action = DraftDatasourceConfigAction(
+        context=context,
+        base_url=cloud_base_url,
+        organization_id=UUID(org_id_env_var),
+        auth_key=token_env_var,
+    )
     datasource_id_for_connect_failure = (
         "e47a5059-a6bb-4de7-9286-6ea600a0c53a"  # local_mercury_db_bad_password
     )
