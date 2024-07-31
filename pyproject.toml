@@ -35,7 +35,7 @@ sqlalchemy = { version = ">=2.0", optional = false }
 # optional dependencies
 snowflake-sqlalchemy = { version = ">=1.6", optional = true }
 psycopg2-binary = { version = "*", optional = true }
-databricks-sql-connector = { version = ">=3.1.1", optional = true }
+databricks-sql-connector = { version = ">=3.1.1", extras = ["sqlalchemy"], optional = true }
 
 [tool.poetry.extras]
 # https://python-poetry.org/docs/pyproject#extras
@@ -49,7 +49,7 @@ great-expectations = { version = "^0.18.19"}
 snowflake-sqlalchemy = ">=1.6"
 snowflake-connector-python = ">=3.3.1"
 psycopg2-binary = "^2.9.9"
-databricks-sql-connector = ">=3.1.1"
+databricks-sql-connector = { version = ">=3.1.1", extras = ["sqlalchemy"]}
 
 [tool.poetry.group.dev.dependencies]
 coverage = { extras = ["toml"], version = "^7.5.1" }
