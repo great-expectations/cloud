@@ -54,6 +54,7 @@ def test_running_draft_datasource_config_action(
         "checkpoint_job_schedules",
         "draft_configs",
         "user_api_tokens",
+        "user_asset_alerts",
         "organization_api_tokens",
         "suite_validation_results",
         "metrics",
