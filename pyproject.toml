@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20240729.0.dev0"
+version = "20240730.0.dev0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -31,9 +31,9 @@ orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue 
 # relying on packaging in agent code so declaring it explicitly here
 packaging = ">=21.3,<25.0"
 tenacity = "^8.2.3"
+sqlalchemy = { version = ">=2.0", optional = false }
 # optional dependencies
-snowflake-sqlalchemy = { version = "<1.6", optional = true } # TODO: remove pin once we have tested with sqlalchemy 2.0 & snowflake
-sqlalchemy = { version = "<2.0", optional = true }  # TODO: see above ^
+snowflake-sqlalchemy = { version = ">=1.6", optional = true }
 psycopg2-binary = { version = "*", optional = true }
 
 [tool.poetry.extras]
@@ -45,16 +45,13 @@ postgres = ["sqlalchemy", "psycopg2-binary"]
 [tool.poetry.group.sql.dependencies]
 great-expectations = { version = "^0.18.19", extras = [
     "databricks",
-    "sqlalchemy1",
 ] }
-snowflake-sqlalchemy = ">=1.5.0"
+snowflake-sqlalchemy = ">=1.6"
 snowflake-connector-python = ">=3.3.1"
-# TODO: Remove the python constraint once this PR is merged - https://github.com/sqlalchemy-redshift/sqlalchemy-redshift/pull/288
-sqlalchemy-redshift = { version = "^0.8.8", python = "<3.11" }
 psycopg2-binary = "^2.9.9"
 
 [tool.poetry.group.dev.dependencies]
-coverage = {extras = ["toml"], version = "^7.5.1"}
+coverage = { extras = ["toml"], version = "^7.5.1" }
 freezegun = "^1.4.0"
 invoke = "^2.2.0"
 mypy = "1.11.0"
@@ -192,7 +189,9 @@ max-complexity = 10
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "os.environ".msg = """Please do not use os.environ, instead use a pydantic.BaseSettings model"""
 "great_expectations.compatibility.pydantic".msg = "Import pydantic directly."
-# TODO: ban use of the compatibility layer in favor of direct imports
+"great_expectations.compatibility.sqlalchemy".msg = "Import sqlalchemy directly."
+"great_expectations.compatibility".msg = "Favor specific version imports over compatibility module."
+
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
@@ -246,6 +245,10 @@ filterwarnings = [
     # Full warning:
     # PoetryVersionOutdated: The latest version of poetry is latest_poetry_version: 1.8.0 but the poetry.lock file was generated using 1.7.1.
     "once:.*:tests.test_project.PoetryVersionOutdated",
+    # Full warning:
+    # sqlalchemy.exc.SAWarning: The GenericFunction 'flatten' is already registered and is going to be overridden.
+    # this is apparently a known issue with snowflake connector 1.6
+    "module: The GenericFunction 'flatten' is already registered and is going to be overridden:sqlalchemy.exc.SAWarning"
 ]
 
 [tool.coverage.report]
@@ -260,4 +263,4 @@ exclude_also = [
     "if __name__ == .__main__.:",
     # Don't complain about abstract methods, they aren't run:
     "@(abc\\.)?abstractmethod",
-    ]
+]
