@@ -70,7 +70,7 @@ See also [CONTRIBUTING.md](https://github.com/great-expectations/cloud/blob/main
 
 ### Developer Tasks
 
-Common developer tasks are available via `invoke` (defined in `tasks.py`)
+Common developer tasks are available via `invoke` (defined in `tasks.py`).
 
 `invoke --list` to see available tasks.
 
