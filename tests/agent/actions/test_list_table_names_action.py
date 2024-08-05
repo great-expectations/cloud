@@ -16,6 +16,7 @@ from sqlalchemy.engine import Inspector
 from great_expectations_cloud.agent.actions import (
     ListTableNamesAction,
 )
+from great_expectations_cloud.agent.agent import GXAgentError
 from great_expectations_cloud.agent.models import ListTableNamesEvent
 
 if TYPE_CHECKING:
@@ -115,3 +116,27 @@ def test_run_list_table_names_action_returns_action_result(
     assert action_result.type == event.type
     assert action_result.id == id
     assert action_result.created_resources == []
+
+
+def test_organization_id_of_event_needs_to_match_context(
+    mock_context, mocker: MockerFixture, org_id: str, org_id_different_from_context: str
+):
+    event = ListTableNamesEvent(
+        type="list_table_names_request.received",
+        datasource_name="test-datasource",
+        organization_id=uuid.UUID(org_id_different_from_context),
+    )
+    action = ListTableNamesAction(
+        context=mock_context,
+        base_url="https://api.greatexpectations.io/",
+        organization_id=uuid.UUID(org_id),
+        auth_key="",
+    )
+    id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
+    mock_context.get_expectation_suite.side_effect = StoreBackendError("test-message")
+    mock_context.get_checkpoint.side_effect = StoreBackendError("test-message")
+    datasource = mocker.Mock(spec=PandasDatasource)
+    mock_context.get_datasource.return_value = datasource
+
+    with pytest.raises(GXAgentError):
+        action.run(event=event, id=id)

@@ -12,6 +12,7 @@ from great_expectations.datasource.fluent.interfaces import TestConnectionError
 from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
     DraftDatasourceConfigAction,
 )
+from great_expectations_cloud.agent.agent import GXAgentError
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.exceptions import ErrorCode, GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
@@ -397,4 +398,43 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
     )
 
     with pytest.raises(RuntimeError, match="error while connecting to GX Cloud"):
+        action.run(event=event, id=str(job_id))
+
+
+@responses.activate
+def test_organization_id_of_event_needs_to_match_context(
+    mock_context,
+    mocker: MockerFixture,
+    set_required_env_vars: None,
+    org_id: str,
+    org_id_different_from_context: str,
+):
+    datasource_config = {"type": "pandas", "name": "test-1-2-3"}
+    config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
+    org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    env_vars = GxAgentEnvVars()
+    action = DraftDatasourceConfigAction(
+        context=mock_context,
+        base_url="https://test-base-url",
+        auth_key="",
+        organization_id=uuid.UUID(org_id),
+    )
+
+    _get_table_names_spy = mocker.spy(action, "_get_table_names")
+    _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
+
+    job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
+    event = DraftDatasourceConfigEvent(
+        config_id=config_id, organization_id=uuid.UUID(org_id_different_from_context)
+    )
+    expected_url: str = (
+        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/datasources/drafts/{config_id}"
+    )
+
+    responses.get(
+        url=expected_url,
+        json=build_get_draft_config_payload(config=datasource_config, id=config_id),
+    )
+    with pytest.raises(GXAgentError):
         action.run(event=event, id=str(job_id))

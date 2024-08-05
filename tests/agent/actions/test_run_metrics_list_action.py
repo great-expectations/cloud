@@ -19,6 +19,7 @@ from great_expectations.experimental.metric_repository.metrics import (
 )
 
 from great_expectations_cloud.agent.actions import MetricListAction
+from great_expectations_cloud.agent.agent import GXAgentError
 from great_expectations_cloud.agent.models import CreatedResource, RunMetricsListEvent
 
 if TYPE_CHECKING:
@@ -255,3 +256,38 @@ def test_run_metrics_list_creates_metric_run_then_raises_on_any_metric_exception
             id="test-id",
         )
     mock_metric_repository.add_metric_run.assert_called_once_with(mock_metric_run)
+
+
+def test_organization_id_of_event_needs_to_match_context(
+    mock_context, mocker: MockerFixture, org_id: str, org_id_different_from_context: str
+):
+    mock_metric_repository = mocker.Mock(spec=MetricRepository)
+    mock_batch_inspector = mocker.Mock(spec=BatchInspector)
+
+    mock_datasource = mocker.Mock()
+    mock_context.get_datasource.return_value = mock_datasource
+    mock_data_asset = mocker.Mock()
+    mock_datasource.get_asset.return_value = mock_data_asset
+    mock_data_asset.test_connection.side_effect = TestConnectionError()
+
+    action = MetricListAction(
+        context=mock_context,
+        metric_repository=mock_metric_repository,
+        batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.UUID(org_id_different_from_context),
+    )
+
+    with pytest.raises(GXAgentError):
+        action.run(
+            event=RunMetricsListEvent(
+                type="metrics_list_request.received",
+                datasource_name="test-datasource",
+                data_asset_name="test-data-asset",
+                metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+                organization_id=uuid.UUID(org_id),
+            ),
+            id="test-id",
+        )
+    mock_batch_inspector.compute_metric_run.assert_not_called()
