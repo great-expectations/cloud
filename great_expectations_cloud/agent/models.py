@@ -90,7 +90,7 @@ class DraftDatasourceConfigEvent(EventBase):
     config_id: UUID
 
 
-class UnknownEvent(AgentBaseExtraForbid):
+class UnknownEvent(AgentBaseExtraIgnore):
     type: Literal["unknown_event"] = "unknown_event"
 
 

@@ -34,3 +34,7 @@ class AgentAction(Generic[_EventT]):
 
     @abstractmethod
     def run(self, event: _EventT, id: str) -> ActionResult: ...
+
+    @property
+    def organization_id(self) -> UUID:
+        return self._organization_id
