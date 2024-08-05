@@ -24,6 +24,16 @@ def org_id_env_var() -> str:
 
 
 @pytest.fixture(scope="module")
+def org_id_different_from_env_var() -> str:
+    # This is a different org_id from the one in the env var
+    org_id = "1a6b0e6b-5943-4225-a23c-d154fee937a2"
+    assert org_id != os.environ.get(
+        "GX_CLOUD_ORGANIZATION_ID"
+    ), "org_id is the same as the one in the env var"
+    return org_id
+
+
+@pytest.fixture(scope="module")
 def token_env_var() -> str:
     gx_token = os.environ.get("GX_CLOUD_ACCESS_TOKEN")
     assert gx_token, "No GX_CLOUD_ACCESS_TOKEN env var"

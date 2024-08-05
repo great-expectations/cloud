@@ -68,6 +68,10 @@ class EventHandler:
         self, event: Event, base_url: str, auth_key: str, organization_id: UUID
     ) -> AgentAction[Any]:
         """Get the action that should be run for the given event."""
+
+        if not self._check_event_organization_id(event, organization_id):
+            raise GXAgentError("Unable to process Event. Organization ID does not match.")  # noqa: TRY003
+
         action_map = _EVENT_ACTION_MAP.get(_GX_MAJOR_VERSION)
         if action_map is None:
             raise NoVersionImplementationError(version=_GX_MAJOR_VERSION)
@@ -81,9 +85,6 @@ class EventHandler:
             auth_key=auth_key,
         )
 
-    def check_matching_organization_id(self, event: Event, organization_id: UUID) -> bool:
-        return event.organization_id == organization_id
-
     def handle_event(  # Refactor opportunity
         self, event: Event, id: str, base_url: str, auth_key: str, organization_id: UUID
     ) -> ActionResult:
@@ -96,11 +97,6 @@ class EventHandler:
             event=event, base_url=base_url, auth_key=auth_key, organization_id=organization_id
         )
         LOGGER.info(f"Handling event: {event.type} -> {action.__class__.__name__}")
-        # this is the action run.
-        if not self.check_matching_organization_id(event, organization_id):
-            raise GXAgentError(  # noqa: TRY003 # TODO: use AuthenticationError
-                "Unable to authenticate to GX Cloud. Please check your credentials."
-            )
         action_result = action.run(event=event, id=id)
         end_time = datetime.now(tz=timezone.utc)
         action_result.job_duration = end_time - start_time
@@ -116,6 +112,12 @@ class EventHandler:
             return UnknownEvent()
 
         return event
+
+    def _check_event_organization_id(self, event: Event, organization_id: UUID) -> bool:
+        event_org_id = event.organization_id
+        if event_org_id and event_org_id != organization_id:
+            return False
+        return True
 
 
 class EventError(Exception): ...

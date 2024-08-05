@@ -10,6 +10,7 @@ import requests
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
 
 from great_expectations_cloud.agent.actions import MetricListAction
+from great_expectations_cloud.agent.agent import GXAgentError
 from great_expectations_cloud.agent.models import (
     RunMetricsListEvent,
 )
@@ -167,3 +168,38 @@ def test_running_metric_list_action(
     # assert rowCount is computed and Metrics is non-empty
     assert result["data"]["dataAsset"]["latestMetricRun"]["metrics"]
     assert result["data"]["dataAsset"]["latestMetricRun"]["rowCount"] != 0
+
+
+def test_metric_list_action_org_is_matches_context(
+    context: CloudDataContext,
+    local_mercury_db_datasource: PostgresDatasource,
+    local_mercury_db_organizations_table_asset: TableAsset,
+    org_id_env_var: str,
+    cloud_base_url: str,
+    token_env_var: str,
+    org_id_different_from_env_var: str,
+):
+    # MetricListEvent with only the Table Metrics requested
+    metrics_list_event = RunMetricsListEvent(
+        type="metrics_list_request.received",
+        datasource_name=local_mercury_db_datasource.name,
+        data_asset_name=local_mercury_db_organizations_table_asset.name,
+        metric_names=[
+            MetricTypes.TABLE_COLUMN_TYPES,
+            MetricTypes.TABLE_COLUMNS,
+            MetricTypes.TABLE_ROW_COUNT,
+        ],
+        organization_id=uuid.UUID(org_id_different_from_env_var),
+    )
+    # Action and Event
+    action = MetricListAction(
+        context=context,
+        base_url=cloud_base_url,
+        organization_id=uuid.UUID(org_id_env_var),
+        auth_key=token_env_var,
+    )
+    with pytest.raises(GXAgentError):
+        action.run(
+            event=metrics_list_event,
+            id="test-id",
+        )

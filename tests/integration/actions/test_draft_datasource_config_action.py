@@ -6,6 +6,7 @@ from uuid import UUID
 import pytest
 
 from great_expectations_cloud.agent.actions import DraftDatasourceConfigAction
+from great_expectations_cloud.agent.agent import GXAgentError
 from great_expectations_cloud.agent.exceptions import GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
@@ -123,4 +124,31 @@ def test_running_draft_datasource_config_action_fails_for_unreachable_datasource
     # Act & Assert
     # Check that the action was unsuccessful and an error was raised.
     with pytest.raises(GXCoreError):
+        action.run(event=draft_datasource_config_event, id=event_id)
+
+
+def test_event_org_id_matches_context_org_id(
+    context: CloudDataContext,
+    cloud_base_url: str,
+    org_id_env_var: str,
+    token_env_var: str,
+    org_id_different_from_env_var: str,
+):
+    action = DraftDatasourceConfigAction(
+        context=context,
+        base_url=cloud_base_url,
+        organization_id=UUID(org_id_different_from_env_var),
+        auth_key=token_env_var,
+    )
+
+    draft_datasource_id_for_connect_successfully = (
+        "2512c2d8-a212-4295-b01b-2bb2ac066f04"  # local_mercury_db
+    )
+    draft_datasource_config_event = DraftDatasourceConfigEvent(
+        type="test_datasource_config",
+        config_id=UUID(draft_datasource_id_for_connect_successfully),
+        organization_id=UUID(org_id_env_var),
+    )
+    event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
+    with pytest.raises(GXAgentError):
         action.run(event=draft_datasource_config_event, id=event_id)
