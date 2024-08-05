@@ -105,6 +105,17 @@ class EventHandler:
 
         return event
 
+    @classmethod
+    def parse_event_from_dict(cls, msg_body: dict) -> Event:
+        try:
+            event: Event = pydantic_v1.parse_obj_as(Event, msg_body)  # type: ignore[arg-type] # FIXME
+        except (pydantic_v1.ValidationError, JSONDecodeError):
+            # Log as bytes
+            LOGGER.exception("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
+            return UnknownEvent()
+
+        return event
+
 
 class EventError(Exception): ...
 

@@ -10,9 +10,17 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
+from unittest import mock
 from uuid import UUID
 
+import aiormq
 import orjson
+from fast_depends import inject
+from faststream import (
+    Context,
+    FastStream,
+)
+from faststream.rabbit import RabbitBroker, RabbitQueue
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
@@ -31,13 +39,11 @@ from great_expectations_cloud.agent.event_handler import (
     EventHandler,
 )
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
-    AsyncRabbitMQClient,
     ClientError,
 )
 from great_expectations_cloud.agent.message_service.subscriber import (
     EventContext,
     OnMessageCallback,
-    Subscriber,
     SubscriberError,
 )
 from great_expectations_cloud.agent.models import (
@@ -61,6 +67,9 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 # TODO Set in log dict
 LOGGER.setLevel(logging.INFO)
 HandlerMap = Dict[str, OnMessageCallback]
+
+
+MAX_DELIVERY = 10
 
 
 class GXAgentConfig(AgentBaseExtraForbid):
@@ -99,6 +108,101 @@ class Payload(AgentBaseExtraForbid):
         extra = "forbid"
         json_dumps = orjson_dumps
         json_loads = orjson_loads
+
+
+# class GXAgentMiddleware(BaseMiddleware):
+#     async def on_receive(self):
+#         print(f"Received: {self.message}")
+#         # Same logic as in _handle_event_as_thread_enter
+#         # if self._reject_correlation_id(self.message.correlation_id) is True:
+#         #     # this event has been redelivered too many times - remove it from circulation
+#         #     raise RejectMessage()
+#         # The above can be replaced by Retries = 10
+
+#         # elif self._can_accept_new_task() is not True:
+#         #     # request that this message is redelivered later
+#         #     loop = asyncio.get_event_loop()
+#         #     # store a reference the task to ensure it isn't garbage collected
+#         #     self._redeliver_msg_task = loop.create_task(self.message.redeliver_message())
+#         #     return
+#         # Do we need the above?? We are using Async faststream and can set number of using CLI --worker
+#         return await super().on_receive()
+
+#     async def after_processed(self, exc_type, exc_val, exc_tb):
+#         return await super().after_processed(exc_type, exc_val, exc_tb)
+
+
+def wrap_inject_self(func):
+    async def wrapper(self):
+        return await inject(func)(self=self)
+
+    return wrapper
+
+
+# Use Retries = 10, --workers 1
+# Data Context as a Dependency
+async def handler(msg: dict, gx_agent: GXAgent, correlation_id: str) -> None:
+    print(f"Received: {msg}")
+    print(f"GX Agent: {gx_agent}")
+    status = None
+
+    event = EventHandler.parse_event_from_dict(msg)
+    event_context = EventContext(
+        event=event,
+        correlation_id=correlation_id,  # msg.correlation_id,
+        processed_successfully=mock.Mock(),
+        processed_with_failures=mock.Mock(),
+        redeliver_message=mock.Mock(),
+    )
+    organization_id = gx_agent.get_organization_id(event_context)
+    try:
+        result = gx_agent._handle_event(event_context)
+    except Exception as e:
+        status = build_failed_job_completed_status(e)
+        LOGGER.exception(
+            "Job completed with error",
+            extra={
+                "event_type": event_context.event.type,
+                "correlation_id": event_context.correlation_id,
+            },
+        )
+    else:  # handle no exception
+        if result.type == UnknownEvent().type:
+            status = JobCompleted(
+                success=False,
+                created_resources=[],
+                error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
+                processed_by=gx_agent._get_processed_by(),
+            )
+            LOGGER.error(
+                "Job completed with error. Ensure agent is up-to-date.",
+                extra={
+                    "event_type": event_context.event.type,
+                    "id": event_context.correlation_id,
+                    "organization_id": str(organization_id),
+                },
+            )
+        else:
+            status = JobCompleted(
+                success=True,
+                created_resources=result.created_resources,
+                processed_by=gx_agent._get_processed_by(),
+            )
+            LOGGER.info(
+                "Completed job",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                    "job_duration": (
+                        result.job_duration.total_seconds() if result.job_duration else None
+                    ),
+                    "organization_id": str(organization_id),
+                },
+            )
+    finally:
+        gx_agent._update_status(
+            job_id=event_context.correlation_id, status=status, org_id=organization_id
+        )
 
 
 class GXAgent:
@@ -143,43 +247,132 @@ class GXAgent:
         """Open a connection to GX Cloud."""
 
         print("Opening connection to GX Cloud.")
-        self._listen()
+        asyncio.run(self._listen())
         print("The connection to GX Cloud has been closed.")
 
     # ZEL-505: A race condition can occur if two or more agents are started at the same time
     #          due to the generation of passwords for rabbitMQ queues. This can be mitigated
     #          by adding a delay and retrying the connection. Retrying with new credentials
     #          requires calling get_config again, which handles the password generation.
+    # Note: This is not the number of retries of processing a message, it's the number of retries
+    #       to establish a connection to the broker.
     @retry(
         retry=retry_if_exception_type((AuthenticationError, ProbableAuthenticationError)),
         wait=wait_exponential(multiplier=1, min=1, max=10),
         stop=stop_after_attempt(3),
         after=after_log(LOGGER, logging.DEBUG),
     )
-    def _listen(self) -> None:
+    async def _listen(self) -> None:
         """Manage connection lifecycle."""
-        subscriber = None
+        # def _build_client_parameters(self, url: str) -> pika.URLParameters:
+        # """Configure parameters used to connect to the broker."""
+        # parameters = pika.URLParameters(url)
+        # only enable SSL if connection string calls for it
+
+        # Works with this but not needed
+        # ssl_context = None
+        # if self._config.connection_string.startswith("amqps://"):
+        #     # SSL Context for TLS configuration of Amazon MQ for RabbitMQ
+        #     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        #     ssl_context.load_default_certs()
+        #     ssl_context.set_ciphers("ECDHE+AESGCM:!ECDSA")
+        #     print(ssl_context.get_ciphers())
+        #     print("EHHH")
+        # else:
+        #     ssl_context = ssl.create_default_context()
+
+        # # Perform connection
+        # connection = await aiormq.connect(str(self._config.connection_string), context=ssl_context)
+
+        # # Creating a channel
+        # channel = await connection.channel()
+        # print("YOYO")
+        # exchange = await channel.exchange_declare(
+        #     exchange="agent-exchange", exchange_type="direct", passive=True
+        # )
+        # print("EXCHANGE", exchange)
+        # # breakpoint()
+        # declare_ok = await channel.queue_declare(
+        #     queue=self._config.queue, passive=True  # , durable=True
+        # )
+        # print("QUEUE", declare_ok)
+        # await channel.queue_bind(declare_ok.queue, "agent-exchange")
+        # print("DECLARED", declare_ok)
+
+        #     parameters.ssl_options = pika.SSLOptions(context=ssl_context)
+        # return parameters
+
         try:
-            client = AsyncRabbitMQClient(url=str(self._config.connection_string))
-            subscriber = Subscriber(client=client)
-            print("The GX Agent is ready.")
-            # Open a connection until encountering a shutdown event
-            subscriber.consume(
-                queue=self._config.queue,
-                on_message=self._handle_event_as_thread_enter,
-            )
+            print("Starting FastStream.")
+            print(str(self._config.connection_string))
+            # security = BaseSecurity(ssl_context=ssl_context)
+            broker = RabbitBroker(
+                url=str(self._config.connection_string),
+            )  # security=security)
+            app = FastStream(broker)
+            queue = RabbitQueue(name=self._config.queue, durable=True, passive=True)
+            print("Queue is valid.")
+
+            # FastStream declares default exchange if not provided
+            @broker.subscriber(queue, retries=MAX_DELIVERY)
+            async def handle_me(
+                msg: dict, correlation_id: str = Context("message.correlation_id")
+            ) -> None:
+                print(f"Received: {msg}")
+                print(f"Correlation ID: {correlation_id}")
+                await handler(msg, gx_agent=self, correlation_id=correlation_id)
+
+            # THIS also works
+            # router = RabbitRouter(
+            #     handlers=(
+            #         RabbitRoute(
+            #             handler,
+            #             queue,
+            #         ),
+            #     )
+            # )
+            # broker.include_router(router)
+
+            print("FastStream is ready.")
+            await app.run()
         except KeyboardInterrupt:
             print("Received request to shut down.")
-        except (SubscriberError, ClientError):
+        except (
+            SubscriberError,
+            ClientError,
+            asyncio.exceptions.CancelledError,
+            aiormq.exceptions.ChannelAccessRefused,
+        ):
             print("The connection to GX Cloud has encountered an error.")
+            print(traceback.format_exc())
         except (AuthenticationError, ProbableAuthenticationError):
             # Retry with new credentials
             self._config = self._get_config()
             # Raise to use the retry decorator to handle the retry logic
             raise
-        finally:
-            if subscriber is not None:
-                subscriber.close()
+
+        # subscriber = None
+        # try:
+        #     client = AsyncRabbitMQClient(url=str(self._config.connection_string))
+        #     subscriber = Subscriber(client=client)
+        #     print("The GX Agent is ready.")
+        #     # Open a connection until encountering a shutdown event
+        #     subscriber.consume(
+        #         queue=self._config.queue,
+        #         on_message=self._handle_event_as_thread_enter,
+        #     )
+        # except KeyboardInterrupt:
+        #     print("Received request to shut down.")
+        # except (SubscriberError, ClientError):
+        #     print("The connection to GX Cloud has encountered an error.")
+        # except (AuthenticationError, ProbableAuthenticationError):
+        #     # Retry with new credentials
+        #     self._config = self._get_config()
+        #     # Raise to use the retry decorator to handle the retry logic
+        #     raise
+        # finally:
+        #     if subscriber is not None:
+        #         subscriber.close()
 
     @classmethod
     def get_current_gx_agent_version(cls) -> str:
@@ -326,9 +519,9 @@ class GXAgent:
                     extra={
                         "event_type": event_context.event.type,
                         "correlation_id": event_context.correlation_id,
-                        "job_duration": result.job_duration.total_seconds()
-                        if result.job_duration
-                        else None,
+                        "job_duration": (
+                            result.job_duration.total_seconds() if result.job_duration else None
+                        ),
                         "organization_id": str(organization_id),
                     },
                 )
@@ -401,8 +594,13 @@ class GXAgent:
             )
 
         json_response = response.json()
+        print(json_response)
         queue = json_response["queue"]
         connection_string = json_response["connection_string"]
+        print("queue", queue)
+        print("connection_string", connection_string)
+        # queue q-0ccac18e-7631-4bdd-8a42-3c35cce574c6
+        # connection_string amqps://org-agent-0ccac18e-7631-4bdd-8a42-3c35cce574c6:%26e5%26Wg%3B2vPzz%3A%5CbrG%23%22b2MGv%2FxY%24%3Fzf_rcRn%28XsFL5%25AMPyi%40tY%3E4%5E%3FlDJAV%3F%5Bn%3A@mq.dev.greatexpectations.io:5671
 
         try:
             # pydantic will coerce the url to the correct type
@@ -431,7 +629,12 @@ class GXAgent:
         )
         with create_session(access_token=self.get_auth_key()) as session:
             data = status.json()
-            session.patch(agent_sessions_url, data=data)
+            response = session.patch(agent_sessions_url, data=data)
+            if response.ok is not True:
+                LOGGER.exception(
+                    "Unable to update status",
+                    extra={"job_id": job_id, "status": str(status)},
+                )
             LOGGER.info("Status updated", extra={"job_id": job_id, "status": str(status)})
 
     def _create_scheduled_job_and_set_started(self, event_context: EventContext) -> None:

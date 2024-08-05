@@ -68,6 +68,10 @@ See also [CONTRIBUTING.md](https://github.com/great-expectations/cloud/blob/main
 4. Set up precommit hooks
    - `pre-commit install`
 
+### Troubleshooting
+
+If you run into issues, you can try `pipx reinstall-all`
+
 ### Developer Tasks
 
 Common developer tasks are available via `invoke` (defined in `tasks.py`)
