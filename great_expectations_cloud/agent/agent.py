@@ -223,11 +223,11 @@ class GXAgent:
             )
             self._current_task.add_done_callback(on_exit_callback)
 
-    def get_data_context(self, event_context: EventContext) -> CloudDataContext:
+    def get_data_context(self) -> CloudDataContext:
         """Helper method to get a DataContext Agent. Overridden in GX-Runner."""
         return self._context
 
-    def get_organization_id(self, event_context: EventContext) -> UUID:
+    def get_organization_id(self) -> UUID:
         """Helper method to get the organization ID. Overridden in GX-Runner."""
         return UUID(self._config.gx_cloud_organization_id)
 
@@ -246,29 +246,27 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
-        data_context = self.get_data_context(event_context=event_context)
+        data_context = self.get_data_context()
         # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
         self._set_http_session_headers(
             correlation_id=event_context.correlation_id, data_context=data_context
         )
 
-        organization_id = self.get_organization_id(event_context)
+        org_id = self.get_organization_id()
         base_url = self._config.gx_cloud_base_url
         auth_key = self.get_auth_key()
 
         if isinstance(event_context.event, ScheduledEventBase):
             self._create_scheduled_job_and_set_started(event_context)
         else:
-            self._update_status(
-                job_id=event_context.correlation_id, status=JobStarted(), org_id=organization_id
-            )
+            self._update_status(job_id=event_context.correlation_id, status=JobStarted())
         print(f"Starting job {event_context.event.type} ({event_context.correlation_id}) ")
         LOGGER.info(
             "Starting job",
             extra={
                 "event_type": event_context.event.type,
                 "correlation_id": event_context.correlation_id,
-                "organization_id": str(organization_id),
+                "organization_id": str(org_id),
             },
         )
         handler = EventHandler(context=data_context)
@@ -278,7 +276,7 @@ class GXAgent:
             id=event_context.correlation_id,
             base_url=base_url,
             auth_key=auth_key,
-            organization_id=organization_id,
+            organization_id=org_id,
         )
         return result
 
@@ -293,7 +291,7 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
-        organization_id = self.get_organization_id(event_context)
+        org_id = self.get_organization_id()
 
         # get results or errors from the thread
         error = future.exception()
@@ -312,7 +310,7 @@ class GXAgent:
                     extra={
                         "event_type": event_context.event.type,
                         "id": event_context.correlation_id,
-                        "organization_id": str(organization_id),
+                        "organization_id": str(org_id),
                     },
                 )
             else:
@@ -329,7 +327,7 @@ class GXAgent:
                         "job_duration": result.job_duration.total_seconds()
                         if result.job_duration
                         else None,
-                        "organization_id": str(organization_id),
+                        "organization_id": str(org_id),
                     },
                 )
         else:
@@ -340,12 +338,11 @@ class GXAgent:
                 extra={
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
+                    "organization_id": str(org_id),
                 },
             )
 
-        self._update_status(
-            job_id=event_context.correlation_id, status=status, org_id=organization_id
-        )
+        self._update_status(job_id=event_context.correlation_id, status=status)
 
         # ack message and cleanup resources
         event_context.processed_successfully()
@@ -418,21 +415,28 @@ class GXAgent:
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
 
-    def _update_status(self, job_id: str, status: JobStatus, org_id: UUID) -> None:
+    def _update_status(self, job_id: str, status: JobStatus) -> None:
         """Update GX Cloud on the status of a job.
 
         Args:
             job_id: job identifier, also known as correlation_id
             status: pydantic model encapsulating the current status
         """
-        LOGGER.info("Updating status", extra={"job_id": job_id, "status": str(status)})
+        org_id = self.get_organization_id()
+        LOGGER.info(
+            "Updating status",
+            extra={"job_id": job_id, "status": str(status), "organization_id": str(org_id)},
+        )
         agent_sessions_url = (
             f"{self._config.gx_cloud_base_url}/organizations/{org_id}" + f"/agent-jobs/{job_id}"
         )
         with create_session(access_token=self.get_auth_key()) as session:
             data = status.json()
             session.patch(agent_sessions_url, data=data)
-            LOGGER.info("Status updated", extra={"job_id": job_id, "status": str(status)})
+            LOGGER.info(
+                "Status updated",
+                extra={"job_id": job_id, "status": str(status), "organization_id": str(org_id)},
+            )
 
     def _create_scheduled_job_and_set_started(self, event_context: EventContext) -> None:
         """Create a job in GX Cloud for scheduled events.
@@ -444,20 +448,26 @@ class GXAgent:
         Args:
             event_context: event with related properties and actions.
         """
+        org_id = self.get_organization_id()
         data = {
             "correlation_id": event_context.correlation_id,
             "event": event_context.event.dict(),
         }
-        LOGGER.info("Creating scheduled job and setting started", extra=data)
+        LOGGER.info(
+            "Creating scheduled job and setting started",
+            extra={**data, "organization_id": str(org_id)},
+        )
 
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{self.get_organization_id(event_context)}"
-            + "/agent-jobs"
+            f"{self._config.gx_cloud_base_url}/organizations/{org_id}" + "/agent-jobs"
         )
         with create_session(access_token=self.get_auth_key()) as session:
             payload = Payload(data=data)
             session.post(agent_sessions_url, data=payload.json())
-            LOGGER.info("Created scheduled job and set started", extra=data)
+            LOGGER.info(
+                "Created scheduled job and set started",
+                extra={**data, "organization_id": str(org_id)},
+            )
 
     def get_header_name(self) -> type[HeaderName]:
         return HeaderName
@@ -472,7 +482,7 @@ class GXAgent:
         self, data_context: CloudDataContext, correlation_id: str | None = None
     ) -> None:
         """
-        Set the the session headers for requests to GX Cloud.
+        Set the session headers for requests to GX Cloud.
         In particular, set the User-Agent header to identify the GX Agent and the correlation_id as
         Agent-Job-Id if provided.
 
