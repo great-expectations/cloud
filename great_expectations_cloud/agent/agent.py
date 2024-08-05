@@ -464,7 +464,7 @@ class GXAgent:
             payload = Payload(data=data)
             session.post(agent_sessions_url, data=payload.json())
             LOGGER.info(
-                "Created scheduled job and set started", extra={**data, "organization_id": org_id}
+                "Created scheduled job and set started", extra={**data, "organization_id": str(org_id)}
             )
 
     def get_header_name(self) -> type[HeaderName]:
