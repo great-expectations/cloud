@@ -6,8 +6,7 @@ from uuid import UUID
 import pytest
 
 from great_expectations_cloud.agent.actions import DraftDatasourceConfigAction
-from great_expectations_cloud.agent.agent import GXAgentError
-from great_expectations_cloud.agent.exceptions import GXCoreError
+from great_expectations_cloud.agent.exceptions import GXAgentError, GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 if TYPE_CHECKING:

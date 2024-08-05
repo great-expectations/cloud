@@ -16,7 +16,7 @@ from sqlalchemy.engine import Inspector
 from great_expectations_cloud.agent.actions import (
     ListTableNamesAction,
 )
-from great_expectations_cloud.agent.agent import GXAgentError
+from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import ListTableNamesEvent
 
 if TYPE_CHECKING:

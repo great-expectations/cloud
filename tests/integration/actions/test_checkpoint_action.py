@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 from great_expectations.core import ExpectationConfiguration
 
-from great_expectations_cloud.agent.agent import GXAgentError
+from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     RunCheckpointEvent,
 )

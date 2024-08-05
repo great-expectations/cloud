@@ -12,9 +12,8 @@ from great_expectations.datasource.fluent.interfaces import TestConnectionError
 from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
     DraftDatasourceConfigAction,
 )
-from great_expectations_cloud.agent.agent import GXAgentError
 from great_expectations_cloud.agent.config import GxAgentEnvVars
-from great_expectations_cloud.agent.exceptions import ErrorCode, GXCoreError
+from great_expectations_cloud.agent.exceptions import ErrorCode, GXAgentError, GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 if TYPE_CHECKING:

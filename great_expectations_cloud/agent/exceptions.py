@@ -4,6 +4,12 @@ import enum
 from typing import NoReturn
 
 
+class GXAgentError(Exception): ...
+
+
+class GXAgentConfigError(GXAgentError): ...
+
+
 def raise_with_error_code(e: Exception, error_code: ErrorCode) -> NoReturn:
     """Raise a GXCoreError with the given error_code and the message from the given exception.
 

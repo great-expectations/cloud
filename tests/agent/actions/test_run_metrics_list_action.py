@@ -19,7 +19,7 @@ from great_expectations.experimental.metric_repository.metrics import (
 )
 
 from great_expectations_cloud.agent.actions import MetricListAction
-from great_expectations_cloud.agent.agent import GXAgentError
+from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import CreatedResource, RunMetricsListEvent
 
 if TYPE_CHECKING:

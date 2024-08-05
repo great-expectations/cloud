@@ -13,7 +13,7 @@ from packaging.version import parse as parse_version
 from pydantic import v1 as pydantic_v1
 
 from great_expectations_cloud.agent.actions.unknown import UnknownEventAction
-from great_expectations_cloud.agent.agent import GXAgentError
+from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     Event,
     UnknownEvent,
