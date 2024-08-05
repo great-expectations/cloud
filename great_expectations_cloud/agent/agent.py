@@ -454,7 +454,8 @@ class GXAgent:
             "event": event_context.event.dict(),
         }
         LOGGER.info(
-            "Creating scheduled job and setting started", extra={**data, "organization_id": org_id}
+            "Creating scheduled job and setting started",
+            extra={**data, "organization_id": str(org_id)},
         )
 
         agent_sessions_url = (
