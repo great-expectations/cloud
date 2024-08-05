@@ -411,7 +411,6 @@ def test_organization_id_of_event_needs_to_match_context(
 ):
     datasource_config = {"type": "pandas", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
-    org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(
         context=mock_context,
