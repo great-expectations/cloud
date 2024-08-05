@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   containerize-agent:
@@ -109,7 +110,8 @@ jobs:
 
       - name: Get is_release from pyproject.toml
         id: get_is_release
-        run: echo "IS_RELEASE=$(poetry version -s | grep -q 'dev' && echo false || echo true)" >> $GITHUB_OUTPUT
+        # run: echo "IS_RELEASE=$(poetry version -s | grep -q 'dev' && echo false || echo true)" >> $GITHUB_OUTPUT
+        run: echo "IS_RELEASE=false" >> $GITHUB_OUTPUT
 
       # Uses the version from pyproject.toml for the tag
       - name: Push Pre-Release to Docker Hub and Internal ECR
@@ -120,7 +122,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            greatexpectations/agent:dev
             greatexpectations/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
             258143015559.dkr.ecr.us-east-1.amazonaws.com/gx/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
 

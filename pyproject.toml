@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20240730.0.dev0"
+version = "20240805.0.faststream0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -36,7 +36,7 @@ sqlalchemy = { version = ">=2.0", optional = false }
 snowflake-sqlalchemy = { version = ">=1.6", optional = true }
 psycopg2-binary = { version = "*", optional = true }
 fastapi = "^0.111.1"
-faststream = {extras = ["rabbit"], version = "^0.5.15"}
+faststream = { extras = ["rabbit"], version = "^0.5.15" }
 
 [tool.poetry.extras]
 # https://python-poetry.org/docs/pyproject#extras
@@ -45,9 +45,7 @@ snowflake = ["snowflake-sqlalchemy"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
 
 [tool.poetry.group.sql.dependencies]
-great-expectations = { version = "^0.18.19", extras = [
-    "databricks",
-] }
+great-expectations = { version = "^0.18.19", extras = ["databricks"] }
 snowflake-sqlalchemy = ">=1.6"
 snowflake-connector-python = ">=3.3.1"
 psycopg2-binary = "^2.9.9"
@@ -87,7 +85,7 @@ ignore_missing_imports = true
 follow_imports = 'normal'
 warn_redundant_casts = true
 show_error_codes = true
-implicit_reexport = true                                         # enabled due to strict mode
+implicit_reexport = true # enabled due to strict mode
 enable_error_code = [
     'ignore-without-code',
     'explicit-override',
@@ -250,7 +248,7 @@ filterwarnings = [
     # Full warning:
     # sqlalchemy.exc.SAWarning: The GenericFunction 'flatten' is already registered and is going to be overridden.
     # this is apparently a known issue with snowflake connector 1.6
-    "module: The GenericFunction 'flatten' is already registered and is going to be overridden:sqlalchemy.exc.SAWarning"
+    "module: The GenericFunction 'flatten' is already registered and is going to be overridden:sqlalchemy.exc.SAWarning",
 ]
 
 [tool.coverage.report]
