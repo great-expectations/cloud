@@ -112,6 +112,11 @@ class EventHandler:
 
     @staticmethod
     def _check_event_organization_id(event: Event, organization_id: UUID) -> bool:
+        """Check if the organization_id in the event matches the given organization_id.
+
+        This prevents processing events that are not intended for the current organization, and potentially
+        leaking sensitive information across organizations.
+        """
         if hasattr(event, "organization_id") and event.organization_id != organization_id:
             return False
         return True
