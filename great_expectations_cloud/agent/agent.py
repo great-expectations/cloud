@@ -30,6 +30,7 @@ from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderNa
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
 )
+from great_expectations_cloud.agent.exceptions import GXAgentConfigError, GXAgentError
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     AsyncRabbitMQClient,
     ClientError,
@@ -547,9 +548,3 @@ class GXAgent:
         # TODO: this is relying on a private implementation detail
         # use a public API once it is available
         http._update_headers = _update_headers_agent_patch
-
-
-class GXAgentError(Exception): ...
-
-
-class GXAgentConfigError(GXAgentError): ...
