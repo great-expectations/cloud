@@ -13,6 +13,7 @@ from packaging.version import parse as parse_version
 from pydantic import v1 as pydantic_v1
 
 from great_expectations_cloud.agent.actions.unknown import UnknownEventAction
+from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     Event,
     UnknownEvent,
@@ -67,6 +68,11 @@ class EventHandler:
         self, event: Event, base_url: str, auth_key: str, organization_id: UUID
     ) -> AgentAction[Any]:
         """Get the action that should be run for the given event."""
+
+        if not self._check_event_organization_id(event, organization_id):
+            # Making message more generic
+            raise GXAgentError("Unable to process job. Invalid input.")  # noqa: TRY003
+
         action_map = _EVENT_ACTION_MAP.get(_GX_MAJOR_VERSION)
         if action_map is None:
             raise NoVersionImplementationError(version=_GX_MAJOR_VERSION)
@@ -104,6 +110,17 @@ class EventHandler:
             return UnknownEvent()
 
         return event
+
+    @staticmethod
+    def _check_event_organization_id(event: Event, organization_id: UUID) -> bool:
+        """Check if the organization_id in the event matches the given organization_id.
+
+        This prevents processing events that are not intended for the current organization, and potentially
+        leaking sensitive information across organizations.
+        """
+        if hasattr(event, "organization_id") and event.organization_id != organization_id:
+            return False
+        return True
 
 
 class EventError(Exception): ...

@@ -18,8 +18,9 @@ from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import GXAgentConfig, GXAgentConfigError, Payload
+from great_expectations_cloud.agent.agent import GXAgentConfig, Payload
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
+from great_expectations_cloud.agent.exceptions import GXAgentConfigError
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
 )
