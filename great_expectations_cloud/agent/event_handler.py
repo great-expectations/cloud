@@ -70,7 +70,8 @@ class EventHandler:
         """Get the action that should be run for the given event."""
 
         if not self._check_event_organization_id(event, organization_id):
-            raise GXAgentError("Unable to process Event. Organization ID does not match.")  # noqa: TRY003
+            # Making message more generic
+            raise GXAgentError("Unable to process job. Invalid input.")  # noqa: TRY003
 
         action_map = _EVENT_ACTION_MAP.get(_GX_MAJOR_VERSION)
         if action_map is None:
