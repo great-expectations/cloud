@@ -314,7 +314,7 @@ class GXAgent:
             print("Queue is valid.")
 
             # FastStream declares default exchange if not provided
-            @broker.subscriber(queue, retries=MAX_DELIVERY)
+            @broker.subscriber(queue)
             async def handle_me(
                 msg: dict, correlation_id: str = Context("message.correlation_id")
             ) -> None:
