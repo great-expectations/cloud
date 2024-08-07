@@ -4174,9 +4174,9 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [extras]
 databricks = ["databricks-sql-connector"]
 postgres = ["psycopg2-binary", "sqlalchemy"]
-snowflake = ["snowflake-sqlalchemy"]
+snowflake = ["snowflake-connector-python", "snowflake-sqlalchemy"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "c2522d4677b57130e642a17d7fb79ab77be9f064fc70abdcc67bcfd2611bd927"
+content-hash = "83e39ceba754f190170e4190f9a98902ac01f8da484d265fe80731fd39c4cbab"
