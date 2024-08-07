@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - fastapi-poc
 
 jobs:
   pypi-test-publish:
