@@ -9,7 +9,6 @@ from great_expectations.checkpoint.checkpoint import Checkpoint
 from great_expectations.datasource.fluent import Datasource
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
-from great_expectations.checkpoint.configurator import ActionDict
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
 from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
     RunScheduledCheckpointAction,
@@ -21,6 +20,7 @@ from great_expectations_cloud.agent.models import (
 )
 
 if TYPE_CHECKING:
+    from great_expectations.checkpoint.configurator import ActionDict
     from pytest_mock import MockerFixture
 
 pytestmark = pytest.mark.unit
