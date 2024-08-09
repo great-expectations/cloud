@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from typing_extensions import override
@@ -8,6 +9,8 @@ from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
+from great_expectations.checkpoint.configurator import ActionDict
+from great_expectations.checkpoint.checkpoint import Checkpoint
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     CreatedResource,
@@ -44,9 +47,15 @@ def run_checkpoint(
         ) in data_asset_names:  # only test connection for assets that are validated in checkpoint
             asset = datasource.get_asset(data_asset_name)
             asset.test_connection()  # raises `TestConnectionError` on failure
-    checkpoint_run_result = context.run_checkpoint(
-        ge_cloud_id=event.checkpoint_id,
+
+    checkpoint = context.get_checkpoint(ge_cloud_id=str(event.checkpoint_id))
+    has_store_checkpoint_action = _checkpoint_has_store_validation_results_action(checkpoint)
+
+    checkpoint_run_result = checkpoint.run(
         batch_request={"options": event.splitter_options} if event.splitter_options else None,
+        action_list=(
+            None if has_store_checkpoint_action else [_create_store_validation_result_action()]
+        ),
     )
 
     validation_results = checkpoint_run_result.run_results
@@ -63,6 +72,28 @@ def run_checkpoint(
         type=event.type,
         created_resources=created_resources,
     )
+
+
+def _checkpoint_has_store_validation_results_action(checkpoint: Checkpoint) -> bool:
+    """
+    Checks if the checkpoint has a StoreValidationResultAction in its action_list.
+
+    v0.18 guarantees we have this action.
+    v1.0 does not include this action.
+
+    Since we can run checkpoints created in 1.0, we'll need to add this action if it's not present.
+    """
+    action_class_names = {a.get("action", {}).get("class_name") for a in checkpoint.action_list}
+    return "StoreValidationResultAction" in action_class_names
+
+
+def _create_store_validation_result_action() -> ActionDict:
+    return {
+        "name": "store_validation_result",
+        "action": {
+            "class_name": "StoreValidationResultAction",
+        },
+    }
 
 
 register_event_action("0", RunCheckpointEvent, RunCheckpointAction)
