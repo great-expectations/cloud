@@ -99,8 +99,7 @@ def configure_logger(log_settings: LogSettings) -> None:
         root.handlers[0].setFormatter(fmt)
 
     root.setLevel(log_settings.log_level.numeric_level)
-    # 2024-08-12: gs
-    # Reduce noise of pika reconnects
+    # 2024-08-12: Reduce noise of pika reconnects
     logging.getLogger("pika").setLevel(logging.WARNING)
 
     # TODO Define file loggers as dictConfig as well
