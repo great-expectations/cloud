@@ -174,6 +174,17 @@ class JSONFormatter(logging.Formatter):
 
     @override
     def format(self, record: logging.LogRecord) -> str:
+        """
+        Note: args must not be modified to maintain support for fstrings
+        Ex:
+        logger.error(
+            "Snowflake Connector for Python Version: %s, "
+            "Python Version: %s, Platform: %s",
+            SNOWFLAKE_CONNECTOR_VERSION,
+            PYTHON_VERSION,
+            PLATFORM,
+        )
+        """
         log_full = record.__dict__
 
         log_full["event"] = record.msg
@@ -183,9 +194,6 @@ class JSONFormatter(logging.Formatter):
 
         if record.exc_info:
             log_full["exc_info"] = str(record.exc_info)
-
-        if record.args:
-            log_full["args"] = str(record.args)
 
         log_subset = {
             key: value
