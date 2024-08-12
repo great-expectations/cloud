@@ -175,8 +175,9 @@ class JSONFormatter(logging.Formatter):
     @override
     def format(self, record: logging.LogRecord) -> str:
         """
-        Note: args must not be modified to maintain support for fstrings
+        TODO Support fstrings substitution containing '%s' syntax
 
+        Example from snowflake-connector-python:
         logger.error(
             "Snowflake Connector for Python Version: %s, "
             "Python Version: %s, Platform: %s",
@@ -184,7 +185,6 @@ class JSONFormatter(logging.Formatter):
             PYTHON_VERSION,
             PLATFORM,
         )
-        TODO Support fstrings substitution containing '%s' syntax
         """
         log_full = record.__dict__
 
