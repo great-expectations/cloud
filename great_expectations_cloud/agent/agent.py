@@ -68,7 +68,8 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 HandlerMap = Dict[str, OnMessageCallback]
 
-
+# Note: MAX_DELIVERY is only used for UnknownEvent, to attempt again (in case the agent is outdated) in hopes that agent is updated
+# if processing fails due to an exception, the message will not be redelivered, and instead an error will be logged for the job (if possible)
 MAX_DELIVERY = 10
 
 
@@ -144,7 +145,6 @@ def wrap_inject_self(func):
 async def handler(msg: dict, gx_agent: GXAgent, correlation_id: str) -> None:
     print(f"Received: {msg}")
     print(f"GX Agent: {gx_agent}")
-    status = None
 
     event = EventHandler.parse_event_from_dict(msg)
     event_context = EventContext(
@@ -154,8 +154,9 @@ async def handler(msg: dict, gx_agent: GXAgent, correlation_id: str) -> None:
         processed_with_failures=mock.Mock(),
         redeliver_message=mock.Mock(),
     )
-    organization_id = gx_agent.get_organization_id(event_context)
+    organization_id = None
     try:
+        organization_id = gx_agent.get_organization_id(event_context)
         result = gx_agent._handle_event(event_context)
     except Exception as e:
         status = build_failed_job_completed_status(e)
@@ -200,9 +201,19 @@ async def handler(msg: dict, gx_agent: GXAgent, correlation_id: str) -> None:
                 },
             )
     finally:
-        gx_agent._update_status(
-            job_id=event_context.correlation_id, status=status, org_id=organization_id
-        )
+        if organization_id:
+            gx_agent._update_status(
+                job_id=event_context.correlation_id, status=status, org_id=organization_id
+            )
+        else:
+            LOGGER.error(
+                "Organization ID is not available.",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                    "event": event.dict(),
+                },
+            )
 
 
 class GXAgent:
