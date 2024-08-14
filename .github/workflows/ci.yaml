@@ -70,7 +70,7 @@ jobs:
         run: poetry install --sync
 
       - name: Run tests
-        run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml
+        run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml -ra
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
@@ -152,7 +152,7 @@ jobs:
 
       - name: Run tests
 
-        run: poetry run pytest -vv -m integration -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml
+        run: poetry run pytest -vv -m integration -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml -ra
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
