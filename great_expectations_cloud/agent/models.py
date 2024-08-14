@@ -110,6 +110,11 @@ Event = Annotated[
 ]
 
 
+class EventMessage(AgentBaseExtraForbid):
+    event: Event
+    correlation_id: str
+
+
 class CreatedResource(AgentBaseExtraForbid):
     resource_id: str
     type: str

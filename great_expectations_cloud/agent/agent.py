@@ -48,6 +48,7 @@ from great_expectations_cloud.agent.message_service.subscriber import (
 )
 from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
+    EventMessage,
     JobCompleted,
     JobStarted,
     JobStatus,
@@ -327,7 +328,7 @@ class GXAgent:
             # FastStream declares default exchange if not provided
             @broker.subscriber(queue, retry=MAX_DELIVERY)
             async def handle_me(
-                msg: dict, correlation_id: str = Context("message.correlation_id")
+                msg: EventMessage, correlation_id: str = Context("message.correlation_id")
             ) -> None:
                 print(f"Received: {msg}")
                 print(f"Correlation ID: {correlation_id}")
