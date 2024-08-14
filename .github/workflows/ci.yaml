@@ -70,7 +70,7 @@ jobs:
         run: poetry install --sync
 
       - name: Run tests
-        run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml
+        run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml --junitxml=junit.xml -ra
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
@@ -78,6 +78,14 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: great-expectations/cloud
+          flags: ${{ matrix.python-version }}
+
+      # upload test results to codecov
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ matrix.python-version }}
 
   integration-tests:
@@ -151,8 +159,7 @@ jobs:
           docker compose -f docker-compose.yml logs
 
       - name: Run tests
-
-        run: poetry run pytest -vv -m integration -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml
+        run: poetry run pytest -vv -m integration -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml --junitxml=junit.xml -ra
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
@@ -160,6 +167,14 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: great-expectations/cloud
+          flags: integration
+
+      # upload test results to codecov
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           flags: integration
 
   test-docker-build:
