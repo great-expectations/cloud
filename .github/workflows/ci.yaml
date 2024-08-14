@@ -86,6 +86,7 @@ jobs:
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.python-version }}
 
   integration-tests:
     strategy:
@@ -159,7 +160,7 @@ jobs:
 
       - name: Run tests
 
-        run: poetry run pytest -vv -m integration -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml
+        run: poetry run pytest -vv -m integration -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml --junitxml=junit.xml
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
@@ -167,6 +168,14 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: great-expectations/cloud
+          flags: integration
+
+      # upload test results to codecov
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           flags: integration
 
   test-docker-build:
