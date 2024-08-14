@@ -231,3 +231,5 @@ For changes to the `pyproject.toml` file:
 - To stop the auto-version bump add the `no version bump` label to the PR. Use this when:
   - Only modifying dev dependencies.
   - Only modifying tests that do not change functionality.
+
+bump CI
