@@ -15,7 +15,6 @@ from uuid import UUID
 
 import aiormq
 import orjson
-from fast_depends import inject
 from faststream import (
     Context,
     FastStream,
@@ -48,7 +47,6 @@ from great_expectations_cloud.agent.message_service.subscriber import (
 )
 from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
-    EventMessage,
     JobCompleted,
     JobStarted,
     JobStatus,
@@ -110,35 +108,6 @@ class Payload(AgentBaseExtraForbid):
         extra = "forbid"
         json_dumps = orjson_dumps
         json_loads = orjson_loads
-
-
-# class GXAgentMiddleware(BaseMiddleware):
-#     async def on_receive(self):
-#         print(f"Received: {self.message}")
-#         # Same logic as in _handle_event_as_thread_enter
-#         # if self._reject_correlation_id(self.message.correlation_id) is True:
-#         #     # this event has been redelivered too many times - remove it from circulation
-#         #     raise RejectMessage()
-#         # The above can be replaced by Retries = 10
-
-#         # elif self._can_accept_new_task() is not True:
-#         #     # request that this message is redelivered later
-#         #     loop = asyncio.get_event_loop()
-#         #     # store a reference the task to ensure it isn't garbage collected
-#         #     self._redeliver_msg_task = loop.create_task(self.message.redeliver_message())
-#         #     return
-#         # Do we need the above?? We are using Async faststream and can set number of using CLI --worker
-#         return await super().on_receive()
-
-#     async def after_processed(self, exc_type, exc_val, exc_tb):
-#         return await super().after_processed(exc_type, exc_val, exc_tb)
-
-
-def wrap_inject_self(func):
-    async def wrapper(self):
-        return await inject(func)(self=self)
-
-    return wrapper
 
 
 # Use Retries = 10, --workers 1
@@ -276,51 +245,10 @@ class GXAgent:
     )
     async def _listen(self) -> None:
         """Manage connection lifecycle."""
-        # def _build_client_parameters(self, url: str) -> pika.URLParameters:
-        # """Configure parameters used to connect to the broker."""
-        # parameters = pika.URLParameters(url)
-        # only enable SSL if connection string calls for it
-
-        # Works with this but not needed
-        # ssl_context = None
-        # if self._config.connection_string.startswith("amqps://"):
-        #     # SSL Context for TLS configuration of Amazon MQ for RabbitMQ
-        #     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-        #     ssl_context.load_default_certs()
-        #     ssl_context.set_ciphers("ECDHE+AESGCM:!ECDSA")
-        #     print(ssl_context.get_ciphers())
-        #     print("EHHH")
-        # else:
-        #     ssl_context = ssl.create_default_context()
-
-        # # Perform connection
-        # connection = await aiormq.connect(str(self._config.connection_string), context=ssl_context)
-
-        # # Creating a channel
-        # channel = await connection.channel()
-        # print("YOYO")
-        # exchange = await channel.exchange_declare(
-        #     exchange="agent-exchange", exchange_type="direct", passive=True
-        # )
-        # print("EXCHANGE", exchange)
-        # # breakpoint()
-        # declare_ok = await channel.queue_declare(
-        #     queue=self._config.queue, passive=True  # , durable=True
-        # )
-        # print("QUEUE", declare_ok)
-        # await channel.queue_bind(declare_ok.queue, "agent-exchange")
-        # print("DECLARED", declare_ok)
-
-        #     parameters.ssl_options = pika.SSLOptions(context=ssl_context)
-        # return parameters
-
         try:
-            print("Starting FastStream.")
-            print(str(self._config.connection_string))
-            # security = BaseSecurity(ssl_context=ssl_context)
             broker = RabbitBroker(
                 url=str(self._config.connection_string),
-            )  # security=security)
+            )
             app = FastStream(broker)
             queue = RabbitQueue(name=self._config.queue, durable=True, passive=True)
             print("Queue is valid.")
@@ -328,22 +256,11 @@ class GXAgent:
             # FastStream declares default exchange if not provided
             @broker.subscriber(queue, retry=MAX_DELIVERY)
             async def handle_me(
-                msg: EventMessage, correlation_id: str = Context("message.correlation_id")
+                msg: dict, correlation_id: str = Context("message.correlation_id")
             ) -> None:
                 print(f"Received: {msg}")
                 print(f"Correlation ID: {correlation_id}")
                 await handler(msg, gx_agent=self, correlation_id=correlation_id)
-
-            # THIS also works
-            # router = RabbitRouter(
-            #     handlers=(
-            #         RabbitRoute(
-            #             handler,
-            #             queue,
-            #         ),
-            #     )
-            # )
-            # broker.include_router(router)
 
             print("FastStream is ready.")
             await app.run()
@@ -362,29 +279,6 @@ class GXAgent:
             self._config = self._get_config()
             # Raise to use the retry decorator to handle the retry logic
             raise
-
-        # subscriber = None
-        # try:
-        #     client = AsyncRabbitMQClient(url=str(self._config.connection_string))
-        #     subscriber = Subscriber(client=client)
-        #     print("The GX Agent is ready.")
-        #     # Open a connection until encountering a shutdown event
-        #     subscriber.consume(
-        #         queue=self._config.queue,
-        #         on_message=self._handle_event_as_thread_enter,
-        #     )
-        # except KeyboardInterrupt:
-        #     print("Received request to shut down.")
-        # except (SubscriberError, ClientError):
-        #     print("The connection to GX Cloud has encountered an error.")
-        # except (AuthenticationError, ProbableAuthenticationError):
-        #     # Retry with new credentials
-        #     self._config = self._get_config()
-        #     # Raise to use the retry decorator to handle the retry logic
-        #     raise
-        # finally:
-        #     if subscriber is not None:
-        #         subscriber.close()
 
     @classmethod
     def get_current_gx_agent_version(cls) -> str:
@@ -606,13 +500,8 @@ class GXAgent:
             )
 
         json_response = response.json()
-        print(json_response)
         queue = json_response["queue"]
         connection_string = json_response["connection_string"]
-        print("queue", queue)
-        print("connection_string", connection_string)
-        # queue q-0ccac18e-7631-4bdd-8a42-3c35cce574c6
-        # connection_string amqps://org-agent-0ccac18e-7631-4bdd-8a42-3c35cce574c6:%26e5%26Wg%3B2vPzz%3A%5CbrG%23%22b2MGv%2FxY%24%3Fzf_rcRn%28XsFL5%25AMPyi%40tY%3E4%5E%3FlDJAV%3F%5Bn%3A@mq.dev.greatexpectations.io:5671
 
         try:
             # pydantic will coerce the url to the correct type
