@@ -70,7 +70,7 @@ jobs:
         run: poetry install --sync
 
       - name: Run tests
-        run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml
+        run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml -rEfxXs
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
