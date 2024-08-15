@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from great_expectations.execution_engine import SqlAlchemyExecutionEngine
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
 )
@@ -71,6 +72,11 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
         # Note: This exception is raised after the metric run is added to the repository so that
         # the user can still access any computed metrics even if one of the metrics fails.
         self._raise_on_any_metric_exception(metric_run)
+
+        # Close connections that were opened to avoid running out of connections.
+        execution_engine = datasource.get_execution_engine()
+        if isinstance(execution_engine, SqlAlchemyExecutionEngine):
+            execution_engine.close()
 
         return ActionResult(
             id=id,

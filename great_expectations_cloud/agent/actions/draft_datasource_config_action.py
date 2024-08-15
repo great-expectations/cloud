@@ -6,6 +6,7 @@ from uuid import UUID
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.datasource.fluent.interfaces import Datasource, TestConnectionError
+from great_expectations.execution_engine import SqlAlchemyExecutionEngine
 from sqlalchemy import inspect
 from typing_extensions import override
 
@@ -62,6 +63,11 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         if isinstance(datasource, SQLDatasource):
             table_names = self._get_table_names(datasource=datasource)
             self._update_table_names_list(config_id=event.config_id, table_names=table_names)
+
+        # Close connections that were opened to avoid running out of connections.
+        execution_engine = datasource.get_execution_engine()
+        if isinstance(execution_engine, SqlAlchemyExecutionEngine):
+            execution_engine.close()
 
         return ActionResult(
             id=id,
