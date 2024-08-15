@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from great_expectations.execution_engine import SqlAlchemyExecutionEngine
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions.agent_action import (
@@ -36,6 +37,7 @@ def run_checkpoint(
     """Note: the logic for this action is broken out into this function so that
     the same logic can be used for both RunCheckpointEvent and RunScheduledCheckpointEvent."""
     # TODO: move connection testing into OSS; there isn't really a reason it can't be done there
+    datasources_to_close = []
     for datasource_name, data_asset_names in event.datasource_names_to_asset_names.items():
         datasource = context.get_datasource(datasource_name)
         datasource.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
@@ -44,6 +46,7 @@ def run_checkpoint(
         ) in data_asset_names:  # only test connection for assets that are validated in checkpoint
             asset = datasource.get_asset(data_asset_name)
             asset.test_connection()  # raises `TestConnectionError` on failure
+        datasources_to_close.append(datasource)
     checkpoint_run_result = context.run_checkpoint(
         ge_cloud_id=event.checkpoint_id,
         batch_request={"options": event.splitter_options} if event.splitter_options else None,
@@ -57,6 +60,12 @@ def run_checkpoint(
             type="SuiteValidationResult",
         )
         created_resources.append(created_resource)
+
+    # Close all connections that were opened to avoid running out of connections.
+    for datasource in datasources_to_close:
+        execution_engine = datasource.get_execution_engine()
+        if isinstance(execution_engine, SqlAlchemyExecutionEngine):
+            execution_engine.close()
 
     return ActionResult(
         id=id,
