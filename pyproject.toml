@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20240814.0.dev0"
+version = "20240816.0.dev0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -30,6 +30,7 @@ pika = "^1.3.1"
 orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue is resolved
 # relying on packaging in agent code so declaring it explicitly here
 packaging = ">=21.3,<25.0"
+python-dotenv = "^1.0.1"
 tenacity = ">=8.2.3,<10.0.0"
 sqlalchemy = { version = ">=2.0", optional = false }
 # optional dependencies
@@ -189,11 +190,11 @@ required-imports = ["from __future__ import annotations"]
 max-complexity = 10
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
-"os.environ".msg = """Please do not use os.environ, instead use a pydantic.BaseSettings model"""
+"os.environ".msg = "Please do not use os.environ, instead use a pydantic.BaseSettings model"
+"os.getenv".msg = "Please do not use os.getenv, instead use a pydantic.BaseSettings model"
 "great_expectations.compatibility.pydantic".msg = "Import pydantic directly."
 "great_expectations.compatibility.sqlalchemy".msg = "Import sqlalchemy directly."
 "great_expectations.compatibility".msg = "Favor specific version imports over compatibility module."
-
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
