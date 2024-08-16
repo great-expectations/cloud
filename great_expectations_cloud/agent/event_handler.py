@@ -111,6 +111,17 @@ class EventHandler:
 
         return event
 
+    @classmethod
+    def parse_event_from_dict(cls, msg_body: dict[str, Any]) -> Event:
+        try:
+            event: Event = pydantic_v1.parse_obj_as(Event, msg_body)  # type: ignore[arg-type] # FIXME
+        except pydantic_v1.ValidationError:
+            # Log as dict
+            LOGGER.exception("Unable to parse event type", extra={"msg_body": msg_body})
+            return UnknownEvent()
+
+        return event
+
     @staticmethod
     def _check_event_organization_id(event: Event, organization_id: UUID) -> bool:
         """Check if the organization_id in the event matches the given organization_id.
