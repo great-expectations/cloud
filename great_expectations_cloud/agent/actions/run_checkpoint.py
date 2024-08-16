@@ -66,6 +66,9 @@ def run_checkpoint(
         execution_engine = datasource.get_execution_engine()
         if isinstance(execution_engine, SqlAlchemyExecutionEngine):
             execution_engine.close()
+            # For testing purposes, we should refactor to not be referencing a private attribute:
+            if execution_engine._connection:
+                execution_engine._connection.close()
 
     return ActionResult(
         id=id,
