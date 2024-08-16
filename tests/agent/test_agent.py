@@ -18,8 +18,9 @@ from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import GXAgentConfig, GXAgentConfigError, Payload
+from great_expectations_cloud.agent.agent import GXAgentConfig, Payload
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
+from great_expectations_cloud.agent.exceptions import GXAgentConfigError
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
 )
@@ -189,8 +190,9 @@ def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config, requests_p
 
 
 def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "invalid_token")
-    with pytest.raises(gx_exception.GXCloudError):
+    # There is no validation for the token aside from presence, so we set to empty to raise an error.
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "")
+    with pytest.raises(gx_exception.GXCloudConfigurationError):
         GXAgent()
 
 

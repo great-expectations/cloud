@@ -31,6 +31,7 @@ from great_expectations_cloud.agent.event_handler import (
     _get_major_version,
     register_event_action,
 )
+from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
     Event,
@@ -47,6 +48,11 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
 pytestmark = pytest.mark.unit
+
+
+@pytest.fixture
+def org_id_different_from_event() -> str:
+    return "f67dd790-fe65-4f8a-bbc8-2c11f20e34b8"
 
 
 @pytest.fixture()
@@ -78,7 +84,7 @@ class TestEventHandler:
                 RunMissingnessDataAssistantEvent(
                     datasource_name="test-datasource",
                     data_asset_name="test-data-asset",
-                    organization_id=uuid4(),
+                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
                 ),
                 RunMissingnessDataAssistantAction,
             ),
@@ -87,7 +93,7 @@ class TestEventHandler:
                 RunOnboardingDataAssistantEvent(
                     datasource_name="test-datasource",
                     data_asset_name="test-data-asset",
-                    organization_id=uuid4(),
+                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
                 ),
                 RunOnboardingDataAssistantAction,
             ),
@@ -96,7 +102,7 @@ class TestEventHandler:
                 RunCheckpointEvent(
                     checkpoint_id=UUID("3ecd140b-1dd5-41f4-bdb1-c8009d4f1940"),
                     datasource_names_to_asset_names={"Data Source name": {"Asset name"}},
-                    organization_id=uuid4(),
+                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
                 ),
                 RunCheckpointAction,
             ),
@@ -104,13 +110,16 @@ class TestEventHandler:
                 "DraftDatasourceConfigEvent",
                 DraftDatasourceConfigEvent(
                     config_id=uuid4(),
-                    organization_id=uuid4(),
+                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
                 ),
                 DraftDatasourceConfigAction,
             ),
             (
                 "ListTableNamesEvent",
-                ListTableNamesEvent(datasource_name="test-datasource", organization_id=uuid4()),
+                ListTableNamesEvent(
+                    datasource_name="test-datasource",
+                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
+                ),
                 ListTableNamesAction,
             ),
             (
@@ -119,7 +128,7 @@ class TestEventHandler:
                     datasource_name="test-datasource",
                     data_asset_name="test-data-asset",
                     metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
-                    organization_id=uuid4(),
+                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
                 ),
                 MetricListAction,
             ),
@@ -150,6 +159,89 @@ class TestEventHandler:
             context=mock_context, base_url="", organization_id=fake_org_id, auth_key=""
         )
         action().run.assert_called_with(event=event, id=correlation_id)
+
+    @pytest.mark.parametrize(
+        "event_name, event, action_type",
+        [
+            (
+                "RunMissingnessDataAssistantEvent",
+                RunMissingnessDataAssistantEvent(
+                    datasource_name="test-datasource",
+                    data_asset_name="test-data-asset",
+                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
+                ),
+                RunMissingnessDataAssistantAction,
+            ),
+            (
+                "RunOnboardingDataAssistantEvent",
+                RunOnboardingDataAssistantEvent(
+                    datasource_name="test-datasource",
+                    data_asset_name="test-data-asset",
+                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
+                ),
+                RunOnboardingDataAssistantAction,
+            ),
+            (
+                "RunCheckpointEvent",
+                RunCheckpointEvent(
+                    checkpoint_id=UUID("3ecd140b-1dd5-41f4-bdb1-c8009d4f1940"),
+                    datasource_names_to_asset_names={"Data Source name": {"Asset name"}},
+                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
+                ),
+                RunCheckpointAction,
+            ),
+            (
+                "DraftDatasourceConfigEvent",
+                DraftDatasourceConfigEvent(
+                    config_id=uuid4(),
+                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
+                ),
+                DraftDatasourceConfigAction,
+            ),
+            (
+                "ListTableNamesEvent",
+                ListTableNamesEvent(
+                    datasource_name="test-datasource",
+                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
+                ),
+                ListTableNamesAction,
+            ),
+            (
+                "RunMetricsListEvent",
+                RunMetricsListEvent(
+                    datasource_name="test-datasource",
+                    data_asset_name="test-data-asset",
+                    metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
+                ),
+                MetricListAction,
+            ),
+        ],
+    )
+    def test_event_handler_checks_org_id_in_context_matches_event(
+        self,
+        mock_context,
+        mocker: MockerFixture,
+        event_name: str,
+        event: Event,
+        action_type: type[AgentAction[Any]],
+        org_id_different_from_event: str,
+    ):
+        action = mocker.MagicMock(autospec=action_type)
+        mocker.patch("great_expectations_cloud.agent.event_handler._GX_MAJOR_VERSION", "1")
+
+        mocker.patch.dict(_EVENT_ACTION_MAP, {"1": {event_name: action}}, clear=True)
+        correlation_id = str(uuid4())
+        handler = EventHandler(context=mock_context)
+
+        with pytest.raises(GXAgentError):
+            handler.handle_event(
+                event=event,
+                id=correlation_id,
+                base_url="",
+                auth_key="",
+                organization_id=uuid.UUID(org_id_different_from_event),
+            )
 
     def test_event_handler_raises_on_no_version_implementation(
         self, mock_context, mocker: MockerFixture
@@ -196,15 +288,15 @@ class TestEventHandlerRegistry:
 
     def test_event_handler_gets_correct_event_action(self, mocker: MockerFixture, mock_context):
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
+        DummyEvent.organization_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
         register_event_action("0", DummyEvent, DummyAction)  # type: ignore[arg-type]
         handler = EventHandler(context=mock_context)
-
         assert isinstance(
             handler.get_event_action(
                 DummyEvent,  # type: ignore[arg-type]  # Dummy event only used in testing
                 base_url="",
                 auth_key="",
-                organization_id=uuid.uuid4(),
+                organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
             ),
             DummyAction,
         )

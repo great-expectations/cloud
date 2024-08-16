@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20240806.0"
+version = "20240814.0.dev0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -36,12 +36,14 @@ faststream = { extras = ["rabbit"], version = "^0.5.15", optional = false }
 # optional dependencies
 snowflake-connector-python = { version = ">=3.3.1", optional = true }
 snowflake-sqlalchemy = { version = ">=1.6", optional = true }
+snowflake-connector-python = { version = ">=3.3.1", optional = true }
 psycopg2-binary = { version = "*", optional = true }
+databricks-sql-connector = { version = ">=3.1.1", extras = ["sqlalchemy"], optional = true }
 
 [tool.poetry.extras]
 # https://python-poetry.org/docs/pyproject#extras
 # these must reference an optional dependency in the dependencies section
-snowflake = ["snowflake-sqlalchemy"]
+snowflake = ["snowflake-sqlalchemy", "snowflake-connector-python"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
 databricks = ["databricks-sql-connector"]
 
@@ -64,7 +66,7 @@ pytest-cov = ">=5"
 pytest-icdiff = "*"
 pytest-mock = "*"
 responses = ">=0.23.1,<0.26.0"
-ruff = "0.5.6"
+ruff = "0.5.7"
 tenacity = ">=8.2.3,<10.0.0"
 tomlkit = ">=0.12.1,<0.14.0"
 types-requests = "^2.31"

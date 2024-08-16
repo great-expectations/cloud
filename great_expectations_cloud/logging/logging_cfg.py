@@ -99,6 +99,8 @@ def configure_logger(log_settings: LogSettings) -> None:
         root.handlers[0].setFormatter(fmt)
 
     root.setLevel(log_settings.log_level.numeric_level)
+    # 2024-08-12: Reduce noise of pika reconnects
+    logging.getLogger("pika").setLevel(logging.WARNING)
 
     # TODO Define file loggers as dictConfig as well
     if not log_settings.skip_log_file:
@@ -172,6 +174,18 @@ class JSONFormatter(logging.Formatter):
 
     @override
     def format(self, record: logging.LogRecord) -> str:
+        """
+        TODO Support fstrings substitution containing '%s' syntax
+
+        Example from snowflake-connector-python:
+        logger.error(
+            "Snowflake Connector for Python Version: %s, "
+            "Python Version: %s, Platform: %s",
+            SNOWFLAKE_CONNECTOR_VERSION,
+            PYTHON_VERSION,
+            PLATFORM,
+        )
+        """
         log_full = record.__dict__
 
         log_full["event"] = record.msg
@@ -181,9 +195,6 @@ class JSONFormatter(logging.Formatter):
 
         if record.exc_info:
             log_full["exc_info"] = str(record.exc_info)
-
-        if record.args:
-            log_full["args"] = str(record.args)
 
         log_subset = {
             key: value

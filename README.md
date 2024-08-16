@@ -1,4 +1,4 @@
-# cloud
+# GX cloud
 
 [![PyPI](https://img.shields.io/pypi/v/great_expectations_cloud)](https://pypi.org/project/great-expectations_cloud/#history)
 [![Docker Pulls](https://img.shields.io/docker/pulls/greatexpectations/agent)](https://hub.docker.com/r/greatexpectations/agent)
@@ -38,7 +38,7 @@ optional arguments:
   --version             Show the GX Agent version.
 ```
 
-#### Set ENV variables
+#### Set env variables
 
 `GX_CLOUD_ACCESS_TOKEN`
 `GX_CLOUD_ORGANIZATION_ID`
@@ -74,7 +74,7 @@ If you run into issues, you can try `pipx reinstall-all`
 
 ### Developer Tasks
 
-Common developer tasks are available via `invoke` (defined in `tasks.py`)
+Common developer tasks are available via `invoke` (defined in `tasks.py`).
 
 `invoke --list` to see available tasks.
 
