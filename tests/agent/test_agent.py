@@ -9,17 +9,18 @@ from unittest.mock import call
 
 import pytest
 import responses
-from great_expectations.compatibility.pydantic import (
-    ValidationError,
-)
 from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
+from pydantic.v1 import (
+    ValidationError,
+)
 from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import GXAgentConfig, GXAgentConfigError, Payload
+from great_expectations_cloud.agent.agent import GXAgentConfig, Payload
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
+from great_expectations_cloud.agent.exceptions import GXAgentConfigError
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
 )
@@ -77,7 +78,7 @@ def gx_agent_config_missing_token(
     monkeypatch,
 ) -> GXAgentConfig:
     monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
-    config = GXAgentConfig(
+    config = GXAgentConfig(  # type: ignore[call-arg]
         queue=queue,
         connection_string=connection_string,
         gx_cloud_organization_id=random_uuid,
@@ -98,7 +99,7 @@ def gx_agent_config_missing_org_id(
     monkeypatch,
 ) -> GXAgentConfig:
     monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
-    config = GXAgentConfig(
+    config = GXAgentConfig(  # type: ignore[call-arg]
         queue=queue,
         connection_string=connection_string,
         gx_cloud_access_token=random_string,
@@ -150,12 +151,12 @@ def event_handler(mocker):
 
 
 @pytest.fixture
-def queue():
+def queue() -> str:
     return "3ee9791c-4ea6-479d-9b05-98217e70d341"
 
 
 @pytest.fixture
-def connection_string():
+def connection_string() -> str:
     return "amqps://user:pass@great_expectations.io:5671"
 
 
@@ -171,14 +172,27 @@ def create_session(mocker, queue, connection_string):
     return create_session
 
 
-def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config):
+@pytest.fixture(autouse=True)
+def requests_post(mocker, queue, connection_string):
+    """Patch for requests.Session.post"""
+    requests_post = mocker.patch("requests.Session.post")
+    requests_post().json.return_value = {
+        "queue": queue,
+        "connection_string": connection_string,
+    }
+    requests_post().ok = True
+    return requests_post
+
+
+def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config, requests_post):
     agent = GXAgent()
     assert agent._config == gx_agent_config
 
 
 def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "invalid_token")
-    with pytest.raises(gx_exception.GXCloudError):
+    # There is no validation for the token aside from presence, so we set to empty to raise an error.
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "")
+    with pytest.raises(gx_exception.GXCloudConfigurationError):
         GXAgent()
 
 
@@ -273,13 +287,15 @@ def test_gx_agent_updates_cloud_on_job_status(
         f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs/{correlation_id}"
     )
     job_started_data = JobStarted().json()
-    job_completed = JobCompleted(success=True, created_resources=[])
+    job_completed = JobCompleted(success=True, created_resources=[], processed_by="agent")
     job_completed_data = job_completed.json()
 
     async def redeliver_message():
         return None
 
-    event = RunOnboardingDataAssistantEvent(datasource_name="test-ds", data_asset_name="test-da")
+    event = RunOnboardingDataAssistantEvent(
+        datasource_name="test-ds", data_asset_name="test-da", organization_id=uuid.uuid4()
+    )
 
     end_test = False
 
@@ -317,7 +333,11 @@ def test_gx_agent_updates_cloud_on_job_status(
     agent = GXAgent()
     agent.run()
 
-    create_session.return_value.patch.assert_has_calls(
+    # sessions created with context managers now, so we need to
+    # test the runtime calls rather than the return value calls.
+    # the calls also appear to store in any order, hence the any_order=True
+    create_session().__enter__().patch.assert_has_calls(
+        any_order=True,
         calls=[
             call(url, data=job_started_data),
             call(url, data=job_completed_data),
@@ -349,6 +369,7 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
         datasource_names_to_asset_names={},
         splitter_options=None,
         schedule_id=schedule_id,
+        organization_id=uuid.uuid4(),
     )
     payload = Payload(
         data={
@@ -397,7 +418,9 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     agent = GXAgent()
     agent.run()
 
-    return create_session.return_value.post.assert_any_call(post_url, data=data)
+    # sessions created with context managers now, so we need to
+    # test the runtime calls rather than the return value calls
+    return create_session().__enter__().post.assert_any_call(post_url, data=data)
 
 
 def test_invalid_env_variables_missing_token(set_required_env_vars, monkeypatch):
@@ -412,28 +435,32 @@ def test_invalid_env_variables_missing_org_id(set_required_env_vars, monkeypatch
         GXAgent()
 
 
-def test_invalid_config_agent_missing_token(set_required_env_vars, monkeypatch):
-    monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
-    with pytest.raises(ValidationError):
-        GXAgentConfig(
+def test_invalid_config_agent_missing_token(
+    connection_string: str, queue: str, random_uuid: str, local_mercury: str
+):
+    with pytest.raises(ValidationError) as exc_info:
+        GXAgentConfig(  # type: ignore[call-arg]
             queue=queue,
-            connection_string=connection_string,
+            connection_string=connection_string,  # type: ignore[arg-type]
             gx_cloud_organization_id=random_uuid,
-            token=random_string,
-            gx_cloud_base_url=local_mercury,
+            gx_cloud_base_url=local_mercury,  # type: ignore[arg-type]
         )
+    error_locs = [error["loc"] for error in exc_info.value.errors()]
+    assert "gx_cloud_access_token" in error_locs[0]
 
 
-def test_invalid_config_agent_missing_org_id(set_required_env_vars, monkeypatch):
-    monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
-    with pytest.raises(ValidationError):
-        GXAgentConfig(
+def test_invalid_config_agent_missing_org_id(
+    connection_string: str, queue: str, local_mercury: str, random_string: str
+):
+    with pytest.raises(ValidationError) as exc_info:
+        GXAgentConfig(  # type: ignore[call-arg]
             queue=queue,
-            connection_string=connection_string,
-            gx_cloud_organization_id=random_uuid,
-            token=random_string,
-            gx_cloud_base_url=local_mercury,
+            connection_string=connection_string,  # type: ignore[arg-type]
+            gx_cloud_access_token=random_string,
+            gx_cloud_base_url=local_mercury,  # type: ignore[arg-type]
         )
+    error_locs = [error["loc"] for error in exc_info.value.errors()]
+    assert "gx_cloud_organization_id" in error_locs[0]
 
 
 def test_custom_user_agent(
@@ -493,6 +520,7 @@ def test_correlation_id_header(
     ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
     fake_subscriber: FakeSubscriber,
+    random_uuid: str,
 ):
     """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
     agent_job_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
@@ -502,10 +530,26 @@ def test_correlation_id_header(
     # seed the fake queue with an event that will be consumed by the agent
     fake_subscriber.test_queue.extendleft(
         [
-            (DraftDatasourceConfigEvent(config_id=datasource_config_id_1), agent_job_ids[0]),
-            (DraftDatasourceConfigEvent(config_id=datasource_config_id_2), agent_job_ids[1]),
             (
-                RunCheckpointEvent(checkpoint_id=checkpoint_id, datasource_names_to_asset_names={}),
+                DraftDatasourceConfigEvent(
+                    config_id=datasource_config_id_1,
+                    organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
+                ),
+                agent_job_ids[0],
+            ),
+            (
+                DraftDatasourceConfigEvent(
+                    config_id=datasource_config_id_2,
+                    organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
+                ),
+                agent_job_ids[1],
+            ),
+            (
+                RunCheckpointEvent(
+                    checkpoint_id=checkpoint_id,
+                    datasource_names_to_asset_names={},
+                    organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
+                ),
                 agent_job_ids[2],
             ),
         ]

@@ -148,7 +148,7 @@ class AsyncRabbitMQClient:
             nack = partial(channel.basic_nack, delivery_tag=delivery_tag, requeue=requeue)
             loop.call_soon_threadsafe(callback=nack)
 
-    def _callback_handler(  # noqa: PLR0913
+    def _callback_handler(
         self,
         channel: Channel,
         method_frame: Basic.Deliver,

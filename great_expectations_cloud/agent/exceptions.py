@@ -32,3 +32,9 @@ class ErrorCode(str, enum.Enum):
 
     GENERIC_UNHANDLED_ERROR = "generic-unhandled-error"
     WRONG_USERNAME_OR_PASSWORD = "wrong-username-or-password"  # noqa: S105  # Not a hardcoded password
+
+
+class GXAgentError(Exception): ...
+
+
+class GXAgentConfigError(GXAgentError): ...

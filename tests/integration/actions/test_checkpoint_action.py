@@ -199,18 +199,24 @@ def checkpoint(
 
 
 @pytest.fixture
-def checkpoint_event(checkpoint, datasource_names_to_asset_names):
+def checkpoint_event(checkpoint, datasource_names_to_asset_names, org_id_env_var: str):
     return RunCheckpointEvent(
         type="run_checkpoint_request",
         checkpoint_id=checkpoint.ge_cloud_id,
         datasource_names_to_asset_names=datasource_names_to_asset_names,
+        organization_id=uuid.UUID(org_id_env_var),
     )
 
 
 def test_running_checkpoint_action(
     context, checkpoint_event, cloud_base_url: str, org_id_env_var: str, token_env_var: str
 ):
-    action = RunCheckpointAction(context=context)
+    action = RunCheckpointAction(
+        context=context,
+        base_url=cloud_base_url,
+        organization_id=uuid.UUID(org_id_env_var),
+        auth_key=token_env_var,
+    )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
     # Act
@@ -227,9 +233,9 @@ def test_running_checkpoint_action(
         f"{cloud_base_url}/organizations/"
         f"{org_id_env_var}/validation-results/{validation_result_id}"
     )
-    session = create_session(access_token=token_env_var)
-    response = session.get(resource_url)
-    data = response.json()
+    with create_session(access_token=token_env_var) as session:
+        response = session.get(resource_url)
+        data = response.json()
 
     validation_result = data["data"]["attributes"]["validation_result"]
     assert validation_result["success"]

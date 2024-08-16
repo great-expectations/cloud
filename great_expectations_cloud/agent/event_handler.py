@@ -2,15 +2,18 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from datetime import datetime, timezone
 from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, Final
+from uuid import UUID
 
 import great_expectations as gx
-from great_expectations.compatibility import pydantic
 from packaging.version import Version
 from packaging.version import parse as parse_version
+from pydantic import v1 as pydantic_v1
 
 from great_expectations_cloud.agent.actions.unknown import UnknownEventAction
+from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     Event,
     UnknownEvent,
@@ -61,33 +64,63 @@ class EventHandler:
     def __init__(self, context: CloudDataContext) -> None:
         self._context = context
 
-    def get_event_action(self, event: Event) -> AgentAction[Any]:
+    def get_event_action(
+        self, event: Event, base_url: str, auth_key: str, organization_id: UUID
+    ) -> AgentAction[Any]:
         """Get the action that should be run for the given event."""
+
+        if not self._check_event_organization_id(event, organization_id):
+            # Making message more generic
+            raise GXAgentError("Unable to process job. Invalid input.")  # noqa: TRY003
+
         action_map = _EVENT_ACTION_MAP.get(_GX_MAJOR_VERSION)
         if action_map is None:
             raise NoVersionImplementationError(version=_GX_MAJOR_VERSION)
         action_class = action_map.get(_get_event_name(event))
         if action_class is None:
             action_class = UnknownEventAction
-        return action_class(context=self._context)
+        return action_class(
+            context=self._context,
+            base_url=base_url,
+            organization_id=organization_id,
+            auth_key=auth_key,
+        )
 
-    def handle_event(self, event: Event, id: str) -> ActionResult:
+    def handle_event(  # Refactor opportunity
+        self, event: Event, id: str, base_url: str, auth_key: str, organization_id: UUID
+    ) -> ActionResult:
+        start_time = datetime.now(tz=timezone.utc)
         """Transform an Event into an ActionResult."""
-        action = self.get_event_action(event=event)
+        action = self.get_event_action(
+            event=event, base_url=base_url, auth_key=auth_key, organization_id=organization_id
+        )
         LOGGER.info(f"Handling event: {event.type} -> {action.__class__.__name__}")
         action_result = action.run(event=event, id=id)
+        end_time = datetime.now(tz=timezone.utc)
+        action_result.job_duration = end_time - start_time
         return action_result
 
     @classmethod
     def parse_event_from(cls, msg_body: bytes) -> Event:
         try:
-            event: Event = pydantic.parse_raw_as(Event, msg_body)
-        except (pydantic.ValidationError, JSONDecodeError):
+            event: Event = pydantic_v1.parse_raw_as(Event, msg_body)  # type: ignore[arg-type] # FIXME
+        except (pydantic_v1.ValidationError, JSONDecodeError):
             # Log as bytes
             LOGGER.exception("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
             return UnknownEvent()
 
         return event
+
+    @staticmethod
+    def _check_event_organization_id(event: Event, organization_id: UUID) -> bool:
+        """Check if the organization_id in the event matches the given organization_id.
+
+        This prevents processing events that are not intended for the current organization, and potentially
+        leaking sensitive information across organizations.
+        """
+        if hasattr(event, "organization_id") and event.organization_id != organization_id:
+            return False
+        return True
 
 
 class EventError(Exception): ...
@@ -127,6 +160,6 @@ _GX_MAJOR_VERSION = _get_major_version(str(version))
 
 def _get_event_name(event: Event) -> str:
     try:
-        return str(event.__name__)
+        return str(event.__name__)  # type: ignore[union-attr] # FIXME
     except AttributeError:
-        return str(event.__class__.__name__)
+        return event.__class__.__name__

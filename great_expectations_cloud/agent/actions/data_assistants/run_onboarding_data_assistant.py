@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from typing_extensions import override
 
@@ -18,8 +19,12 @@ if TYPE_CHECKING:
 
 
 class RunOnboardingDataAssistantAction(AgentAction[RunOnboardingDataAssistantEvent]):
-    def __init__(self, context: CloudDataContext):
-        super().__init__(context=context)
+    def __init__(
+        self, context: CloudDataContext, base_url: str, organization_id: UUID, auth_key: str
+    ):
+        super().__init__(
+            context=context, base_url=base_url, organization_id=organization_id, auth_key=auth_key
+        )
         self._data_assistant = self._context.assistants.onboarding
 
     @override

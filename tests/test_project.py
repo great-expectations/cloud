@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import pathlib
 import re
+import sys
 import warnings
 from dataclasses import dataclass
 from pprint import pformat as pf
@@ -25,6 +26,12 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 PROJECT_ROOT: Final = pathlib.Path(__file__).parent.parent
 PYPROJECT_TOML: Final = PROJECT_ROOT / "pyproject.toml"
 CODECOV_YML: Final = PROJECT_ROOT / "codecov.yml"
+PYTHON_VERSION_FILE: Final = PROJECT_ROOT / ".python-version"
+
+# The version of python that should be installed in our docker containers
+CANNONICAL_PYTHON_VERSION: Final = Version(PYTHON_VERSION_FILE.read_text().strip())
+# actual python version
+PYTHON_VERSION: Final[Version] = Version(sys.version.split()[0])
 
 
 @pytest.fixture
@@ -282,6 +289,11 @@ def latest_poetry_version(lock_file_poetry_version: Version) -> Version:
     return latest_version
 
 
+# only need to run this test for one version of python
+@pytest.mark.skipif(
+    CANNONICAL_PYTHON_VERSION.minor != PYTHON_VERSION.minor,
+    reason=f"Python version 3.{PYTHON_VERSION.minor} != 3.{CANNONICAL_PYTHON_VERSION.minor}",
+)
 def test_lockfile_poetry_version(lock_file_poetry_version: Version, latest_poetry_version: Version):
     """
     This test ensures that the poetry.lock file was generated using a recent version of poetry.

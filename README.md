@@ -1,4 +1,4 @@
-# cloud
+# GX cloud
 
 [![PyPI](https://img.shields.io/pypi/v/great_expectations_cloud)](https://pypi.org/project/great-expectations_cloud/#history)
 [![Docker Pulls](https://img.shields.io/docker/pulls/greatexpectations/agent)](https://hub.docker.com/r/greatexpectations/agent)
@@ -84,7 +84,7 @@ See also [CONTRIBUTING.md](https://github.com/great-expectations/cloud/blob/main
 
 ### Developer Tasks
 
-Common developer tasks are available via `invoke` (defined in `tasks.py`)
+Common developer tasks are available via `invoke` (defined in `tasks.py`).
 
 `invoke --list` to see available tasks.
 
@@ -230,13 +230,15 @@ We use the GitHub Actions workflow to automate the release and pre-release proce
 A visual representation of the workflow is shown [here](https://github.com/great-expectations/cloud/blob/main/.github/workflows/agent_release_workflows.png)
 
 ### Dependabot and Releases/Pre-releases
+
 GitHub's Dependabot regularly checks our dependencies for vulnerabilty-based updates and proposes PRs to update dependency version numbers accordingly.
 
 Dependabot may only update the `poetry.lock` file. If only changes to `poetry.lock` are made, this may be done in a pre-release.
 
 For changes to the `pyproject.toml` file:
+
 - If the version of a tool in the `[tool.poetry.group.dev.dependencies]` group is updated, this may be done without any version bump.
-   -  While doing this, make sure any version references in the pre-commit config `.pre-commit-config.yaml` are kept in sync (e.g., ruff).
+  - While doing this, make sure any version references in the pre-commit config `.pre-commit-config.yaml` are kept in sync (e.g., ruff).
 - For other dependency updates or package build metadata changes, a new release should be orchestrated. This includes updates in the following sections:
   - `[tool.poetry.dependencies]`
   - `[tool.poetry.group.*.dependencies]` where `*` is the name of the group (not including the `dev` group)

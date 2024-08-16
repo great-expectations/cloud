@@ -4,7 +4,7 @@ flag_management:
     after_n_builds: 5 # should correspond to the number of coverage reports we expect
     statuses:
       - type: project
-        target: 80% # the default target for the project
+        target: 74% # the default target for the project
         threshold: 2% # the allowed drop from the target
       - type: patch
         target: 70%

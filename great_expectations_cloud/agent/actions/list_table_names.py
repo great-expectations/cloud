@@ -2,20 +2,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from great_expectations.compatibility import pydantic
-from great_expectations.compatibility.sqlalchemy import inspect
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.exceptions import GXCloudError
+from sqlalchemy import inspect
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
-)
-from great_expectations_cloud.agent.config import (
-    GxAgentEnvVars,
-    generate_config_validation_error_text,
 )
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
@@ -23,7 +18,7 @@ from great_expectations_cloud.agent.models import (
 )
 
 if TYPE_CHECKING:
-    from great_expectations.compatibility.sqlalchemy.engine import Inspector
+    from sqlalchemy.engine.reflection import Inspector
 
 
 class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
@@ -53,19 +48,12 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
         )
 
     def _add_or_update_table_names_list(self, datasource_id: str, table_names: list[str]) -> None:
-        try:
-            cloud_config = GxAgentEnvVars()
-        except pydantic.ValidationError as validation_err:
-            raise RuntimeError(
-                generate_config_validation_error_text(validation_err)
-            ) from validation_err
-
-        session = create_session(access_token=cloud_config.gx_cloud_access_token)
-        response = session.patch(
-            url=f"{cloud_config.gx_cloud_base_url}/organizations/"
-            f"{cloud_config.gx_cloud_organization_id}/datasources/{datasource_id}",
-            json={"table_names": table_names},
-        )
+        with create_session(access_token=self._auth_key) as session:
+            response = session.patch(
+                url=f"{self._base_url}/organizations/"
+                f"{self._organization_id}/datasources/{datasource_id}",
+                json={"table_names": table_names},
+            )
         if response.status_code != 204:  # noqa: PLR2004
             raise GXCloudError(
                 message=f"ListTableNamesAction encountered an error while connecting to GX Cloud. "
