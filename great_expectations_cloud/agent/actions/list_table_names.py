@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.exceptions import GXCloudError
+from great_expectations.execution_engine import SqlAlchemyExecutionEngine
 from sqlalchemy import inspect
 from typing_extensions import override
 
@@ -40,6 +41,11 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
         self._add_or_update_table_names_list(
             datasource_id=str(datasource.id), table_names=table_names
         )
+
+        # Close connections that were opened to avoid running out of connections.
+        execution_engine = datasource.get_execution_engine()
+        if isinstance(execution_engine, SqlAlchemyExecutionEngine):
+            execution_engine.close()
 
         return ActionResult(
             id=id,
