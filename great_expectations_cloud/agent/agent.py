@@ -111,8 +111,6 @@ class Payload(AgentBaseExtraForbid):
         json_loads = orjson_loads
 
 
-# Use Retries = 10, --workers 1
-# Data Context as a Dependency
 async def handler(msg: dict, gx_agent: GXAgent, correlation_id: str) -> None:
     print(f"Received: {msg}")
     print(f"GX Agent: {gx_agent}")
