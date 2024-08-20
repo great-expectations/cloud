@@ -10,7 +10,6 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
-from unittest import mock
 from uuid import UUID
 
 import aiormq
@@ -119,9 +118,9 @@ async def handler(msg: dict, gx_agent: GXAgent, correlation_id: str) -> None:
     event_context = EventContext(
         event=event,
         correlation_id=correlation_id,  # msg.correlation_id,
-        processed_successfully=mock.Mock(),
-        processed_with_failures=mock.Mock(),
-        redeliver_message=mock.Mock(),
+        processed_successfully=None,
+        processed_with_failures=None,
+        redeliver_message=None,
     )
     organization_id = None
     try:
