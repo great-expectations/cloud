@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import traceback
 import warnings
 from collections import defaultdict
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
-from functools import partial
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
 from uuid import UUID
@@ -118,9 +116,6 @@ async def handler(msg: dict, gx_agent: GXAgent, correlation_id: str) -> None:
     event_context = EventContext(
         event=event,
         correlation_id=correlation_id,  # msg.correlation_id,
-        processed_successfully=None,
-        processed_with_failures=None,
-        redeliver_message=None,
     )
     organization_id = None
     try:
@@ -288,38 +283,6 @@ class GXAgent:
         version: str = metadata_version(cls._PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME)
         return version
 
-    def _handle_event_as_thread_enter(self, event_context: EventContext) -> None:
-        """Schedule _handle_event to run in a thread.
-
-        Callback passed to Subscriber.consume which forwards events to
-        the EventHandler for processing.
-
-        Args:
-            event_context: An Event with related properties and actions.
-        """
-        if self._reject_correlation_id(event_context.correlation_id) is True:
-            # this event has been redelivered too many times - remove it from circulation
-            event_context.processed_with_failures()
-            return
-        elif self._can_accept_new_task() is not True:
-            # request that this message is redelivered later
-            loop = asyncio.get_event_loop()
-            # store a reference the task to ensure it isn't garbage collected
-            self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
-            return
-
-        self._current_task = self._executor.submit(
-            self._handle_event,
-            event_context=event_context,
-        )
-
-        if self._current_task is not None:
-            # add a callback for when the thread exits and pass it the event context
-            on_exit_callback = partial(
-                self._handle_event_as_thread_exit, event_context=event_context
-            )
-            self._current_task.add_done_callback(on_exit_callback)
-
     def get_data_context(self, event_context: EventContext) -> CloudDataContext:
         """Helper method to get a DataContext Agent. Overridden in GX-Runner."""
         return self._context
@@ -378,74 +341,6 @@ class GXAgent:
             organization_id=org_id,
         )
         return result
-
-    def _handle_event_as_thread_exit(
-        self, future: Future[ActionResult], event_context: EventContext
-    ) -> None:
-        """Callback invoked when the thread running GX exits.
-
-        Args:
-            future: object returned from the thread
-            event_context: event with related properties and actions.
-        """
-        # warning:  this method will not be executed in the main thread
-
-        org_id = self.get_organization_id(event_context)
-
-        # get results or errors from the thread
-        error = future.exception()
-        if error is None:
-            result: ActionResult = future.result()
-
-            if result.type == UnknownEvent().type:
-                status = JobCompleted(
-                    success=False,
-                    created_resources=[],
-                    error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
-                    processed_by=self._get_processed_by(),
-                )
-                LOGGER.error(
-                    "Job completed with error. Ensure agent is up-to-date.",
-                    extra={
-                        "event_type": event_context.event.type,
-                        "id": event_context.correlation_id,
-                        "organization_id": str(org_id),
-                    },
-                )
-            else:
-                status = JobCompleted(
-                    success=True,
-                    created_resources=result.created_resources,
-                    processed_by=self._get_processed_by(),
-                )
-                LOGGER.info(
-                    "Completed job",
-                    extra={
-                        "event_type": event_context.event.type,
-                        "correlation_id": event_context.correlation_id,
-                        "job_duration": (
-                            result.job_duration.total_seconds() if result.job_duration else None
-                        ),
-                        "organization_id": str(org_id),
-                    },
-                )
-        else:
-            status = build_failed_job_completed_status(error)
-            LOGGER.info(traceback.format_exc())
-            LOGGER.info(
-                "Job completed with error",
-                extra={
-                    "event_type": event_context.event.type,
-                    "correlation_id": event_context.correlation_id,
-                    "organization_id": str(org_id),
-                },
-            )
-
-        self._update_status(job_id=event_context.correlation_id, status=status, org_id=org_id)
-
-        # ack message and cleanup resources
-        event_context.processed_successfully()
-        self._current_task = None
 
     def _get_processed_by(self) -> Literal["agent", "runner"]:
         """Return the name of the service that processed the event."""

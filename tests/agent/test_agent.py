@@ -209,17 +209,6 @@ def test_gx_agent_run_starts_subscriber(get_context, subscriber, client, gx_agen
     subscriber.assert_called_with(client=client())
 
 
-def test_gx_agent_run_invokes_consume(get_context, subscriber, client, gx_agent_config):
-    """Expect GXAgent.run to invoke subscriber.consume with the correct arguments."""
-    agent = GXAgent()
-    agent.run()
-
-    subscriber().consume.assert_called_with(
-        queue=gx_agent_config.queue,
-        on_message=agent._handle_event_as_thread_enter,
-    )
-
-
 def test_gx_agent_run_closes_subscriber(get_context, subscriber, client, gx_agent_config):
     """Expect GXAgent.run to invoke subscriber.close."""
     agent = GXAgent()
