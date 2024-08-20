@@ -272,7 +272,7 @@ class GXAgent:
             aiormq.exceptions.ChannelAccessRefused,
         ):
             print("The connection to GX Cloud has encountered an error.")
-            print(traceback.format_exc())
+            LOGGER.exception("agent.listen.error")
         except (AuthenticationError, ProbableAuthenticationError):
             # Retry with new credentials
             self._config = self._get_config()
