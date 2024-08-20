@@ -39,9 +39,9 @@ class EventContext:
 
     event: Event
     correlation_id: str
-    processed_successfully: Callable[[], None]
-    processed_with_failures: Callable[[], None]
-    redeliver_message: Callable[[], Coroutine[OnMessageCallback, None, None]]
+    processed_successfully: Callable[[], None] | None = None
+    processed_with_failures: Callable[[], None] | None = None
+    redeliver_message: Callable[[], Coroutine[OnMessageCallback, None, None]] | None = None
 
 
 class OnMessageCallback(Protocol):
