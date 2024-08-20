@@ -108,7 +108,7 @@ class Payload(AgentBaseExtraForbid):
         json_loads = orjson_loads
 
 
-async def handler(msg: dict, gx_agent: GXAgent, correlation_id: str) -> None:
+async def handler(msg: dict[str, Any], gx_agent: GXAgent, correlation_id: str) -> None:  # noqa:
     print(f"Received: {msg}")
     print(f"GX Agent: {gx_agent}")
 
@@ -249,7 +249,7 @@ class GXAgent:
             # FastStream declares default exchange if not provided
             @broker.subscriber(queue, retry=MAX_DELIVERY)
             async def handle_me(
-                msg: dict, correlation_id: str = Context("message.correlation_id")
+                msg: dict[str, Any], correlation_id: str = Context("message.correlation_id")
             ) -> None:
                 print(f"Received: {msg}")
                 print(f"Correlation ID: {correlation_id}")
