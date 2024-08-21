@@ -1,0 +1,15 @@
+asyncapi: 2.6.0
+defaultContentType: application/json
+info:
+  title: FastStream
+  version: 0.1.0
+  description: ""
+servers:
+  development:
+    url: amqps://org-agent-a7ba9504-a02f-40c8-8c46-145b4ff5765b:XI,IT)U5%5Bd%5C%23%22$%40%3F0SwhhdF0gp%60z(1-WHE%3Fu%230tTm6N%3C%5DQLjg;*v6%22%7DU%7D4%5D%7CM%5BjK@mq.greatexpectations.io:5671/
+    protocol: amqps
+    protocolVersion: 0.9.1
+channels: {}
+components:
+  messages: {}
+  schemas: {}

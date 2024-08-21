@@ -191,7 +191,9 @@ class GXAgent:
     _PYPI_GX_AGENT_PACKAGE_NAME = "great_expectations_cloud"
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
-    def __init__(self: Self):
+    def __init__(self: Self, app: FastStream, broker: RabbitBroker) -> None:
+        self.app = app
+        self.broker = broker
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
         print(f"GX Agent version: {agent_version}")
@@ -239,15 +241,11 @@ class GXAgent:
     async def _listen(self) -> None:
         """Manage connection lifecycle."""
         try:
-            broker = RabbitBroker(
-                url=str(self._config.connection_string),
-            )
-            app = FastStream(broker)
             queue = RabbitQueue(name=self._config.queue, durable=True, passive=True)
             print("Queue is valid.")
 
             # FastStream declares default exchange if not provided
-            @broker.subscriber(queue, retry=MAX_DELIVERY)
+            @self.broker.subscriber(queue, retry=MAX_DELIVERY)
             async def handle_me(
                 msg: dict[str, Any], correlation_id: str = Context("message.correlation_id")
             ) -> None:
@@ -542,3 +540,7 @@ class GXAgent:
         # TODO: this is relying on a private implementation detail
         # use a public API once it is available
         http._update_headers = _update_headers_agent_patch
+
+
+broker = RabbitBroker(str(GXAgent._get_config().connection_string))
+app: Final[FastStream] = FastStream(broker)

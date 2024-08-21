@@ -1,0 +1,21 @@
+{
+  "asyncapi": "2.6.0",
+  "defaultContentType": "application/json",
+  "info": {
+    "title": "FastStream",
+    "version": "0.1.0",
+    "description": ""
+  },
+  "servers": {
+    "development": {
+      "url": "amqps://org-agent-a7ba9504-a02f-40c8-8c46-145b4ff5765b:B-8Eflf%7Bd5y_%23k_-Lcs%5CVYcN8Osf,!%40l%3CB=dE9j515Yj%3Ec%5Bb4POG2%5D*_ja%60%5BV%5BZb@mq.greatexpectations.io:5671/",
+      "protocol": "amqps",
+      "protocolVersion": "0.9.1"
+    }
+  },
+  "channels": {},
+  "components": {
+    "messages": {},
+    "schemas": {}
+  }
+}
