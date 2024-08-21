@@ -24,6 +24,12 @@ PROJECT_ROOT: Final[pathlib.Path] = pathlib.Path(__file__).parent
 PYPROJECT_TOML: Final[pathlib.Path] = PROJECT_ROOT / "pyproject.toml"
 DOCKERFILE_PATH: Final[str] = "./Dockerfile"
 
+ASYNCAPI_YAML: Final = PROJECT_ROOT / "asyncapi.yaml"
+ASNYCAPI_JSON: Final = PROJECT_ROOT / "asyncapi.json"
+
+# TODO: need a module level constant for the runner app to generate docs
+AGENT_APP_PATH_ID: Final = "great_expectations_cloud.agent.agent:app"
+
 
 @functools.lru_cache(maxsize=8)
 def _get_pyproject_tool_dict(
@@ -76,6 +82,25 @@ def lint(ctx: Context, check: bool = False, unsafe_fixes: bool = False) -> None:
     if unsafe_fixes:
         cmds.extend(["--unsafe-fixes", "--show-fixes"])
     ctx.run(" ".join(cmds), echo=True, pty=True)
+
+
+@invoke.task(aliases=["sync-asyncapi"])
+def gen_asyncapi(ctx: Context) -> None:
+    """
+    Generate asyncapi docs
+    TODO: this will not work until AGENT_APP_PATH_ID points to a FastStream app instance
+    https://faststream.airt.ai/latest/faststream/#running-the-application
+    """
+    core_cmds = ["faststream", "docs", "gen"]
+    yaml_cmds = [*core_cmds, "--yaml", AGENT_APP_PATH_ID]
+    ctx.run(" ".join(yaml_cmds), echo=True, pty=True)
+    assert ASYNCAPI_YAML.exists(), f"{ASYNCAPI_YAML} not found"
+    print(f"Updated {ASYNCAPI_YAML}")
+
+    json_cmds = [*core_cmds, AGENT_APP_PATH_ID]
+    ctx.run(" ".join(json_cmds), echo=True, pty=True)
+    assert ASNYCAPI_JSON.exists(), f"{ASNYCAPI_JSON} not found"
+    print(f"Updated {ASNYCAPI_JSON}")
 
 
 @invoke.task(
