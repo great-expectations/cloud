@@ -193,6 +193,7 @@ max-complexity = 10
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "os.environ".msg = """Please do not use os.environ, instead use a pydantic.BaseSettings model"""
+"pydantic.v1".msg = "Do not use pydantic v1."
 "great_expectations.compatibility.pydantic".msg = "Import pydantic directly."
 "great_expectations.compatibility.sqlalchemy".msg = "Import sqlalchemy directly."
 "great_expectations.compatibility".msg = "Favor specific version imports over compatibility module."
