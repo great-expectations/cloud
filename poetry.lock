@@ -856,18 +856,19 @@ tests = ["asttokens (>=2.1.0)", "coverage", "coverage-enable-subprocess", "ipyth
 
 [[package]]
 name = "fast-depends"
-version = "2.4.3"
+version = "2.4.9"
 description = "FastDepends - extracted and cleared from HTTP domain logic FastAPI Dependency Injection System. Async and sync are both supported."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "fast_depends-2.4.3-py3-none-any.whl", hash = "sha256:4cf483575b2b7b0a3294fd4ca244698f1bf24d995ea665c3ae79b67e79b1384d"},
-    {file = "fast_depends-2.4.3.tar.gz", hash = "sha256:be39b3d80bf1ee807ccf3e13a5c12a646605e6b2070df0b3f8807b5efb42d34a"},
+    {file = "fast_depends-2.4.9-py3-none-any.whl", hash = "sha256:6e44955523d095148c40aae6ed2ab80e4f6b995157073451e94960c1dd02a957"},
+    {file = "fast_depends-2.4.9.tar.gz", hash = "sha256:ca56542061ba8f8dde12021da3c0b82bc883394211941f03df38527b1d1c2c8a"},
 ]
 
 [package.dependencies]
 anyio = ">=3.0.0,<5.0.0"
 pydantic = ">=1.7.4,<1.8 || >1.8,<1.8.1 || >1.8.1,<3.0.0"
+typing-extensions = {version = "<4.12.1", markers = "python_version < \"3.9\""}
 
 [[package]]
 name = "fastjsonschema"
@@ -4250,13 +4251,13 @@ files = [
 
 [[package]]
 name = "typing-extensions"
-version = "4.12.2"
+version = "4.12.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "typing_extensions-4.12.2-py3-none-any.whl", hash = "sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d"},
-    {file = "typing_extensions-4.12.2.tar.gz", hash = "sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8"},
+    {file = "typing_extensions-4.12.0-py3-none-any.whl", hash = "sha256:b349c66bea9016ac22978d800cfff206d5f9816951f12a7d0ec5578b0a819594"},
+    {file = "typing_extensions-4.12.0.tar.gz", hash = "sha256:8cbcdc8606ebcb0d95453ad7dc5065e6237b6aa230a31e81d0f440c30fed5fd8"},
 ]
 
 [[package]]
@@ -4528,4 +4529,4 @@ snowflake = ["snowflake-connector-python", "snowflake-sqlalchemy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "23eefe21f7d9309b82f770b32bc680df0f8514bee210906636e6daab3777d585"
+content-hash = "2d33fd02857d1ba14081042e012a79c59ae8468e41097d55f9a37689b149a7a7"

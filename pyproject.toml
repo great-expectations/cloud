@@ -34,6 +34,7 @@ packaging = ">=21.3,<25.0"
 tenacity = ">=8.2.3,<10.0.0"
 sqlalchemy = { version = ">=2.0", optional = false }
 faststream = { extras = ["rabbit"], version = "^0.5.15", optional = false }
+fast-depends = ">=2.4.9"
 # optional dependencies
 snowflake-connector-python = { version = ">=3.3.1", optional = true }
 snowflake-sqlalchemy = { version = ">=1.6", optional = true }
