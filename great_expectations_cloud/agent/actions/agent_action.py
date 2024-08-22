@@ -5,7 +5,7 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, Optional, Sequence, TypeVar
 from uuid import UUID
 
-from pydantic.v1 import BaseModel
+from pydantic import BaseModel
 
 from great_expectations_cloud.agent.models import CreatedResource, Event
 

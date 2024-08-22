@@ -12,18 +12,14 @@ from uuid import UUID
 
 import aiormq
 import orjson
-from faststream import (
-    Context,
-    FastStream,
-)
+from faststream import Context, FastStream
 from faststream.rabbit import RabbitBroker, RabbitQueue
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
 from packaging.version import Version
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
-from pydantic import v1 as pydantic_v1
-from pydantic.v1 import AmqpDsn, AnyUrl
+from pydantic import AmqpDsn, AnyUrl, ValidationError
 from tenacity import after_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from great_expectations_cloud.agent.config import (
@@ -45,6 +41,7 @@ from great_expectations_cloud.agent.message_service.subscriber import (
 )
 from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
+    EventMessage,
     JobCompleted,
     JobStarted,
     JobStatus,
@@ -108,14 +105,12 @@ class Payload(AgentBaseExtraForbid):
         json_loads = orjson_loads
 
 
-async def handler(msg: dict[str, Any], gx_agent: GXAgent, correlation_id: str) -> None:  # noqa:
+async def handler(msg: EventMessage, gx_agent: GXAgent) -> None:  # noqa:
     print(f"Received: {msg}")
     print(f"GX Agent: {gx_agent}")
-
-    event = EventHandler.parse_event_from_dict(msg)
     event_context = EventContext(
-        event=event,
-        correlation_id=correlation_id,  # msg.correlation_id,
+        event=msg.event,
+        correlation_id=msg.correlation_id,
     )
     organization_id = None
     try:
@@ -174,7 +169,7 @@ async def handler(msg: dict[str, Any], gx_agent: GXAgent, correlation_id: str) -
                 extra={
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
-                    "event": event.dict(),
+                    "event": msg.event.dict(),
                 },
             )
 
@@ -191,7 +186,12 @@ class GXAgent:
     _PYPI_GX_AGENT_PACKAGE_NAME = "great_expectations_cloud"
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
-    def __init__(self: Self):
+    app: FastStream
+    broker: RabbitBroker
+
+    def __init__(self: Self, app: FastStream) -> None:
+        self.app = app
+        self.broker = app.broker  # type: ignore[assignment]
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
         print(f"GX Agent version: {agent_version}")
@@ -239,21 +239,17 @@ class GXAgent:
     async def _listen(self) -> None:
         """Manage connection lifecycle."""
         try:
-            broker = RabbitBroker(
-                url=str(self._config.connection_string),
-            )
-            app = FastStream(broker)
             queue = RabbitQueue(name=self._config.queue, durable=True, passive=True)
             print("Queue is valid.")
 
             # FastStream declares default exchange if not provided
-            @broker.subscriber(queue, retry=MAX_DELIVERY)
+            @self.broker.subscriber(queue, retry=MAX_DELIVERY)
             async def handle_me(
-                msg: dict[str, Any], correlation_id: str = Context("message.correlation_id")
+                msg: EventMessage, correlation_id: str = Context("message.correlation_id")
             ) -> None:
                 print(f"Received: {msg}")
                 print(f"Correlation ID: {correlation_id}")
-                await handler(msg, gx_agent=self, correlation_id=correlation_id)
+                await handler(msg, gx_agent=self)
 
             print("FastStream is ready.")
             await app.run()
@@ -373,7 +369,7 @@ class GXAgent:
 
         try:
             env_vars = GxAgentEnvVars()
-        except pydantic_v1.ValidationError as validation_err:
+        except ValidationError as validation_err:
             raise GXAgentConfigError(
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
@@ -405,7 +401,7 @@ class GXAgent:
                 gx_cloud_organization_id=env_vars.gx_cloud_organization_id,
                 gx_cloud_access_token=env_vars.gx_cloud_access_token,
             )
-        except pydantic_v1.ValidationError as validation_err:
+        except ValidationError as validation_err:
             raise GXAgentConfigError(
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
@@ -542,3 +538,14 @@ class GXAgent:
         # TODO: this is relying on a private implementation detail
         # use a public API once it is available
         http._update_headers = _update_headers_agent_patch
+
+
+broker = RabbitBroker(str(GXAgent._get_config().connection_string))
+app: Final[FastStream] = FastStream(broker)
+queue = RabbitQueue(name=GXAgent._get_config().queue, durable=True, passive=True)
+
+
+# FastStream declares default exchange if not provided
+@broker.subscriber(queue, retry=MAX_DELIVERY)
+async def handle_event(msg: EventMessage):
+    print(msg)

@@ -10,12 +10,13 @@ from uuid import UUID
 import great_expectations as gx
 from packaging.version import Version
 from packaging.version import parse as parse_version
-from pydantic import v1 as pydantic_v1
+from pydantic import ValidationError
 
 from great_expectations_cloud.agent.actions.unknown import UnknownEventAction
 from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     Event,
+    EventTA,
     UnknownEvent,
 )
 
@@ -103,8 +104,8 @@ class EventHandler:
     @classmethod
     def parse_event_from(cls, msg_body: bytes) -> Event:
         try:
-            event: Event = pydantic_v1.parse_raw_as(Event, msg_body)  # type: ignore[arg-type] # FIXME
-        except (pydantic_v1.ValidationError, JSONDecodeError):
+            event: Event = EventTA.validate_json(msg_body)
+        except (ValidationError, JSONDecodeError):
             # Log as bytes
             LOGGER.exception("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
             return UnknownEvent()
@@ -114,8 +115,8 @@ class EventHandler:
     @classmethod
     def parse_event_from_dict(cls, msg_body: dict[str, Any]) -> Event:
         try:
-            event: Event = pydantic_v1.parse_obj_as(Event, msg_body)  # type: ignore[arg-type] # FIXME
-        except pydantic_v1.ValidationError:
+            event: Event = EventTA.validate_python(msg_body)
+        except ValidationError:
             # Log as dict
             LOGGER.exception("Unable to parse event type", extra={"msg_body": msg_body})
             return UnknownEvent()

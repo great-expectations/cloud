@@ -25,6 +25,7 @@ include = [
 python = ">=3.8,<3.12"
 great-expectations = "^0.18.19"
 pydantic = ">=2.8.1,<3"
+pydantic-settings = "^2.4.0"
 pika = "^1.3.1"
 # needed for metrics serialization
 orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue is resolved
@@ -33,6 +34,7 @@ packaging = ">=21.3,<25.0"
 tenacity = ">=8.2.3,<10.0.0"
 sqlalchemy = { version = ">=2.0", optional = false }
 faststream = { extras = ["rabbit"], version = "^0.5.15", optional = false }
+fast-depends = ">=2.4.9"
 # optional dependencies
 snowflake-connector-python = { version = ">=3.3.1", optional = true }
 snowflake-sqlalchemy = { version = ">=1.6", optional = true }
@@ -176,6 +178,7 @@ runtime-evaluated-base-classes = [
     # NOTE: ruff is unable to detect that these are subclasses of pydantic.BaseModel
     "pydantic.BaseModel",
     "pydantic.v1.BaseModel",
+    "pydantic_settings.BaseSettings",
     "great_expectations_cloud.agent.models.AgentBaseExtraForbid",
     "great_expectations_cloud.agent.models.AgentBaseExtraIgnore",
     "great_expectations_cloud.agent.models.EventBase",
@@ -193,6 +196,7 @@ max-complexity = 10
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "os.environ".msg = """Please do not use os.environ, instead use a pydantic.BaseSettings model"""
+"pydantic.v1".msg = "Do not use pydantic v1."
 "great_expectations.compatibility.pydantic".msg = "Import pydantic directly."
 "great_expectations.compatibility.sqlalchemy".msg = "Import sqlalchemy directly."
 "great_expectations.compatibility".msg = "Favor specific version imports over compatibility module."
