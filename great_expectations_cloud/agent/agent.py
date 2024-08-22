@@ -45,6 +45,7 @@ from great_expectations_cloud.agent.message_service.subscriber import (
 )
 from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
+    EventMessage,
     JobCompleted,
     JobStarted,
     JobStatus,
@@ -544,3 +545,10 @@ class GXAgent:
 
 broker = RabbitBroker(str(GXAgent._get_config().connection_string))
 app: Final[FastStream] = FastStream(broker)
+queue = RabbitQueue(name=GXAgent._get_config().queue, durable=True, passive=True)
+
+
+# FastStream declares default exchange if not provided
+@broker.subscriber(queue, retry=MAX_DELIVERY)
+async def handle_event(msg: EventMessage):
+    print(msg)
