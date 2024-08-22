@@ -8,14 +8,528 @@
   },
   "servers": {
     "development": {
-      "url": "amqps://org-agent-a7ba9504-a02f-40c8-8c46-145b4ff5765b:B-8Eflf%7Bd5y_%23k_-Lcs%5CVYcN8Osf,!%40l%3CB=dE9j515Yj%3Ec%5Bb4POG2%5D*_ja%60%5BV%5BZb@mq.greatexpectations.io:5671/",
+      "url": "amqps://org-agent-a7ba9504-a02f-40c8-8c46-145b4ff5765b:$E%25Q.gY3)wDP%2FSeAKFuovvo%3C%3CCcaf%5Bm%23iJF%7CFg3D4pWp(j1!%3E0'Bu5pVCE6.g3.%5D@mq.greatexpectations.io:5671/",
       "protocol": "amqps",
       "protocolVersion": "0.9.1"
     }
   },
-  "channels": {},
+  "channels": {
+    "q-a7ba9504-a02f-40c8-8c46-145b4ff5765b:_:HandleEvent": {
+      "servers": [
+        "development"
+      ],
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "bindingVersion": "0.2.0",
+          "queue": {
+            "name": "q-a7ba9504-a02f-40c8-8c46-145b4ff5765b",
+            "durable": true,
+            "exclusive": false,
+            "autoDelete": false,
+            "vhost": "/"
+          },
+          "exchange": {
+            "type": "default",
+            "vhost": "/"
+          }
+        }
+      },
+      "subscribe": {
+        "bindings": {
+          "amqp": {
+            "cc": "q-a7ba9504-a02f-40c8-8c46-145b4ff5765b",
+            "ack": true,
+            "bindingVersion": "0.2.0"
+          }
+        },
+        "message": {
+          "$ref": "#/components/messages/q-a7ba9504-a02f-40c8-8c46-145b4ff5765b:_:HandleEvent:Message"
+        }
+      }
+    }
+  },
   "components": {
-    "messages": {},
-    "schemas": {}
+    "messages": {
+      "q-a7ba9504-a02f-40c8-8c46-145b4ff5765b:_:HandleEvent:Message": {
+        "title": "q-a7ba9504-a02f-40c8-8c46-145b4ff5765b:_:HandleEvent:Message",
+        "correlationId": {
+          "location": "$message.header#/correlation_id"
+        },
+        "payload": {
+          "$ref": "#/components/schemas/EventMessage"
+        }
+      }
+    },
+    "schemas": {
+      "DraftDatasourceConfigEvent": {
+        "properties": {
+          "type": {
+            "const": "test_datasource_config",
+            "default": "test_datasource_config",
+            "enum": [
+              "test_datasource_config"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "organization_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Organization Id"
+          },
+          "config_id": {
+            "format": "uuid",
+            "title": "Config Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "config_id"
+        ],
+        "title": "DraftDatasourceConfigEvent",
+        "type": "object"
+      },
+      "ListTableNamesEvent": {
+        "properties": {
+          "type": {
+            "const": "list_table_names_request.received",
+            "default": "list_table_names_request.received",
+            "enum": [
+              "list_table_names_request.received"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "organization_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Organization Id"
+          },
+          "datasource_name": {
+            "title": "Datasource Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "datasource_name"
+        ],
+        "title": "ListTableNamesEvent",
+        "type": "object"
+      },
+      "MetricTypes": {
+        "description": "Represents Metric types in OSS that are used for ColumnDescriptiveMetrics and MetricRepository.\n\nMore Metric types will be added in the future.",
+        "enum": [
+          "table.columns",
+          "table.row_count",
+          "table.column_types",
+          "column.min",
+          "column.max",
+          "column.median",
+          "column.mean",
+          "column_values.null.count"
+        ],
+        "title": "MetricTypes",
+        "type": "string"
+      },
+      "RunCheckpointEvent": {
+        "properties": {
+          "type": {
+            "const": "run_checkpoint_request",
+            "default": "run_checkpoint_request",
+            "enum": [
+              "run_checkpoint_request"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "organization_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Organization Id"
+          },
+          "datasource_names_to_asset_names": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "title": "Datasource Names To Asset Names",
+            "type": "object"
+          },
+          "checkpoint_id": {
+            "format": "uuid",
+            "title": "Checkpoint Id",
+            "type": "string"
+          },
+          "splitter_options": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Splitter Options"
+          }
+        },
+        "required": [
+          "datasource_names_to_asset_names",
+          "checkpoint_id"
+        ],
+        "title": "RunCheckpointEvent",
+        "type": "object"
+      },
+      "RunColumnDescriptiveMetricsEvent": {
+        "properties": {
+          "type": {
+            "const": "column_descriptive_metrics_request.received",
+            "default": "column_descriptive_metrics_request.received",
+            "enum": [
+              "column_descriptive_metrics_request.received"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "organization_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Organization Id"
+          },
+          "datasource_name": {
+            "title": "Datasource Name",
+            "type": "string"
+          },
+          "data_asset_name": {
+            "title": "Data Asset Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "datasource_name",
+          "data_asset_name"
+        ],
+        "title": "RunColumnDescriptiveMetricsEvent",
+        "type": "object"
+      },
+      "RunMetricsListEvent": {
+        "properties": {
+          "type": {
+            "const": "metrics_list_request.received",
+            "default": "metrics_list_request.received",
+            "enum": [
+              "metrics_list_request.received"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "organization_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Organization Id"
+          },
+          "datasource_name": {
+            "title": "Datasource Name",
+            "type": "string"
+          },
+          "data_asset_name": {
+            "title": "Data Asset Name",
+            "type": "string"
+          },
+          "metric_names": {
+            "items": {
+              "$ref": "#/components/schemas/MetricTypes"
+            },
+            "title": "Metric Names",
+            "type": "array"
+          }
+        },
+        "required": [
+          "datasource_name",
+          "data_asset_name",
+          "metric_names"
+        ],
+        "title": "RunMetricsListEvent",
+        "type": "object"
+      },
+      "RunMissingnessDataAssistantEvent": {
+        "properties": {
+          "type": {
+            "const": "missingness_data_assistant_request.received",
+            "default": "missingness_data_assistant_request.received",
+            "enum": [
+              "missingness_data_assistant_request.received"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "organization_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Organization Id"
+          },
+          "datasource_name": {
+            "title": "Datasource Name",
+            "type": "string"
+          },
+          "data_asset_name": {
+            "title": "Data Asset Name",
+            "type": "string"
+          },
+          "expectation_suite_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Expectation Suite Name"
+          }
+        },
+        "required": [
+          "datasource_name",
+          "data_asset_name"
+        ],
+        "title": "RunMissingnessDataAssistantEvent",
+        "type": "object"
+      },
+      "RunOnboardingDataAssistantEvent": {
+        "properties": {
+          "type": {
+            "const": "onboarding_data_assistant_request.received",
+            "default": "onboarding_data_assistant_request.received",
+            "enum": [
+              "onboarding_data_assistant_request.received"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "organization_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Organization Id"
+          },
+          "datasource_name": {
+            "title": "Datasource Name",
+            "type": "string"
+          },
+          "data_asset_name": {
+            "title": "Data Asset Name",
+            "type": "string"
+          },
+          "expectation_suite_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Expectation Suite Name"
+          }
+        },
+        "required": [
+          "datasource_name",
+          "data_asset_name"
+        ],
+        "title": "RunOnboardingDataAssistantEvent",
+        "type": "object"
+      },
+      "RunScheduledCheckpointEvent": {
+        "properties": {
+          "type": {
+            "const": "run_scheduled_checkpoint.received",
+            "default": "run_scheduled_checkpoint.received",
+            "enum": [
+              "run_scheduled_checkpoint.received"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "organization_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Organization Id"
+          },
+          "schedule_id": {
+            "format": "uuid",
+            "title": "Schedule Id",
+            "type": "string"
+          },
+          "datasource_names_to_asset_names": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "title": "Datasource Names To Asset Names",
+            "type": "object"
+          },
+          "checkpoint_id": {
+            "format": "uuid",
+            "title": "Checkpoint Id",
+            "type": "string"
+          },
+          "splitter_options": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Splitter Options"
+          }
+        },
+        "required": [
+          "schedule_id",
+          "datasource_names_to_asset_names",
+          "checkpoint_id"
+        ],
+        "title": "RunScheduledCheckpointEvent",
+        "type": "object"
+      },
+      "UnknownEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "unknown_event",
+            "default": "unknown_event",
+            "enum": [
+              "unknown_event"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "title": "UnknownEvent",
+        "type": "object"
+      },
+      "EventMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "event": {
+            "discriminator": "type",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RunOnboardingDataAssistantEvent"
+              },
+              {
+                "$ref": "#/components/schemas/RunMissingnessDataAssistantEvent"
+              },
+              {
+                "$ref": "#/components/schemas/RunCheckpointEvent"
+              },
+              {
+                "$ref": "#/components/schemas/RunScheduledCheckpointEvent"
+              },
+              {
+                "$ref": "#/components/schemas/RunColumnDescriptiveMetricsEvent"
+              },
+              {
+                "$ref": "#/components/schemas/RunMetricsListEvent"
+              },
+              {
+                "$ref": "#/components/schemas/DraftDatasourceConfigEvent"
+              },
+              {
+                "$ref": "#/components/schemas/ListTableNamesEvent"
+              },
+              {
+                "$ref": "#/components/schemas/UnknownEvent"
+              }
+            ],
+            "title": "Event"
+          },
+          "correlation_id": {
+            "title": "Correlation Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event",
+          "correlation_id"
+        ],
+        "title": "EventMessage",
+        "type": "object"
+      }
+    }
   }
 }
