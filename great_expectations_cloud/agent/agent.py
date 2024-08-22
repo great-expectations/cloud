@@ -19,8 +19,7 @@ from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_U
 from great_expectations.data_context.data_context.context_factory import get_context
 from packaging.version import Version
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
-from pydantic import v1 as pydantic_v1
-from pydantic.v1 import AmqpDsn, AnyUrl
+from pydantic import AmqpDsn, AnyUrl, ValidationError
 from tenacity import after_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from great_expectations_cloud.agent.config import (
@@ -370,7 +369,7 @@ class GXAgent:
 
         try:
             env_vars = GxAgentEnvVars()
-        except pydantic_v1.ValidationError as validation_err:
+        except ValidationError as validation_err:
             raise GXAgentConfigError(
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
@@ -402,7 +401,7 @@ class GXAgent:
                 gx_cloud_organization_id=env_vars.gx_cloud_organization_id,
                 gx_cloud_access_token=env_vars.gx_cloud_access_token,
             )
-        except pydantic_v1.ValidationError as validation_err:
+        except ValidationError as validation_err:
             raise GXAgentConfigError(
                 generate_config_validation_error_text(validation_err)
             ) from validation_err

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
-from pydantic.v1 import AnyUrl, BaseSettings, ValidationError
+from pydantic import AnyUrl, ValidationError
+from pydantic_settings import BaseSettings
 
 
 class GxAgentEnvVars(BaseSettings):
