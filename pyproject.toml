@@ -46,7 +46,7 @@ postgres = ["sqlalchemy", "psycopg2-binary"]
 databricks = ["databricks-sql-connector"]
 
 [tool.poetry.group.sql.dependencies]
-great-expectations = { version = "^0.18.19"}
+great-expectations = { version = ">=0.18.19,<1.0"}
 snowflake-sqlalchemy = ">=1.6"
 snowflake-connector-python = ">=3.3.1"
 psycopg2-binary = "^2.9.9"
