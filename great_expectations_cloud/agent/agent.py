@@ -3,45 +3,41 @@ from __future__ import annotations
 import asyncio
 import logging
 import warnings
-from collections import defaultdict
-from concurrent.futures import Future
-from concurrent.futures.thread import ThreadPoolExecutor
 from importlib.metadata import version as metadata_version
-from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Callable, Dict, Final, Literal
 from uuid import UUID
 
-import aiormq
 import orjson
+from fast_depends import dependency_provider
 from faststream import (
     Context,
-    FastStream,
+    Depends,
 )
-from faststream.rabbit import RabbitBroker, RabbitQueue
 from great_expectations.core.http import create_session
-from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
 from packaging.version import Version
-from pika.exceptions import AuthenticationError, ProbableAuthenticationError
-from pydantic import v1 as pydantic_v1
-from pydantic.v1 import AmqpDsn, AnyUrl
-from tenacity import after_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from great_expectations_cloud.agent.config import (
-    GxAgentEnvVars,
-    generate_config_validation_error_text,
+    MAX_DELIVERY,
+    GXAgentConfig,
+    get_config,
 )
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
 )
-from great_expectations_cloud.agent.exceptions import GXAgentConfigError, GXAgentError
-from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
-    ClientError,
+from great_expectations_cloud.agent.faststream import (
+    app as faststream_app,
+)
+from great_expectations_cloud.agent.faststream import (
+    config,
+)
+from great_expectations_cloud.agent.faststream import (
+    queue as faststream_queue,
 )
 from great_expectations_cloud.agent.message_service.subscriber import (
     EventContext,
     OnMessageCallback,
-    SubscriberError,
 )
 from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
@@ -64,25 +60,6 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 # TODO Set in log dict
 LOGGER.setLevel(logging.INFO)
 HandlerMap = Dict[str, OnMessageCallback]
-
-# Note: MAX_DELIVERY is only used for UnknownEvent, to attempt again (in case the agent is outdated) in hopes that agent is updated
-# if processing fails due to an exception, the message will not be redelivered, and instead an error will be logged for the job (if possible)
-MAX_DELIVERY = 10
-
-
-class GXAgentConfig(AgentBaseExtraForbid):
-    """GXAgent configuration.
-    Attributes:
-        queue: name of queue
-        connection_string: address of broker service
-    """
-
-    queue: str
-    connection_string: AmqpDsn
-    # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL  # type: ignore[assignment] # pydantic will coerce
-    gx_cloud_organization_id: str
-    gx_cloud_access_token: str
 
 
 def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
@@ -108,9 +85,20 @@ class Payload(AgentBaseExtraForbid):
         json_loads = orjson_loads
 
 
-async def handler(msg: dict[str, Any], gx_agent: GXAgent, correlation_id: str) -> None:  # noqa:
+def agent_instance() -> GXAgent:
+    # This function is used to inject the GX Agent instance into the handler
+    # The dependency is overridden with the real instance later on
+    raise NotImplementedError("Missing GX Agent instance")
+
+
+@faststream_app.broker.subscriber(faststream_queue, retry=MAX_DELIVERY)
+async def handler(
+    msg: dict[str, Any],
+    gx_agent: Annotated[GXAgent, Depends(agent_instance)],
+    correlation_id: str = Context("message.correlation_id"),
+) -> None:
     print(f"Received: {msg}")
-    print(f"GX Agent: {gx_agent}")
+    print(f"Correlation ID: {correlation_id}")
 
     event = EventHandler.parse_event_from_dict(msg)
     event_context = EventContext(
@@ -197,7 +185,7 @@ class GXAgent:
         print(f"GX Agent version: {agent_version}")
         print(f"Great Expectations version: {great_expectations_version}")
         print("Initializing the GX Agent.")
-        self._config = self._get_config()
+        self._config = config
         print("Loading a DataContext - this might take a moment.")
 
         with warnings.catch_warnings():
@@ -207,71 +195,15 @@ class GXAgent:
         print("DataContext is ready.")
 
         self._set_http_session_headers(data_context=self._context)
+        print("Opening connection to GX Cloud.")
 
-        # Create a thread pool with a single worker, so we can run long-lived
-        # GX processes and maintain our connection to the broker. Note that
-        # the CloudDataContext cached here is used by the worker, so
-        # it isn't safe to increase the number of workers running GX jobs.
-        self._executor = ThreadPoolExecutor(max_workers=1)
-        self._current_task: Future[Any] | None = None
-        self._redeliver_msg_task: asyncio.Task[Any] | None = None
-        self._correlation_ids: defaultdict[str, int] = defaultdict(lambda: 0)
+        # Override the agent_instance dependency with the real instance
+        dependency_provider.dependency_overrides[agent_instance] = lambda: self
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
-
-        print("Opening connection to GX Cloud.")
-        asyncio.run(self._listen())
+        asyncio.run(faststream_app.run())
         print("The connection to GX Cloud has been closed.")
-
-    # ZEL-505: A race condition can occur if two or more agents are started at the same time
-    #          due to the generation of passwords for rabbitMQ queues. This can be mitigated
-    #          by adding a delay and retrying the connection. Retrying with new credentials
-    #          requires calling get_config again, which handles the password generation.
-    # Note: This is not the number of retries of processing a message, it's the number of retries
-    #       to establish a connection to the broker.
-    @retry(
-        retry=retry_if_exception_type((AuthenticationError, ProbableAuthenticationError)),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
-        stop=stop_after_attempt(3),
-        after=after_log(LOGGER, logging.DEBUG),
-    )
-    async def _listen(self) -> None:
-        """Manage connection lifecycle."""
-        try:
-            broker = RabbitBroker(
-                url=str(self._config.connection_string),
-            )
-            app = FastStream(broker)
-            queue = RabbitQueue(name=self._config.queue, durable=True, passive=True)
-            print("Queue is valid.")
-
-            # FastStream declares default exchange if not provided
-            @broker.subscriber(queue, retry=MAX_DELIVERY)
-            async def handle_me(
-                msg: dict[str, Any], correlation_id: str = Context("message.correlation_id")
-            ) -> None:
-                print(f"Received: {msg}")
-                print(f"Correlation ID: {correlation_id}")
-                await handler(msg, gx_agent=self, correlation_id=correlation_id)
-
-            print("FastStream is ready.")
-            await app.run()
-        except KeyboardInterrupt:
-            print("Received request to shut down.")
-        except (
-            SubscriberError,
-            ClientError,
-            asyncio.exceptions.CancelledError,
-            aiormq.exceptions.ChannelAccessRefused,
-        ):
-            print("The connection to GX Cloud has encountered an error.")
-            LOGGER.exception("agent.listen.error")
-        except (AuthenticationError, ProbableAuthenticationError):
-            # Retry with new credentials
-            self._config = self._get_config()
-            # Raise to use the retry decorator to handle the retry logic
-            raise
 
     @classmethod
     def get_current_gx_agent_version(cls) -> str:
@@ -346,69 +278,9 @@ class GXAgent:
         """Return the name of the service that processed the event."""
         return "runner" if self._config.queue == "gx-runner" else "agent"
 
-    def _can_accept_new_task(self) -> bool:
-        """Are we currently processing a task or are we free to take a new one?"""
-        return self._current_task is None or self._current_task.done()
-
-    def _reject_correlation_id(self, id: str) -> bool:
-        """Has this correlation ID been seen too many times?"""
-        MAX_REDELIVERY = 10
-        MAX_KEYS = 100000
-        self._correlation_ids[id] += 1
-        delivery_count = self._correlation_ids[id]
-        if delivery_count > MAX_REDELIVERY:
-            should_reject = True
-        else:
-            should_reject = False
-        # ensure the correlation ids dict doesn't get too large:
-        if len(self._correlation_ids.keys()) > MAX_KEYS:
-            self._correlation_ids.clear()
-        return should_reject
-
     @classmethod
     def _get_config(cls) -> GXAgentConfig:
-        """Construct GXAgentConfig."""
-
-        # ensure we have all required env variables, and provide a useful error if not
-
-        try:
-            env_vars = GxAgentEnvVars()
-        except pydantic_v1.ValidationError as validation_err:
-            raise GXAgentConfigError(
-                generate_config_validation_error_text(validation_err)
-            ) from validation_err
-
-        # obtain the broker url and queue name from Cloud
-        agent_sessions_url = (
-            f"{env_vars.gx_cloud_base_url}/organizations/"
-            f"{env_vars.gx_cloud_organization_id}/agent-sessions"
-        )
-
-        session = create_session(access_token=env_vars.gx_cloud_access_token)
-        response = session.post(agent_sessions_url)
-        session.close()
-        if response.ok is not True:
-            raise GXAgentError(  # noqa: TRY003 # TODO: use AuthenticationError
-                "Unable to authenticate to GX Cloud. Please check your credentials."
-            )
-
-        json_response = response.json()
-        queue = json_response["queue"]
-        connection_string = json_response["connection_string"]
-
-        try:
-            # pydantic will coerce the url to the correct type
-            return GXAgentConfig(
-                queue=queue,
-                connection_string=connection_string,
-                gx_cloud_base_url=env_vars.gx_cloud_base_url,
-                gx_cloud_organization_id=env_vars.gx_cloud_organization_id,
-                gx_cloud_access_token=env_vars.gx_cloud_access_token,
-            )
-        except pydantic_v1.ValidationError as validation_err:
-            raise GXAgentConfigError(
-                generate_config_validation_error_text(validation_err)
-            ) from validation_err
+        return get_config()
 
     def _update_status(self, job_id: str, status: JobStatus, org_id: UUID) -> None:
         """Update GX Cloud on the status of a job.

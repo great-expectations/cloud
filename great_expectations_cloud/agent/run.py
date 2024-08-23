@@ -4,7 +4,7 @@ import logging
 from typing import Final
 
 from great_expectations_cloud.agent import GXAgent
-from great_expectations_cloud.agent.agent import GXAgentConfigError
+from great_expectations_cloud.agent.config import GXAgentConfigError
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 

@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import json
 import random
 import string
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
-from unittest.mock import call
+from unittest import mock
 
 import pytest
 import responses
+from faststream.rabbit import TestRabbitBroker
 from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from pydantic.v1 import (
@@ -18,9 +20,15 @@ from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import GXAgentConfig, Payload
+from great_expectations_cloud.agent.agent import GXAgentConfig, Payload, handler
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.exceptions import GXAgentConfigError
+from great_expectations_cloud.agent.faststream import (
+    broker,
+)
+from great_expectations_cloud.agent.faststream import (
+    queue as faststream_queue,
+)
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
 )
@@ -201,12 +209,27 @@ def test_gx_agent_initializes_cloud_context(get_context, gx_agent_config):
     get_context.assert_called_with(cloud_mode=True)
 
 
-def test_gx_agent_run_starts_subscriber(get_context, subscriber, client, gx_agent_config):
+@pytest.mark.asyncio
+async def test_gx_agent_run_starts_faststream_subscriber(get_context, gx_agent_config, mocker):
     """Expect GXAgent.run to invoke the Subscriber class with the correct arguments."""
     agent = GXAgent()
-    agent.run()
 
-    subscriber.assert_called_with(client=client())
+    checkpoint_id = uuid.uuid4()
+    schedule_id = uuid.uuid4()
+    event = RunScheduledCheckpointEvent(
+        checkpoint_id=checkpoint_id,
+        datasource_names_to_asset_names={},
+        splitter_options=None,
+        schedule_id=schedule_id,
+        organization_id=agent.get_organization_id(event_context=mocker.MagicMock()),
+    )
+
+    # agent.run() will call app.run() which will start the faststream subscriber
+    # but TestRabbitBroker will handle this for us
+    async with TestRabbitBroker(broker) as br:
+        await br.publish(event.dict(), queue=faststream_queue.name)
+
+        handler.mock.assert_called_once_with(json.loads(event.json()))
 
 
 def test_gx_agent_run_closes_subscriber(get_context, subscriber, client, gx_agent_config):
@@ -328,8 +351,8 @@ def test_gx_agent_updates_cloud_on_job_status(
     create_session().__enter__().patch.assert_has_calls(
         any_order=True,
         calls=[
-            call(url, data=job_started_data),
-            call(url, data=job_completed_data),
+            mock.call(url, data=job_started_data),
+            mock.call(url, data=job_completed_data),
         ],
     )
 

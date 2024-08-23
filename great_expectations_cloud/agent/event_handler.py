@@ -129,6 +129,7 @@ class EventHandler:
         This prevents processing events that are not intended for the current organization, and potentially
         leaking sensitive information across organizations.
         """
+        breakpoint()
         if hasattr(event, "organization_id") and event.organization_id != organization_id:
             return False
         return True
