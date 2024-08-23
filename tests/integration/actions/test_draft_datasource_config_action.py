@@ -60,6 +60,7 @@ def test_running_draft_datasource_config_action(
         "metrics",
         "batch_definitions",
         "expectation_suites",
+        "expectation_validation_results",
         "data_context_variables",
         "system_users",
         "checkpoints",

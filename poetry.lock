@@ -4122,4 +4122,4 @@ snowflake = ["snowflake-connector-python", "snowflake-sqlalchemy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "b9c370b98e4a5597c38016472d9cc68e0adece5a62d8e5cdcfc680f871ad26f7"
+content-hash = "a68ac9b70834d855f3293b8ee38756210537b406f8ad3046f042148c17dd09ed"
