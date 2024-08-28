@@ -39,6 +39,11 @@ COPY examples/agent/data data
 RUN poetry install --only-root && rm -rf POETRY_CACHE_DIR
 
 # Clean up all non-runtime linux deps
-RUN apt-get remove python3-dev gcc -y
+RUN apt-get remove -y \
+    python3-dev \
+    gcc \
+    gcc-12 \
+    cpp-12 \
+    cpp
 
 ENTRYPOINT ["poetry", "run", "gx-agent"]
