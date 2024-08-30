@@ -65,7 +65,6 @@ class RunScheduledCheckpointEvent(ScheduledEventBase):
     splitter_options: Optional[Dict[str, Any]] = None
 
 
-# comment to bump ci
 class RunWindowCheckpointEvent(EventBase):
     type: Literal["run_window_checkpoint.received"] = "run_window_checkpoint.received"
     datasource_names_to_asset_names: Dict[str, Set[str]]
