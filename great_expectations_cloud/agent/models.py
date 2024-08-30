@@ -65,6 +65,13 @@ class RunScheduledCheckpointEvent(ScheduledEventBase):
     splitter_options: Optional[Dict[str, Any]] = None
 
 
+class RunWindowCheckpointEvent(EventBase):
+    type: Literal["run_window_checkpoint.received"] = "run_window_checkpoint.received"
+    datasource_names_to_asset_names: Dict[str, Set[str]]
+    checkpoint_id: uuid.UUID
+    splitter_options: Optional[Dict[str, Any]] = None
+
+
 class RunColumnDescriptiveMetricsEvent(EventBase):
     type: Literal["column_descriptive_metrics_request.received"] = (
         "column_descriptive_metrics_request.received"
@@ -100,6 +107,7 @@ Event = Annotated[
         RunMissingnessDataAssistantEvent,
         RunCheckpointEvent,
         RunScheduledCheckpointEvent,
+        RunWindowCheckpointEvent,
         RunColumnDescriptiveMetricsEvent,
         RunMetricsListEvent,
         DraftDatasourceConfigEvent,
