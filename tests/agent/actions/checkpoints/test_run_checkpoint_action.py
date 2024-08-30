@@ -69,7 +69,11 @@ run_window_checkpoint_action_class_and_event = (
 )
 @pytest.mark.parametrize(
     "action_class,event",
-    [run_checkpoint_action_class_and_event, run_scheduled_checkpoint_action_class_and_event],
+    [
+        run_checkpoint_action_class_and_event,
+        run_scheduled_checkpoint_action_class_and_event,
+        run_window_checkpoint_action_class_and_event,
+    ],
 )
 def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_result(
     mock_context, action_class, event, splitter_options, batch_request
@@ -106,7 +110,11 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
 
 @pytest.mark.parametrize(
     "action_class,event",
-    [run_checkpoint_action_class_and_event, run_scheduled_checkpoint_action_class_and_event],
+    [
+        run_checkpoint_action_class_and_event,
+        run_scheduled_checkpoint_action_class_and_event,
+        run_window_checkpoint_action_class_and_event,
+    ],
 )
 def test_run_checkpoint_action_raises_on_test_connection_failure(
     mock_context,
