@@ -201,10 +201,10 @@ def scheduled_checkpoint(
 
 
 @pytest.fixture
-def checkpoint_event(checkpoint, datasource_names_to_asset_names, org_id_env_var: str):
+def checkpoint_event(scheduled_checkpoint, datasource_names_to_asset_names, org_id_env_var: str):
     return RunScheduledCheckpointEvent(
         type="run_scheduled_checkpoint.received",
-        checkpoint_id=checkpoint.ge_cloud_id,
+        checkpoint_id=scheduled_checkpoint.ge_cloud_id,
         schedule_id=uuid.UUID("e37cc13f-141d-4818-93c2-e3ec60024683"),
         datasource_names_to_asset_names=datasource_names_to_asset_names,
         organization_id=uuid.UUID(org_id_env_var),
