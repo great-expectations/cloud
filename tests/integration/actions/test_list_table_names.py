@@ -85,8 +85,9 @@ def test_running_list_table_names_action(
     assert result.type == list_table_names_event.type
     assert result.created_resources == []
 
-    # Ensure table name introspection was successful and that the table names were updated on the draft config
+    # Ensure table name introspection was successful
     assert sorted(_add_or_update_table_names_list.spy_return) == sorted(expected_table_names)
+    print("Table names: ", _add_or_update_table_names_list.spy_return)
 
 
 def test_running_list_table_names_action_fails_for_unreachable_datasource(
@@ -110,5 +111,5 @@ def test_running_list_table_names_action_fails_for_unreachable_datasource(
 
     # Act & Assert
     # Check that the action was unsuccessful and an error was raised.
-    with pytest.raises(KeyError):
+    with pytest.raises(ValueError):
         action.run(event=list_table_names_event, id=event_id)
