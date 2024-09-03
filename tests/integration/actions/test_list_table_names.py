@@ -23,8 +23,6 @@ def test_running_list_table_names_action(
     mocker: MockerFixture,
 ):
     # Arrange
-    # Note: Draft config is loaded in mercury seed data
-
     action = ListTableNamesAction(
         context=context,
         base_url=cloud_base_url,
@@ -80,7 +78,7 @@ def test_running_list_table_names_action(
     result = action.run(event=list_table_names_event, id=event_id)
 
     # Assert
-    # Check that the action was successful e.g. that we can connect to the datasource
+    # Check that the action was successful e.g. that we can connect to the datasource and list table names
     assert result
     assert result.id == event_id
     assert result.type == list_table_names_event.type
@@ -95,8 +93,6 @@ def test_running_list_table_names_action_fails_for_unreachable_datasource(
     context: CloudDataContext, cloud_base_url: str, org_id_env_var: str, token_env_var: str
 ):
     # Arrange
-    # Note: Draft config is loaded in mercury seed data
-
     action = ListTableNamesAction(
         context=context,
         base_url=cloud_base_url,
