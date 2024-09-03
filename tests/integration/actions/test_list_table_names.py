@@ -5,9 +5,9 @@ from uuid import UUID
 
 import pytest
 
-from great_expectations_cloud.agent.actions import DraftDatasourceConfigAction
+from great_expectations_cloud.agent.actions import ListTableNamesAction
 from great_expectations_cloud.agent.exceptions import GXCoreError
-from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
+from great_expectations_cloud.agent.models import ListTableNamesEvent
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.integration
 
 
-def test_running_draft_datasource_config_action(
+def test_running_list_table_names_action(
     context: CloudDataContext,
     cloud_base_url: str,
     org_id_env_var: str,
@@ -26,19 +26,19 @@ def test_running_draft_datasource_config_action(
     # Arrange
     # Note: Draft config is loaded in mercury seed data
 
-    action = DraftDatasourceConfigAction(
+    action = ListTableNamesAction(
         context=context,
         base_url=cloud_base_url,
         organization_id=UUID(org_id_env_var),
         auth_key=token_env_var,
     )
 
-    draft_datasource_id_for_connect_successfully = (
-        "2512c2d8-a212-4295-b01b-2bb2ac066f04"  # local_mercury_db
-    )
-    list_table_names_event = DraftDatasourceConfigEvent(
-        type="test_datasource_config",
-        config_id=UUID(draft_datasource_id_for_connect_successfully),
+    # datasource_id_for_connect_successfully = (
+    #     "2512c2d8-a212-4295-b01b-2bb2ac066f04"  # local_mercury_db
+    # )
+    list_table_names_event = ListTableNamesEvent(
+        type="list_table_names_request.received",
+        datasource_name="local_mercury_db",
         organization_id=UUID(org_id_env_var),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
@@ -91,37 +91,34 @@ def test_running_draft_datasource_config_action(
     assert sorted(_get_table_names_spy.spy_return) == sorted(expected_table_names)
 
     # assert _update_table_names_list was called with the correct arguments
-    assert _update_table_names_list_spy.call_args.kwargs.get("config_id") == UUID(
-        draft_datasource_id_for_connect_successfully
-    )
+    # assert _update_table_names_list_spy.call_args.kwargs.get("config_id") == UUID(
+    #     draft_datasource_id_for_connect_successfully
+    # )
     assert sorted(_update_table_names_list_spy.call_args.kwargs.get("table_names")) == sorted(
         expected_table_names
     )
 
 
-def test_running_draft_datasource_config_action_fails_for_unreachable_datasource(
+def test_running_list_table_names_action_fails_for_unreachable_datasource(
     context: CloudDataContext, cloud_base_url: str, org_id_env_var: str, token_env_var: str
 ):
     # Arrange
     # Note: Draft config is loaded in mercury seed data
 
-    action = DraftDatasourceConfigAction(
+    action = ListTableNamesAction(
         context=context,
         base_url=cloud_base_url,
         organization_id=UUID(org_id_env_var),
         auth_key=token_env_var,
     )
-    datasource_id_for_connect_failure = (
-        "e47a5059-a6bb-4de7-9286-6ea600a0c53a"  # local_mercury_db_bad_password
-    )
-    draft_datasource_config_event = DraftDatasourceConfigEvent(
-        type="test_datasource_config",
-        config_id=UUID(datasource_id_for_connect_failure),
+    list_table_names_event = ListTableNamesEvent(
+        type="list_table_names_request.received",
         organization_id=UUID(org_id_env_var),
+        datasource_name="local_mercury_db_bad_password",
     )
     event_id = "64842838-c7bf-4038-8b27-c7a32eba4b7b"
 
     # Act & Assert
     # Check that the action was unsuccessful and an error was raised.
     with pytest.raises(GXCoreError):
-        action.run(event=draft_datasource_config_event, id=event_id)
+        action.run(event=list_table_names_event, id=event_id)
