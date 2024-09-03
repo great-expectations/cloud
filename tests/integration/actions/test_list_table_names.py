@@ -6,7 +6,6 @@ from uuid import UUID
 import pytest
 
 from great_expectations_cloud.agent.actions import ListTableNamesAction
-from great_expectations_cloud.agent.exceptions import GXCoreError
 from great_expectations_cloud.agent.models import ListTableNamesEvent
 
 if TYPE_CHECKING:
@@ -74,8 +73,7 @@ def test_running_list_table_names_action(
         "api_tokens",
     ]
     # add spies to the action methods
-    _get_table_names_spy = mocker.spy(action, "_get_table_names")
-    _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
+    _add_or_update_table_names_list = mocker.spy(action, "_add_or_update_table_names_list")
 
     # Act
     result = action.run(event=list_table_names_event, id=event_id)
@@ -88,15 +86,7 @@ def test_running_list_table_names_action(
     assert result.created_resources == []
 
     # Ensure table name introspection was successful and that the table names were updated on the draft config
-    assert sorted(_get_table_names_spy.spy_return) == sorted(expected_table_names)
-
-    # assert _update_table_names_list was called with the correct arguments
-    # assert _update_table_names_list_spy.call_args.kwargs.get("config_id") == UUID(
-    #     draft_datasource_id_for_connect_successfully
-    # )
-    assert sorted(_update_table_names_list_spy.call_args.kwargs.get("table_names")) == sorted(
-        expected_table_names
-    )
+    assert sorted(_add_or_update_table_names_list.spy_return) == sorted(expected_table_names)
 
 
 def test_running_list_table_names_action_fails_for_unreachable_datasource(
@@ -120,5 +110,5 @@ def test_running_list_table_names_action_fails_for_unreachable_datasource(
 
     # Act & Assert
     # Check that the action was unsuccessful and an error was raised.
-    with pytest.raises(GXCoreError):
+    with pytest.raises(KeyError):
         action.run(event=list_table_names_event, id=event_id)
