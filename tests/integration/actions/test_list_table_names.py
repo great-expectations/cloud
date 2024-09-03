@@ -89,6 +89,7 @@ def test_running_list_table_names_action(
     # assert sorted(_add_or_update_table_names_list.spy_return) == sorted(expected_table_names)
     print("Table names: ", _add_or_update_table_names_list.spy_return)
     print("Expected table names: ", expected_table_names)
+    assert False
 
 
 def test_running_list_table_names_action_fails_for_unreachable_datasource(
