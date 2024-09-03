@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Iterator
 import pytest
 
 from great_expectations_cloud.agent.models import (
-    RunCheckpointEvent,
+    RunScheduledCheckpointEvent,
 )
 
 if TYPE_CHECKING:
@@ -19,13 +19,15 @@ if TYPE_CHECKING:
 
 from great_expectations.core.http import create_session
 
-from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
+from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
+    RunScheduledCheckpointAction,
+)
 
 pytestmark = pytest.mark.integration
 
 
 @pytest.fixture(scope="module")
-def checkpoint(
+def scheduled_checkpoint(
     context: CloudDataContext,
     data_asset: DataFrameAsset,
     batch_request: BatchRequest,
@@ -71,10 +73,11 @@ def checkpoint(
 
 
 @pytest.fixture
-def checkpoint_event(checkpoint, datasource_names_to_asset_names, org_id_env_var: str):
-    return RunCheckpointEvent(
-        type="run_checkpoint_request",
-        checkpoint_id=checkpoint.ge_cloud_id,
+def checkpoint_event(scheduled_checkpoint, datasource_names_to_asset_names, org_id_env_var: str):
+    return RunScheduledCheckpointEvent(
+        type="run_scheduled_checkpoint.received",
+        checkpoint_id=scheduled_checkpoint.ge_cloud_id,
+        schedule_id=uuid.UUID("e37cc13f-141d-4818-93c2-e3ec60024683"),
         datasource_names_to_asset_names=datasource_names_to_asset_names,
         organization_id=uuid.UUID(org_id_env_var),
     )
@@ -83,7 +86,7 @@ def checkpoint_event(checkpoint, datasource_names_to_asset_names, org_id_env_var
 def test_running_checkpoint_action(
     context, checkpoint_event, cloud_base_url: str, org_id_env_var: str, token_env_var: str
 ):
-    action = RunCheckpointAction(
+    action = RunScheduledCheckpointAction(
         context=context,
         base_url=cloud_base_url,
         organization_id=uuid.UUID(org_id_env_var),
