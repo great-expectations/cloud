@@ -42,38 +42,38 @@ def test_running_list_table_names_action(
     datasource_id_for_connect_successfully = (
         "2ccfea7f-3f91-47f2-804e-2106aa07ef24"  # local_mercury_db
     )
-
     expected_table_names = [
         "alembic_version",
+        "organization_api_tokens",
+        "asset_refs",
+        "checkpoints",
+        "data_context_variables",
+        "datasources",
+        "expectation_suites",
+        "organizations",
+        "api_tokens",
+        "users",
         "agent_job_created_resources",
         "agent_job_source_resources",
+        "draft_configs",
+        "metric_runs",
+        "metrics",
         "agent_jobs",
-        "asset_refs",
         "expectations",
         "expectation_changes",
-        "checkpoint_job_schedules",
-        "draft_configs",
-        "user_api_tokens",
-        "user_asset_alerts",
-        "organization_api_tokens",
-        "suite_validation_results",
-        "metrics",
-        "batch_definitions",
-        "expectation_suites",
-        "expectation_validation_results",
-        "data_context_variables",
         "system_users",
-        "checkpoints",
-        "organizations",
-        "metric_runs",
-        "users",
+        "batch_definitions",
+        "checkpoint_job_schedules",
+        "expectation_validation_results",
+        "suite_validation_results",
+        "user_api_tokens",
         "auth0_users",
-        "datasources",
         "organization_users",
+        "user_asset_alerts",
         "validations",
-        "api_tokens",
     ]
-    # add spies to the action methods
+
+    # add spy to the action method
     _add_or_update_table_names_list = mocker.spy(action, "_add_or_update_table_names_list")
 
     # Act
