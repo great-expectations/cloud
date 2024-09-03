@@ -32,9 +32,6 @@ def test_running_list_table_names_action(
         auth_key=token_env_var,
     )
 
-    # datasource_id_for_connect_successfully = (
-    #     "2512c2d8-a212-4295-b01b-2bb2ac066f04"  # local_mercury_db
-    # )
     list_table_names_event = ListTableNamesEvent(
         type="list_table_names_request.received",
         datasource_name="local_mercury_db",
@@ -87,6 +84,7 @@ def test_running_list_table_names_action(
 
     # Ensure table name introspection was successful
     # assert sorted(_add_or_update_table_names_list.spy_return) == sorted(expected_table_names)
+    print("Result:", result)
     print("Table names: ", _add_or_update_table_names_list.spy_return)
     print("Expected table names: ", expected_table_names)
     assert False
