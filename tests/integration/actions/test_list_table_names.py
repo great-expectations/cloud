@@ -40,7 +40,7 @@ def test_running_list_table_names_action(
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
     datasource_id_for_connect_successfully = (
-        "2512c2d8-a212-4295-b01b-2bb2ac066f04"  # local_mercury_db
+        "2ccfea7f-3f91-47f2-804e-2106aa07ef24"  # local_mercury_db
     )
 
     expected_table_names = [
