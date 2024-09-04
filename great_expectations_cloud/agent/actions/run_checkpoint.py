@@ -13,6 +13,7 @@ from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunCheckpointEvent,
     RunScheduledCheckpointEvent,
+    RunWindowCheckpointEvent,
 )
 
 if TYPE_CHECKING:
@@ -30,7 +31,7 @@ class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
 
 def run_checkpoint(
     context: CloudDataContext,
-    event: RunCheckpointEvent | RunScheduledCheckpointEvent,
+    event: RunCheckpointEvent | RunScheduledCheckpointEvent | RunWindowCheckpointEvent,
     id: str,
 ) -> ActionResult:
     """Note: the logic for this action is broken out into this function so that
