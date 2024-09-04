@@ -72,9 +72,7 @@ jobs:
       - name: Run tests
         run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml --junitxml=junit.xml -ra
         env:
-          GX_CLOUD_ORGANIZATION_ID: "6bfb1257-9492-43d8-937e-cd80329c398a"
-          GX_CLOUD_ACCESS_TOKEN: "NVcC5eGTVTWzVVxxT2XZ"
-          GX_CLOUD_BASE_URL: "http://localhost:5000"
+          IS_TEST: true
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov

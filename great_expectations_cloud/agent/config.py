@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import random
+import string
+import uuid
+
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from pydantic import v1 as pydantic_v1
@@ -44,6 +48,10 @@ class GxAgentEnvVars(BaseSettings):
         super().__init__(**overrides)
 
 
+class Env(BaseSettings):
+    is_test: bool = False
+
+
 def generate_config_validation_error_text(validation_error: ValidationError) -> str:
     missing_variables = ", ".join(
         [str(validation_error["loc"][0]) for validation_error in validation_error.errors()]
@@ -54,6 +62,18 @@ def generate_config_validation_error_text(validation_error: ValidationError) -> 
 
 def get_config() -> GXAgentConfig:
     """Construct GXAgentConfig."""
+
+    # If in testing environment, return a dummy config
+    if Env().is_test:
+        return GXAgentConfig(
+            gx_cloud_organization_id=str(uuid.uuid4()),
+            queue="test-queue",
+            connection_string=AmqpDsn("amqp://test:test@localhost:5672"),
+            gx_cloud_base_url=AnyUrl("http://localhost:5000"),
+            gx_cloud_access_token="".join(
+                random.choices(string.ascii_letters + string.digits, k=20)  # noqa: S311
+            ),
+        )
 
     # ensure we have all required env variables, and provide a useful error if not
 
