@@ -166,9 +166,15 @@ def requests_post(mocker, queue, connection_string):
     return requests_post
 
 
-def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config, requests_post):
+def test_gx_agent_gets_env_vars_in_get_config(get_context, gx_agent_config, requests_post):
     agent = GXAgent()
-    assert agent._config == gx_agent_config
+    # Config is loaded from env vars prior to initialization, and then stored in the agent instance
+    instance_config = agent._config
+    assert agent._config != gx_agent_config
+    # To get the new config, we need to call _get_config() again
+    assert agent._get_config() == gx_agent_config
+    # But _get_config() will not overwrite the instance config
+    assert agent._config == instance_config
 
 
 def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
@@ -213,30 +219,28 @@ async def test_gx_agent_run_starts_faststream_subscriber(get_context, gx_agent_c
 
 @pytest.mark.asyncio
 async def test_handler_updates_cloud_on_job_status(
-    create_session, get_context, gx_agent_config, event_handler, mocker
+    create_session, get_context, event_handler, mocker
 ):
     # ARRANGE
+    gx_agent = GXAgent()
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
-    url = (
-        f"{gx_agent_config.gx_cloud_base_url}/organizations/"
-        f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs/{correlation_id}"
-    )
-    job_started_data = JobStarted().json()
-    job_completed = JobCompleted(success=True, created_resources=[], processed_by="agent")
-    job_completed_data = job_completed.json()
-
-    # async def redeliver_message():
-    #     return None
-
     # TODO: Update the event used in test once this event is deprecated
     event = RunOnboardingDataAssistantEvent(
-        datasource_name="test-ds", data_asset_name="test-da", organization_id=uuid.uuid4()
+        datasource_name="test-ds",
+        data_asset_name="test-da",
+        organization_id=uuid.UUID(gx_agent._config.gx_cloud_organization_id),
     )
     event_handler.return_value.handle_event.return_value = ActionResult(
         id=correlation_id, type=event.type, created_resources=[]
     )
 
-    gx_agent = GXAgent()
+    url = (
+        f"{gx_agent._config.gx_cloud_base_url}/organizations/"
+        f"{gx_agent._config.gx_cloud_organization_id}/agent-jobs/{correlation_id}"
+    )
+    job_started_data = JobStarted().json()
+    job_completed = JobCompleted(success=True, created_resources=[], processed_by="agent")
+    job_completed_data = job_completed.json()
 
     # ACT
     await handle(json.loads(event.json()), gx_agent, correlation_id=correlation_id)
@@ -268,9 +272,10 @@ async def test_handler_sends_request_to_create_scheduled_job(
     """
     # ARRANGE
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
+    gx_agent = GXAgent()
     post_url = (
-        f"{gx_agent_config.gx_cloud_base_url}/organizations/"
-        f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs"
+        f"{gx_agent._config.gx_cloud_base_url}/organizations/"
+        f"{gx_agent._config.gx_cloud_organization_id}/agent-jobs"
     )
 
     checkpoint_id = uuid.uuid4()
@@ -280,7 +285,7 @@ async def test_handler_sends_request_to_create_scheduled_job(
         datasource_names_to_asset_names={},
         splitter_options=None,
         schedule_id=schedule_id,
-        organization_id=uuid.uuid4(),
+        organization_id=uuid.UUID(gx_agent._config.gx_cloud_organization_id),
     )
     payload = Payload(
         data={
@@ -289,11 +294,10 @@ async def test_handler_sends_request_to_create_scheduled_job(
         }
     )
     data = payload.json()
+    event_handler.parse_event_from_dict.return_value = event
     event_handler.return_value.handle_event.return_value = ActionResult(
         id=correlation_id, type=event.type, created_resources=[]
     )
-
-    gx_agent = GXAgent()
 
     # ACT
     await handle(json.loads(event.json()), gx_agent=gx_agent, correlation_id=correlation_id)

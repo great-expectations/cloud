@@ -16,6 +16,9 @@ from faststream import (
 from great_expectations.core.http import create_session
 from great_expectations.data_context.data_context.context_factory import get_context
 from packaging.version import Version
+from typing_extensions import (
+    Annotated,  # noqa: TCH002 - WARNING: This is used for a type hint, but pydantic will fail if not imported this way
+)
 
 from great_expectations_cloud.agent.config import (
     MAX_DELIVERY,
@@ -49,7 +52,7 @@ from great_expectations_cloud.agent.models import (
 if TYPE_CHECKING:
     import requests
     from great_expectations.data_context import CloudDataContext
-    from typing_extensions import Annotated, Self
+    from typing_extensions import Self
 
     from great_expectations_cloud.agent.actions.agent_action import ActionResult
 
@@ -167,7 +170,6 @@ class GXAgent:
         org_id = self.get_organization_id(event_context)
         base_url = self._config.gx_cloud_base_url
         auth_key = self.get_auth_key()
-
         if isinstance(event_context.event, ScheduledEventBase):
             self._create_scheduled_job_and_set_started(event_context, org_id)
         else:
@@ -200,6 +202,7 @@ class GXAgent:
 
     @classmethod
     def _get_config(cls) -> GXAgentConfig:
+        # We keep this method, since the GXRunner will override it/call it
         return get_config()
 
     def _update_status(self, job_id: str, status: JobStatus, org_id: UUID) -> None:
