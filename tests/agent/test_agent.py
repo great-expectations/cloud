@@ -17,7 +17,7 @@ from pydantic.v1 import (
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import GXAgentConfig, Payload, handler
+from great_expectations_cloud.agent.agent import GXAgentConfig, Payload, handle
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.faststream import (
     broker,
@@ -205,10 +205,10 @@ async def test_gx_agent_run_starts_faststream_subscriber(get_context, gx_agent_c
     async with TestRabbitBroker(broker) as br:
         await br.publish(event.dict(), queue=faststream_queue.name)
 
-        assert handler.mock is not None
-        handler.mock.assert_called_once_with(json.loads(event.json()))
+        assert handle.mock is not None
+        handle.mock.assert_called_once_with(json.loads(event.json()))
 
-    assert handler.mock is None
+    assert handle.mock is None
 
 
 @pytest.mark.asyncio
@@ -239,7 +239,7 @@ async def test_handler_updates_cloud_on_job_status(
     gx_agent = GXAgent()
 
     # ACT
-    await handler(json.loads(event.json()), gx_agent, correlation_id=correlation_id)
+    await handle(json.loads(event.json()), gx_agent, correlation_id=correlation_id)
 
     # ASSERT
     # sessions created with context managers now, so we need to
@@ -296,7 +296,7 @@ async def test_handler_sends_request_to_create_scheduled_job(
     gx_agent = GXAgent()
 
     # ACT
-    await handler(json.loads(event.json()), gx_agent=gx_agent, correlation_id=correlation_id)
+    await handle(json.loads(event.json()), gx_agent=gx_agent, correlation_id=correlation_id)
 
     # ASSERT
     # sessions created with context managers now, so we need to
@@ -477,8 +477,8 @@ async def test_correlation_id_header(
             for message in messages:
                 await br.publish(message[0].dict(), queue=faststream_queue.name)
 
-            assert handler.mock is not None
-            handler.mock.assert_has_calls(
+            assert handle.mock is not None
+            handle.mock.assert_has_calls(
                 [
                     mocker.call.__bool__(),
                     mocker.call(
@@ -510,4 +510,4 @@ async def test_correlation_id_header(
                 any_order=False,
             )
 
-        assert handler.mock is None
+        assert handle.mock is None
