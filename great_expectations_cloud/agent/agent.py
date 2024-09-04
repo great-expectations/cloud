@@ -38,6 +38,9 @@ from great_expectations_cloud.agent.faststream import (
 from great_expectations_cloud.agent.faststream import (
     config,
 )
+from great_expectations_cloud.agent.faststream import (
+    queue as faststream_queue,
+)
 from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
     EventContext,
@@ -339,7 +342,7 @@ class GXAgent:
         http._update_headers = _update_headers_agent_patch
 
 
-@faststream_broker.subscriber(config.queue, retry=MAX_DELIVERY)
+@faststream_broker.subscriber(faststream_queue, retry=MAX_DELIVERY)  # type: ignore[arg-type] - Must pass in the declared queue
 async def handle(
     msg: dict[str, Any],
     gx_agent: Annotated[GXAgent, Depends(agent_instance)],
