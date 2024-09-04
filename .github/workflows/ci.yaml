@@ -72,7 +72,17 @@ jobs:
       - name: Run tests
         run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml --junitxml=junit.xml -ra
         env:
-          IS_TEST: true
+          # GX Agent
+          GX_CLOUD_ACCESS_TOKEN: ${{ secrets.GX_CLOUD_ACCESS_TOKEN }}
+          GX_CLOUD_ORGANIZATION_ID: ${{ secrets.GX_CLOUD_ORGANIZATION_ID }}
+          GX_CLOUD_BASE_URL: "http://localhost:5000"
+          # GX Cloud
+          AUTH0_DOMAIN: ${{secrets.AUTH0_DOMAIN}}
+          AUTH0_API_AUDIENCE: ${{secrets.AUTH0_API_AUDIENCE}}
+          AUTH0_MERCURY_API_CLIENT_ID: ${{secrets.AUTH0_MERCURY_API_CLIENT_ID}}
+          AUTH0_MERCURY_API_CLIENT_SECRET: ${{secrets.AUTH0_MERCURY_API_CLIENT_SECRET}}
+          LOGGING_LEVEL: DEBUG
+          ENVIRONMENT: local
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov

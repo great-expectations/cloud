@@ -32,6 +32,7 @@ from great_expectations_cloud.agent.models import (
     RunCheckpointEvent,
     RunOnboardingDataAssistantEvent,
     RunScheduledCheckpointEvent,
+    UnknownEvent,
 )
 
 if TYPE_CHECKING:
@@ -244,6 +245,47 @@ async def test_handler_updates_cloud_on_job_status(
 
     # ACT
     await handle(json.loads(event.json()), gx_agent, correlation_id=correlation_id)
+
+    # ASSERT
+    # sessions created with context managers now, so we need to
+    # test the runtime calls rather than the return value calls.
+    # the calls also appear to store in any order, hence the any_order=True
+    create_session().__enter__().patch.assert_has_calls(
+        any_order=True,
+        calls=[
+            mock.call(url, data=job_started_data),
+            mock.call(url, data=job_completed_data),
+        ],
+    )
+
+
+@pytest.mark.asyncio
+async def test_handler_handles_unknwon_event(create_session, get_context, event_handler, mocker):
+    # ARRANGE
+    gx_agent = GXAgent()
+    correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
+    event = UnknownEvent()
+    event_handler.return_value.handle_event.return_value = ActionResult(
+        id=correlation_id, type=event.type, created_resources=[]
+    )
+
+    url = (
+        f"{gx_agent._config.gx_cloud_base_url}/organizations/"
+        f"{gx_agent._config.gx_cloud_organization_id}/agent-jobs/{correlation_id}"
+    )
+    job_started_data = JobStarted().json()
+    job_completed = JobCompleted(
+        success=False,
+        created_resources=[],
+        error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
+        error_code=None,
+        error_params=None,
+        processed_by="agent",
+    )
+    job_completed_data = job_completed.json()
+
+    # ACT
+    await handle(json.loads(event.json()))
 
     # ASSERT
     # sessions created with context managers now, so we need to
@@ -515,3 +557,22 @@ async def test_correlation_id_header(
             )
 
         assert handle.mock is None
+
+
+# Change this to test declare queue
+# def test_gx_agent_run_handles_client_authentication_error_on_init(
+#     get_context, subscriber, client, gx_agent_config
+# ):
+#     with pytest.raises((AuthenticationError, RetryError)):
+#         client.side_effect = AuthenticationError
+#         agent = GXAgent()
+#         agent.run()
+
+
+# def test_gx_agent_run_handles_client_probable_authentication_error_on_init(
+#     get_context, subscriber, client, gx_agent_config
+# ):
+#     with pytest.raises((ProbableAuthenticationError, RetryError)):
+#         client.side_effect = ProbableAuthenticationError
+#         agent = GXAgent()
+#         agent.run()
