@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import warnings
+from dataclasses import dataclass
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
 from uuid import UUID
@@ -35,12 +36,9 @@ from great_expectations_cloud.agent.faststream import (
 from great_expectations_cloud.agent.faststream import (
     config,
 )
-from great_expectations_cloud.agent.message_service.subscriber import (
-    EventContext,
-    OnMessageCallback,
-)
 from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
+    Event,
     JobCompleted,
     JobStarted,
     JobStatus,
@@ -59,7 +57,6 @@ if TYPE_CHECKING:
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 # TODO Set in log dict
 LOGGER.setLevel(logging.INFO)
-HandlerMap = Dict[str, OnMessageCallback]
 
 
 def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
@@ -74,6 +71,19 @@ def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
 def orjson_loads(v: bytes | bytearray | memoryview | str) -> Any:
     # Typing using example from https://github.com/ijl/orjson?tab=readme-ov-file#deserialize
     return orjson.loads(v)
+
+
+@dataclass(frozen=True)
+class EventContext:
+    """An Event with related properties and actions.
+
+    Attributes:
+        event: Pydantic model of type Event
+        correlation_id: stable identifier for this Event over its lifecycle
+    """
+
+    event: Event
+    correlation_id: str
 
 
 class Payload(AgentBaseExtraForbid):
