@@ -4,7 +4,6 @@ import json
 import random
 import string
 import uuid
-from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
 from unittest import mock
 
@@ -12,29 +11,19 @@ import pytest
 import responses
 from faststream.rabbit import TestRabbitBroker
 from great_expectations.exceptions import exceptions as gx_exception
-from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from pydantic.v1 import (
     ValidationError,
 )
-from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.agent import GXAgentConfig, Payload, handler
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
-from great_expectations_cloud.agent.exceptions import GXAgentConfigError
 from great_expectations_cloud.agent.faststream import (
     broker,
 )
 from great_expectations_cloud.agent.faststream import (
     queue as faststream_queue,
-)
-from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
-    ClientError,
-)
-from great_expectations_cloud.agent.message_service.subscriber import (
-    EventContext,
-    SubscriberError,
 )
 from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
@@ -44,7 +33,6 @@ from great_expectations_cloud.agent.models import (
     RunOnboardingDataAssistantEvent,
     RunScheduledCheckpointEvent,
 )
-from tests.agent.conftest import FakeSubscriber
 
 if TYPE_CHECKING:
     from tests.agent.conftest import DataContextConfigTD
@@ -139,20 +127,6 @@ def get_context(mocker):
 
 
 @pytest.fixture
-def client(mocker):
-    """Patch for agent.RabbitMQClient"""
-    client = mocker.patch("great_expectations_cloud.agent.agent.AsyncRabbitMQClient")
-    return client
-
-
-@pytest.fixture
-def subscriber(mocker):
-    """Patch for agent.Subscriber"""
-    subscriber = mocker.patch("great_expectations_cloud.agent.agent.Subscriber")
-    return subscriber
-
-
-@pytest.fixture
 def event_handler(mocker):
     event_handler = mocker.patch("great_expectations_cloud.agent.agent.EventHandler")
     return event_handler
@@ -231,68 +205,14 @@ async def test_gx_agent_run_starts_faststream_subscriber(get_context, gx_agent_c
 
         handler.mock.assert_called_once_with(json.loads(event.json()))
 
-
-def test_gx_agent_run_closes_subscriber(get_context, subscriber, client, gx_agent_config):
-    """Expect GXAgent.run to invoke subscriber.close."""
-    agent = GXAgent()
-    agent.run()
-
-    subscriber().close.assert_called_with()
+    assert handler.mock is None
 
 
-def test_gx_agent_run_handles_client_error_on_init(
-    get_context, subscriber, client, gx_agent_config
+@pytest.mark.asyncio
+async def test_handler_updates_cloud_on_job_status(
+    create_session, get_context, gx_agent_config, event_handler, mocker
 ):
-    client.side_effect = ClientError
-    agent = GXAgent()
-    agent.run()
-
-
-def test_gx_agent_run_handles_subscriber_error_on_init(
-    get_context, subscriber, client, gx_agent_config
-):
-    subscriber.side_effect = SubscriberError
-    agent = GXAgent()
-    agent.run()
-
-
-def test_gx_agent_run_handles_subscriber_error_on_consume(
-    get_context, subscriber, client, gx_agent_config
-):
-    subscriber.consume.side_effect = SubscriberError
-    agent = GXAgent()
-    agent.run()
-
-
-def test_gx_agent_run_handles_client_authentication_error_on_init(
-    get_context, subscriber, client, gx_agent_config
-):
-    with pytest.raises((AuthenticationError, RetryError)):
-        client.side_effect = AuthenticationError
-        agent = GXAgent()
-        agent.run()
-
-
-def test_gx_agent_run_handles_client_probable_authentication_error_on_init(
-    get_context, subscriber, client, gx_agent_config
-):
-    with pytest.raises((ProbableAuthenticationError, RetryError)):
-        client.side_effect = ProbableAuthenticationError
-        agent = GXAgent()
-        agent.run()
-
-
-def test_gx_agent_run_handles_subscriber_error_on_close(
-    get_context, subscriber, client, gx_agent_config
-):
-    subscriber.close.side_effect = SubscriberError
-    agent = GXAgent()
-    agent.run()
-
-
-def test_gx_agent_updates_cloud_on_job_status(
-    subscriber, create_session, get_context, client, gx_agent_config, event_handler
-):
+    # ARRANGE
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
     url = (
         f"{gx_agent_config.gx_cloud_base_url}/organizations/"
@@ -302,49 +222,23 @@ def test_gx_agent_updates_cloud_on_job_status(
     job_completed = JobCompleted(success=True, created_resources=[], processed_by="agent")
     job_completed_data = job_completed.json()
 
-    async def redeliver_message():
-        return None
+    # async def redeliver_message():
+    #     return None
 
+    # TODO: Update the event used in test once this event is deprecated
     event = RunOnboardingDataAssistantEvent(
         datasource_name="test-ds", data_asset_name="test-da", organization_id=uuid.uuid4()
-    )
-
-    end_test = False
-
-    def signal_subtask_finished():
-        nonlocal end_test
-        end_test = True
-
-    event_context = EventContext(
-        event=event,
-        correlation_id=correlation_id,
-        processed_successfully=signal_subtask_finished,
-        processed_with_failures=signal_subtask_finished,
-        redeliver_message=redeliver_message,
     )
     event_handler.return_value.handle_event.return_value = ActionResult(
         id=correlation_id, type=event.type, created_resources=[]
     )
 
-    def consume(queue: str, on_message: Callable[[EventContext], None]):
-        """util to allow testing agent behavior without a subscriber.
+    gx_agent = GXAgent()
 
-        Replicates behavior of Subscriber.consume by invoking the on_message
-        parameter with an event_context.
-        """
-        nonlocal event_context
-        on_message(event_context)
+    # ACT
+    await handler(json.loads(event.json()), gx_agent, correlation_id=correlation_id)
 
-        # we need the main thread to remain alive until event handler has finished
-        nonlocal end_test
-        while end_test is False:
-            sleep(0)  # defer control
-
-    subscriber().consume = consume
-
-    agent = GXAgent()
-    agent.run()
-
+    # ASSERT
     # sessions created with context managers now, so we need to
     # test the runtime calls rather than the return value calls.
     # the calls also appear to store in any order, hence the any_order=True
@@ -357,8 +251,9 @@ def test_gx_agent_updates_cloud_on_job_status(
     )
 
 
-def test_gx_agent_sends_request_to_create_scheduled_job(
-    subscriber, create_session, get_context, client, gx_agent_config, event_handler
+@pytest.mark.asyncio
+async def test_handler_sends_request_to_create_scheduled_job(
+    create_session, get_context, gx_agent_config, event_handler
 ):
     """What does this test and why?
 
@@ -368,6 +263,7 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     first, and then an event is created in the queue.
     This test ensures that the agent sends the correct request to the correct endpoint.
     """
+    # ARRANGE
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
     post_url = (
         f"{gx_agent_config.gx_cloud_base_url}/organizations/"
@@ -390,46 +286,16 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
         }
     )
     data = payload.json()
-
-    async def redeliver_message():
-        return None
-
-    end_test = False
-
-    def signal_subtask_finished():
-        nonlocal end_test
-        end_test = True
-
-    event_context = EventContext(
-        event=event,
-        correlation_id=correlation_id,
-        processed_successfully=signal_subtask_finished,
-        processed_with_failures=signal_subtask_finished,
-        redeliver_message=redeliver_message,
-    )
     event_handler.return_value.handle_event.return_value = ActionResult(
         id=correlation_id, type=event.type, created_resources=[]
     )
 
-    def consume(queue: str, on_message: Callable[[EventContext], None]):
-        """util to allow testing agent behavior without a subscriber.
+    gx_agent = GXAgent()
 
-        Replicates behavior of Subscriber.consume by invoking the on_message
-        parameter with an event_context.
-        """
-        nonlocal event_context
-        on_message(event_context)
+    # ACT
+    await handler(json.loads(event.json()), gx_agent=gx_agent, correlation_id=correlation_id)
 
-        # we need the main thread to remain alive until event handler has finished
-        nonlocal end_test
-        while end_test is False:
-            sleep(0)  # defer control
-
-    subscriber().consume = consume
-
-    agent = GXAgent()
-    agent.run()
-
+    # ASSERT
     # sessions created with context managers now, so we need to
     # test the runtime calls rather than the return value calls
     return create_session().__enter__().post.assert_any_call(post_url, data=data)
@@ -437,13 +303,13 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
 
 def test_invalid_env_variables_missing_token(set_required_env_vars, monkeypatch):
     monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
-    with pytest.raises(GXAgentConfigError):
+    with pytest.raises(gx_exception.GXCloudConfigurationError):
         GXAgent()
 
 
 def test_invalid_env_variables_missing_org_id(set_required_env_vars, monkeypatch):
     monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
-    with pytest.raises(GXAgentConfigError):
+    with pytest.raises(gx_exception.GXCloudConfigurationError):
         GXAgent()
 
 
@@ -525,47 +391,22 @@ def ds_config_factory() -> Callable[[str], dict[Literal["name", "type", "connect
     return _factory
 
 
-def test_correlation_id_header(
+@pytest.mark.asyncio
+async def test_correlation_id_header(
     set_required_env_vars: None,
     mock_gx_version_check: None,
     data_context_config: DataContextConfigTD,
     ds_config_factory: Callable[[str], dict[Literal["name", "type", "connection_string"], str]],
     gx_agent_config: GXAgentConfig,
-    fake_subscriber: FakeSubscriber,
     random_uuid: str,
+    mocker,
 ):
     """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
     agent_job_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
     datasource_config_id_1 = uuid.UUID("00000000-0000-0000-0000-000000000001")
     datasource_config_id_2 = uuid.UUID("00000000-0000-0000-0000-000000000002")
     checkpoint_id = uuid.UUID("00000000-0000-0000-0000-000000000003")
-    # seed the fake queue with an event that will be consumed by the agent
-    fake_subscriber.test_queue.extendleft(
-        [
-            (
-                DraftDatasourceConfigEvent(
-                    config_id=datasource_config_id_1,
-                    organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
-                ),
-                agent_job_ids[0],
-            ),
-            (
-                DraftDatasourceConfigEvent(
-                    config_id=datasource_config_id_2,
-                    organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
-                ),
-                agent_job_ids[1],
-            ),
-            (
-                RunCheckpointEvent(
-                    checkpoint_id=checkpoint_id,
-                    datasource_names_to_asset_names={},
-                    organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
-                ),
-                agent_job_ids[2],
-            ),
-        ]
-    )
+
     base_url = gx_agent_config.gx_cloud_base_url
     org_id = gx_agent_config.gx_cloud_organization_id
     with responses.RequestsMock() as rsps:
@@ -574,26 +415,93 @@ def test_correlation_id_header(
             f"{base_url}/organizations/{org_id}/data-context-configuration",
             json=data_context_config,
         )
-        rsps.add(
-            responses.GET,
-            f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_1}",
-            json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-1")}}},
-            # match will fail if correlation-id header is not set
-            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[0]})],
-        )
-        rsps.add(
-            responses.GET,
-            f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_2}",
-            json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-2")}}},
-            # match will fail if correlation-id header is not set
-            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[1]})],
-        )
-        rsps.add(
-            responses.GET,
-            f"{base_url}organizations/{org_id}/checkpoints/{checkpoint_id}",
-            json={"data": {}},
-            # match will fail if correlation-id header is not set
-            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[2]})],
-        )
-        agent = GXAgent()
-        agent.run()
+        # Note since the handler is mocked, we don't need to worry about the actual response
+        # TODO: Update to use with_real for integration tests
+        # rsps.add(
+        #     responses.GET,
+        #     f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_1}",
+        #     json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-1")}}},
+        #     # match will fail if correlation-id header is not set
+        #     match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[0]})],
+        # )
+        # rsps.add(
+        #     responses.GET,
+        #     f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_2}",
+        #     json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-2")}}},
+        #     # match will fail if correlation-id header is not set
+        #     match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[1]})],
+        # )
+        # rsps.add(
+        #     responses.GET,
+        #     f"{base_url}/organizations/{org_id}/checkpoints/{checkpoint_id}",
+        #     json={"data": {}},
+        #     # match will fail if correlation-id header is not set
+        #     match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[2]})],
+        # )
+
+        GXAgent()
+
+        # agent.run() will call app.run() which will start the faststream subscriber
+        # but TestRabbitBroker will handle this for us
+        async with TestRabbitBroker(broker) as br:
+            messages = [
+                (
+                    DraftDatasourceConfigEvent(
+                        config_id=datasource_config_id_1,
+                        organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
+                    ),
+                    agent_job_ids[0],
+                ),
+                (
+                    DraftDatasourceConfigEvent(
+                        config_id=datasource_config_id_2,
+                        organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
+                    ),
+                    agent_job_ids[1],
+                ),
+                (
+                    RunCheckpointEvent(
+                        checkpoint_id=checkpoint_id,
+                        datasource_names_to_asset_names={},
+                        organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
+                    ),
+                    agent_job_ids[2],
+                ),
+            ]
+            # seed the queue with an event that will be consumed by the agent
+            for message in messages:
+                await br.publish(message[0].dict(), queue=faststream_queue.name)
+
+            handler.mock.assert_has_calls(
+                [
+                    mocker.call.__bool__(),
+                    mocker.call(
+                        {
+                            "type": "test_datasource_config",
+                            "organization_id": random_uuid,
+                            "config_id": "00000000-0000-0000-0000-000000000001",
+                        }
+                    ),
+                    mocker.call.__bool__(),
+                    mocker.call(
+                        {
+                            "type": "test_datasource_config",
+                            "organization_id": random_uuid,
+                            "config_id": "00000000-0000-0000-0000-000000000002",
+                        }
+                    ),
+                    mocker.call.__bool__(),
+                    mocker.call(
+                        {
+                            "type": "run_checkpoint_request",
+                            "organization_id": random_uuid,
+                            "datasource_names_to_asset_names": {},
+                            "checkpoint_id": str(checkpoint_id),
+                            "splitter_options": None,
+                        }
+                    ),
+                ],
+                any_order=False,
+            )
+
+        assert handler.mock is None

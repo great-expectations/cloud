@@ -102,12 +102,12 @@ class FakeSubscriber(Subscriber):
         LOGGER.info(f"{self.__class__.__name__}.close() called")
 
 
-@pytest.fixture
-def fake_subscriber(mocker) -> FakeSubscriber:
-    """Patch the agent.Subscriber constuctor to return a FakeSubscriber that pulls from a `.test_queue` in-memory list."""
-    subscriber = FakeSubscriber(client=object())
-    mocker.patch("great_expectations_cloud.agent.agent.Subscriber", return_value=subscriber)
-    return subscriber
+# @pytest.fixture
+# def fake_subscriber(mocker) -> FakeSubscriber:
+#     """Patch the agent.Subscriber constuctor to return a FakeSubscriber that pulls from a `.test_queue` in-memory list."""
+#     subscriber = FakeSubscriber(client=object())
+#     mocker.patch("great_expectations_cloud.agent.agent.Subscriber", return_value=subscriber)
+#     return subscriber
 
 
 class DataContextConfigTD(TypedDict):
