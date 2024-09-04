@@ -342,7 +342,8 @@ class GXAgent:
         http._update_headers = _update_headers_agent_patch
 
 
-@faststream_broker.subscriber(faststream_queue, retry=MAX_DELIVERY)  # type: ignore[arg-type] - Must pass in the declared queue
+@faststream_broker.subscriber(faststream_queue, retry=MAX_DELIVERY)  # type: ignore[arg-type]
+# Type ignored because we want to pass in the declared queue which had retry logic
 async def handle(
     msg: dict[str, Any],
     gx_agent: Annotated[GXAgent, Depends(agent_instance)],
