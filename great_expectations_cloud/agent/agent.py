@@ -4,7 +4,7 @@ import asyncio
 import logging
 import warnings
 from importlib.metadata import version as metadata_version
-from typing import TYPE_CHECKING, Annotated, Any, Callable, Dict, Final, Literal
+from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
 from uuid import UUID
 
 import orjson
@@ -30,10 +30,10 @@ from great_expectations_cloud.agent.faststream import (
     app as faststream_app,
 )
 from great_expectations_cloud.agent.faststream import (
-    config,
+    broker as faststream_broker,
 )
 from great_expectations_cloud.agent.faststream import (
-    queue as faststream_queue,
+    config,
 )
 from great_expectations_cloud.agent.message_service.subscriber import (
     EventContext,
@@ -52,7 +52,7 @@ from great_expectations_cloud.agent.models import (
 if TYPE_CHECKING:
     import requests
     from great_expectations.data_context import CloudDataContext
-    from typing_extensions import Self
+    from typing_extensions import Annotated, Self
 
     from great_expectations_cloud.agent.actions.agent_action import ActionResult
 
@@ -91,7 +91,7 @@ def agent_instance() -> GXAgent:
     raise NotImplementedError("Missing GX Agent instance")
 
 
-@faststream_app.broker.subscriber(faststream_queue, retry=MAX_DELIVERY)
+@faststream_broker.subscriber(config.queue, retry=MAX_DELIVERY)
 async def handler(
     msg: dict[str, Any],
     gx_agent: Annotated[GXAgent, Depends(agent_instance)],

@@ -197,12 +197,15 @@ async def test_gx_agent_run_starts_faststream_subscriber(get_context, gx_agent_c
         schedule_id=schedule_id,
         organization_id=agent.get_organization_id(event_context=mocker.MagicMock()),
     )
+    # Make type checker happy
+    assert faststream_queue is not None
 
     # agent.run() will call app.run() which will start the faststream subscriber
     # but TestRabbitBroker will handle this for us
     async with TestRabbitBroker(broker) as br:
         await br.publish(event.dict(), queue=faststream_queue.name)
 
+        assert handler.mock is not None
         handler.mock.assert_called_once_with(json.loads(event.json()))
 
     assert handler.mock is None
@@ -440,6 +443,8 @@ async def test_correlation_id_header(
         # )
 
         GXAgent()
+        # Make type checker happy
+        assert faststream_queue is not None
 
         # agent.run() will call app.run() which will start the faststream subscriber
         # but TestRabbitBroker will handle this for us
@@ -472,6 +477,7 @@ async def test_correlation_id_header(
             for message in messages:
                 await br.publish(message[0].dict(), queue=faststream_queue.name)
 
+            assert handler.mock is not None
             handler.mock.assert_has_calls(
                 [
                     mocker.call.__bool__(),

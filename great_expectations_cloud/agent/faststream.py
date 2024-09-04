@@ -42,10 +42,11 @@ def _refresh_config(config: GXAgentConfig) -> None:
     stop=stop_after_attempt(3),
     after=after_log(LOGGER, logging.DEBUG),
 )
-def _declare_queue(config: GXAgentConfig) -> RabbitQueue:
+def _declare_queue(config: GXAgentConfig) -> RabbitQueue | None:
     """Manage connection lifecycle."""
+    queue = None
     try:
-        return RabbitQueue(name=config.queue, durable=True, passive=True)
+        queue = RabbitQueue(name=config.queue, durable=True, passive=True)
     except KeyboardInterrupt:
         print("Received request to shut down.")
     except (
@@ -59,6 +60,8 @@ def _declare_queue(config: GXAgentConfig) -> RabbitQueue:
         _refresh_config(config)
         # Raise to use the retry decorator to handle the retry logic
         raise
+
+    return queue
 
 
 # Note: faststream requires module level variables for its testing implementation
