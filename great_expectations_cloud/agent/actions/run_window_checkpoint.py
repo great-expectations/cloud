@@ -25,3 +25,4 @@ class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
 
 
 register_event_action("0", RunWindowCheckpointEvent, RunWindowCheckpointAction)
+register_event_action("1", RunWindowCheckpointEvent, RunWindowCheckpointAction)

@@ -65,3 +65,4 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
 
 
 register_event_action("0", ListTableNamesEvent, ListTableNamesAction)
+register_event_action("1", ListTableNamesEvent, ListTableNamesAction)

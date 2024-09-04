@@ -66,4 +66,56 @@ def run_checkpoint(
     )
 
 
+class RunCheckpointActionV1(AgentAction[RunCheckpointEvent]):
+    # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
+    #  This action is registered for v0, see register_event_action()
+
+    @override
+    def run(self, event: RunCheckpointEvent, id: str) -> ActionResult:
+        return run_checkpoint_v1(self._context, event, id)
+
+
+def run_checkpoint_v1(
+    context: CloudDataContext,
+    event: RunCheckpointEvent | RunScheduledCheckpointEvent | RunWindowCheckpointEvent,
+    id: str,
+) -> ActionResult:
+    """Note: the logic for this action is broken out into this function so that
+    the same logic can be used for both RunCheckpointEvent and RunScheduledCheckpointEvent."""
+    # TODO: move connection testing into OSS; there isn't really a reason it can't be done there
+    for datasource_name, data_asset_names in event.datasource_names_to_asset_names.items():
+        datasource = context.get_datasource(datasource_name)
+        datasource.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
+        for (
+            data_asset_name
+        ) in data_asset_names:  # only test connection for assets that are validated in checkpoint
+            asset = datasource.get_asset(data_asset_name)
+            asset.test_connection()  # raises `TestConnectionError` on failure
+    # checkpoint = context.checkpoints.get("NAME") # TODO: get by name
+    checkpoint = context.checkpoint_store.get(
+        context.checkpoint_store.get_key(id=event.checkpoint_id, name="")
+    )
+    checkpoint_run_result = checkpoint.run(
+        batch_parameters=event.splitter_options if event.splitter_options else None,
+    )
+
+    validation_results = checkpoint_run_result.run_results
+    created_resources = []
+    breakpoint()
+    for key in validation_results.keys():
+        created_resource = CreatedResource(
+            resource_id=validation_results[key]["actions_results"]["store_validation_result"]["id"],
+            type="SuiteValidationResult",
+        )
+        created_resources.append(created_resource)
+
+    return ActionResult(
+        id=id,
+        type=event.type,
+        created_resources=created_resources,
+    )
+
+
 register_event_action("0", RunCheckpointEvent, RunCheckpointAction)
+register_event_action("1", RunCheckpointEvent, RunCheckpointActionV1)
+# Does not auto work with v1

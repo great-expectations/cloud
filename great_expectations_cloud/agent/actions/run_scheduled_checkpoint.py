@@ -23,3 +23,4 @@ class RunScheduledCheckpointAction(AgentAction[RunScheduledCheckpointEvent]):
 
 
 register_event_action("0", RunScheduledCheckpointEvent, RunScheduledCheckpointAction)
+register_event_action("1", RunScheduledCheckpointEvent, RunScheduledCheckpointAction)
