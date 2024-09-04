@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import random
+import string
 import uuid
 from typing import TYPE_CHECKING, Callable, Literal
 from unittest import mock
@@ -110,12 +112,12 @@ def local_mercury():
 
 @pytest.fixture
 def random_uuid() -> str:
-    return "6bfb1257-9492-43d8-937e-cd80329c398a"
+    return str(uuid.uuid4())
 
 
 @pytest.fixture
 def random_string() -> str:
-    return "NVcC5eGTVTWzVVxxT2XZ"
+    return "".join(random.choices(string.ascii_letters + string.digits, k=20))
 
 
 @pytest.fixture

@@ -68,8 +68,8 @@ def get_config() -> GXAgentConfig:
         return GXAgentConfig(
             gx_cloud_organization_id=str(uuid.uuid4()),
             queue="test-queue",
-            connection_string=AmqpDsn("amqp://test:test@localhost:5672"),
-            gx_cloud_base_url=AnyUrl("http://localhost:5000"),
+            connection_string=AmqpDsn("amqp://test:test@localhost:5672", scheme="amqp"),
+            gx_cloud_base_url=AnyUrl("http://localhost:5000", scheme="http"),
             gx_cloud_access_token="".join(
                 random.choices(string.ascii_letters + string.digits, k=20)  # noqa: S311
             ),

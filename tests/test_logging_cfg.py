@@ -35,13 +35,6 @@ default_log_formatted = {
 default_log_emitted = {"msg": "hello", "name": "root", "levelname": "DEBUG"}
 
 
-@pytest.fixture(autouse=True)
-def set_required_env_vars(monkeypatch, random_uuid, random_string, local_mercury):
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", random_uuid)
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", random_string)
-    monkeypatch.setenv("GX_CLOUD_BASE_URL", local_mercury)
-
-
 @pytest.fixture
 def logfile_path():
     return Path(DEFAULT_LOG_DIR, DEFAULT_LOG_FILE)
