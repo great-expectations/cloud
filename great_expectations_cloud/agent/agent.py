@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 import warnings
 from importlib.metadata import version as metadata_version
@@ -9,37 +8,17 @@ from uuid import UUID
 
 import orjson
 from fast_depends import dependency_provider
-from faststream import (
-    Context,
-    Depends,
-)
 from great_expectations.core.http import create_session
 from great_expectations.data_context.data_context.context_factory import get_context
 from packaging.version import Version
-from typing_extensions import (
-    Annotated,  # noqa: TCH002 - WARNING: This is used for a type hint, but pydantic will fail if not imported this way
-)
 
 from great_expectations_cloud.agent.config import (
-    MAX_DELIVERY,
+    BaseConfig,
     GXAgentConfig,
-    get_config,
 )
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
-)
-from great_expectations_cloud.agent.faststream import (
-    app as faststream_app,
-)
-from great_expectations_cloud.agent.faststream import (
-    broker as faststream_broker,
-)
-from great_expectations_cloud.agent.faststream import (
-    config,
-)
-from great_expectations_cloud.agent.faststream import (
-    queue as faststream_queue,
 )
 from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
@@ -105,13 +84,26 @@ class GXAgent:
     _PYPI_GX_AGENT_PACKAGE_NAME = "great_expectations_cloud"
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
-    def __init__(self: Self):
+    def __init__(self: Self, config: BaseConfig) -> None:
+        self.configure(config)
+        self._print_startup_message()
+        self._load_data_context_on_startup()
+
+        # Override the agent_instance dependency with the real instance after startup
+        dependency_provider.dependency_overrides[agent_instance] = lambda: self
+
+    def configure(self, config: BaseConfig) -> None:
+        # Cast the config from protocol BaseConfig to concrete GXAgentConfig
+        self._config = GXAgentConfig(**config.dict())
+
+    def _print_startup_message(self) -> None:
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
         print(f"GX Agent version: {agent_version}")
         print(f"Great Expectations version: {great_expectations_version}")
         print("Initializing the GX Agent.")
-        self._config = config
+
+    def _load_data_context_on_startup(self) -> None:
         print("Loading a DataContext - this might take a moment.")
 
         with warnings.catch_warnings():
@@ -122,14 +114,6 @@ class GXAgent:
 
         self._set_http_session_headers(data_context=self._context)
         print("Opening connection to GX Cloud.")
-
-        # Override the agent_instance dependency with the real instance
-        dependency_provider.dependency_overrides[agent_instance] = lambda: self
-
-    def run(self) -> None:
-        """Open a connection to GX Cloud."""
-        asyncio.run(faststream_app.run())
-        print("The connection to GX Cloud has been closed.")
 
     @classmethod
     def get_current_gx_agent_version(cls) -> str:
@@ -152,6 +136,84 @@ class GXAgent:
     def get_auth_key(self) -> str:
         """Helper method to get the auth key. Overridden in GX-Runner."""
         return self._config.gx_cloud_access_token
+
+    def _handle_message(self, msg: dict[str, Any], correlation_id: str) -> None:
+        # warning:  this method will not be executed in the main thread
+        event = EventHandler.parse_event_from_dict(msg)
+        event_context = EventContext(
+            event=event,
+            correlation_id=correlation_id,
+        )
+        organization_id = None
+        status = None
+        try:
+            organization_id = self.get_organization_id(event_context)
+            result = self._handle_event(event_context)
+        except Exception as e:
+            status = build_failed_job_completed_status(e)
+            LOGGER.exception(
+                "Job completed with error",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                },
+            )
+        else:  # handle no exception
+            if result.type == UnknownEvent().type:
+                status = JobCompleted(
+                    success=False,
+                    created_resources=[],
+                    error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
+                    processed_by=self._get_processed_by(),
+                )
+                LOGGER.error(
+                    "Job completed with error. Ensure agent is up-to-date.",
+                    extra={
+                        "event_type": event_context.event.type,
+                        "id": event_context.correlation_id,
+                        "organization_id": str(organization_id),
+                    },
+                )
+            else:
+                status = JobCompleted(
+                    success=True,
+                    created_resources=result.created_resources,
+                    processed_by=self._get_processed_by(),
+                )
+                LOGGER.info(
+                    "Completed job",
+                    extra={
+                        "event_type": event_context.event.type,
+                        "correlation_id": event_context.correlation_id,
+                        "job_duration": (
+                            result.job_duration.total_seconds() if result.job_duration else None
+                        ),
+                        "organization_id": str(organization_id),
+                    },
+                )
+        finally:
+            if organization_id and status:
+                self._update_status(
+                    job_id=event_context.correlation_id, status=status, org_id=organization_id
+                )
+            elif not organization_id:
+                LOGGER.error(
+                    "Organization ID is not available.",
+                    extra={
+                        "event_type": event_context.event.type,
+                        "correlation_id": event_context.correlation_id,
+                        "event": event.dict(),
+                    },
+                )
+            elif not status:
+                LOGGER.error(
+                    "Status is not available.",
+                    extra={
+                        "event_type": event_context.event.type,
+                        "correlation_id": event_context.correlation_id,
+                        "organization_id": str(organization_id),
+                    },
+                )
 
     def _handle_event(self, event_context: EventContext) -> ActionResult:
         """Pass events to EventHandler.
@@ -189,7 +251,7 @@ class GXAgent:
             },
         )
         handler = EventHandler(context=data_context)
-        # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
+        # This method might raise an exception. Allow it and handle in _handle_message
         result = handler.handle_event(
             event=event_context.event,
             id=event_context.correlation_id,
@@ -202,11 +264,6 @@ class GXAgent:
     def _get_processed_by(self) -> Literal["agent", "runner"]:
         """Return the name of the service that processed the event."""
         return "runner" if self._config.queue == "gx-runner" else "agent"
-
-    @classmethod
-    def _get_config(cls) -> GXAgentConfig:
-        # We keep this method, since the GXRunner will override it/call it
-        return get_config()
 
     def _update_status(self, job_id: str, status: JobStatus, org_id: UUID) -> None:
         """Update GX Cloud on the status of a job.
@@ -340,80 +397,3 @@ class GXAgent:
         # TODO: this is relying on a private implementation detail
         # use a public API once it is available
         http._update_headers = _update_headers_agent_patch
-
-
-@faststream_broker.subscriber(faststream_queue, retry=MAX_DELIVERY)  # type: ignore[arg-type]
-# Type ignored because we want to pass in the declared queue which had retry logic
-async def handle(
-    msg: dict[str, Any],
-    gx_agent: Annotated[GXAgent, Depends(agent_instance)],
-    correlation_id: str = Context("message.correlation_id"),
-) -> None:
-    print(f"Received: {msg}")
-    print(f"Correlation ID: {correlation_id}")
-
-    event = EventHandler.parse_event_from_dict(msg)
-    event_context = EventContext(
-        event=event,
-        correlation_id=correlation_id,  # msg.correlation_id,
-    )
-    organization_id = None
-    try:
-        organization_id = gx_agent.get_organization_id(event_context)
-        result = gx_agent._handle_event(event_context)
-    except Exception as e:
-        status = build_failed_job_completed_status(e)
-        LOGGER.exception(
-            "Job completed with error",
-            extra={
-                "event_type": event_context.event.type,
-                "correlation_id": event_context.correlation_id,
-            },
-        )
-    else:  # handle no exception
-        if result.type == UnknownEvent().type:
-            status = JobCompleted(
-                success=False,
-                created_resources=[],
-                error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
-                processed_by=gx_agent._get_processed_by(),
-            )
-            LOGGER.error(
-                "Job completed with error. Ensure agent is up-to-date.",
-                extra={
-                    "event_type": event_context.event.type,
-                    "id": event_context.correlation_id,
-                    "organization_id": str(organization_id),
-                },
-            )
-        else:
-            status = JobCompleted(
-                success=True,
-                created_resources=result.created_resources,
-                processed_by=gx_agent._get_processed_by(),
-            )
-            LOGGER.info(
-                "Completed job",
-                extra={
-                    "event_type": event_context.event.type,
-                    "correlation_id": event_context.correlation_id,
-                    "job_duration": (
-                        result.job_duration.total_seconds() if result.job_duration else None
-                    ),
-                    "organization_id": str(organization_id),
-                },
-            )
-    finally:
-        if organization_id:
-            gx_agent._update_status(
-                job_id=event_context.correlation_id, status=status, org_id=organization_id
-            )
-        else:
-            LOGGER.error(
-                "Organization ID is not available.",
-                extra={
-                    "event_type": event_context.event.type,
-                    "correlation_id": event_context.correlation_id,
-                    "event": event.dict(),
-                },
-            )
