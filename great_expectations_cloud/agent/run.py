@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
-from faststream import Context, FastStream
-from faststream.rabbit import RabbitBroker
 from fast_depends import (
     Depends,  # noqa: TCH002 - WARNING: This is used for a type hint, but pydantic will fail if not imported this way
 )
-
+from faststream import Context, FastStream
+from faststream.rabbit import RabbitBroker
 from typing_extensions import (
     Annotated,  # noqa: TCH002 - WARNING: This is used for a type hint, but pydantic will fail if not imported this way
 )
@@ -17,7 +16,6 @@ from typing_extensions import (
 from great_expectations_cloud.agent.agent import GXAgent, agent_instance
 from great_expectations_cloud.agent.config import GXAgentConfig, GXAgentConfigError
 from great_expectations_cloud.agent.queue import declare_queue
-
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 

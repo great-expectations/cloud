@@ -19,12 +19,6 @@ from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.agent import GXAgentConfig, Payload, handle
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
-from great_expectations_cloud.agent.queue import (
-    broker,
-)
-from great_expectations_cloud.agent.queue import (
-    queue as faststream_queue,
-)
 from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
     JobCompleted,
@@ -33,6 +27,12 @@ from great_expectations_cloud.agent.models import (
     RunOnboardingDataAssistantEvent,
     RunScheduledCheckpointEvent,
     UnknownEvent,
+)
+from great_expectations_cloud.agent.queue import (
+    broker,
+)
+from great_expectations_cloud.agent.queue import (
+    queue as faststream_queue,
 )
 
 if TYPE_CHECKING:
