@@ -12,13 +12,16 @@ import responses
 from faststream.rabbit import TestRabbitBroker
 from great_expectations.exceptions import exceptions as gx_exception
 from pydantic.v1 import (
+    AmqpDsn,
+    AnyUrl,
     ValidationError,
 )
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import GXAgentConfig, Payload, handle
+from great_expectations_cloud.agent.agent import GXAgentConfig, Payload
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
+from great_expectations_cloud.agent.exceptions import GXAgentConfigError
 from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
     JobCompleted,
@@ -28,10 +31,11 @@ from great_expectations_cloud.agent.models import (
     RunScheduledCheckpointEvent,
     UnknownEvent,
 )
-from great_expectations_cloud.agent.queue import (
+from great_expectations_cloud.agent.run import (
     broker,
+    handle,
 )
-from great_expectations_cloud.agent.queue import (
+from great_expectations_cloud.agent.run import (
     queue as faststream_queue,
 )
 
@@ -167,33 +171,40 @@ def requests_post(mocker, queue, connection_string):
     return requests_post
 
 
-def test_gx_agent_gets_env_vars_in_get_config(get_context, gx_agent_config, requests_post):
-    agent = GXAgent()
+def test_gx_agent_takes_in_config(get_context, gx_agent_config, requests_post):
+    agent = GXAgent(gx_agent_config)
     # Config is loaded from env vars prior to initialization, and then stored in the agent instance
-    instance_config = agent._config
-    assert agent._config != gx_agent_config
-    # To get the new config, we need to call _get_config() again
-    assert agent._get_config() == gx_agent_config
-    # But _get_config() will not overwrite the instance config
-    assert agent._config == instance_config
+    assert agent._config == gx_agent_config
+
+    another_config = GXAgentConfig(
+        queue="test-queue",
+        connection_string=AmqpDsn("amqp://test:test@localhost:5672", scheme="amqp"),
+        gx_cloud_organization_id=str(uuid.uuid4()),
+        gx_cloud_base_url=AnyUrl("http://localhost:5000", scheme="http"),
+        gx_cloud_access_token="".join(random.choices(string.ascii_letters + string.digits, k=20)),
+    )
+    # configure can be used to update the config
+    agent.configure(another_config)
+    assert agent._config == another_config
 
 
 def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
     # There is no validation for the token aside from presence, so we set to empty to raise an error.
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "")
+    config = GXAgentConfig.build()
     with pytest.raises(gx_exception.GXCloudConfigurationError):
-        GXAgent()
+        GXAgent(config)
 
 
 def test_gx_agent_initializes_cloud_context(get_context, gx_agent_config):
-    GXAgent()
+    GXAgent(gx_agent_config)
     get_context.assert_called_with(cloud_mode=True)
 
 
 @pytest.mark.asyncio
 async def test_gx_agent_run_starts_faststream_subscriber(get_context, gx_agent_config, mocker):
     """Expect GXAgent.run to invoke the Subscriber class with the correct arguments."""
-    agent = GXAgent()
+    agent = GXAgent(gx_agent_config)
 
     checkpoint_id = uuid.uuid4()
     schedule_id = uuid.uuid4()
@@ -220,10 +231,10 @@ async def test_gx_agent_run_starts_faststream_subscriber(get_context, gx_agent_c
 
 @pytest.mark.asyncio
 async def test_handler_updates_cloud_on_job_status(
-    create_session, get_context, event_handler, mocker
+    create_session, get_context, gx_agent_config, event_handler, mocker
 ):
     # ARRANGE
-    gx_agent = GXAgent()
+    gx_agent = GXAgent(gx_agent_config)
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
     # TODO: Update the event used in test once this event is deprecated
     event = RunOnboardingDataAssistantEvent(
@@ -260,9 +271,11 @@ async def test_handler_updates_cloud_on_job_status(
 
 
 @pytest.mark.asyncio
-async def test_handler_handles_unknwon_event(create_session, get_context, event_handler, mocker):
+async def test_handler_handles_unknwon_event(
+    create_session, get_context, gx_agent_config, event_handler, mocker
+):
     # ARRANGE
-    gx_agent = GXAgent()
+    gx_agent = GXAgent(gx_agent_config)
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
     event = UnknownEvent()
     event_handler.return_value.handle_event.return_value = ActionResult(
@@ -285,7 +298,7 @@ async def test_handler_handles_unknwon_event(create_session, get_context, event_
     job_completed_data = job_completed.json()
 
     # ACT
-    await handle(json.loads(event.json()))
+    await handle(json.loads(event.json()), gx_agent=gx_agent, correlation_id=correlation_id)
 
     # ASSERT
     # sessions created with context managers now, so we need to
@@ -314,7 +327,7 @@ async def test_handler_sends_request_to_create_scheduled_job(
     """
     # ARRANGE
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
-    gx_agent = GXAgent()
+    gx_agent = GXAgent(gx_agent_config)
     post_url = (
         f"{gx_agent._config.gx_cloud_base_url}/organizations/"
         f"{gx_agent._config.gx_cloud_organization_id}/agent-jobs"
@@ -352,14 +365,14 @@ async def test_handler_sends_request_to_create_scheduled_job(
 
 def test_invalid_env_variables_missing_token(set_required_env_vars, monkeypatch):
     monkeypatch.delenv("GX_CLOUD_ACCESS_TOKEN")
-    with pytest.raises(gx_exception.GXCloudConfigurationError):
-        GXAgent()
+    with pytest.raises(GXAgentConfigError):
+        GXAgentConfig.build()
 
 
 def test_invalid_env_variables_missing_org_id(set_required_env_vars, monkeypatch):
     monkeypatch.delenv("GX_CLOUD_ORGANIZATION_ID")
-    with pytest.raises(gx_exception.GXCloudConfigurationError):
-        GXAgent()
+    with pytest.raises(GXAgentConfigError):
+        GXAgentConfig.build()
 
 
 def test_invalid_config_agent_missing_token(
@@ -419,7 +432,7 @@ def test_custom_user_agent(
                 )
             ],
         )
-        GXAgent()
+        GXAgent(gx_agent_config)
 
 
 @pytest.fixture
@@ -464,31 +477,8 @@ async def test_correlation_id_header(
             f"{base_url}/organizations/{org_id}/data-context-configuration",
             json=data_context_config,
         )
-        # Note since the handler is mocked, we don't need to worry about the actual response
-        # TODO: Update to use with_real for integration tests
-        # rsps.add(
-        #     responses.GET,
-        #     f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_1}",
-        #     json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-1")}}},
-        #     # match will fail if correlation-id header is not set
-        #     match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[0]})],
-        # )
-        # rsps.add(
-        #     responses.GET,
-        #     f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_2}",
-        #     json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-2")}}},
-        #     # match will fail if correlation-id header is not set
-        #     match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[1]})],
-        # )
-        # rsps.add(
-        #     responses.GET,
-        #     f"{base_url}/organizations/{org_id}/checkpoints/{checkpoint_id}",
-        #     json={"data": {}},
-        #     # match will fail if correlation-id header is not set
-        #     match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[2]})],
-        # )
 
-        GXAgent()
+        GXAgent(config=gx_agent_config)
         # Make type checker happy
         assert faststream_queue is not None
 
