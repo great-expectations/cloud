@@ -339,7 +339,7 @@ class GXAgent:
         Note: the Agent-Job-Id header value will be set for all GX Cloud request until this method is
         called again.
         """
-        from great_expectations import __version__  # type: ignore[attr-defined] # TODO: fix this
+        from great_expectations import __version__
         from great_expectations.core import http
         from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend
 
@@ -397,3 +397,7 @@ class GXAgent:
         # TODO: this is relying on a private implementation detail
         # use a public API once it is available
         http._update_headers = _update_headers_agent_patch
+
+
+def get_version() -> str:
+    return GXAgent.get_current_gx_agent_version()

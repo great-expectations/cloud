@@ -6,6 +6,10 @@ from typing import TYPE_CHECKING, Any, Final
 
 from faststream import Context, FastStream
 from faststream.rabbit import RabbitBroker
+from fast_depends import (
+    Depends,  # noqa: TCH002 - WARNING: This is used for a type hint, but pydantic will fail if not imported this way
+)
+
 from typing_extensions import (
     Annotated,  # noqa: TCH002 - WARNING: This is used for a type hint, but pydantic will fail if not imported this way
 )
@@ -14,8 +18,6 @@ from great_expectations_cloud.agent.agent import GXAgent, agent_instance
 from great_expectations_cloud.agent.config import GXAgentConfig, GXAgentConfigError
 from great_expectations_cloud.agent.queue import declare_queue
 
-if TYPE_CHECKING:
-    from fast_depends import Depends
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -47,7 +49,3 @@ def run_agent() -> None:
     except GXAgentConfigError as error:
         # catch error to avoid stacktrace printout
         LOGGER.error(error)  # noqa: TRY400 # intentionally avoiding logging stacktrace
-
-
-def get_version() -> str:
-    return GXAgent.get_current_gx_agent_version()
