@@ -191,8 +191,8 @@ def test_gx_agent_takes_in_config(get_context, gx_agent_config, requests_post):
 def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
     # There is no validation for the token aside from presence, so we set to empty to raise an error.
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "")
-    config = GXAgentConfig.build()
     with pytest.raises(gx_exception.GXCloudConfigurationError):
+        config = GXAgentConfig.build()
         GXAgent(config)
 
 

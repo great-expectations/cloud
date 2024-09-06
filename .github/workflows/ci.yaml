@@ -83,6 +83,7 @@ jobs:
           AUTH0_MERCURY_API_CLIENT_SECRET: ${{secrets.AUTH0_MERCURY_API_CLIENT_SECRET}}
           LOGGING_LEVEL: DEBUG
           ENVIRONMENT: local
+          USE_MOCK_CONFIG: true
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
