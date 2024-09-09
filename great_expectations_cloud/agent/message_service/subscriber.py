@@ -98,8 +98,6 @@ class Subscriber:
             except KeyboardInterrupt as e:
                 self.client.stop()
                 raise KeyboardInterrupt from e
-            if self.client.should_reconnect:
-                self.client.reset()
             else:
                 break  # exit
 
