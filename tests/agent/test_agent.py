@@ -11,11 +11,13 @@ import pytest
 import responses
 from faststream.rabbit import TestRabbitBroker
 from great_expectations.exceptions import exceptions as gx_exception
+from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from pydantic.v1 import (
     AmqpDsn,
     AnyUrl,
     ValidationError,
 )
+from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
@@ -31,6 +33,7 @@ from great_expectations_cloud.agent.models import (
     RunScheduledCheckpointEvent,
     UnknownEvent,
 )
+from great_expectations_cloud.agent.queue import declare_queue
 from great_expectations_cloud.agent.run import (
     broker,
     handle,
@@ -549,20 +552,21 @@ async def test_correlation_id_header(
         assert handle.mock is None
 
 
-# Change this to test declare queue
-# def test_gx_agent_run_handles_client_authentication_error_on_init(
-#     get_context, subscriber, client, gx_agent_config
-# ):
-#     with pytest.raises((AuthenticationError, RetryError)):
-#         client.side_effect = AuthenticationError
-#         agent = GXAgent()
-#         agent.run()
+def test_declare_queue_handles_client_authentication_error_on_init(gx_agent_config, mocker):
+    mock_rabbit_queue = mocker.patch("great_expectations_cloud.agent.queue.RabbitQueue")
+
+    config = GXAgentConfig.build()
+    with pytest.raises((AuthenticationError, RetryError)):
+        mock_rabbit_queue.side_effect = AuthenticationError
+        declare_queue(config)
 
 
-# def test_gx_agent_run_handles_client_probable_authentication_error_on_init(
-#     get_context, subscriber, client, gx_agent_config
-# ):
-#     with pytest.raises((ProbableAuthenticationError, RetryError)):
-#         client.side_effect = ProbableAuthenticationError
-#         agent = GXAgent()
-#         agent.run()
+def test_declare_queue_run_handles_client_probable_authentication_error_on_init(
+    gx_agent_config, mocker
+):
+    mock_rabbit_queue = mocker.patch("great_expectations_cloud.agent.queue.RabbitQueue")
+
+    config = GXAgentConfig.build()
+    with pytest.raises((ProbableAuthenticationError, RetryError)):
+        mock_rabbit_queue.side_effect = AuthenticationError
+        declare_queue(config)

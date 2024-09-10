@@ -33,8 +33,6 @@ async def handle(
     gx_agent: Annotated[GXAgent, Depends(agent_instance)],
     correlation_id: str = Context("message.correlation_id"),
 ) -> None:
-    print(f"Received: {msg}")
-    print(f"Correlation ID: {correlation_id}")
     gx_agent._handle_message(msg, correlation_id)
 
 
