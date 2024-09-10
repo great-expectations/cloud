@@ -64,9 +64,8 @@ class GXAgentConfig(AgentBaseExtraForbid):
                 f"{env_vars.gx_cloud_organization_id}/agent-sessions"
             )
 
-            session = create_session(access_token=env_vars.gx_cloud_access_token)
-            response = session.post(agent_sessions_url)
-            session.close()
+            with create_session(access_token=env_vars.gx_cloud_access_token) as session:
+                response = session.post(agent_sessions_url)
             if response.ok is not True:
                 raise GXAgentError(  # noqa: TRY003 # TODO: use AuthenticationError
                     "Unable to authenticate to GX Cloud. Please check your credentials."
