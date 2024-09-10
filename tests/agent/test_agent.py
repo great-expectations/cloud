@@ -46,10 +46,6 @@ if TYPE_CHECKING:
     from tests.agent.conftest import DataContextConfigTD
 
 
-# TODO: This should be marked as unit tests after fixing the tests to mock outgoing calls
-pytestmark = pytest.mark.integration
-
-
 @pytest.fixture
 def set_required_env_vars(monkeypatch, random_uuid, random_string, local_mercury):
     monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", random_uuid)

@@ -14,7 +14,7 @@ from typing_extensions import (
 )
 
 from great_expectations_cloud.agent.agent import GXAgent, agent_instance
-from great_expectations_cloud.agent.config import GXAgentConfig, GXAgentConfigError
+from great_expectations_cloud.agent.config import MAX_DELIVERY, GXAgentConfig, GXAgentConfigError
 from great_expectations_cloud.agent.queue import declare_queue
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ app = FastStream(broker)
 queue = declare_queue(config)
 
 
-@broker.subscriber(queue, retry=1)  # type: ignore[arg-type]
+@broker.subscriber(queue, retry=MAX_DELIVERY)  # type: ignore[arg-type]
 # Type ignored because we want to pass in the declared queue which had retry logic
 async def handle(
     msg: dict[str, Any],
