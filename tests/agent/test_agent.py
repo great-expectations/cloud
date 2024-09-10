@@ -271,7 +271,7 @@ async def test_handler_updates_cloud_on_job_status(
 
 
 @pytest.mark.asyncio
-async def test_handler_handles_unknwon_event(
+async def test_handler_handles_unknown_event(
     create_session, get_context, gx_agent_config, event_handler, mocker
 ):
     # ARRANGE
