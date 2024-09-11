@@ -17,10 +17,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Read python version from .python-version
+        id: read-python-version
+        run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11.9"
+          python-version: ${{ steps.read-python-version.outputs.PYTHON_VERSION }}
           cache-dependency-path: poetry.lock
 
       - name: Load cached Poetry installation
