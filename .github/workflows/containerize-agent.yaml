@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: read
 
     steps:
       - name: Checkout
@@ -130,7 +129,7 @@ jobs:
             258143015559.dkr.ecr.us-east-1.amazonaws.com/gx/agent:${{ steps.get_version.outputs.POETRY_VERSION }}
 
       - name: Push Release to Docker Hub and Internal ECR
-        if: ${{ steps.get_is_release.outputs.IS_RELEASE == 'true' and github.ref == 'refs/heads/main' }}
+        if: ${{ steps.get_is_release.outputs.IS_RELEASE == 'true' && github.ref == 'refs/heads/main' }}
         uses: docker/build-push-action@v5
         with:
           context: .
