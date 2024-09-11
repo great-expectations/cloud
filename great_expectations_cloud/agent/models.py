@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
 from typing import Any, Dict, Literal, Optional, Sequence, Set, Union
 from uuid import UUID
 
@@ -152,3 +153,16 @@ def build_failed_job_completed_status(error: BaseException) -> JobCompleted:
         status = JobCompleted(success=False, error_stack_trace=str(error))
 
     return status
+
+
+@dataclass(frozen=True)
+class EventContext:
+    """An Event with related properties and actions.
+
+    Attributes:
+        event: Pydantic model of type Event
+        correlation_id: stable identifier for this Event over its lifecycle
+    """
+
+    event: Event
+    correlation_id: str

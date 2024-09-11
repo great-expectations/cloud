@@ -1,48 +1,28 @@
 from __future__ import annotations
 
-import asyncio
 import logging
-import traceback
 import warnings
-from collections import defaultdict
-from concurrent.futures import Future
-from concurrent.futures.thread import ThreadPoolExecutor
-from functools import partial
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
 from uuid import UUID
 
 import orjson
+from fast_depends import dependency_provider
 from great_expectations.core.http import create_session
-from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
 from packaging.version import Version
-from pika.exceptions import AuthenticationError, ProbableAuthenticationError
-from pydantic import v1 as pydantic_v1
-from pydantic.v1 import AmqpDsn, AnyUrl
-from tenacity import after_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from great_expectations_cloud.agent.config import (
-    GxAgentEnvVars,
-    generate_config_validation_error_text,
+    BaseConfig,
+    GXAgentConfig,
 )
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
 )
-from great_expectations_cloud.agent.exceptions import GXAgentConfigError, GXAgentError
-from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
-    AsyncRabbitMQClient,
-    ClientError,
-)
-from great_expectations_cloud.agent.message_service.subscriber import (
-    EventContext,
-    OnMessageCallback,
-    Subscriber,
-    SubscriberError,
-)
 from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
+    EventContext,
     JobCompleted,
     JobStarted,
     JobStatus,
@@ -61,22 +41,6 @@ if TYPE_CHECKING:
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 # TODO Set in log dict
 LOGGER.setLevel(logging.INFO)
-HandlerMap = Dict[str, OnMessageCallback]
-
-
-class GXAgentConfig(AgentBaseExtraForbid):
-    """GXAgent configuration.
-    Attributes:
-        queue: name of queue
-        connection_string: address of broker service
-    """
-
-    queue: str
-    connection_string: AmqpDsn
-    # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL  # type: ignore[assignment] # pydantic will coerce
-    gx_cloud_organization_id: str
-    gx_cloud_access_token: str
 
 
 def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
@@ -102,6 +66,12 @@ class Payload(AgentBaseExtraForbid):
         json_loads = orjson_loads
 
 
+def agent_instance() -> GXAgent:
+    # This function is used to inject the GX Agent instance into the handle function
+    # The dependency is overridden with the real instance later on
+    raise NotImplementedError("Missing GX Agent instance")
+
+
 class GXAgent:
     """
     Run GX in any environment from GX Cloud.
@@ -114,13 +84,26 @@ class GXAgent:
     _PYPI_GX_AGENT_PACKAGE_NAME = "great_expectations_cloud"
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
-    def __init__(self: Self):
+    def __init__(self: Self, config: BaseConfig) -> None:
+        self.configure(config)
+        self._print_startup_message()
+        self._load_data_context_on_startup()
+
+        # Override the agent_instance dependency with the real instance after startup
+        dependency_provider.dependency_overrides[agent_instance] = lambda: self
+
+    def configure(self, config: BaseConfig) -> None:
+        # Cast the config from protocol BaseConfig to concrete GXAgentConfig
+        self._config = GXAgentConfig(**config.dict())
+
+    def _print_startup_message(self) -> None:
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
         print(f"GX Agent version: {agent_version}")
         print(f"Great Expectations version: {great_expectations_version}")
         print("Initializing the GX Agent.")
-        self._config = self._get_config()
+
+    def _load_data_context_on_startup(self) -> None:
         print("Loading a DataContext - this might take a moment.")
 
         with warnings.catch_warnings():
@@ -130,57 +113,7 @@ class GXAgent:
         print("DataContext is ready.")
 
         self._set_http_session_headers(data_context=self._context)
-
-        # Create a thread pool with a single worker, so we can run long-lived
-        # GX processes and maintain our connection to the broker. Note that
-        # the CloudDataContext cached here is used by the worker, so
-        # it isn't safe to increase the number of workers running GX jobs.
-        self._executor = ThreadPoolExecutor(max_workers=1)
-        self._current_task: Future[Any] | None = None
-        self._redeliver_msg_task: asyncio.Task[Any] | None = None
-        self._correlation_ids: defaultdict[str, int] = defaultdict(lambda: 0)
-
-    def run(self) -> None:
-        """Open a connection to GX Cloud."""
-
         print("Opening connection to GX Cloud.")
-        self._listen()
-        print("The connection to GX Cloud has been closed.")
-
-    # ZEL-505: A race condition can occur if two or more agents are started at the same time
-    #          due to the generation of passwords for rabbitMQ queues. This can be mitigated
-    #          by adding a delay and retrying the connection. Retrying with new credentials
-    #          requires calling get_config again, which handles the password generation.
-    @retry(
-        retry=retry_if_exception_type((AuthenticationError, ProbableAuthenticationError)),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
-        stop=stop_after_attempt(3),
-        after=after_log(LOGGER, logging.DEBUG),
-    )
-    def _listen(self) -> None:
-        """Manage connection lifecycle."""
-        subscriber = None
-        try:
-            client = AsyncRabbitMQClient(url=str(self._config.connection_string))
-            subscriber = Subscriber(client=client)
-            print("The GX Agent is ready.")
-            # Open a connection until encountering a shutdown event
-            subscriber.consume(
-                queue=self._config.queue,
-                on_message=self._handle_event_as_thread_enter,
-            )
-        except KeyboardInterrupt:
-            print("Received request to shut down.")
-        except (SubscriberError, ClientError):
-            print("The connection to GX Cloud has encountered an error.")
-        except (AuthenticationError, ProbableAuthenticationError):
-            # Retry with new credentials
-            self._config = self._get_config()
-            # Raise to use the retry decorator to handle the retry logic
-            raise
-        finally:
-            if subscriber is not None:
-                subscriber.close()
 
     @classmethod
     def get_current_gx_agent_version(cls) -> str:
@@ -191,38 +124,6 @@ class GXAgent:
     def _get_current_great_expectations_version(cls) -> str:
         version: str = metadata_version(cls._PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME)
         return version
-
-    def _handle_event_as_thread_enter(self, event_context: EventContext) -> None:
-        """Schedule _handle_event to run in a thread.
-
-        Callback passed to Subscriber.consume which forwards events to
-        the EventHandler for processing.
-
-        Args:
-            event_context: An Event with related properties and actions.
-        """
-        if self._reject_correlation_id(event_context.correlation_id) is True:
-            # this event has been redelivered too many times - remove it from circulation
-            event_context.processed_with_failures()
-            return
-        elif self._can_accept_new_task() is not True:
-            # request that this message is redelivered later
-            loop = asyncio.get_event_loop()
-            # store a reference the task to ensure it isn't garbage collected
-            self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
-            return
-
-        self._current_task = self._executor.submit(
-            self._handle_event,
-            event_context=event_context,
-        )
-
-        if self._current_task is not None:
-            # add a callback for when the thread exits and pass it the event context
-            on_exit_callback = partial(
-                self._handle_event_as_thread_exit, event_context=event_context
-            )
-            self._current_task.add_done_callback(on_exit_callback)
 
     def get_data_context(self, event_context: EventContext) -> CloudDataContext:
         """Helper method to get a DataContext Agent. Overridden in GX-Runner."""
@@ -235,6 +136,84 @@ class GXAgent:
     def get_auth_key(self) -> str:
         """Helper method to get the auth key. Overridden in GX-Runner."""
         return self._config.gx_cloud_access_token
+
+    def _handle_message(self, msg: Dict[str, Any], correlation_id: str) -> None:  # noqa: UP006
+        # warning:  this method will not be executed in the main thread
+        event = EventHandler.parse_event_from_dict(msg)
+        event_context = EventContext(
+            event=event,
+            correlation_id=correlation_id,
+        )
+        organization_id = None
+        status = None
+        try:
+            organization_id = self.get_organization_id(event_context)
+            result = self._handle_event(event_context)
+        except Exception as e:
+            status = build_failed_job_completed_status(e)
+            LOGGER.exception(
+                "Job completed with error",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                },
+            )
+        else:  # handle no exception
+            if result.type == UnknownEvent().type:
+                status = JobCompleted(
+                    success=False,
+                    created_resources=[],
+                    error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
+                    processed_by=self._get_processed_by(),
+                )
+                LOGGER.error(
+                    "Job completed with error. Ensure agent is up-to-date.",
+                    extra={
+                        "event_type": event_context.event.type,
+                        "id": event_context.correlation_id,
+                        "organization_id": str(organization_id),
+                    },
+                )
+            else:
+                status = JobCompleted(
+                    success=True,
+                    created_resources=result.created_resources,
+                    processed_by=self._get_processed_by(),
+                )
+                LOGGER.info(
+                    "Completed job",
+                    extra={
+                        "event_type": event_context.event.type,
+                        "correlation_id": event_context.correlation_id,
+                        "job_duration": (
+                            result.job_duration.total_seconds() if result.job_duration else None
+                        ),
+                        "organization_id": str(organization_id),
+                    },
+                )
+        finally:
+            if organization_id and status:
+                self._update_status(
+                    job_id=event_context.correlation_id, status=status, org_id=organization_id
+                )
+            elif not organization_id:
+                LOGGER.error(
+                    "Organization ID is not available.",
+                    extra={
+                        "event_type": event_context.event.type,
+                        "correlation_id": event_context.correlation_id,
+                        "event": event.dict(),
+                    },
+                )
+            elif not status:
+                LOGGER.error(
+                    "Status is not available.",
+                    extra={
+                        "event_type": event_context.event.type,
+                        "correlation_id": event_context.correlation_id,
+                        "organization_id": str(organization_id),
+                    },
+                )
 
     def _handle_event(self, event_context: EventContext) -> ActionResult:
         """Pass events to EventHandler.
@@ -256,7 +235,6 @@ class GXAgent:
         org_id = self.get_organization_id(event_context)
         base_url = self._config.gx_cloud_base_url
         auth_key = self.get_auth_key()
-
         if isinstance(event_context.event, ScheduledEventBase):
             self._create_scheduled_job_and_set_started(event_context, org_id)
         else:
@@ -273,7 +251,7 @@ class GXAgent:
             },
         )
         handler = EventHandler(context=data_context)
-        # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
+        # This method might raise an exception. Allow it and handle in _handle_message
         result = handler.handle_event(
             event=event_context.event,
             id=event_context.correlation_id,
@@ -283,141 +261,9 @@ class GXAgent:
         )
         return result
 
-    def _handle_event_as_thread_exit(
-        self, future: Future[ActionResult], event_context: EventContext
-    ) -> None:
-        """Callback invoked when the thread running GX exits.
-
-        Args:
-            future: object returned from the thread
-            event_context: event with related properties and actions.
-        """
-        # warning:  this method will not be executed in the main thread
-
-        org_id = self.get_organization_id(event_context)
-
-        # get results or errors from the thread
-        error = future.exception()
-        if error is None:
-            result: ActionResult = future.result()
-
-            if result.type == UnknownEvent().type:
-                status = JobCompleted(
-                    success=False,
-                    created_resources=[],
-                    error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
-                    processed_by=self._get_processed_by(),
-                )
-                LOGGER.error(
-                    "Job completed with error. Ensure agent is up-to-date.",
-                    extra={
-                        "event_type": event_context.event.type,
-                        "id": event_context.correlation_id,
-                        "organization_id": str(org_id),
-                    },
-                )
-            else:
-                status = JobCompleted(
-                    success=True,
-                    created_resources=result.created_resources,
-                    processed_by=self._get_processed_by(),
-                )
-                LOGGER.info(
-                    "Completed job",
-                    extra={
-                        "event_type": event_context.event.type,
-                        "correlation_id": event_context.correlation_id,
-                        "job_duration": result.job_duration.total_seconds()
-                        if result.job_duration
-                        else None,
-                        "organization_id": str(org_id),
-                    },
-                )
-        else:
-            status = build_failed_job_completed_status(error)
-            LOGGER.info(traceback.format_exc())
-            LOGGER.info(
-                "Job completed with error",
-                extra={
-                    "event_type": event_context.event.type,
-                    "correlation_id": event_context.correlation_id,
-                    "organization_id": str(org_id),
-                },
-            )
-
-        self._update_status(job_id=event_context.correlation_id, status=status, org_id=org_id)
-
-        # ack message and cleanup resources
-        event_context.processed_successfully()
-        self._current_task = None
-
     def _get_processed_by(self) -> Literal["agent", "runner"]:
         """Return the name of the service that processed the event."""
         return "runner" if self._config.queue == "gx-runner" else "agent"
-
-    def _can_accept_new_task(self) -> bool:
-        """Are we currently processing a task or are we free to take a new one?"""
-        return self._current_task is None or self._current_task.done()
-
-    def _reject_correlation_id(self, id: str) -> bool:
-        """Has this correlation ID been seen too many times?"""
-        MAX_REDELIVERY = 10
-        MAX_KEYS = 100000
-        self._correlation_ids[id] += 1
-        delivery_count = self._correlation_ids[id]
-        if delivery_count > MAX_REDELIVERY:
-            should_reject = True
-        else:
-            should_reject = False
-        # ensure the correlation ids dict doesn't get too large:
-        if len(self._correlation_ids.keys()) > MAX_KEYS:
-            self._correlation_ids.clear()
-        return should_reject
-
-    @classmethod
-    def _get_config(cls) -> GXAgentConfig:
-        """Construct GXAgentConfig."""
-
-        # ensure we have all required env variables, and provide a useful error if not
-
-        try:
-            env_vars = GxAgentEnvVars()
-        except pydantic_v1.ValidationError as validation_err:
-            raise GXAgentConfigError(
-                generate_config_validation_error_text(validation_err)
-            ) from validation_err
-
-        # obtain the broker url and queue name from Cloud
-        agent_sessions_url = (
-            f"{env_vars.gx_cloud_base_url}/organizations/"
-            f"{env_vars.gx_cloud_organization_id}/agent-sessions"
-        )
-
-        session = create_session(access_token=env_vars.gx_cloud_access_token)
-        response = session.post(agent_sessions_url)
-        session.close()
-        if response.ok is not True:
-            raise GXAgentError(  # noqa: TRY003 # TODO: use AuthenticationError
-                "Unable to authenticate to GX Cloud. Please check your credentials."
-            )
-
-        json_response = response.json()
-        queue = json_response["queue"]
-        connection_string = json_response["connection_string"]
-
-        try:
-            # pydantic will coerce the url to the correct type
-            return GXAgentConfig(
-                queue=queue,
-                connection_string=connection_string,
-                gx_cloud_base_url=env_vars.gx_cloud_base_url,
-                gx_cloud_organization_id=env_vars.gx_cloud_organization_id,
-                gx_cloud_access_token=env_vars.gx_cloud_access_token,
-            )
-        except pydantic_v1.ValidationError as validation_err:
-            raise GXAgentConfigError(
-                generate_config_validation_error_text(validation_err)
-            ) from validation_err
 
     def _update_status(self, job_id: str, status: JobStatus, org_id: UUID) -> None:
         """Update GX Cloud on the status of a job.
@@ -551,3 +397,7 @@ class GXAgent:
         # TODO: this is relying on a private implementation detail
         # use a public API once it is available
         http._update_headers = _update_headers_agent_patch
+
+
+def get_version() -> str:
+    return GXAgent.get_current_gx_agent_version()

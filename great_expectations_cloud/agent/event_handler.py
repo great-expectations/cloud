@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import datetime, timezone
-from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, Final
 from uuid import UUID
 
@@ -101,12 +100,12 @@ class EventHandler:
         return action_result
 
     @classmethod
-    def parse_event_from(cls, msg_body: bytes) -> Event:
+    def parse_event_from_dict(cls, msg_body: dict[str, Any]) -> Event:
         try:
-            event: Event = pydantic_v1.parse_raw_as(Event, msg_body)  # type: ignore[arg-type] # FIXME
-        except (pydantic_v1.ValidationError, JSONDecodeError):
-            # Log as bytes
-            LOGGER.exception("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
+            event: Event = pydantic_v1.parse_obj_as(Event, msg_body)  # type: ignore[arg-type] # FIXME
+        except pydantic_v1.ValidationError:
+            # Log as dict
+            LOGGER.exception("Unable to parse event type", extra={"msg_body": msg_body})
             return UnknownEvent()
 
         return event
