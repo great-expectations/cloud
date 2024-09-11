@@ -137,7 +137,7 @@ class GXAgent:
         """Helper method to get the auth key. Overridden in GX-Runner."""
         return self._config.gx_cloud_access_token
 
-    def _handle_message(self, msg: dict[str, Any], correlation_id: str) -> None:
+    def _handle_message(self, msg: Dict[str, Any], correlation_id: str) -> None:  # noqa: UP006
         # warning:  this method will not be executed in the main thread
         event = EventHandler.parse_event_from_dict(msg)
         event_context = EventContext(

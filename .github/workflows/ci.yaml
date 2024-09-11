@@ -17,10 +17,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Read python version from .python-version
+        id: python-version
+        run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.8"
+          python-version: ${{ steps.python-version.outputs.PYTHON_VERSION }}
           cache-dependency-path: poetry.lock
 
       - name: Load cached Poetry installation
@@ -28,7 +32,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local # the path depends on the OS
-          key: poetry-3.8 # increment to reset cache
+          key: poetry-${{ steps.python-version.outputs.PYTHON_VERSION }} # increment to reset cache
 
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
@@ -249,8 +253,10 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v5
+        # Read the python version from pyproject.toml
+
         with:
-          python-version: "3.8"
+          python-version:
           cache-dependency-path: poetry.lock
 
       - name: Load cached Poetry installation
