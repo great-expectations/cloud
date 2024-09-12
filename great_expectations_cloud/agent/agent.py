@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 # TODO Set in log dict
-LOGGER.setLevel(logging.INFO)
+LOGGER.setLevel(logging.DEBUG)
 
 
 def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
