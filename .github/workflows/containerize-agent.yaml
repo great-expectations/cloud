@@ -90,12 +90,19 @@ jobs:
       # Uses local image built in previous step
       - name: Test New amd64 Agent Image
         run: |
+          echo "STARTING db and mq"
           docker compose up db mq -d
+          echo "STARTING db-provisioner"
           docker compose run db-provisioner
+          echo "STARTING db-seeder"
           docker compose run db-seeder
+          echo "STARTING mq-wait"
           docker compose run mq-wait
+          echo "STARTING mercury-service-api"
           docker compose up mercury-service-api -d
+          echo "STARTING gx-agent"
           docker compose up gx-agent -d
+          echo "RUNNING TESTS"
           poetry run pytest -m "agentjobs"
         env:
           GX_CLOUD_BASE_URL: "http://localhost:5000"

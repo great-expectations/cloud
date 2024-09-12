@@ -40,9 +40,11 @@ def ensure_agent_is_ready(local_gql_url: str, token: str):
         timeout=2,
     )
     response.raise_for_status()
-    print(response.json())
+
     if not response.json()["data"]["agentStatus"]["active"]:
-        raise ConnectionError("Agent is not ready")  # noqa: TRY003 # one off error
+        raise ConnectionError(  # noqa: TRY003 # one off error
+            "Received API response from Mercury: Agent is not active"
+        )
 
 
 @pytest.fixture(scope="session")
