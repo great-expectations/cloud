@@ -14,9 +14,7 @@ def gx_agent_vars() -> GxAgentEnvVars:
 
 @pytest.fixture(scope="session")
 def local_gql_url(gx_agent_vars: GxAgentEnvVars) -> str:
-    gql_url = (
-        f"http://localhost:5000/organizations/{gx_agent_vars.gx_cloud_organization_id}/graphql"
-    )
+    gql_url = f"{gx_agent_vars.gx_cloud_base_url}/organizations/{gx_agent_vars.gx_cloud_organization_id}/graphql"
     return gql_url
 
 
