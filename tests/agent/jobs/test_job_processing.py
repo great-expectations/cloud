@@ -14,7 +14,10 @@ def gx_agent_vars() -> GxAgentEnvVars:
 
 @pytest.fixture(scope="session")
 def local_gql_url(gx_agent_vars: GxAgentEnvVars) -> str:
-    gql_url = f"https://mercury-service-api:5000/organizations/{gx_agent_vars.gx_cloud_organization_id}/graphql"
+    print("GX ENV VARS", gx_agent_vars.gx_cloud_base_url)
+    gql_url = (
+        f"http://localhost:5000/organizations/{gx_agent_vars.gx_cloud_organization_id}/graphql"
+    )
     return gql_url
 
 
