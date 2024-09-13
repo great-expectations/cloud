@@ -18,8 +18,6 @@ from great_expectations_cloud.agent.actions import (
     ListTableNamesAction,
     MetricListAction,
     RunCheckpointAction,
-    RunMissingnessDataAssistantAction,
-    RunOnboardingDataAssistantAction,
 )
 from great_expectations_cloud.agent.agent_warnings import GXAgentUserWarning
 from great_expectations_cloud.agent.event_handler import (
@@ -38,7 +36,6 @@ from great_expectations_cloud.agent.models import (
     ListTableNamesEvent,
     RunCheckpointEvent,
     RunMetricsListEvent,
-    RunMissingnessDataAssistantEvent,
     RunOnboardingDataAssistantEvent,
     UnknownEvent,
 )
@@ -78,24 +75,6 @@ class TestEventHandler:
     @pytest.mark.parametrize(
         "event_name, event, action_type",
         [
-            (
-                "RunMissingnessDataAssistantEvent",
-                RunMissingnessDataAssistantEvent(
-                    datasource_name="test-datasource",
-                    data_asset_name="test-data-asset",
-                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                ),
-                RunMissingnessDataAssistantAction,
-            ),
-            (
-                "RunOnboardingDataAssistantEvent",
-                RunOnboardingDataAssistantEvent(
-                    datasource_name="test-datasource",
-                    data_asset_name="test-data-asset",
-                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                ),
-                RunOnboardingDataAssistantAction,
-            ),
             (
                 "RunCheckpointEvent",
                 RunCheckpointEvent(
@@ -162,24 +141,6 @@ class TestEventHandler:
     @pytest.mark.parametrize(
         "event_name, event, action_type",
         [
-            (
-                "RunMissingnessDataAssistantEvent",
-                RunMissingnessDataAssistantEvent(
-                    datasource_name="test-datasource",
-                    data_asset_name="test-data-asset",
-                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                ),
-                RunMissingnessDataAssistantAction,
-            ),
-            (
-                "RunOnboardingDataAssistantEvent",
-                RunOnboardingDataAssistantEvent(
-                    datasource_name="test-datasource",
-                    data_asset_name="test-data-asset",
-                    organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                ),
-                RunOnboardingDataAssistantAction,
-            ),
             (
                 "RunCheckpointEvent",
                 RunCheckpointEvent(
