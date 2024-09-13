@@ -8,6 +8,11 @@ from great_expectations_cloud.agent.config import GxAgentEnvVars
 
 
 @pytest.fixture(scope="session")
+def gx_agent_vars() -> GxAgentEnvVars:
+    return GxAgentEnvVars()
+
+
+@pytest.fixture(scope="session")
 def local_gql_url(gx_agent_vars: GxAgentEnvVars) -> str:
     # run cmd and print out
     gql_url = (
