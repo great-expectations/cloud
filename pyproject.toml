@@ -76,7 +76,6 @@ tomlkit = ">=0.12.1,<0.14.0"
 types-requests = "^2.31"
 typing_extensions = ">=4.4.0"
 
-
 [tool.poetry.scripts]
 gx-agent = 'great_expectations_cloud.agent.cli:main'
 
@@ -258,8 +257,6 @@ filterwarnings = [
     # sqlalchemy.exc.SAWarning: The GenericFunction 'flatten' is already registered and is going to be overridden.
     # this is apparently a known issue with snowflake connector 1.6
     "module: The GenericFunction 'flatten' is already registered and is going to be overridden:sqlalchemy.exc.SAWarning",
-    # Add
-    "ignore: distutils Version classes are deprecated. Use packaging.version instead"
 ]
 
 [tool.coverage.report]
