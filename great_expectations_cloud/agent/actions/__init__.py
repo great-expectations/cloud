@@ -7,10 +7,6 @@ from great_expectations_cloud.agent.actions.agent_action import (
 )
 
 # Import all actions to register them:
-from great_expectations_cloud.agent.actions.data_assistants import (
-    RunMissingnessDataAssistantAction,
-    RunOnboardingDataAssistantAction,
-)
 from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
     DraftDatasourceConfigAction,
 )

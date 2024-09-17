@@ -10,16 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Read python version from .python-version
+        id: read-python-version
+        run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.8"
+          python-version: ${{ steps.read-python-version.outputs.PYTHON_VERSION }}
           cache-dependency-path: poetry.lock
 
       - name: Load cached Poetry installation
@@ -86,15 +89,22 @@ jobs:
       # Uses local image built in previous step
       - name: Test New amd64 Agent Image
         run: |
+          echo "STARTING db and mq"
           docker compose up db mq -d
+          echo "STARTING db-provisioner"
           docker compose run db-provisioner
+          echo "STARTING db-seeder"
           docker compose run db-seeder
+          echo "STARTING mq-wait"
           docker compose run mq-wait
+          echo "STARTING mercury-service-api"
           docker compose up mercury-service-api -d
+          echo "STARTING gx-agent"
           docker compose up gx-agent -d
+          echo "RUNNING TESTS"
           poetry run pytest -m "agentjobs"
         env:
-          GX_CLOUD_BASE_URL: ${{ vars.GX_CLOUD_BASE_URL }}
+          GX_CLOUD_BASE_URL: "http://localhost:5000"
           GX_CLOUD_ORGANIZATION_ID: ${{ secrets.GX_CLOUD_ORGANIZATION_ID }}
           GX_CLOUD_ACCESS_TOKEN: ${{ secrets.GX_CLOUD_ACCESS_TOKEN }}
           AUTH0_API_AUDIENCE: ${{ secrets.AUTH0_API_AUDIENCE }}

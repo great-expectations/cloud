@@ -22,6 +22,7 @@ from pydantic import v1 as pydantic_v1
 from pydantic.v1 import AmqpDsn, AnyUrl
 from tenacity import after_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
+
 from great_expectations_cloud.agent.config import (
     GxAgentEnvVars,
     generate_config_validation_error_text,
@@ -499,19 +500,6 @@ class GXAgent:
 
         header_name = self.get_header_name()
         user_agent_header = self.get_user_agent_header()
-
-        if Version(__version__) > Version(
-            "0.19"  # using 0.19 instead of 1.0 to account for pre-releases
-        ):
-            # TODO: public API should be available in v1
-            LOGGER.info(
-                "Unable to set header for requests to GX Cloud",
-                extra={
-                    "user_agent": header_name.USER_AGENT,
-                    "agent_job_id": header_name.AGENT_JOB_ID,
-                },
-            )
-            return
 
         agent_version = self._get_version()
         LOGGER.debug(
