@@ -43,7 +43,7 @@ optional arguments:
 `GX_CLOUD_ACCESS_TOKEN`
 `GX_CLOUD_ORGANIZATION_ID`
 
-### Start the Agent
+### Start the GX Agent
 
 If you intend to run the GX Agent against local services (Cloud backend or datasources) run the Agent outside of the container.
 
