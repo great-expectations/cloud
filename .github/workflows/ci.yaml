@@ -17,10 +17,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Read python version from .python-version
+        id: python-version
+        run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.8"
+          python-version: ${{ steps.python-version.outputs.PYTHON_VERSION }}
           cache-dependency-path: poetry.lock
 
       - name: Load cached Poetry installation
@@ -28,7 +32,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local # the path depends on the OS
-          key: poetry-3.8 # increment to reset cache
+          key: poetry-${{ steps.python-version.outputs.PYTHON_VERSION }} # increment to reset cache
 
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
@@ -42,7 +46,7 @@ jobs:
   tests:
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11"]
     runs-on: ubuntu-latest
 
     steps:
@@ -71,6 +75,19 @@ jobs:
 
       - name: Run tests
         run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml --junitxml=junit.xml -ra
+        env:
+          # GX Agent
+          GX_CLOUD_ACCESS_TOKEN: ${{ secrets.GX_CLOUD_ACCESS_TOKEN }}
+          GX_CLOUD_ORGANIZATION_ID: ${{ secrets.GX_CLOUD_ORGANIZATION_ID }}
+          GX_CLOUD_BASE_URL: "http://localhost:5000"
+          # GX Cloud
+          AUTH0_DOMAIN: ${{secrets.AUTH0_DOMAIN}}
+          AUTH0_API_AUDIENCE: ${{secrets.AUTH0_API_AUDIENCE}}
+          AUTH0_MERCURY_API_CLIENT_ID: ${{secrets.AUTH0_MERCURY_API_CLIENT_ID}}
+          AUTH0_MERCURY_API_CLIENT_SECRET: ${{secrets.AUTH0_MERCURY_API_CLIENT_SECRET}}
+          LOGGING_LEVEL: DEBUG
+          ENVIRONMENT: local
+          USE_MOCK_CONFIG: true
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov
@@ -236,8 +253,10 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v5
+        # Read the python version from pyproject.toml
+
         with:
-          python-version: "3.8"
+          python-version:
           cache-dependency-path: poetry.lock
 
       - name: Load cached Poetry installation
