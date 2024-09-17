@@ -96,7 +96,7 @@ def main() -> None:
         print(f"GX Agent version: {get_version()}")
         return
 
-    from great_expectations_cloud.agent.run import run_agent
+    from great_expectations_cloud.agent import run_agent
 
     run_agent()
 

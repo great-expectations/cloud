@@ -4,6 +4,7 @@ import uuid
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID, uuid4
 
+import orjson
 import packaging.version
 import pytest
 from great_expectations.experimental.metric_repository.metrics import (
@@ -321,7 +322,8 @@ class TestEventHandlerRegistry:
 def test_parse_event_extra_field_is_ignored(example_event):
     event_dict = example_event.dict()
     event_dict["new_field"] = "surprise!"
-    event = EventHandler.parse_event_from_dict(event_dict)
+    serialized_bytes = orjson.dumps(event_dict)
+    event = EventHandler.parse_event_from(serialized_bytes)
 
     # Extra field is ignored, which allows request to still be received - ZELDA-770
     assert event.type == "onboarding_data_assistant_request.received"
@@ -329,12 +331,23 @@ def test_parse_event_extra_field_is_ignored(example_event):
 
 def test_parse_event_missing_required_field(example_event):
     event_dict = example_event.dict(exclude={"datasource_name"})
-    event = EventHandler.parse_event_from_dict(event_dict)
+    serialized_bytes = orjson.dumps(event_dict)
+    event = EventHandler.parse_event_from(serialized_bytes)
+
+    assert event.type == "unknown_event"
+
+
+def test_parse_event_invalid_json(example_event):
+    event_dict = example_event.dict()
+    invalid_json_addition = "}}}}"
+    serialized_bytes = (orjson.dumps(event_dict).decode() + invalid_json_addition).encode("utf-8")
+    event = EventHandler.parse_event_from(serialized_bytes)
 
     assert event.type == "unknown_event"
 
 
 def test_parse_event(example_event):
-    event = EventHandler.parse_event_from_dict(example_event)
+    serialized_bytes = example_event.json().encode("utf-8")
+    event = EventHandler.parse_event_from(serialized_bytes)
 
     assert event.type == "onboarding_data_assistant_request.received"
