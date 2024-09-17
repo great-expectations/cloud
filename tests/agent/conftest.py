@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import logging
+import time
 import uuid
-from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict
+from collections import deque
+from typing import TYPE_CHECKING, Any, Iterable, NamedTuple, TypedDict
 
 import pytest
 from great_expectations import (  # type: ignore[attr-defined] # TODO: fix this
@@ -10,7 +12,13 @@ from great_expectations import (  # type: ignore[attr-defined] # TODO: fix this
 )
 from great_expectations.data_context import CloudDataContext
 from packaging.version import Version
+from typing_extensions import override
 
+from great_expectations_cloud.agent.message_service.subscriber import (
+    EventContext,
+    OnMessageCallback,
+    Subscriber,
+)
 from great_expectations_cloud.agent.models import Event
 
 if TYPE_CHECKING:
@@ -49,6 +57,57 @@ class FakeMessagePayload(NamedTuple):
 
     event: Event
     correlation_id: str
+
+
+class FakeSubscriber(Subscriber):
+    """
+    Fake Subscriber that pulls from a `.test_queue` in-memory deque (double-ended queue).
+
+    The deque is populated with FakeMessagePayloads or tuples of (Event, correlation_id) rather than JSON strings/bytes.
+    The real Subscriber pulls from a RabbitMQ queue and receives JSON strings/bytes which must be parsed into an Event.
+    """
+
+    test_queue: deque[FakeMessagePayload | tuple[Event, str]]
+
+    def __init__(
+        self,
+        client: Any,
+        test_events: Iterable[FakeMessagePayload | tuple[Event, str]] | None = None,
+    ):
+        self.client = client
+        self.test_queue = deque()
+        if test_events:
+            self.test_queue.extend(test_events)
+
+    @override
+    def consume(self, queue: str, on_message: OnMessageCallback) -> None:
+        LOGGER.info(f"{self.__class__.__name__}.consume() called")
+        while self.test_queue:
+            event, correlation_id = self.test_queue.pop()
+            LOGGER.info(f"FakeSubscriber.consume() received -> {event!r}")
+            event_context = EventContext(
+                event=event,
+                correlation_id=correlation_id,
+                processed_successfully=lambda: None,
+                processed_with_failures=lambda: None,
+                redeliver_message=lambda: None,  # type: ignore[arg-type,return-value] # should be Coroutine
+            )
+            on_message(event_context)
+            # allow time for thread to process the event
+            # TODO: better solution for this might be to make the FakeSubscriber not run in a separate thread at all
+            time.sleep(0.4)
+
+    @override
+    def close(self) -> None:
+        LOGGER.info(f"{self.__class__.__name__}.close() called")
+
+
+@pytest.fixture
+def fake_subscriber(mocker) -> FakeSubscriber:
+    """Patch the agent.Subscriber constuctor to return a FakeSubscriber that pulls from a `.test_queue` in-memory list."""
+    subscriber = FakeSubscriber(client=object())
+    mocker.patch("great_expectations_cloud.agent.agent.Subscriber", return_value=subscriber)
+    return subscriber
 
 
 class DataContextConfigTD(TypedDict):
