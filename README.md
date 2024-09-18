@@ -9,19 +9,30 @@
 
 ## Quick Start
 
-### Python
+To use the GX Agent, you will need to have a Great Expectations Cloud account. If you don't have one, you can sign up for free at [https://app.greatexpectations.io](https://app.greatexpectations.io).
 
-#### Install
+Deployment instructions for the GX Agent can be found in the [GX Cloud documentation](https://docs.greatexpectations.io/docs/cloud/deploy_gx_agent).
 
-```console
-pip install great_expectations_cloud
-```
+## Dev Setup
 
-##### Optional Dependencies
+The following instructions are for those who are contributing to the GX Agent, to deploy and use the GX agent please see the Quick Start section above.
 
-```console
-pip install 'great_expectations_cloud[sql]'
-```
+See also [CONTRIBUTING.md](https://github.com/great-expectations/cloud/blob/main/CONTRIBUTING.md)
+
+1. [Install `poetry`](https://python-poetry.org/docs/#installation)
+   - [`pipx install poetry`](https://python-poetry.org/docs/#installing-with-pipx)
+2. Set up virtual environment and install dependencies
+   - `poetry install --sync`
+3. Activate your virtual environment
+   - `poetry shell`
+4. Set up precommit hooks
+   - `pre-commit install`
+
+### Troubleshooting
+
+If you run into issues, you can try `pipx reinstall-all`
+
+### Running locally for development
 
 ```console
 $ gx-agent --help
@@ -50,27 +61,6 @@ If you intend to run the GX Agent against local services (Cloud backend or datas
 ```
 gx-agent
 ```
-
-### Docker
-
-[Building and running the Agent with Docker](#building-and-running-the-gx-agent-image)
-
-## Dev Setup
-
-See also [CONTRIBUTING.md](https://github.com/great-expectations/cloud/blob/main/CONTRIBUTING.md)
-
-1. [Install `poetry`](https://python-poetry.org/docs/#installation)
-   - [`pipx install poetry`](https://python-poetry.org/docs/#installing-with-pipx)
-2. Set up virtual environment and install dependencies
-   - `poetry install --sync`
-3. Activate your virtual environment
-   - `poetry shell`
-4. Set up precommit hooks
-   - `pre-commit install`
-
-### Troubleshooting
-
-If you run into issues, you can try `pipx reinstall-all`
 
 ### Developer Tasks
 
