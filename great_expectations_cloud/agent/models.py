@@ -56,6 +56,8 @@ class RunCheckpointEvent(EventBase):
     datasource_names_to_asset_names: Dict[str, Set[str]]
     checkpoint_id: uuid.UUID
     splitter_options: Optional[Dict[str, Any]] = None
+    # TODO: Remove optional once fully migrated to greatexpectations v1
+    checkpoint_name: Optional[str] = None
 
 
 class RunScheduledCheckpointEvent(ScheduledEventBase):
@@ -63,6 +65,8 @@ class RunScheduledCheckpointEvent(ScheduledEventBase):
     datasource_names_to_asset_names: Dict[str, Set[str]]
     checkpoint_id: uuid.UUID
     splitter_options: Optional[Dict[str, Any]] = None
+    # TODO: Remove optional once fully migrated to greatexpectations v1
+    checkpoint_name: Optional[str] = None
 
 
 class RunWindowCheckpointEvent(EventBase):
@@ -70,6 +74,8 @@ class RunWindowCheckpointEvent(EventBase):
     datasource_names_to_asset_names: Dict[str, Set[str]]
     checkpoint_id: uuid.UUID
     splitter_options: Optional[Dict[str, Any]] = None
+    # TODO: Remove optional once fully migrated to greatexpectations v1
+    checkpoint_name: Optional[str] = None
 
 
 class RunColumnDescriptiveMetricsEvent(EventBase):

@@ -114,3 +114,15 @@ def test_running_checkpoint_action(
 
     validation_result = data["data"]["attributes"]["validation_result"]
     assert validation_result["success"]
+
+
+def test_checkpoint_event_with_name():
+    checkpoint_event = RunScheduledCheckpointEvent(
+        type="run_scheduled_checkpoint.received",
+        checkpoint_name="my_checkpoint",
+        schedule_id=uuid.uuid4(),
+        datasource_names_to_asset_names={},
+        organization_id=uuid.uuid4(),
+        checkpoint_id=uuid.uuid4(),
+    )
+    assert checkpoint_event.checkpoint_name == "my_checkpoint"
