@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20240918.0"
+version = "20240918.0.a0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -36,7 +36,9 @@ sqlalchemy = { version = ">=2.0", optional = false }
 snowflake-sqlalchemy = { version = ">=1.6", optional = true }
 snowflake-connector-python = { version = ">=3.3.1", optional = true }
 psycopg2-binary = { version = "*", optional = true }
-databricks-sql-connector = { version = ">=3.1.1", extras = ["sqlalchemy"], optional = true }
+databricks-sql-connector = { version = ">=3.1.1", extras = [
+    "sqlalchemy",
+], optional = true }
 
 [tool.poetry.extras]
 # https://python-poetry.org/docs/pyproject#extras
@@ -46,11 +48,11 @@ postgres = ["sqlalchemy", "psycopg2-binary"]
 databricks = ["databricks-sql-connector"]
 
 [tool.poetry.group.sql.dependencies]
-great-expectations = { version = ">=0.18.19"}
+great-expectations = { version = ">=0.18.19" }
 snowflake-sqlalchemy = ">=1.6"
 snowflake-connector-python = ">=3.3.1"
 psycopg2-binary = "^2.9.9"
-databricks-sql-connector = { version = ">=3.1.1", extras = ["sqlalchemy"]}
+databricks-sql-connector = { version = ">=3.1.1", extras = ["sqlalchemy"] }
 
 [tool.poetry.group.dev.dependencies]
 coverage = { extras = ["toml"], version = "^7.5.1" }
@@ -87,7 +89,7 @@ ignore_missing_imports = true
 follow_imports = 'normal'
 warn_redundant_casts = true
 show_error_codes = true
-implicit_reexport = true                                         # enabled due to strict mode
+implicit_reexport = true # enabled due to strict mode
 enable_error_code = [
     'ignore-without-code',
     'explicit-override',
@@ -252,7 +254,7 @@ filterwarnings = [
     # this is apparently a known issue with snowflake connector 1.6
     "module: The GenericFunction 'flatten' is already registered and is going to be overridden:sqlalchemy.exc.SAWarning",
     #  RuntimeWarning: coroutine 'FastStream.run' was never awaited. We are already handling FastStream.run() as part of asyncio
-    "ignore: coroutine 'FastStream.run' was never awaited"
+    "ignore: coroutine 'FastStream.run' was never awaited",
 ]
 
 [tool.coverage.report]
