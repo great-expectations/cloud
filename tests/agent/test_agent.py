@@ -29,14 +29,12 @@ from great_expectations_cloud.agent.message_service.subscriber import (
     SubscriberError,
 )
 from great_expectations_cloud.agent.models import (
-    DraftDatasourceConfigEvent,
     JobCompleted,
     JobStarted,
-    RunCheckpointEvent,
     RunOnboardingDataAssistantEvent,
     RunScheduledCheckpointEvent,
 )
-from tests.agent.conftest import FakeSubscriber
+from tests.agent.conftest import DummyEvent, FakeMessagePayload, FakeSubscriber
 
 if TYPE_CHECKING:
     from tests.agent.conftest import DataContextConfigTD
@@ -467,6 +465,7 @@ def test_custom_user_agent(
     mock_gx_version_check: None,
     set_required_env_vars: None,
     gx_agent_config: GXAgentConfig,
+    data_context_config: DataContextConfigTD,
 ):
     """Ensure custom User-Agent header is set on GX Cloud api calls."""
     base_url = gx_agent_config.gx_cloud_base_url
@@ -474,15 +473,21 @@ def test_custom_user_agent(
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            f"{base_url}/organizations/{org_id}/data-context-configuration",
-            json={
-                "anonymous_usage_statistics": {
-                    "data_context_id": str(uuid.uuid4()),
-                    "enabled": False,
-                },
-                "datasources": {},
-                "stores": {},
-            },
+            f"{base_url}api/v1/organizations/{org_id}/data-context-configuration",
+            json=data_context_config,
+            # match will fail if the User-Agent header is not set
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{GXAgent.get_current_gx_agent_version()}"
+                    }
+                )
+            ],
+        )
+        rsps.add(
+            responses.GET,
+            f"{base_url}organizations/{org_id}/accounts/me",
+            json={"user_id": str(uuid.uuid4())},
             # match will fail if the User-Agent header is not set
             match=[
                 responses.matchers.header_matcher(
@@ -557,43 +562,17 @@ def test_correlation_id_header(
     base_url = gx_agent_config.gx_cloud_base_url
     org_id = gx_agent_config.gx_cloud_organization_id
     with responses.RequestsMock() as rsps:
+        (
+            rsps.add(
+                responses.GET,
+                f"{base_url}organizations/{org_id}/accounts/me",
+                json={"user_id": str(uuid.uuid4())},
+            ),
+        )
         rsps.add(
             responses.GET,
-            f"{base_url}/organizations/{org_id}/data-context-configuration",
+            f"{base_url}api/v1/organizations/{org_id}/data-context-configuration",
             json=data_context_config,
-        )
-        rsps.add(
-            responses.GET,
-            f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_1}",
-            json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-1")}}},
-            # match will fail if correlation-id header is not set
-            match=[
-                responses.matchers.header_matcher(
-                    {HeaderName.AGENT_JOB_ID: agent_correlation_ids[0]}
-                )
-            ],
-        )
-        rsps.add(
-            responses.GET,
-            f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_2}",
-            json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-2")}}},
-            # match will fail if correlation-id header is not set
-            match=[
-                responses.matchers.header_matcher(
-                    {HeaderName.AGENT_JOB_ID: agent_correlation_ids[1]}
-                )
-            ],
-        )
-        rsps.add(
-            responses.GET,
-            f"{base_url}organizations/{org_id}/checkpoints/{checkpoint_id}",
-            json={"data": {}},
-            # match will fail if correlation-id header is not set
-            match=[
-                responses.matchers.header_matcher(
-                    {HeaderName.AGENT_JOB_ID: agent_correlation_ids[2]}
-                )
-            ],
         )
         agent = GXAgent()
         agent.run()
