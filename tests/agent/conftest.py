@@ -4,7 +4,7 @@ import logging
 import time
 import uuid
 from collections import deque
-from typing import TYPE_CHECKING, Any, Iterable, NamedTuple, TypedDict
+from typing import TYPE_CHECKING, Any, Iterable, Literal, NamedTuple, TypedDict
 
 import pytest
 from great_expectations import (  # type: ignore[attr-defined] # TODO: fix this
@@ -14,12 +14,16 @@ from great_expectations.data_context import CloudDataContext
 from packaging.version import Version
 from typing_extensions import override
 
+from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
+from great_expectations_cloud.agent.event_handler import (
+    register_event_action,
+)
 from great_expectations_cloud.agent.message_service.subscriber import (
     EventContext,
     OnMessageCallback,
     Subscriber,
 )
-from great_expectations_cloud.agent.models import Event
+from great_expectations_cloud.agent.models import Event, EventBase
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -55,7 +59,7 @@ class FakeMessagePayload(NamedTuple):
     The real payload is a JSON string which must be parsed into an Event
     """
 
-    event: Event
+    event: Event | DummyEvent
     correlation_id: str
 
 
@@ -176,3 +180,16 @@ def data_context_config() -> DataContextConfigTD:
             },
         },
     }
+
+
+class DummyEvent(EventBase):
+    type: Literal["event_name.received"] = "event_name.received"
+
+
+class DummyAction(AgentAction[Any]):
+    @override
+    def run(self, event: Event, id: str) -> ActionResult:
+        return ActionResult(id=id, type="DummyAction", created_resources=[])
+
+
+register_event_action("1", DummyEvent, DummyAction)  # type: ignore[arg-type]
