@@ -23,7 +23,6 @@ from great_expectations_cloud.agent.models import Event
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
-# force human commit
 
 LOGGER = logging.getLogger(__name__)
 
