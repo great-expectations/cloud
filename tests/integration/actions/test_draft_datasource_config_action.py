@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.integration
 
 
-@pytest.mark.skip("Skipping integration tests until they are updated for v1.0")
 def test_running_draft_datasource_config_action(
     context: CloudDataContext,
     cloud_base_url: str,
@@ -100,7 +99,6 @@ def test_running_draft_datasource_config_action(
     )
 
 
-@pytest.mark.skip("Skipping integration tests until they are updated for v1.0")
 def test_running_draft_datasource_config_action_fails_for_unreachable_datasource(
     context: CloudDataContext, cloud_base_url: str, org_id_env_var: str, token_env_var: str
 ):
