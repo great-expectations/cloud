@@ -122,7 +122,7 @@ def expectation_suite(
     )
     expectation_suite.add_expectation(
         expectation_configuration=ExpectationConfiguration(
-            expectation_type="expect_column_values_to_not_be_null",
+            type="expect_column_values_to_not_be_null",
             kwargs={
                 "column": "string",
                 "mostly": 1,
