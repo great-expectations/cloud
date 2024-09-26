@@ -80,7 +80,6 @@ def checkpoint_event(checkpoint, datasource_names_to_asset_names, org_id_env_var
     )
 
 
-@pytest.mark.skip("Skipping integration tests until they are updated for v1.0")
 def test_running_checkpoint_action(
     context, checkpoint_event, cloud_base_url: str, org_id_env_var: str, token_env_var: str
 ):
