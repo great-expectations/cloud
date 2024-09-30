@@ -182,10 +182,11 @@ class DraftDatasourceConfigActionV1(AgentAction[DraftDatasourceConfigEvent]):
                 f"={config_id}.",
             )
 
+    # TODO This is a bit weird, bc the v1 is in the base URL in GX Core
     def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
         resource_url = (
-            f"{self._base_url}/organizations/"
-            f"{self._organization_id}/datasources/drafts/{config_id}"
+            f"{self._base_url}/api/v1/organizations/"
+            f"{self._organization_id}/draft-datasources/{config_id}"
         )
         with create_session(access_token=self._auth_key) as session:
             response = session.get(resource_url)
