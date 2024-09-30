@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
@@ -11,7 +12,7 @@ from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.event_handler import register_event_action
-from great_expectations_cloud.agent.exceptions import ErrorCode, raise_with_error_code
+from great_expectations_cloud.agent.exceptions import ErrorCode, GXCoreError, raise_with_error_code
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 if TYPE_CHECKING:
@@ -188,6 +189,9 @@ class DraftDatasourceConfigActionV1(AgentAction[DraftDatasourceConfigEvent]):
             f"{self._base_url}/api/v1/organizations/"
             f"{self._organization_id}/draft-datasources/{config_id}"
         )
+        # TODO Remove
+        logging.getLogger(__name__).error("resource_url: " + resource_url)
+        raise GXCoreError("resource_url: " + resource_url)
         print("resource_url: " + resource_url)
         with create_session(access_token=self._auth_key) as session:
             response = session.get(resource_url)
