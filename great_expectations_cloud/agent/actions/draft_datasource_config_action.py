@@ -188,6 +188,7 @@ class DraftDatasourceConfigActionV1(AgentAction[DraftDatasourceConfigEvent]):
             f"{self._base_url}/api/v1/organizations/"
             f"{self._organization_id}/draft-datasources/{config_id}"
         )
+        print("resource_url: " + resource_url)
         with create_session(access_token=self._auth_key) as session:
             response = session.get(resource_url)
             if not response.ok:
