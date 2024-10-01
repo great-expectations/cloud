@@ -7,7 +7,7 @@ from collections import deque
 from typing import TYPE_CHECKING, Any, Iterable, NamedTuple, TypedDict
 
 import pytest
-from great_expectations import (  # type: ignore[attr-defined] # TODO: fix this
+from great_expectations import (
     __version__ as gx_version,
 )
 from great_expectations.data_context import CloudDataContext
@@ -46,7 +46,7 @@ def mock_gx_version_check(
 @pytest.fixture
 def mock_context(mocker: MockerFixture) -> CloudDataContext:
     """Returns a `MagicMock` of a `CloudDataContext` for testing purposes."""
-    return mocker.MagicMock(autospec=CloudDataContext)  # type: ignore[no-any-return] #TODO: fix this
+    return mocker.MagicMock(autospec=CloudDataContext)
 
 
 class FakeMessagePayload(NamedTuple):
