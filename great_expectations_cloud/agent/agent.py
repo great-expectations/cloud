@@ -16,7 +16,12 @@ import orjson
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
-from pika.exceptions import AuthenticationError, ProbableAuthenticationError
+from pika.exceptions import (
+    AMQPError,
+    AuthenticationError,
+    ChannelError,
+    ProbableAuthenticationError,
+)
 from pydantic import v1 as pydantic_v1
 from pydantic.v1 import AmqpDsn, AnyUrl
 from tenacity import after_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
@@ -151,7 +156,9 @@ class GXAgent:
     #          by adding a delay and retrying the connection. Retrying with new credentials
     #          requires calling get_config again, which handles the password generation.
     @retry(
-        retry=retry_if_exception_type((AuthenticationError, ProbableAuthenticationError)),
+        retry=retry_if_exception_type(
+            (AuthenticationError, ProbableAuthenticationError, AMQPError, ChannelError)
+        ),
         wait=wait_exponential(multiplier=1, min=1, max=10),
         stop=stop_after_attempt(3),
         after=after_log(LOGGER, logging.DEBUG),

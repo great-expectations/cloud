@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import time
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Callable, Coroutine, Protocol
@@ -93,15 +92,18 @@ class Subscriber:
                 raise
             except (AMQPError, ChannelError):
                 self.client.stop()
-                reconnect_delay = self._get_reconnect_delay()
-                time.sleep(reconnect_delay)  # todo: update this blocking call to asyncio.sleep
+                # reconnect_delay = self._get_reconnect_delay()
+                # time.sleep(reconnect_delay)  # todo: update this blocking call to asyncio.sleep
+                raise
             except KeyboardInterrupt as e:
                 self.client.stop()
                 raise KeyboardInterrupt from e
-            if self.client.should_reconnect:
-                self.client.reset()
-            else:
-                break  # exit
+            except Exception:
+                raise
+            # if self.client.should_reconnect:
+            #     self.client.reset()
+            # else:
+            #     break  # exit
 
     def _on_message_handler(
         self,
