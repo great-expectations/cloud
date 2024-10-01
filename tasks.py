@@ -345,3 +345,25 @@ def release(ctx: Context, dry_run: bool = False) -> None:
 def prerelease(ctx: Context, dry_run: bool = False) -> None:
     """Bump project pre-release version for release to pypi and build image for dockerhub."""
     _version_bump(ctx, pre=True, standard=False, dry_run=dry_run)
+
+
+@invoke.task(name="is-pre-release")
+def is_pre_release(ctx: Context) -> None:
+    """Check if the current version is a pre-release."""
+    print(_get_local_version().is_prerelease and not _get_local_version().is_devrelease)
+
+
+@invoke.task(name="is-dev-release")
+def is_dev_release(ctx: Context) -> None:
+    """Check if the current version is a dev-release."""
+    print(_get_local_version().is_devrelease)
+
+
+@invoke.task(name="is-release")
+def is_release(ctx: Context) -> None:
+    """Check if the current version is a release."""
+    print(
+        not _get_local_version().is_devrelease
+        and not _get_local_version().is_prerelease
+        and not _get_local_version().is_postrelease
+    )
