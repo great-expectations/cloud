@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID, uuid4
 
 import orjson
@@ -10,8 +10,10 @@ import pytest
 from great_expectations.experimental.metric_repository.metrics import (
     MetricTypes,
 )
+from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import (
+    ActionResult,
     AgentAction,
     DraftDatasourceConfigAction,
     ListTableNamesAction,
@@ -31,13 +33,13 @@ from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     DraftDatasourceConfigEvent,
     Event,
+    EventBase,
     ListTableNamesEvent,
     RunCheckpointEvent,
     RunMetricsListEvent,
     RunOnboardingDataAssistantEvent,
     UnknownEvent,
 )
-from tests.agent.conftest import DummyAction, DummyEvent
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -216,6 +218,16 @@ class TestEventHandler:
             handler.get_event_action(DummyEvent, base_url="", auth_key="", organization_id=uuid4())  # type: ignore[arg-type]  # Dummy event only used in testing
 
 
+class DummyEvent(EventBase):
+    type: Literal["event_name.received"] = "event_name.received"
+
+
+class DummyAction(AgentAction[Any]):
+    @override
+    def run(self, event: Event, id: str) -> ActionResult:
+        return ActionResult(id=id, type="DummyAction", created_resources=[])
+
+
 class TestEventHandlerRegistry:
     @pytest.mark.parametrize(
         "version",
@@ -238,7 +250,7 @@ class TestEventHandlerRegistry:
     def test_event_handler_gets_correct_event_action(self, mocker: MockerFixture, mock_context):
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
         DummyEvent.organization_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
-        register_event_action("1", DummyEvent, DummyAction)  # type: ignore[arg-type]
+        register_event_action("0", DummyEvent, DummyAction)  # type: ignore[arg-type]
         handler = EventHandler(context=mock_context)
         assert isinstance(
             handler.get_event_action(
