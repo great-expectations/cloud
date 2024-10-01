@@ -9,7 +9,6 @@ import pandas as pd
 import pytest
 
 if TYPE_CHECKING:
-    from great_expectations.core import ExpectationSuite
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent import PandasDatasource
     from great_expectations.datasource.fluent.pandas_datasource import DataFrameAsset
@@ -136,4 +135,3 @@ def expectation_suite(
     context.suites.delete(name=expectation_suite_name)
     with pytest.raises(get_missing_expectation_suite_error_type):
         context.suites.get(name=expectation_suite_name)
-
