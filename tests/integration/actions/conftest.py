@@ -86,11 +86,11 @@ def data_asset(
     _ = datasource.add_dataframe_asset(
         name=asset_name,
     )
-    data_asset = datasource.get_asset(asset_name=asset_name)
+    data_asset = datasource.get_asset(name=asset_name)
     yield data_asset
-    datasource.delete_asset(asset_name=asset_name)
+    datasource.delete_asset(name=asset_name)
     with pytest.raises(get_missing_data_asset_error_type):
-        datasource.get_asset(asset_name=asset_name)
+        datasource.get_asset(name=asset_name)
 
 
 @pytest.fixture(scope="module")
