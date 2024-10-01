@@ -117,13 +117,17 @@ jobs:
         id: get_version
         run: echo "POETRY_VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
 
+      - name: Get is_dev from pyproject.toml
+        id: get_is_dev
+        run: echo "IS_DEV=$(poetry version -s | grep -q 'dev' && echo true || echo false)" >> $GITHUB_OUTPUT
+
       - name: Get is_release from pyproject.toml
         id: get_is_release
-        run: echo "IS_RELEASE=$(poetry version -s | grep -q 'dev' && echo false || echo true)" >> $GITHUB_OUTPUT
+        run: echo "IS_RELEASE=$(poetry version -s | grep -q '[A-Za-z ]*' && echo false || echo true)" >> $GITHUB_OUTPUT
 
       # Uses the version from pyproject.toml for the tag
       - name: Push Pre-Release to Docker Hub and Internal ECR
-        if: ${{ steps.get_is_release.outputs.IS_RELEASE == 'false' }}
+        if: ${{ steps.get_is_dev.outputs.IS_DEV == 'true' }}
         uses: docker/build-push-action@v5
         with:
           context: .
