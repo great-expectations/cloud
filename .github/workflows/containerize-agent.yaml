@@ -121,13 +121,17 @@ jobs:
         id: get_is_dev
         run: echo "IS_DEV=$(invoke is-dev-release)" >> $GITHUB_OUTPUT
 
+      - name: Get is_pre_release from pyproject.toml
+        id: get_is_release
+        run: echo "IS_PRERELEASE=$(invoke is-pre-release)" >> $GITHUB_OUTPUT
+
       - name: Get is_release from pyproject.toml
         id: get_is_release
         run: echo "IS_RELEASE=$(invoke is-release)" >> $GITHUB_OUTPUT
 
       # Uses the version from pyproject.toml for the tag
       - name: Push Pre-Release to Docker Hub and Internal ECR
-        if: ${{ steps.get_is_dev.outputs.IS_DEV == 'True' }}
+        if: ${{ steps.get_is_dev.outputs.IS_DEV == 'True' && steps.get_is_release.outputs.IS_PRERELEASE == 'False' }}
         uses: docker/build-push-action@v5
         with:
           context: .

@@ -350,7 +350,8 @@ def prerelease(ctx: Context, dry_run: bool = False) -> None:
 @invoke.task(name="is-pre-release")
 def is_pre_release(ctx: Context) -> None:
     """Check if the current version is a pre-release."""
-    print(_get_local_version().is_prerelease and not _get_local_version().is_devrelease)
+    # Note: Dev releases are considered pre-releases by packaging.version.Version
+    print(_get_local_version().is_prerelease)
 
 
 @invoke.task(name="is-dev-release")
