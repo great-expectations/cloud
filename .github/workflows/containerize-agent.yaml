@@ -122,7 +122,7 @@ jobs:
         run: echo "IS_DEV=$(invoke is-dev-release)" >> $GITHUB_OUTPUT
 
       - name: Get is_pre_release from pyproject.toml
-        id: get_is_release
+        id: get_is_pre_release
         run: echo "IS_PRERELEASE=$(invoke is-pre-release)" >> $GITHUB_OUTPUT
 
       - name: Get is_release from pyproject.toml
