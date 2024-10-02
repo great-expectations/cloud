@@ -9,6 +9,7 @@ from typing import Any
 
 import freezegun
 import pytest
+from pika.adapters.utils.connection_workflow import AMQPConnectionWorkflowFailed
 
 from great_expectations_cloud.logging.logging_cfg import (
     DEFAULT_LOG_DIR,
@@ -77,6 +78,22 @@ class TestLogLevel:
         assert LogLevel.WARNING.numeric_level == 30
         assert LogLevel.ERROR.numeric_level == 40
         assert LogLevel.CRITICAL.numeric_level == 50
+
+
+@freezegun.freeze_time(TIMESTAMP)
+def test_json_formatter_handles_json_not_serializable():
+    custom_tags = {"custom": "tag"}
+    non_serializable_obj = AMQPConnectionWorkflowFailed(exceptions=[1, 2, 3])
+    with pytest.raises(TypeError):
+        json.dumps(non_serializable_obj)
+
+    fmt = JSONFormatter(custom_tags=custom_tags)
+    out_str = fmt.format(logging.makeLogRecord({"my_obj": non_serializable_obj}))
+    actual = json.loads(out_str)
+
+    expected = {**default_log_formatted, **custom_tags}
+
+    assert is_subset(expected, actual)
 
 
 @pytest.mark.parametrize("custom_tags", [{}, {"environment": "jungle"}])
