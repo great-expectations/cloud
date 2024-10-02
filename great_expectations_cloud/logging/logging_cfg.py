@@ -210,6 +210,6 @@ class JSONFormatter(logging.Formatter):
         try:
             return json.dumps(complete_dict)
         except TypeError:
-            # Use repr() to avoid infinite recursion in case of circular references
+            # Use repr() to avoid infinite recursion due to throwing another error
             complete_dict = {key: repr(value) for key, value in complete_dict.items()}
             return json.dumps(complete_dict)
