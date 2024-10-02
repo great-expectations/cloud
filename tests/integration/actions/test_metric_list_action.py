@@ -108,7 +108,7 @@ def local_mercury_db_organizations_table_asset(
     yield data_asset
 
 
-@pytest.mark.skip("Skip until metric_run API is implemented for v1")
+@pytest.mark.skip("Skipping integration tests until they are updated for v1.0")
 def test_running_metric_list_action(
     context: CloudDataContext,
     graphql_test_client,
