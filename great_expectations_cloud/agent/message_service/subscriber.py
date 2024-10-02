@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Callable, Coroutine, Protocol
 
+from pika.adapters.utils.connection_workflow import (
+    AMQPConnectionWorkflowFailed,
+    AMQPConnectorException,
+)
 from pika.exceptions import (
     AMQPError,
     AuthenticationError,
@@ -86,7 +91,12 @@ class Subscriber:
         while True:
             try:
                 self.client.run(queue=queue, on_message=callback)
-            except (AuthenticationError, ProbableAuthenticationError):
+            except (
+                AuthenticationError,
+                ProbableAuthenticationError,
+                AMQPConnectorException,
+                AMQPConnectionWorkflowFailed,
+            ):
                 # If an authentication error happens when trying to connect to rabbitMQ,
                 # it means that the connection string is incorrect. Retrying would not
                 # enable us to reconnect.
@@ -101,6 +111,8 @@ class Subscriber:
                 self.client.stop()
                 raise KeyboardInterrupt from e
             except Exception:
+                logging.exception("An unexpected error occurred.")
+                self.client.stop()
                 raise
 
     def _on_message_handler(

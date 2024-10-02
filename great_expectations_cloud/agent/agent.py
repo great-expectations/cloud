@@ -9,6 +9,7 @@ from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
+from socket import gaierror
 from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
 from uuid import UUID
 
@@ -16,7 +17,10 @@ import orjson
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
-from pika.adapters.utils.connection_workflow import AMQPConnectorException
+from pika.adapters.utils.connection_workflow import (
+    AMQPConnectionWorkflowFailed,
+    AMQPConnectorException,
+)
 from pika.exceptions import (
     AMQPError,
     AuthenticationError,
@@ -134,6 +138,8 @@ class GXAgent:
             self._context: CloudDataContext = get_context(cloud_mode=True)
         print("DataContext is ready.")
 
+        print(self._config.connection_string)
+
         self._set_http_session_headers(data_context=self._context)
 
         # Create a thread pool with a single worker, so we can run long-lived
@@ -147,13 +153,8 @@ class GXAgent:
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
-
         print("Opening connection to GX Cloud.")
-        while True:
-            try:
-                self._listen()
-            except Exception:
-                break
+        self._listen()
         print("The connection to GX Cloud has been closed.")
 
     # ZEL-505: A race condition can occur if two or more agents are started at the same time
@@ -172,6 +173,7 @@ class GXAgent:
         """Manage connection lifecycle."""
         subscriber = None
         try:
+            logging.info(self._config.connection_string)
             client = AsyncRabbitMQClient(url=str(self._config.connection_string))
             subscriber = Subscriber(client=client)
             print("The GX Agent is ready.")
@@ -184,14 +186,26 @@ class GXAgent:
             print("Received request to shut down.")
         except (SubscriberError, ClientError):
             print("The connection to GX Cloud has encountered an error.")
-        except (AuthenticationError, ProbableAuthenticationError, AMQPConnectorException):
+        except (
+            AuthenticationError,
+            ProbableAuthenticationError,
+            AMQPConnectorException,
+            AMQPConnectionWorkflowFailed,
+            gaierror,
+        ):
             # Retry with new credentials
+            logging.info(self._config.connection_string)
             self._config = self._get_config()
             # Raise to use the retry decorator to handle the retry logic
+            raise
+        except Exception:
+            print("An unexpected error occurred.")
             raise
         finally:
             if subscriber is not None:
                 subscriber.close()
+            if client is not None:
+                client._close_connection()
 
     @classmethod
     def get_current_gx_agent_version(cls) -> str:
@@ -414,7 +428,8 @@ class GXAgent:
 
         json_response = response.json()
         queue = json_response["queue"]
-        connection_string = json_response["connection_string"]
+        # connection_string = json_response["connection_string"]
+        connection_string = "amqp://gx_prod:password@localhost:5672"
 
         try:
             # pydantic will coerce the url to the correct type
