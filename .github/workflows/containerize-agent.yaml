@@ -124,7 +124,7 @@ jobs:
 
       - name: Get is_pre_release from pyproject.toml
         id: get_is_pre_release
-        run: echo "IS_PRERELEASE=$(invoke is-pre-release)" >> $GITHUB_OUTPUT
+        run: echo "IS_PRERELEASE=$(poetry run invoke is-pre-release)" >> $GITHUB_OUTPUT
 
       - name: Get is_release from pyproject.toml
         id: get_is_release
