@@ -148,7 +148,11 @@ class GXAgent:
         """Open a connection to GX Cloud."""
 
         print("Opening connection to GX Cloud.")
-        self._listen()
+        while True:
+            try:
+                self._listen()
+            except Exception:
+                break
         print("The connection to GX Cloud has been closed.")
 
     # ZEL-505: A race condition can occur if two or more agents are started at the same time

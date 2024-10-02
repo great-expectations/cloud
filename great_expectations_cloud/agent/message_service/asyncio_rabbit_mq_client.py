@@ -200,7 +200,7 @@ class AsyncRabbitMQClient:
 
     def _on_connection_open_error(self, connection: AsyncioConnection, reason: str) -> None:
         """Callback invoked when there is an error while opening connection."""
-        self._reconnect()
+        connection.ioloop.stop()
 
     def _on_connection_closed(self, connection: AsyncioConnection, reason: str) -> None:
         """Callback invoked after the broker closes the connection"""
