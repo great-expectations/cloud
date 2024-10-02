@@ -26,13 +26,14 @@ class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
 
     @override
     def run(self, event: RunCheckpointEvent, id: str) -> ActionResult:
-        return run_checkpoint(self._context, event, id)
+        return run_checkpoint_v0(self._context, event, id)
 
 
-def run_checkpoint(
+def run_checkpoint_v0(
     context: CloudDataContext,
     event: RunCheckpointEvent | RunScheduledCheckpointEvent | RunWindowCheckpointEvent,
     id: str,
+    evaluation_parameters: dict | None = None,
 ) -> ActionResult:
     """Note: the logic for this action is broken out into this function so that
     the same logic can be used for both RunCheckpointEvent and RunScheduledCheckpointEvent."""
@@ -45,9 +46,13 @@ def run_checkpoint(
         ) in data_asset_names:  # only test connection for assets that are validated in checkpoint
             asset = datasource.get_asset(data_asset_name)
             asset.test_connection()  # raises `TestConnectionError` on failure
+
+    if evaluation_parameters is None:
+        evaluation_parameters = {}
     checkpoint_run_result = context.run_checkpoint(
         ge_cloud_id=event.checkpoint_id,
         batch_request={"options": event.splitter_options} if event.splitter_options else None,
+        evaluation_parameters=evaluation_parameters,
     )
 
     validation_results = checkpoint_run_result.run_results
