@@ -16,6 +16,7 @@ import orjson
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
+from pika.adapters.utils.connection_workflow import AMQPConnectorException
 from pika.exceptions import (
     AMQPError,
     AuthenticationError,
@@ -183,7 +184,7 @@ class GXAgent:
             print("Received request to shut down.")
         except (SubscriberError, ClientError):
             print("The connection to GX Cloud has encountered an error.")
-        except (AuthenticationError, ProbableAuthenticationError):
+        except (AuthenticationError, ProbableAuthenticationError, AMQPConnectorException):
             # Retry with new credentials
             self._config = self._get_config()
             # Raise to use the retry decorator to handle the retry logic
@@ -337,9 +338,9 @@ class GXAgent:
                     extra={
                         "event_type": event_context.event.type,
                         "correlation_id": event_context.correlation_id,
-                        "job_duration": result.job_duration.total_seconds()
-                        if result.job_duration
-                        else None,
+                        "job_duration": (
+                            result.job_duration.total_seconds() if result.job_duration else None
+                        ),
                         "organization_id": str(org_id),
                     },
                 )
