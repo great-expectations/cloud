@@ -228,7 +228,6 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
         f"/draft-table-names/{config_id}"
     )
-    # TODO Update
     responses.get(
         url=expected_url_get,
         json=build_get_draft_config_payload(config=datasource_config, id=config_id),
