@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
@@ -75,7 +74,6 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         return inspector.get_table_names()
 
     def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
-        # TODO Update URLs
         with create_session(access_token=self._auth_key) as session:
             url = f"{self._base_url}/api/v1/organizations/{self._organization_id}/draft-table-names/{config_id}"
             response = session.put(
@@ -90,15 +88,11 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
                 f"={config_id}.",
             )
 
-    # TODO This is a bit weird, bc the v1 is in the base URL in GX Core
     def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
         resource_url = (
             f"{self._base_url}/api/v1/organizations/"
             f"{self._organization_id}/draft-datasources/{config_id}"
         )
-        # TODO Remove
-        logging.getLogger(__name__).error("resource_url: " + resource_url)
-        print("resource_url: " + resource_url)
         with create_session(access_token=self._auth_key) as session:
             response = session.get(resource_url)
             if not response.ok:
