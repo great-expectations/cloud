@@ -72,9 +72,9 @@ def datasource(
         datasource.name == datasource_name
     ), "The datasource was not updated in the previous method call."
     yield datasource
-    context.delete_datasource(datasource_name=datasource_name)
+    context.delete_datasource(datasource_name)
     with pytest.raises(get_missing_datasource_error_type):
-        context.get_datasource(datasource_name=datasource_name)
+        context.get_datasource(datasource_name)
 
 
 @pytest.fixture(scope="module")
