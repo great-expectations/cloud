@@ -95,7 +95,6 @@ def test_test_draft_datasource_config_success_non_sql_ds(
     _update_table_names_list_spy.assert_not_called()
 
 
-# TODO Fix
 @responses.activate
 def test_test_draft_datasource_config_success_sql_ds(
     mock_context, mocker: MockerFixture, set_required_env_vars: None
