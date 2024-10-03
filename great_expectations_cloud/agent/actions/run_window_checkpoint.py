@@ -22,7 +22,7 @@ class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
     @override
     def run(self, event: RunWindowCheckpointEvent, id: str) -> ActionResult:
         with create_session(access_token=self._auth_key) as session:
-            expectation_parameters_for_checkpoint_url = f"{self._base_url}api/v1/organizations/"
+            expectation_parameters_for_checkpoint_url = f"{self._base_url}/api/v1/organizations/"
             f"{self._organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
             response = session.get(url=expectation_parameters_for_checkpoint_url)
 
