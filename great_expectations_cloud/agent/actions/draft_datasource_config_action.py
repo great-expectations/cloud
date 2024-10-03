@@ -12,7 +12,7 @@ from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.event_handler import register_event_action
-from great_expectations_cloud.agent.exceptions import ErrorCode, GXCoreError, raise_with_error_code
+from great_expectations_cloud.agent.exceptions import ErrorCode, raise_with_error_code
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
 if TYPE_CHECKING:
@@ -145,7 +145,7 @@ class DraftDatasourceConfigActionV1(AgentAction[DraftDatasourceConfigEvent]):
                 "fluent-style Data Source."
             )
         try:
-            datasource_cls = self._context.sources.type_lookup[datasource_type]
+            datasource_cls = self._context.data_sources.type_lookup[datasource_type]
         except LookupError as exc:
             raise TypeError(  # noqa: TRY003 # one off error
                 "DraftDatasourceConfigAction received an unknown Data Source type."
@@ -169,11 +169,12 @@ class DraftDatasourceConfigActionV1(AgentAction[DraftDatasourceConfigEvent]):
         return inspector.get_table_names()
 
     def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
+        # TODO Update URLs
         with create_session(access_token=self._auth_key) as session:
-            response = session.patch(
-                url=f"{self._base_url}/organizations/"
-                f"{self._organization_id}/datasources/drafts/{config_id}",
-                json={"table_names": table_names},
+            url = f"{self._base_url}/api/v1/organizations/{self._organization_id}/draft-table-names/{config_id}"
+            response = session.put(
+                url=url,
+                json={"data": {"table_names": table_names}},
             )
         if not response.ok:
             raise RuntimeError(  # noqa: TRY003 # one off error
@@ -191,7 +192,6 @@ class DraftDatasourceConfigActionV1(AgentAction[DraftDatasourceConfigEvent]):
         )
         # TODO Remove
         logging.getLogger(__name__).error("resource_url: " + resource_url)
-        raise GXCoreError("resource_url: " + resource_url)
         print("resource_url: " + resource_url)
         with create_session(access_token=self._auth_key) as session:
             response = session.get(resource_url)
@@ -202,7 +202,7 @@ class DraftDatasourceConfigActionV1(AgentAction[DraftDatasourceConfigEvent]):
                 )
         data = response.json()
         try:
-            return data["data"]["attributes"]["draft_config"]  # type: ignore[no-any-return]
+            return data["data"]["config"]  # type: ignore[no-any-return]
         except KeyError as e:
             raise RuntimeError(  # noqa: TRY003 # one off error
                 "Malformed response received from GX Cloud"
