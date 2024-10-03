@@ -43,12 +43,13 @@ services:
       - mq
 
   mercury-service-api:
-    image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api
+    platform: linux/x86_64
+    image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api:v1api-latest
     restart: always
     volumes:
       - ./services/ge_cloud/:/code
     ports:
-      - 5000:5000
+      - 5000:7000
     environment:
       LOGGING_LEVEL: ${LOGGING_LEVEL}
       ENVIRONMENT: ${ENVIRONMENT}
