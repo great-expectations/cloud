@@ -50,7 +50,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
                 "fluent-style Data Source."
             )
         try:
-            datasource_cls = self._context.sources.type_lookup[datasource_type]
+            datasource_cls = self._context.data_sources.type_lookup[datasource_type]
         except LookupError as exc:
             raise TypeError(  # noqa: TRY003 # one off error
                 "DraftDatasourceConfigAction received an unknown Data Source type."
@@ -75,10 +75,10 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
 
     def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
         with create_session(access_token=self._auth_key) as session:
-            response = session.patch(
-                url=f"{self._base_url}/organizations/"
-                f"{self._organization_id}/datasources/drafts/{config_id}",
-                json={"table_names": table_names},
+            url = f"{self._base_url}/api/v1/organizations/{self._organization_id}/draft-table-names/{config_id}"
+            response = session.put(
+                url=url,
+                json={"data": {"table_names": table_names}},
             )
         if not response.ok:
             raise RuntimeError(  # noqa: TRY003 # one off error
@@ -90,8 +90,8 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
 
     def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
         resource_url = (
-            f"{self._base_url}/organizations/"
-            f"{self._organization_id}/datasources/drafts/{config_id}"
+            f"{self._base_url}/api/v1/organizations/"
+            f"{self._organization_id}/draft-datasources/{config_id}"
         )
         with create_session(access_token=self._auth_key) as session:
             response = session.get(resource_url)
@@ -102,11 +102,11 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
                 )
         data = response.json()
         try:
-            return data["data"]["attributes"]["draft_config"]  # type: ignore[no-any-return]
+            return data["data"]["config"]  # type: ignore[no-any-return]
         except KeyError as e:
             raise RuntimeError(  # noqa: TRY003 # one off error
                 "Malformed response received from GX Cloud"
             ) from e
 
 
-register_event_action("0", DraftDatasourceConfigEvent, DraftDatasourceConfigAction)
+register_event_action("1", DraftDatasourceConfigEvent, DraftDatasourceConfigAction)
