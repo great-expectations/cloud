@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 import traceback
 import warnings
 from collections import defaultdict
@@ -39,7 +40,11 @@ from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderNa
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
 )
-from great_expectations_cloud.agent.exceptions import GXAgentConfigError, GXAgentError
+from great_expectations_cloud.agent.exceptions import (
+    GXAgentConfigError,
+    GXAgentError,
+    GXAgentUnrecoverableConnectionError,
+)
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     AsyncRabbitMQClient,
     ClientError,
@@ -137,9 +142,6 @@ class GXAgent:
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
             self._context: CloudDataContext = get_context(cloud_mode=True)
         print("DataContext is ready.")
-
-        print(self._config.connection_string)
-
         self._set_http_session_headers(data_context=self._context)
 
         # Create a thread pool with a single worker, so we can run long-lived
@@ -153,6 +155,7 @@ class GXAgent:
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
+
         print("Opening connection to GX Cloud.")
         self._listen()
         print("The connection to GX Cloud has been closed.")
@@ -173,7 +176,6 @@ class GXAgent:
         """Manage connection lifecycle."""
         subscriber = None
         try:
-            logging.info(self._config.connection_string)
             client = AsyncRabbitMQClient(url=str(self._config.connection_string))
             subscriber = Subscriber(client=client)
             print("The GX Agent is ready.")
@@ -186,6 +188,9 @@ class GXAgent:
             print("Received request to shut down.")
         except (SubscriberError, ClientError):
             print("The connection to GX Cloud has encountered an error.")
+        except GXAgentUnrecoverableConnectionError:
+            print("The connection to GX Cloud has encountered an unrecoverable error. Exiting...")
+            sys.exit(1)
         except (
             AuthenticationError,
             ProbableAuthenticationError,
@@ -197,9 +202,6 @@ class GXAgent:
             logging.info(self._config.connection_string)
             self._config = self._get_config()
             # Raise to use the retry decorator to handle the retry logic
-            raise
-        except Exception:
-            print("An unexpected error occurred.")
             raise
         finally:
             if subscriber is not None:

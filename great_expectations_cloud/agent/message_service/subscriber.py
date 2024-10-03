@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import time
 from dataclasses import dataclass
 from functools import partial
@@ -19,6 +18,7 @@ from pika.exceptions import (
 )
 
 from great_expectations_cloud.agent.event_handler import EventHandler
+from great_expectations_cloud.agent.exceptions import GXAgentUnrecoverableConnectionError
 
 if TYPE_CHECKING:
     from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
@@ -110,10 +110,9 @@ class Subscriber:
             except KeyboardInterrupt as e:
                 self.client.stop()
                 raise KeyboardInterrupt from e
-            except Exception:
-                logging.exception("An unexpected error occurred.")
+            except GXAgentUnrecoverableConnectionError as e:
                 self.client.stop()
-                raise
+                raise GXAgentUnrecoverableConnectionError from e
 
     def _on_message_handler(
         self,

@@ -9,6 +9,9 @@ from typing import TYPE_CHECKING, Callable, Protocol
 
 import pika
 from pika.adapters.asyncio_connection import AsyncioConnection
+from pika.exceptions import AMQPError
+
+from great_expectations_cloud.agent.exceptions import GXAgentUnrecoverableConnectionError
 
 if TYPE_CHECKING:
     from pika.channel import Channel
@@ -59,26 +62,36 @@ class AsyncRabbitMQClient:
         on_connection_open_callback = partial(
             self._on_connection_open, queue=queue, on_message=on_message_callback
         )
-        connection = AsyncioConnection(
-            parameters=self._parameters,
-            on_open_callback=on_connection_open_callback,
-            on_open_error_callback=self._on_connection_open_error,
-            on_close_callback=self._on_connection_closed,
-        )
-        self._connection = connection
-        connection.ioloop.run_forever()
+        try:
+            connection = AsyncioConnection(
+                parameters=self._parameters,
+                on_open_callback=on_connection_open_callback,
+                on_open_error_callback=self._on_connection_open_error,
+                on_close_callback=self._on_connection_closed,
+            )
+            self._connection = connection
+            connection.ioloop.run_forever()
+
+        except AMQPError as e:
+            raise AMQPError from e
+
+        finally:
+            raise GXAgentUnrecoverableConnectionError(  # noqa: TRY003
+                "AsyncRabbitMQClient has encountered an unrecoverable error."
+            )
 
     def stop(self) -> None:
         """Close the connection to RabbitMQ."""
         if self._connection is None:
             return
+        self._connection.ioloop.stop()
         if not self._closing:
             self._closing = True
-            if self._consuming:
-                self._stop_consuming()
-                self._connection.ioloop.run_forever()
-            else:
-                self._connection.ioloop.stop()
+
+        if self._consuming:
+            self._stop_consuming()
+        else:
+            self._connection.ioloop.stop()
 
     def reset(self) -> None:
         """Reset client to allow a restart."""
