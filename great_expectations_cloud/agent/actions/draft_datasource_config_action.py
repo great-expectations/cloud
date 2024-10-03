@@ -75,7 +75,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
 
     def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
         with create_session(access_token=self._auth_key) as session:
-            url = f"{self._base_url}/api/v1/organizations/{self._organization_id}/draft-datasources/{config_id}"
+            url = f"{self._base_url}/api/v1/organizations/{self._organization_id}/draft-table-names/{config_id}"
             response = session.put(
                 url=url,
                 json={"data": {"table_names": table_names}},
