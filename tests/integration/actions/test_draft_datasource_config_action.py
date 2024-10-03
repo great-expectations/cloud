@@ -6,9 +6,6 @@ from uuid import UUID
 import pytest
 
 from great_expectations_cloud.agent.actions import DraftDatasourceConfigAction
-from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
-    DraftDatasourceConfigActionV1,
-)
 from great_expectations_cloud.agent.exceptions import GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
@@ -29,7 +26,7 @@ def test_running_draft_datasource_config_action(
     # Arrange
     # Note: Draft config is loaded in mercury seed data
 
-    action = DraftDatasourceConfigActionV1(
+    action = DraftDatasourceConfigAction(
         context=context,
         base_url=cloud_base_url,
         organization_id=UUID(org_id_env_var),
