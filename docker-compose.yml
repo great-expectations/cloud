@@ -43,7 +43,7 @@ services:
       - mq
 
   mercury-service-api:
-    platform: linux/x86_64
+    platform: linux/amd64
     image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api:v1api-latest
     restart: always
     volumes:
