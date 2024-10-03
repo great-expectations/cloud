@@ -143,18 +143,23 @@ def test_test_draft_datasource_config_success_sql_ds(
 
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
-    expected_url: str = (
+    expected_url_get: str = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
         f"/draft-datasources/{config_id}"
     )
 
+    expected_url_put: str = (
+        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/draft-table-names/{config_id}"
+    )
+
     responses.get(
-        url=expected_url,
+        url=expected_url_get,
         json=build_get_draft_config_payload(config=datasource_config, id=config_id),
     )
     # match will fail if patch not called with correct json data
     responses.put(
-        url=expected_url,
+        url=expected_url_put,
         status=204,
         match=[responses.matchers.json_params_matcher({"data": {"table_names": table_names}})],
     )
@@ -213,18 +218,24 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
 
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
-    expected_url: str = (
+
+    expected_url_get: str = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
         f"/draft-datasources/{config_id}"
     )
 
+    expected_url_put: str = (
+        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/draft-table-names/{config_id}"
+    )
+    # TODO Update
     responses.get(
-        url=expected_url,
+        url=expected_url_get,
         json=build_get_draft_config_payload(config=datasource_config, id=config_id),
     )
     # match will fail if patch not called with correct json data
     responses.put(
-        url=expected_url,
+        url=expected_url_put,
         status=404,
         match=[responses.matchers.json_params_matcher({"data": {"table_names": table_names}})],
     )
