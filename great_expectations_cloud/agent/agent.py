@@ -48,6 +48,7 @@ from great_expectations_cloud.agent.models import (
     JobStatus,
     ScheduledEventBase,
     UnknownEvent,
+    UpdateJobStatusRequest,
     build_failed_job_completed_status,
 )
 
@@ -74,7 +75,7 @@ class GXAgentConfig(AgentBaseExtraForbid):
     queue: str
     connection_string: AmqpDsn
     # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL  # type: ignore[assignment] # pydantic will coerce
+    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
 
@@ -389,7 +390,7 @@ class GXAgent:
 
         # obtain the broker url and queue name from Cloud
         agent_sessions_url = (
-            f"{env_vars.gx_cloud_base_url}/organizations/"
+            f"{env_vars.gx_cloud_base_url}/api/v1/organizations/"
             f"{env_vars.gx_cloud_organization_id}/agent-sessions"
         )
 
@@ -431,10 +432,11 @@ class GXAgent:
             extra={"job_id": job_id, "status": str(status), "organization_id": str(org_id)},
         )
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{org_id}" + f"/agent-jobs/{job_id}"
+            f"{self._config.gx_cloud_base_url}/api/v1/organizations/{org_id}"
+            + f"/agent-jobs/{job_id}"
         )
         with create_session(access_token=self.get_auth_key()) as session:
-            data = status.json()
+            data = UpdateJobStatusRequest(data=status).json()
             session.patch(agent_sessions_url, data=data)
             LOGGER.info(
                 "Status updated",
@@ -454,8 +456,8 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         data = {
+            **event_context.event.dict(),
             "correlation_id": event_context.correlation_id,
-            "event": event_context.event.dict(),
         }
         LOGGER.info(
             "Creating scheduled job and setting started",
@@ -463,7 +465,7 @@ class GXAgent:
         )
 
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{org_id}" + "/agent-jobs"
+            f"{self._config.gx_cloud_base_url}/api/v1/organizations/{org_id}" + "/agent-jobs"
         )
         with create_session(access_token=self.get_auth_key()) as session:
             payload = Payload(data=data)
@@ -493,7 +495,7 @@ class GXAgent:
         Note: the Agent-Job-Id header value will be set for all GX Cloud request until this method is
         called again.
         """
-        from great_expectations import __version__  # type: ignore[attr-defined] # TODO: fix this
+        from great_expectations import __version__
         from great_expectations.core import http
         from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend
 

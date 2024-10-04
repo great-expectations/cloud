@@ -16,9 +16,6 @@ from great_expectations_cloud.agent.models import (
 
 
 class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
-    # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
-    #  This action is registered for v0, see register_event_action()
-
     @override
     def run(self, event: RunWindowCheckpointEvent, id: str) -> ActionResult:
         with create_session(access_token=self._auth_key) as session:
@@ -47,4 +44,4 @@ class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
         )
 
 
-register_event_action("0", RunWindowCheckpointEvent, RunWindowCheckpointAction)
+register_event_action("1", RunWindowCheckpointEvent, RunWindowCheckpointAction)

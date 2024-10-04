@@ -6,7 +6,7 @@ from pydantic.v1 import AnyUrl, BaseSettings, ValidationError
 
 class GxAgentEnvVars(BaseSettings):
     # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL  # type: ignore[assignment]
+    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
 
