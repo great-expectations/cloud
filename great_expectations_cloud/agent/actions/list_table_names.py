@@ -28,7 +28,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
     @override
     def run(self, event: ListTableNamesEvent, id: str) -> ActionResult:
         datasource_name: str = event.datasource_name
-        datasource = self._context.get_datasource(datasource_name)
+        datasource = self._context.data_sources.get(name=datasource_name)
         if not isinstance(datasource, SQLDatasource):
             raise TypeError(  # noqa: TRY003 # one off error
                 f"This operation requires a SQL Data Source but got {type(datasource).__name__}."
