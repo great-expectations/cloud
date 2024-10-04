@@ -14,9 +14,6 @@ from great_expectations_cloud.agent.models import (
 
 
 class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
-    # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
-    #  This action is registered for v0, see register_event_action()
-
     @override
     def run(self, event: RunWindowCheckpointEvent, id: str) -> ActionResult:
         # TODO: https://greatexpectations.atlassian.net/browse/ZELDA-922
@@ -24,4 +21,4 @@ class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
         return run_checkpoint(self._context, event, id)
 
 
-register_event_action("0", RunWindowCheckpointEvent, RunWindowCheckpointAction)
+register_event_action("1", RunWindowCheckpointEvent, RunWindowCheckpointAction)
