@@ -29,6 +29,10 @@ class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
         return run_checkpoint(self._context, event, id)
 
 
+class MissingCheckpointNameError(ValueError):
+    """Property checkpoint_name is required but not present."""
+
+
 def run_checkpoint(
     context: CloudDataContext,
     event: RunCheckpointEvent | RunScheduledCheckpointEvent | RunWindowCheckpointEvent,
@@ -36,7 +40,13 @@ def run_checkpoint(
 ) -> ActionResult:
     """Note: the logic for this action is broken out into this function so that
     the same logic can be used for both RunCheckpointEvent and RunScheduledCheckpointEvent."""
-    # TODO: move connection testing into OSS; there isn't really a reason it can't be done there
+
+    # the checkpoint_name property on events is optional for backwards compatibility,
+    # but this action requires it in order to run:
+    if not event.checkpoint_name:
+        raise MissingCheckpointNameError
+
+    # test connection to data source and any assets used by checkpoint
     for datasource_name, data_asset_names in event.datasource_names_to_asset_names.items():
         datasource = context.get_datasource(datasource_name)
         datasource.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
@@ -45,10 +55,10 @@ def run_checkpoint(
         ) in data_asset_names:  # only test connection for assets that are validated in checkpoint
             asset = datasource.get_asset(data_asset_name)
             asset.test_connection()  # raises `TestConnectionError` on failure
-    checkpoint_run_result = context.run_checkpoint(
-        ge_cloud_id=event.checkpoint_id,
-        batch_request={"options": event.splitter_options} if event.splitter_options else None,
-    )
+
+    # run checkpoint
+    checkpoint = context.checkpoints.get(name=event.checkpoint_name)
+    checkpoint_run_result = checkpoint.run(batch_parameters=event.splitter_options)
 
     validation_results = checkpoint_run_result.run_results
     created_resources = []
@@ -66,4 +76,4 @@ def run_checkpoint(
     )
 
 
-register_event_action("0", RunCheckpointEvent, RunCheckpointAction)
+register_event_action("1", RunCheckpointEvent, RunCheckpointAction)
