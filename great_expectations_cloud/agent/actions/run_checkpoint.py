@@ -41,14 +41,14 @@ def run_checkpoint(
     """Note: the logic for this action is broken out into this function so that
     the same logic can be used for both RunCheckpointEvent and RunScheduledCheckpointEvent."""
 
-    # the checkpoint_name property on events is optional for backwards compatibility,
+    # the checkpoint_name property on possible events is optional for backwards compatibility,
     # but this action requires it in order to run:
     if not event.checkpoint_name:
         raise MissingCheckpointNameError
 
     # test connection to data source and any assets used by checkpoint
     for datasource_name, data_asset_names in event.datasource_names_to_asset_names.items():
-        datasource = context.get_datasource(datasource_name)
+        datasource = context.data_sources.get(name=datasource_name)
         datasource.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
         for (
             data_asset_name
