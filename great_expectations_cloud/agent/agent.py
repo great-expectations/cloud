@@ -10,7 +10,6 @@ from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
-from socket import gaierror
 from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
 from uuid import UUID
 
@@ -197,7 +196,6 @@ class GXAgent:
             ProbableAuthenticationError,
             AMQPConnectorException,
             AMQPConnectionWorkflowFailed,
-            gaierror,
         ):
             # Retry with new credentials
             self._config = self._get_config()
