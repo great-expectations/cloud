@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 def test_subscriber_consume_calls_run(mocker: MockerFixture):
     client = mocker.Mock(autospec=AsyncRabbitMQClient)
     client.should_reconnect = False  # avoid infinite loop
+    # client._is_unrecoverable = True
     subscriber = Subscriber(client=client)
     queue = "test-queue"
 

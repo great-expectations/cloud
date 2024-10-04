@@ -100,19 +100,25 @@ class Subscriber:
                 # If an authentication error happens when trying to connect to rabbitMQ,
                 # it means that the connection string is incorrect. Retrying would not
                 # enable us to reconnect.
+                # breakpoint()
                 self.client.stop()
                 raise
             except (AMQPError, ChannelError):
+                # breakpoint()
                 self.client.stop()
                 reconnect_delay = self._get_reconnect_delay()
                 time.sleep(reconnect_delay)  # todo: update this blocking call to asyncio.sleep
                 raise
             except KeyboardInterrupt as e:
-                self.client.stop()
+                # self.client.stop()
                 raise KeyboardInterrupt from e
             except GXAgentUnrecoverableConnectionError as e:
                 self.client.stop()
                 raise GXAgentUnrecoverableConnectionError from e
+            if self.client.should_reconnect:
+                self.client.reset()
+            else:
+                break  # exit
 
     def _on_message_handler(
         self,

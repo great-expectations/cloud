@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Callable, Protocol
 
 import pika
 from pika.adapters.asyncio_connection import AsyncioConnection
-from pika.exceptions import AMQPError, AuthenticationError
 
 from great_expectations_cloud.agent.exceptions import GXAgentUnrecoverableConnectionError
 
@@ -46,7 +45,7 @@ class AsyncRabbitMQClient:
         self._closing = False
         self._consumer_tag = None
         self._consuming = False
-        self._should_exit = False
+        self._is_unrecoverable = False
 
     def run(self, queue: str, on_message: OnMessageFn) -> None:
         """Run an async connection to RabbitMQ.
@@ -63,24 +62,18 @@ class AsyncRabbitMQClient:
         on_connection_open_callback = partial(
             self._on_connection_open, queue=queue, on_message=on_message_callback
         )
-        try:
-            connection = AsyncioConnection(
-                parameters=self._parameters,
-                on_open_callback=on_connection_open_callback,
-                on_open_error_callback=self._on_connection_open_error,
-                on_close_callback=self._on_connection_closed,
+        connection = AsyncioConnection(
+            parameters=self._parameters,
+            on_open_callback=on_connection_open_callback,
+            on_open_error_callback=self._on_connection_open_error,
+            on_close_callback=self._on_connection_closed,
+        )
+        self._connection = connection
+        connection.ioloop.run_forever()
+        if self._is_unrecoverable:
+            raise GXAgentUnrecoverableConnectionError(  # noqa: TRY003
+                "AsyncRabbitMQClient has encountered an unrecoverable error."
             )
-            self._connection = connection
-            connection.ioloop.run_forever()
-
-        except (AuthenticationError, AMQPError):  # noqa: TRY302
-            raise
-
-        finally:
-            if self._should_exit:
-                raise GXAgentUnrecoverableConnectionError(  # noqa: TRY003
-                    "AsyncRabbitMQClient has encountered an unrecoverable error."
-                )
 
     def stop(self) -> None:
         """Close the connection to RabbitMQ."""
@@ -220,6 +213,7 @@ class AsyncRabbitMQClient:
     def _on_connection_closed(self, connection: AsyncioConnection, reason: str) -> None:
         """Callback invoked after the broker closes the connection"""
         self._channel = None
+        self._is_unrecoverable = True
         if self._closing:
             connection.ioloop.stop()
         else:
@@ -228,7 +222,6 @@ class AsyncRabbitMQClient:
     def _close_connection(self) -> None:
         """Close the connection to the broker."""
         self._consuming = False
-        self._should_exit = True
         if self._connection is None or self._connection.is_closing or self._connection.is_closed:
             pass
         else:
