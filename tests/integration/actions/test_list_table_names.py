@@ -108,5 +108,5 @@ def test_running_list_table_names_action_fails_for_unreachable_datasource(
 
     # Act & Assert
     # Check that the action was unsuccessful and an error was raised.
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         action.run(event=list_table_names_event, id=event_id)
