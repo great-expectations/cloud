@@ -100,7 +100,7 @@ class Subscriber:
             except KeyboardInterrupt as e:
                 self.client.stop()
                 raise KeyboardInterrupt from e
-            except GXAgentUnrecoverableConnectionError as e:
+            except GXAgentUnrecoverableConnectionError:
                 self.client.stop()
                 raise
             if self.client.should_reconnect:
