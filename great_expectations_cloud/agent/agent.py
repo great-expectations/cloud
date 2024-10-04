@@ -190,7 +190,7 @@ class GXAgent:
         except (SubscriberError, ClientError):
             print("The connection to GX Cloud has encountered an error.")
         except GXAgentUnrecoverableConnectionError:
-            print("The connection to GX Cloud has encountered an unrecoverable error. Exiting...")
+            print("The connection to GX Cloud has encountered an unrecoverable error.")
             sys.exit(1)
         except (
             AuthenticationError,
