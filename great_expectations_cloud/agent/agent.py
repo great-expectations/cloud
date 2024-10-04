@@ -206,8 +206,6 @@ class GXAgent:
         finally:
             if subscriber is not None:
                 subscriber.close()
-            if client is not None:
-                client._close_connection()
 
     @classmethod
     def get_current_gx_agent_version(cls) -> str:
