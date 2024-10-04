@@ -10,7 +10,6 @@ from pika.exceptions import (
     AMQPError,
     AuthenticationError,
     ChannelError,
-    ProbableAuthenticationError,
 )
 
 from great_expectations_cloud.agent.event_handler import EventHandler
@@ -87,10 +86,7 @@ class Subscriber:
         while True:
             try:
                 self.client.run(queue=queue, on_message=callback)
-            except (
-                AuthenticationError,
-                ProbableAuthenticationError,
-            ):
+            except AuthenticationError:
                 # If an authentication error happens when trying to connect to rabbitMQ,
                 # it means that the connection string is incorrect. Retrying would not
                 # enable us to reconnect.
