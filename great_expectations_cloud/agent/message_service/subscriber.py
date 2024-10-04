@@ -6,10 +6,6 @@ from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Callable, Coroutine, Protocol
 
-from pika.adapters.utils.connection_workflow import (
-    AMQPConnectionWorkflowFailed,
-    AMQPConnectorException,
-)
 from pika.exceptions import (
     AMQPError,
     AuthenticationError,
@@ -94,8 +90,6 @@ class Subscriber:
             except (
                 AuthenticationError,
                 ProbableAuthenticationError,
-                AMQPConnectorException,
-                AMQPConnectionWorkflowFailed,
             ):
                 # If an authentication error happens when trying to connect to rabbitMQ,
                 # it means that the connection string is incorrect. Retrying would not

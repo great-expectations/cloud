@@ -79,14 +79,12 @@ class AsyncRabbitMQClient:
         """Close the connection to RabbitMQ."""
         if self._connection is None:
             return
-        self._connection.ioloop.stop()
         if not self._closing:
             self._closing = True
 
         if self._consuming:
             self._stop_consuming()
-        else:
-            self._connection.ioloop.stop()
+        self._connection.ioloop.stop()
 
     def reset(self) -> None:
         """Reset client to allow a restart."""
@@ -208,7 +206,7 @@ class AsyncRabbitMQClient:
 
     def _on_connection_open_error(self, connection: AsyncioConnection, reason: str) -> None:
         """Callback invoked when there is an error while opening connection."""
-        connection.ioloop.stop()
+        self._reconnect()
 
     def _on_connection_closed(self, connection: AsyncioConnection, reason: str) -> None:
         """Callback invoked after the broker closes the connection"""

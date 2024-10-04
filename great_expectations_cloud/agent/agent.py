@@ -18,7 +18,6 @@ from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
 from pika.adapters.utils.connection_workflow import (
-    AMQPConnectionWorkflowFailed,
     AMQPConnectorException,
 )
 from pika.exceptions import (
@@ -195,7 +194,6 @@ class GXAgent:
             AuthenticationError,
             ProbableAuthenticationError,
             AMQPConnectorException,
-            AMQPConnectionWorkflowFailed,
         ):
             # Retry with new credentials
             self._config = self._get_config()
