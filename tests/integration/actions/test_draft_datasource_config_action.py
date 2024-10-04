@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.integration
 
 
-@pytest.mark.skip("Skipping integration tests until they are updated for v1.0")
 def test_running_draft_datasource_config_action(
     context: CloudDataContext,
     cloud_base_url: str,
