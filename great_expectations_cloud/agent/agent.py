@@ -428,8 +428,7 @@ class GXAgent:
 
         json_response = response.json()
         queue = json_response["queue"]
-        # connection_string = json_response["connection_string"]
-        connection_string = "amqp://gx_prod:password@localhost:5672"
+        connection_string = json_response["connection_string"]
 
         try:
             # pydantic will coerce the url to the correct type
