@@ -455,8 +455,8 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         data = {
+            **event_context.event.dict(),
             "correlation_id": event_context.correlation_id,
-            "event": event_context.event.dict(),
         }
         LOGGER.info(
             "Creating scheduled job and setting started",
