@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Callable, Protocol
 
 import pika
 from pika.adapters.asyncio_connection import AsyncioConnection
-from pika.exceptions import AMQPError
+from pika.exceptions import AMQPError, AuthenticationError
 
 from great_expectations_cloud.agent.exceptions import GXAgentUnrecoverableConnectionError
 
@@ -72,8 +72,8 @@ class AsyncRabbitMQClient:
             self._connection = connection
             connection.ioloop.run_forever()
 
-        except AMQPError as e:
-            raise AMQPError from e
+        except (AuthenticationError, AMQPError):  # noqa: TRY302
+            raise
 
         finally:
             raise GXAgentUnrecoverableConnectionError(  # noqa: TRY003

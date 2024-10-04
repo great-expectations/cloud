@@ -142,6 +142,7 @@ class GXAgent:
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
             self._context: CloudDataContext = get_context(cloud_mode=True)
         print("DataContext is ready.")
+
         self._set_http_session_headers(data_context=self._context)
 
         # Create a thread pool with a single worker, so we can run long-lived
@@ -199,7 +200,6 @@ class GXAgent:
             gaierror,
         ):
             # Retry with new credentials
-            logging.info(self._config.connection_string)
             self._config = self._get_config()
             # Raise to use the retry decorator to handle the retry logic
             raise

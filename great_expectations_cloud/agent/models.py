@@ -69,10 +69,6 @@ class RunScheduledCheckpointEvent(ScheduledEventBase):
     checkpoint_name: Optional[str] = None
 
 
-class KnownFailureEvent(EventBase):
-    type: Literal["known_failure"] = "known_failure"
-
-
 class RunWindowCheckpointEvent(EventBase):
     type: Literal["run_window_checkpoint.received"] = "run_window_checkpoint.received"
     datasource_names_to_asset_names: Dict[str, Set[str]]
