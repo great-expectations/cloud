@@ -388,7 +388,7 @@ class GXAgent:
 
         # obtain the broker url and queue name from Cloud
         agent_sessions_url = (
-            f"{env_vars.gx_cloud_base_url}/organizations/"
+            f"{env_vars.gx_cloud_base_url}/api/v1/organizations/"
             f"{env_vars.gx_cloud_organization_id}/agent-sessions"
         )
 
