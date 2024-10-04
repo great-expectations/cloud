@@ -33,6 +33,7 @@ from great_expectations_cloud.agent.models import (
     JobStarted,
     RunOnboardingDataAssistantEvent,
     RunScheduledCheckpointEvent,
+    UpdateJobStatusRequest,
 )
 from tests.agent.conftest import DummyEvent, FakeMessagePayload, FakeSubscriber
 
@@ -281,11 +282,13 @@ def test_gx_agent_updates_cloud_on_job_status(
 ):
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
     url = (
-        f"{gx_agent_config.gx_cloud_base_url}/organizations/"
+        f"{gx_agent_config.gx_cloud_base_url}/api/v1/organizations/"
         f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs/{correlation_id}"
     )
-    job_started_data = JobStarted().json()
-    job_completed = JobCompleted(success=True, created_resources=[], processed_by="agent")
+    job_started_data = UpdateJobStatusRequest(data=JobStarted()).json()
+    job_completed = UpdateJobStatusRequest(
+        data=JobCompleted(success=True, created_resources=[], processed_by="agent")
+    )
     job_completed_data = job_completed.json()
 
     async def redeliver_message():
@@ -356,7 +359,7 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     """
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
     post_url = (
-        f"{gx_agent_config.gx_cloud_base_url}/organizations/"
+        f"{gx_agent_config.gx_cloud_base_url}/api/v1/organizations/"
         f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs"
     )
 
