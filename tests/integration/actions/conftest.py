@@ -74,7 +74,7 @@ def datasource(
     yield datasource
     context.delete_datasource(datasource_name)
     with pytest.raises(get_missing_datasource_error_type):
-        context.get_datasource(datasource_name)
+        context.data_sources.get(name=datasource_name)
 
 
 @pytest.fixture(scope="module")
