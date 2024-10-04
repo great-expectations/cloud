@@ -374,8 +374,8 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     )
     payload = Payload(
         data={
+            **event.dict(),
             "correlation_id": correlation_id,
-            "event": event.dict(),
         }
     )
     data = payload.json()
