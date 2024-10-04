@@ -379,9 +379,6 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     )
     data = payload.json()
 
-    print(f"hi will this is data  {data}")
-    assert False
-
     async def redeliver_message():
         return None
 
