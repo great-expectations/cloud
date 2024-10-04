@@ -46,6 +46,7 @@ class AsyncRabbitMQClient:
         self._closing = False
         self._consumer_tag = None
         self._consuming = False
+        self._should_exit = False
 
     def run(self, queue: str, on_message: OnMessageFn) -> None:
         """Run an async connection to RabbitMQ.
@@ -76,9 +77,10 @@ class AsyncRabbitMQClient:
             raise
 
         finally:
-            raise GXAgentUnrecoverableConnectionError(  # noqa: TRY003
-                "AsyncRabbitMQClient has encountered an unrecoverable error."
-            )
+            if self._should_exit:
+                raise GXAgentUnrecoverableConnectionError(  # noqa: TRY003
+                    "AsyncRabbitMQClient has encountered an unrecoverable error."
+                )
 
     def stop(self) -> None:
         """Close the connection to RabbitMQ."""
@@ -226,6 +228,7 @@ class AsyncRabbitMQClient:
     def _close_connection(self) -> None:
         """Close the connection to the broker."""
         self._consuming = False
+        self._should_exit = True
         if self._connection is None or self._connection.is_closing or self._connection.is_closed:
             pass
         else:
