@@ -34,7 +34,7 @@ def run_checkpoint(
     context: CloudDataContext,
     event: RunCheckpointEvent | RunScheduledCheckpointEvent | RunWindowCheckpointEvent,
     id: str,
-    evaluation_parameters: dict[str, Any] | None = None,
+    expectation_parameters: dict[str, Any] | None = None,
 ) -> ActionResult:
     """Note: the logic for this action is broken out into this function so that
     the same logic can be used for both RunCheckpointEvent and RunScheduledCheckpointEvent."""
@@ -57,8 +57,7 @@ def run_checkpoint(
     # run checkpoint
     checkpoint = context.checkpoints.get(name=event.checkpoint_name)
     checkpoint_run_result = checkpoint.run(
-        batch_parameters=event.splitter_options,
-        evaluation_parameters=evaluation_parameters,
+        batch_parameters=event.splitter_options, expectation_parameters=expectation_parameters
     )
 
     validation_results = checkpoint_run_result.run_results

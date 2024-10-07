@@ -39,7 +39,7 @@ class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
 
         # Note: In v0 expectation_parameters are called evaluation_parameters.
         return run_checkpoint(
-            self._context, event, id, evaluation_parameters=expectation_parameters
+            self._context, event, id, expectation_parameters=expectation_parameters
         )
 
 
