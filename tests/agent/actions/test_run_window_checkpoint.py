@@ -87,5 +87,5 @@ def test_run_window_checkpoint(
     _ = action.run(event=event, id=str(job_id))
 
     mock_run_checkpoint.assert_called_with(
-        ANY, event, ANY, evaluation_parameters=expectation_parameters
+        ANY, event, ANY, expectation_parameters=expectation_parameters
     )
