@@ -8,7 +8,7 @@ from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
-from great_expectations_cloud.agent.actions.run_checkpoint import run_checkpoint_v0
+from great_expectations_cloud.agent.actions.run_checkpoint import run_checkpoint
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     RunWindowCheckpointEvent,
@@ -19,8 +19,7 @@ class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
     @override
     def run(self, event: RunWindowCheckpointEvent, id: str) -> ActionResult:
         with create_session(access_token=self._auth_key) as session:
-            expectation_parameters_for_checkpoint_url = f"{self._base_url}/api/v1/organizations/"
-            f"{self._organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
+            expectation_parameters_for_checkpoint_url = f"{self._base_url}/api/v1/organizations/{self._organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
             response = session.get(url=expectation_parameters_for_checkpoint_url)
 
         if not response.ok:
@@ -39,7 +38,7 @@ class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
             ) from e
 
         # Note: In v0 expectation_parameters are called evaluation_parameters.
-        return run_checkpoint_v0(
+        return run_checkpoint(
             self._context, event, id, evaluation_parameters=expectation_parameters
         )
 
