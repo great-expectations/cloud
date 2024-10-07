@@ -53,8 +53,6 @@ def run_checkpoint(
         ) in data_asset_names:  # only test connection for assets that are validated in checkpoint
             asset = datasource.get_asset(data_asset_name)
             asset.test_connection()  # raises `TestConnectionError` on failure
-    if evaluation_parameters is None:
-        evaluation_parameters = {}
 
     # run checkpoint
     checkpoint = context.checkpoints.get(name=event.checkpoint_name)
