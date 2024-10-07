@@ -59,22 +59,24 @@ def datasource(
     get_missing_datasource_error_type: type[Exception],
 ) -> Iterator[PandasDatasource]:
     datasource_name = f"i{uuid.uuid4().hex}"
-    datasource = context.sources.add_pandas(
+    # TODO Bad config
+    context.data_sources.delete(name="david_datasource")
+    datasource = context.data_sources.add_pandas(
         name=datasource_name,
     )
     assert datasource.name == datasource_name
     datasource_name = f"i{uuid.uuid4().hex}"
     datasource.name = datasource_name
-    datasource = context.sources.add_or_update_pandas(
+    datasource = context.data_sources.add_or_update_pandas(
         datasource=datasource,
     )
     assert (
         datasource.name == datasource_name
     ), "The datasource was not updated in the previous method call."
     yield datasource
-    context.delete_datasource(datasource_name=datasource_name)
+    context.data_sources.delete_pandas(name=datasource_name)
     with pytest.raises(get_missing_datasource_error_type):
-        context.get_datasource(datasource_name=datasource_name)
+        context.data_sources.get(name=datasource_name)
 
 
 @pytest.fixture(scope="module")
@@ -99,9 +101,7 @@ def batch_request(
     pandas_test_df: pd.DataFrame,
     in_memory_batch_request_missing_dataframe_error_type: type[Exception],
 ):
-    with pytest.raises(in_memory_batch_request_missing_dataframe_error_type):
-        data_asset.build_batch_request()
-    return data_asset.build_batch_request(dataframe=pandas_test_df)
+    return data_asset.build_batch_request(options={"dataframe": pandas_test_df})
 
 
 @pytest.fixture
@@ -119,7 +119,7 @@ def expectation_suite(
     expectation_suite = gx.ExpectationSuite(name=expectation_suite_name)
     context.suites.add(expectation_suite)
 
-    expectation = gx.expectations.ExpectColumnValuesToNotBeNullExpectation(
+    expectation = gx.expectations.ExpectColumnValuesToBeNull(
         column="string",
         mostly=1,
     )
