@@ -97,7 +97,7 @@ def test_run_list_table_names_action_returns_action_result(
     datasource = mocker.Mock(spec=SQLDatasource)
     datasource_id = str(uuid.uuid4())
     datasource.id = datasource_id
-    mock_context.datasource.get.return_value = datasource
+    mock_context.data_sources.get.return_value = datasource
 
     responses.put(
         re.compile(rf"{dummy_base_url}/api/v1/organizations/{dummy_org_id}/table-names/.*"),
