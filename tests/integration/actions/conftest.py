@@ -3,13 +3,12 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING, Iterator
 
+import great_expectations as gx
 import great_expectations.exceptions as gx_exceptions
 import pandas as pd
 import pytest
-from great_expectations.core import ExpectationConfiguration
 
 if TYPE_CHECKING:
-    from great_expectations.core import ExpectationSuite
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent import PandasDatasource
     from great_expectations.datasource.fluent.pandas_datasource import DataFrameAsset
@@ -87,11 +86,11 @@ def data_asset(
     _ = datasource.add_dataframe_asset(
         name=asset_name,
     )
-    data_asset = datasource.get_asset(asset_name=asset_name)
+    data_asset = datasource.get_asset(name=asset_name)
     yield data_asset
-    datasource.delete_asset(asset_name=asset_name)
+    datasource.delete_asset(name=asset_name)
     with pytest.raises(get_missing_data_asset_error_type):
-        datasource.get_asset(asset_name=asset_name)
+        datasource.get_asset(name=asset_name)
 
 
 @pytest.fixture(scope="module")
@@ -115,26 +114,24 @@ def expectation_suite(
     context: CloudDataContext,
     data_asset: DataFrameAsset,
     get_missing_expectation_suite_error_type: type[Exception],
-) -> Iterator[ExpectationSuite]:
+) -> Iterator[gx.ExpectationSuite]:
     expectation_suite_name = f"{data_asset.datasource.name} | {data_asset.name}"
-    expectation_suite = context.add_expectation_suite(
-        expectation_suite_name=expectation_suite_name,
+    expectation_suite = gx.ExpectationSuite(name=expectation_suite_name)
+    context.suites.add(expectation_suite)
+
+    expectation = gx.expectations.ExpectColumnValuesToNotBeNullExpectation(
+        column="string",
+        mostly=1,
     )
     expectation_suite.add_expectation(
-        expectation_configuration=ExpectationConfiguration(
-            expectation_type="expect_column_values_to_not_be_null",
-            kwargs={
-                "column": "string",
-                "mostly": 1,
-            },
-        )
+        expectation=expectation,
     )
-    _ = context.add_or_update_expectation_suite(expectation_suite=expectation_suite)
-    expectation_suite = context.get_expectation_suite(expectation_suite_name=expectation_suite_name)
+
+    expectation_suite = context.suites.get(name=expectation_suite_name)
     assert (
         len(expectation_suite.expectations) == 1
     ), "Expectation Suite was not updated in the previous method call."
     yield expectation_suite
-    context.delete_expectation_suite(expectation_suite_name=expectation_suite_name)
+    context.suites.delete(name=expectation_suite_name)
     with pytest.raises(get_missing_expectation_suite_error_type):
-        context.get_expectation_suite(expectation_suite_name=expectation_suite_name)
+        context.suites.get(name=expectation_suite_name)

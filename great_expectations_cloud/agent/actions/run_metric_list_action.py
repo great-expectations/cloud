@@ -88,3 +88,4 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
 
 
 register_event_action("0", RunMetricsListEvent, MetricListAction)
+register_event_action("1", RunMetricsListEvent, MetricListAction)

@@ -32,7 +32,7 @@ def token_env_var() -> str:
 
 @pytest.fixture(scope="module")
 def context(org_id_env_var: str, token_env_var: str) -> CloudDataContext:
-    context = gx.get_context(  # type: ignore[attr-defined] # TODO: fix this
+    context = gx.get_context(
         mode="cloud",
         cloud_base_url=os.environ.get("GX_CLOUD_BASE_URL"),
         cloud_organization_id=org_id_env_var,
