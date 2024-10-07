@@ -16,6 +16,7 @@ import orjson
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
+from pika.adapters.utils.connection_workflow import AMQPConnectorException
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
 from pydantic import v1 as pydantic_v1
 from pydantic.v1 import AmqpDsn, AnyUrl
@@ -47,6 +48,7 @@ from great_expectations_cloud.agent.models import (
     JobStatus,
     ScheduledEventBase,
     UnknownEvent,
+    UpdateJobStatusRequest,
     build_failed_job_completed_status,
 )
 
@@ -172,7 +174,7 @@ class GXAgent:
             print("Received request to shut down.")
         except (SubscriberError, ClientError):
             print("The connection to GX Cloud has encountered an error.")
-        except (AuthenticationError, ProbableAuthenticationError):
+        except (AuthenticationError, ProbableAuthenticationError, AMQPConnectorException):
             # Retry with new credentials
             self._config = self._get_config()
             # Raise to use the retry decorator to handle the retry logic
@@ -388,7 +390,7 @@ class GXAgent:
 
         # obtain the broker url and queue name from Cloud
         agent_sessions_url = (
-            f"{env_vars.gx_cloud_base_url}/organizations/"
+            f"{env_vars.gx_cloud_base_url}/api/v1/organizations/"
             f"{env_vars.gx_cloud_organization_id}/agent-sessions"
         )
 
@@ -430,10 +432,11 @@ class GXAgent:
             extra={"job_id": job_id, "status": str(status), "organization_id": str(org_id)},
         )
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{org_id}" + f"/agent-jobs/{job_id}"
+            f"{self._config.gx_cloud_base_url}/api/v1/organizations/{org_id}"
+            + f"/agent-jobs/{job_id}"
         )
         with create_session(access_token=self.get_auth_key()) as session:
-            data = status.json()
+            data = UpdateJobStatusRequest(data=status).json()
             session.patch(agent_sessions_url, data=data)
             LOGGER.info(
                 "Status updated",
@@ -453,8 +456,8 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         data = {
+            **event_context.event.dict(),
             "correlation_id": event_context.correlation_id,
-            "event": event_context.event.dict(),
         }
         LOGGER.info(
             "Creating scheduled job and setting started",
@@ -462,7 +465,7 @@ class GXAgent:
         )
 
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{org_id}" + "/agent-jobs"
+            f"{self._config.gx_cloud_base_url}/api/v1/organizations/{org_id}" + "/agent-jobs"
         )
         with create_session(access_token=self.get_auth_key()) as session:
             payload = Payload(data=data)
