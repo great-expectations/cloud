@@ -55,7 +55,6 @@ def build_get_draft_config_payload(
 def test_run_window_checkpoint(
     mock_context, mocker: MockerFixture, set_required_env_vars: None, org_id
 ):
-    config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
     env_vars = GxAgentEnvVars()
     action = RunWindowCheckpointAction(
@@ -69,8 +68,7 @@ def test_run_window_checkpoint(
     checkpoint_id = uuid.uuid4()
     event = RunWindowCheckpointEvent(
         datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
-        config_id=config_id,
-        organization_id=env_vars.gx_cloud_organization_id,
+        organization_id=UUID(env_vars.gx_cloud_organization_id),
         checkpoint_id=checkpoint_id,
     )
     expected_url: str = (

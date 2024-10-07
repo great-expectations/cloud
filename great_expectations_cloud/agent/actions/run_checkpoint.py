@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from typing_extensions import override
 
@@ -34,7 +34,7 @@ def run_checkpoint(
     context: CloudDataContext,
     event: RunCheckpointEvent | RunScheduledCheckpointEvent | RunWindowCheckpointEvent,
     id: str,
-    evaluation_parameters: dict | None = None,
+    evaluation_parameters: dict[str, Any] | None = None,
 ) -> ActionResult:
     """Note: the logic for this action is broken out into this function so that
     the same logic can be used for both RunCheckpointEvent and RunScheduledCheckpointEvent."""
