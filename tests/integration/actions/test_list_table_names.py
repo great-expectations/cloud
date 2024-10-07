@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.integration
 
 
-@pytest.mark.skip("Skipping integration tests until they are updated for v1.0")
 def test_running_list_table_names_action(
     context: CloudDataContext,
     cloud_base_url: str,
@@ -90,7 +89,6 @@ def test_running_list_table_names_action(
     )
 
 
-@pytest.mark.skip("Skipping integration tests until they are updated for v1.0")
 def test_running_list_table_names_action_fails_for_unreachable_datasource(
     context: CloudDataContext, cloud_base_url: str, org_id_env_var: str, token_env_var: str
 ):
@@ -110,5 +108,5 @@ def test_running_list_table_names_action_fails_for_unreachable_datasource(
 
     # Act & Assert
     # Check that the action was unsuccessful and an error was raised.
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         action.run(event=list_table_names_event, id=event_id)
