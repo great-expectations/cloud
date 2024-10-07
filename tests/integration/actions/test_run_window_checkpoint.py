@@ -4,18 +4,19 @@ import uuid
 from typing import TYPE_CHECKING, Iterator
 
 import pytest
+from great_expectations import ValidationDefinition
 
 from great_expectations_cloud.agent.models import (
     RunCheckpointEvent,
 )
 
 if TYPE_CHECKING:
-    from great_expectations.checkpoint import Checkpoint
     from great_expectations.core import ExpectationSuite
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent import BatchRequest
     from great_expectations.datasource.fluent.pandas_datasource import DataFrameAsset
 
+from great_expectations.checkpoint import Checkpoint
 from great_expectations.core.http import create_session
 
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
@@ -31,38 +32,38 @@ def checkpoint(
     expectation_suite: ExpectationSuite,
     get_missing_checkpoint_error_type: type[Exception],
 ) -> Iterator[Checkpoint]:
-    yield context.checkpoints.all()[0]
-    #
-    # checkpoint_name = f"{data_asset.datasource.name} | {data_asset.name}"
-    # batch_definition = data_asset.add_batch_definition(name="my_batch_def")
-    # validation_definition = context.validation_definitions.add(
-    #     ValidationDefinition(name=f"v{checkpoint_name}", suite=expectation_suite, data=batch_definition)
-    # )
-    # validation_definition.save()
-    # for v in context.validation_definitions.all():
-    #     v.save()
-    #
-    # checkpoint = Checkpoint(
-    #     name=checkpoint_name,
-    #     validation_definitions=[validation_definition],
-    #     result_format={"result_format": "COMPLETE"},
-    # )
-    # validation_definition.save()
-    #
-    # _ = context.checkpoints.add(checkpoint)
-    # checkpoint = context.checkpoints.get(name=checkpoint_name)
-    # assert (
-    #     len(checkpoint.validations) == 1
-    # ), "Checkpoint was not updated in the previous method call."
-    # yield checkpoint
+    checkpoint_name = f"{data_asset.datasource.name} | {data_asset.name}"
+    batch_definition = data_asset.add_batch_definition(name="my_batch_def")
+    validation_definition = context.validation_definitions.add(
+        ValidationDefinition(
+            name=f"v{checkpoint_name}", suite=expectation_suite, data=batch_definition
+        )
+    )
+    validation_definition.save()
+    for v in context.validation_definitions.all():
+        v.save()
+
+    checkpoint = Checkpoint(
+        name=checkpoint_name,
+        validation_definitions=[validation_definition],
+        result_format={"result_format": "COMPLETE"},
+    )
+    validation_definition.save()
+
+    _ = context.checkpoints.add(checkpoint)
+    checkpoint = context.checkpoints.get(name=checkpoint_name)
+    assert (
+        len(checkpoint.validations) == 1
+    ), "Checkpoint was not updated in the previous method call."
+    yield checkpoint
     # PP-691: this is a bug
     # you should only have to pass name
-    # context.checkpoints.delete(
-    #     # name=checkpoint_name,
-    #     id=checkpoint.ge_cloud_id,
-    # )
-    # with pytest.raises(get_missing_checkpoint_error_type):
-    #     context.checkpoints.get(name=checkpoint_name)
+    context.checkpoints.delete(
+        # name=checkpoint_name,
+        id=checkpoint.ge_cloud_id,
+    )
+    with pytest.raises(get_missing_checkpoint_error_type):
+        context.checkpoints.get(name=checkpoint_name)
 
 
 @pytest.fixture
