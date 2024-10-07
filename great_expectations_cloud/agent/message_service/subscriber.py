@@ -13,6 +13,7 @@ from pika.exceptions import (
 )
 
 from great_expectations_cloud.agent.event_handler import EventHandler
+from great_expectations_cloud.agent.exceptions import GXAgentUnrecoverableConnectionError
 
 if TYPE_CHECKING:
     from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
@@ -95,9 +96,13 @@ class Subscriber:
                 self.client.stop()
                 reconnect_delay = self._get_reconnect_delay()
                 time.sleep(reconnect_delay)  # todo: update this blocking call to asyncio.sleep
+                raise
             except KeyboardInterrupt as e:
                 self.client.stop()
                 raise KeyboardInterrupt from e
+            except GXAgentUnrecoverableConnectionError:
+                self.client.stop()
+                raise
             if self.client.should_reconnect:
                 self.client.reset()
             else:

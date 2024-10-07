@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 import traceback
 import warnings
 from collections import defaultdict
@@ -16,8 +17,15 @@ import orjson
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
-from pika.adapters.utils.connection_workflow import AMQPConnectorException
-from pika.exceptions import AuthenticationError, ProbableAuthenticationError
+from pika.adapters.utils.connection_workflow import (
+    AMQPConnectorException,
+)
+from pika.exceptions import (
+    AMQPError,
+    AuthenticationError,
+    ChannelError,
+    ProbableAuthenticationError,
+)
 from pydantic import v1 as pydantic_v1
 from pydantic.v1 import AmqpDsn, AnyUrl
 from tenacity import after_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
@@ -30,7 +38,11 @@ from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderNa
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
 )
-from great_expectations_cloud.agent.exceptions import GXAgentConfigError, GXAgentError
+from great_expectations_cloud.agent.exceptions import (
+    GXAgentConfigError,
+    GXAgentError,
+    GXAgentUnrecoverableConnectionError,
+)
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     AsyncRabbitMQClient,
     ClientError,
@@ -152,7 +164,9 @@ class GXAgent:
     #          by adding a delay and retrying the connection. Retrying with new credentials
     #          requires calling get_config again, which handles the password generation.
     @retry(
-        retry=retry_if_exception_type((AuthenticationError, ProbableAuthenticationError)),
+        retry=retry_if_exception_type(
+            (AuthenticationError, ProbableAuthenticationError, AMQPError, ChannelError)
+        ),
         wait=wait_exponential(multiplier=1, min=1, max=10),
         stop=stop_after_attempt(3),
         after=after_log(LOGGER, logging.DEBUG),
@@ -173,7 +187,14 @@ class GXAgent:
             print("Received request to shut down.")
         except (SubscriberError, ClientError):
             print("The connection to GX Cloud has encountered an error.")
-        except (AuthenticationError, ProbableAuthenticationError, AMQPConnectorException):
+        except GXAgentUnrecoverableConnectionError:
+            print("The connection to GX Cloud has encountered an unrecoverable error.")
+            sys.exit(1)
+        except (
+            AuthenticationError,
+            ProbableAuthenticationError,
+            AMQPConnectorException,
+        ):
             # Retry with new credentials
             self._config = self._get_config()
             # Raise to use the retry decorator to handle the retry logic

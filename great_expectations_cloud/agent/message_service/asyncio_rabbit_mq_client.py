@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING, Callable, Protocol
 import pika
 from pika.adapters.asyncio_connection import AsyncioConnection
 
+from great_expectations_cloud.agent.exceptions import GXAgentUnrecoverableConnectionError
+
 if TYPE_CHECKING:
     from pika.channel import Channel
     from pika.spec import Basic, BasicProperties
@@ -43,6 +45,7 @@ class AsyncRabbitMQClient:
         self._closing = False
         self._consumer_tag = None
         self._consuming = False
+        self._is_unrecoverable = False
 
     def run(self, queue: str, on_message: OnMessageFn) -> None:
         """Run an async connection to RabbitMQ.
@@ -67,6 +70,10 @@ class AsyncRabbitMQClient:
         )
         self._connection = connection
         connection.ioloop.run_forever()
+        if self._is_unrecoverable:
+            raise GXAgentUnrecoverableConnectionError(  # noqa: TRY003
+                "AsyncRabbitMQClient has encountered an unrecoverable error."
+            )
 
     def stop(self) -> None:
         """Close the connection to RabbitMQ."""
@@ -74,11 +81,10 @@ class AsyncRabbitMQClient:
             return
         if not self._closing:
             self._closing = True
-            if self._consuming:
-                self._stop_consuming()
-                self._connection.ioloop.run_forever()
-            else:
-                self._connection.ioloop.stop()
+
+        if self._consuming:
+            self._stop_consuming()
+        self._connection.ioloop.stop()
 
     def reset(self) -> None:
         """Reset client to allow a restart."""
@@ -205,6 +211,7 @@ class AsyncRabbitMQClient:
     def _on_connection_closed(self, connection: AsyncioConnection, reason: str) -> None:
         """Callback invoked after the broker closes the connection"""
         self._channel = None
+        self._is_unrecoverable = True
         if self._closing:
             connection.ioloop.stop()
         else:
