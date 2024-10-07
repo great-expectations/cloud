@@ -83,7 +83,9 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
     event.splitter_options = splitter_options
     action_result = action.run(event=event, id=id)
 
-    checkpoint.run.assert_called_with(batch_parameters=splitter_options, evaluation_parameters=None)
+    checkpoint.run.assert_called_with(
+        batch_parameters=splitter_options, expectation_parameters=None
+    )
     assert action_result.type == event.type
     assert action_result.id == id
     assert action_result.created_resources == [
