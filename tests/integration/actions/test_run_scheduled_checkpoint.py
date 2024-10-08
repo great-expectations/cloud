@@ -35,7 +35,7 @@ def scheduled_checkpoint(
     get_missing_checkpoint_error_type: type[Exception],
 ) -> Iterator[Checkpoint]:
     checkpoint_name = f"{data_asset.datasource.name} | {data_asset.name}"
-    _ = context.add_checkpoint(
+    checkpoint = context.checkpoints.add(
         name=checkpoint_name,
         validations=[
             {
@@ -48,7 +48,7 @@ def scheduled_checkpoint(
             },
         ],
     )
-    _ = context.add_or_update_checkpoint(
+    updated_checkpoint = context.add_or_update_checkpoint(
         name=checkpoint_name,
         validations=[
             {
@@ -57,7 +57,9 @@ def scheduled_checkpoint(
             }
         ],
     )
-    checkpoint = context.get_checkpoint(name=checkpoint_name)
+    print(checkpoint)
+    print(updated_checkpoint)
+    # checkpoint = context.get(name=checkpoint_name)
     assert (
         len(checkpoint.validations) == 1
     ), "Checkpoint was not updated in the previous method call."
