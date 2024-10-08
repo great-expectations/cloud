@@ -59,13 +59,13 @@ def datasource(
     get_missing_datasource_error_type: type[Exception],
 ) -> Iterator[PandasDatasource]:
     datasource_name = f"i{uuid.uuid4().hex}"
-    datasource = context.sources.add_pandas(
+    datasource = context.data_sources.add_pandas(
         name=datasource_name,
     )
     assert datasource.name == datasource_name
     datasource_name = f"i{uuid.uuid4().hex}"
     datasource.name = datasource_name
-    datasource = context.sources.add_or_update_pandas(
+    datasource = context.data_sources.add_or_update_pandas(
         datasource=datasource,
     )
     assert (
