@@ -39,7 +39,7 @@ def get_missing_data_asset_error_type() -> type[Exception]:
 
 
 @pytest.fixture(scope="module")
-def in_memory_batch_request_missing_dataframe_error_type() -> type[Exception]:
+def in_memory_batch_request_missing_dataframe_error_type():
     return gx_exceptions.BuildBatchRequestError
 
 
