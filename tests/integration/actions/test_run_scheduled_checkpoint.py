@@ -39,11 +39,11 @@ def scheduled_checkpoint(
         name=checkpoint_name,
         validations=[
             {
-                "expectation_suite_name": expectation_suite.expectation_suite_name,
+                "expectation_suite_name": expectation_suite.name,
                 "batch_request": batch_request,
             },
             {
-                "expectation_suite_name": expectation_suite.expectation_suite_name,
+                "expectation_suite_name": expectation_suite.name,
                 "batch_request": batch_request,
             },
         ],
@@ -52,7 +52,7 @@ def scheduled_checkpoint(
         name=checkpoint_name,
         validations=[
             {
-                "expectation_suite_name": expectation_suite.expectation_suite_name,
+                "expectation_suite_name": expectation_suite.name,
                 "batch_request": batch_request,
             }
         ],
