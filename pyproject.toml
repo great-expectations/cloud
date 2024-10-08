@@ -254,7 +254,7 @@ filterwarnings = [
     # this is apparently a known issue with snowflake connector 1.6
     "module: The GenericFunction 'flatten' is already registered and is going to be overridden:sqlalchemy.exc.SAWarning",
     #  RuntimeWarning: coroutine 'FastStream.run' was never awaited. We are already handling FastStream.run() as part of asyncio
-    "ignore: coroutine 'FastStream.run' was never awaited"
+    "ignore: coroutine 'FastStream.run' was never awaited",
 ]
 
 [tool.coverage.report]
