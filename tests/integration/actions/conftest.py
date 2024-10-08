@@ -72,7 +72,7 @@ def datasource(
         datasource.name == datasource_name
     ), "The datasource was not updated in the previous method call."
     yield datasource
-    context.data_sources.delete_pandas(name=datasource_name)
+    context.data_sources.delete(name=datasource_name)
     with pytest.raises(get_missing_datasource_error_type):
         context.data_sources.get(name=datasource_name)
 
@@ -119,7 +119,7 @@ def expectation_suite(
     expectation_suite = gx.ExpectationSuite(name=expectation_suite_name)
     context.suites.add(expectation_suite)
 
-    expectation = gx.expectations.ExpectColumnValuesToNotBeNullExpectation(
+    expectation = gx.expectations.ExpectColumnValuesToNotBeNull(
         column="string",
         mostly=1,
     )
