@@ -4,7 +4,7 @@ import uuid
 from typing import TYPE_CHECKING, Iterator
 
 import great_expectations as gx
-import great_expectations.exceptions as gx_exceptions
+import great_expectations.exceptions.exceptions as gx_exceptions
 import pandas as pd
 import pytest
 
@@ -40,7 +40,7 @@ def get_missing_data_asset_error_type() -> type[Exception]:
 
 @pytest.fixture(scope="module")
 def in_memory_batch_request_missing_dataframe_error_type() -> type[Exception]:
-    return ValueError
+    return gx_exceptions.BuildBatchRequestError
 
 
 @pytest.fixture(scope="module")
