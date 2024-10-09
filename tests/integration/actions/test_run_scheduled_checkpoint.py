@@ -57,8 +57,6 @@ def scheduled_checkpoint(
             }
         ],
     )
-    print(checkpoint)
-    print(updated_checkpoint)
     # checkpoint = context.get(name=checkpoint_name)
     assert (
         len(checkpoint.validations) == 1
