@@ -529,15 +529,13 @@ files = [
 python-dateutil = ">=2.7"
 
 [[package]]
-name = "great-expectations"
-version = "1.1.1"
+name = "great_expectations"
+version = "1.1.1+8.ge22ac68e51"
 description = "Always know what to expect from your data."
 optional = false
-python-versions = "<3.12,>=3.9"
-files = [
-    {file = "great_expectations-1.1.1-py3-none-any.whl", hash = "sha256:dfa76af242274d3fe956744d95e79536ed2bb0e290a48c5f976d26a1a38f818b"},
-    {file = "great_expectations-1.1.1.tar.gz", hash = "sha256:973eb05fdea1647b939b4a06bb3fb13b67049e5b2aba328f13a643e5d19d84a4"},
-]
+python-versions = ">=3.9,<3.12"
+files = []
+develop = false
 
 [package.dependencies]
 altair = ">=4.2.1,<5.0.0"
@@ -592,6 +590,12 @@ teradata = ["sqlalchemy (<2.0.0)", "teradatasqlalchemy (==17.0.0.5)"]
 test = ["adr-tools-python (==1.0.3)", "boto3 (>=1.17.106)", "coverage[toml] (>=7.5.1)", "docstring-parser (==0.15)", "feather-format (>=0.4.1)", "flaky (>=3.7.0)", "flask (>=1.0.0)", "freezegun (>=0.3.15)", "invoke (>=2.0.0)", "moto[s3,sns] (>=4.2.13,<5.0)", "mypy (==1.11.2)", "pact-python (>=2.0.1)", "pre-commit (>=2.21.0)", "pyarrow", "pyfakefs (>=4.5.1)", "pytest (>=8.2.1)", "pytest-benchmark (>=3.4.1)", "pytest-cov (>=5.0.0)", "pytest-icdiff (>=0.9.0)", "pytest-mock (>=3.14.0)", "pytest-order (>=1.2.1)", "pytest-random-order (>=1.1.1)", "pytest-timeout (>=2.3.1)", "pytest-xdist (>=3.6.1)", "requirements-parser (>=0.9.0)", "responses (>=0.23.1)", "ruff (==0.6.8)", "setuptools (>=70.0.0)", "snapshottest (==0.6.0)", "sqlalchemy (>=1.4.0)", "tomli (>=2.0.1)"]
 trino = ["sqlalchemy (>=1.4.0)", "trino (>=0.310.0,!=0.316.0)"]
 vertica = ["sqlalchemy (>=1.4.0)", "sqlalchemy-vertica-python (>=0.5.10)"]
+
+[package.source]
+type = "git"
+url = "git@github.com:great-expectations/great_expectations.git"
+reference = "f/zelda-956/zelda-1004/update-metric-runs-endpoint-to-v1-api"
+resolved_reference = "e22ac68e518b2e2477f63b14828a224297f6a96b"
 
 [[package]]
 name = "greenlet"
@@ -2508,4 +2512,4 @@ snowflake = ["snowflake-connector-python", "snowflake-sqlalchemy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "60a0bbb3d9d49211779c2b96ba2ff8256058a1fd9601b2d25ec3be85ce12abc2"
+content-hash = "55c7643ad7c91bdf03cae3c240e331cdbfe630a1c41cbf830d80503edc448298"
