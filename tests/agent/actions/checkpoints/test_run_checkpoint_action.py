@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import uuid
 from typing import TYPE_CHECKING
+from unittest.mock import create_autospec
 from uuid import UUID
 
 import pytest
+from great_expectations.core import ExpectationSuiteValidationResult
+from great_expectations.data_context.types.resource_identifiers import ValidationResultIdentifier
 from great_expectations.datasource.fluent import Datasource
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
@@ -86,13 +89,11 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     checkpoint = mock_context.checkpoints.get.return_value
-    checkpoint.run.return_value.run_results = {
-        "GXCloudIdentifier::validation_result::78ebf58e-bdb5-4d79-88d5-79bae19bf7d0": {
-            "actions_results": {
-                "store_validation_result": {"id": "78ebf58e-bdb5-4d79-88d5-79bae19bf7d0"}
-            }
-        }
-    }
+    identifier = create_autospec(ValidationResultIdentifier)
+    result = ExpectationSuiteValidationResult(
+        success=True, results=[], suite_name="abc", id="78ebf58e-bdb5-4d79-88d5-79bae19bf7d0"
+    )
+    checkpoint.run.return_value.run_results = {identifier: result}
     event.splitter_options = splitter_options
     action_result = action.run(event=event, id=id)
 
