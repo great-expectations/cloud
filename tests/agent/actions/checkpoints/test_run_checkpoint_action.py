@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import uuid
 from typing import TYPE_CHECKING
+from unittest.mock import create_autospec
 from uuid import UUID
 
 import pytest
+from great_expectations.core import ExpectationSuiteValidationResult
+from great_expectations.data_context.types.resource_identifiers import ValidationResultIdentifier
 from great_expectations.datasource.fluent import Datasource
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
@@ -12,12 +15,10 @@ from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointA
 from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
     RunScheduledCheckpointAction,
 )
-from great_expectations_cloud.agent.actions.run_window_checkpoint import RunWindowCheckpointAction
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunCheckpointEvent,
     RunScheduledCheckpointEvent,
-    RunWindowCheckpointEvent,
 )
 
 if TYPE_CHECKING:
@@ -32,6 +33,7 @@ run_checkpoint_action_class_and_event = (
         type="run_checkpoint_request",
         datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
         checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
+        checkpoint_name="Checkpoint Z",
         organization_id=uuid.uuid4(),
     ),
 )
@@ -41,16 +43,8 @@ run_scheduled_checkpoint_action_class_and_event = (
         type="run_scheduled_checkpoint.received",
         datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
         checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
+        checkpoint_name="Checkpoint Z",
         schedule_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
-        organization_id=uuid.uuid4(),
-    ),
-)
-run_window_checkpoint_action_class_and_event = (
-    RunWindowCheckpointAction,
-    RunWindowCheckpointEvent(
-        type="run_window_checkpoint.received",
-        datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
-        checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
         organization_id=uuid.uuid4(),
     ),
 )
@@ -72,7 +66,6 @@ run_window_checkpoint_action_class_and_event = (
     [
         run_checkpoint_action_class_and_event,
         run_scheduled_checkpoint_action_class_and_event,
-        run_window_checkpoint_action_class_and_event,
     ],
 )
 def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_result(
@@ -82,21 +75,19 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
         context=mock_context, base_url="", organization_id=uuid.uuid4(), auth_key=""
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
-    checkpoint = mock_context.run_checkpoint.return_value
-    checkpoint_id_str = "5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"
-    checkpoint.ge_cloud_id = checkpoint_id_str
-    checkpoint.run_results = {
-        "GXCloudIdentifier::validation_result::78ebf58e-bdb5-4d79-88d5-79bae19bf7d0": {
-            "actions_results": {
-                "store_validation_result": {"id": "78ebf58e-bdb5-4d79-88d5-79bae19bf7d0"}
-            }
-        }
-    }
+    checkpoint = mock_context.checkpoints.get.return_value
+
+    identifier = create_autospec(ValidationResultIdentifier)
+    result = ExpectationSuiteValidationResult(
+        success=True, results=[], suite_name="abc", id="78ebf58e-bdb5-4d79-88d5-79bae19bf7d0"
+    )
+    checkpoint.run.return_value.run_results = {identifier: result}
+
     event.splitter_options = splitter_options
     action_result = action.run(event=event, id=id)
 
-    mock_context.run_checkpoint.assert_called_with(
-        ge_cloud_id=UUID(checkpoint_id_str), batch_request=batch_request
+    checkpoint.run.assert_called_with(
+        batch_parameters=splitter_options, expectation_parameters=None
     )
     assert action_result.type == event.type
     assert action_result.id == id
@@ -113,7 +104,6 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
     [
         run_checkpoint_action_class_and_event,
         run_scheduled_checkpoint_action_class_and_event,
-        run_window_checkpoint_action_class_and_event,
     ],
 )
 def test_run_checkpoint_action_raises_on_test_connection_failure(
@@ -123,7 +113,7 @@ def test_run_checkpoint_action_raises_on_test_connection_failure(
     event,
 ):
     mock_datasource = mocker.Mock(spec=Datasource)
-    mock_context.get_datasource.return_value = mock_datasource
+    mock_context.data_sources.get.return_value = mock_datasource
     mock_datasource.test_connection.side_effect = TestConnectionError()
 
     action = action_class(

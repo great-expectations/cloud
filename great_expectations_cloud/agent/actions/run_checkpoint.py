@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from typing_extensions import override
 
@@ -21,40 +21,50 @@ if TYPE_CHECKING:
 
 
 class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
-    # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
-    #  This action is registered for v0, see register_event_action()
-
     @override
     def run(self, event: RunCheckpointEvent, id: str) -> ActionResult:
         return run_checkpoint(self._context, event, id)
+
+
+class MissingCheckpointNameError(ValueError):
+    """Property checkpoint_name is required but not present."""
 
 
 def run_checkpoint(
     context: CloudDataContext,
     event: RunCheckpointEvent | RunScheduledCheckpointEvent | RunWindowCheckpointEvent,
     id: str,
+    expectation_parameters: dict[str, Any] | None = None,
 ) -> ActionResult:
     """Note: the logic for this action is broken out into this function so that
     the same logic can be used for both RunCheckpointEvent and RunScheduledCheckpointEvent."""
-    # TODO: move connection testing into OSS; there isn't really a reason it can't be done there
+
+    # the checkpoint_name property on possible events is optional for backwards compatibility,
+    # but this action requires it in order to run:
+    if not event.checkpoint_name:
+        raise MissingCheckpointNameError
+
+    # test connection to data source and any assets used by checkpoint
     for datasource_name, data_asset_names in event.datasource_names_to_asset_names.items():
-        datasource = context.get_datasource(datasource_name)
+        datasource = context.data_sources.get(name=datasource_name)
         datasource.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
         for (
             data_asset_name
         ) in data_asset_names:  # only test connection for assets that are validated in checkpoint
             asset = datasource.get_asset(data_asset_name)
             asset.test_connection()  # raises `TestConnectionError` on failure
-    checkpoint_run_result = context.run_checkpoint(
-        ge_cloud_id=event.checkpoint_id,
-        batch_request={"options": event.splitter_options} if event.splitter_options else None,
+
+    # run checkpoint
+    checkpoint = context.checkpoints.get(name=event.checkpoint_name)
+    checkpoint_run_result = checkpoint.run(
+        batch_parameters=event.splitter_options, expectation_parameters=expectation_parameters
     )
 
     validation_results = checkpoint_run_result.run_results
     created_resources = []
     for key in validation_results.keys():
         created_resource = CreatedResource(
-            resource_id=validation_results[key]["actions_results"]["store_validation_result"]["id"],
+            resource_id=validation_results[key].id,
             type="SuiteValidationResult",
         )
         created_resources.append(created_resource)
@@ -66,4 +76,4 @@ def run_checkpoint(
     )
 
 
-register_event_action("0", RunCheckpointEvent, RunCheckpointAction)
+register_event_action("1", RunCheckpointEvent, RunCheckpointAction)

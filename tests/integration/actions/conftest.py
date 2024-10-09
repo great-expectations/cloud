@@ -4,7 +4,7 @@ import uuid
 from typing import TYPE_CHECKING, Iterator
 
 import great_expectations as gx
-import great_expectations.exceptions as gx_exceptions
+import great_expectations.exceptions.exceptions as gx_exceptions
 import pandas as pd
 import pytest
 
@@ -39,8 +39,8 @@ def get_missing_data_asset_error_type() -> type[Exception]:
 
 
 @pytest.fixture(scope="module")
-def in_memory_batch_request_missing_dataframe_error_type() -> type[Exception]:
-    return ValueError
+def in_memory_batch_request_missing_dataframe_error_type():
+    return gx_exceptions.BuildBatchRequestError
 
 
 @pytest.fixture(scope="module")
@@ -59,13 +59,13 @@ def datasource(
     get_missing_datasource_error_type: type[Exception],
 ) -> Iterator[PandasDatasource]:
     datasource_name = f"i{uuid.uuid4().hex}"
-    datasource = context.sources.add_pandas(
+    datasource = context.data_sources.add_pandas(
         name=datasource_name,
     )
     assert datasource.name == datasource_name
     datasource_name = f"i{uuid.uuid4().hex}"
     datasource.name = datasource_name
-    datasource = context.sources.add_or_update_pandas(
+    datasource = context.data_sources.add_or_update_pandas(
         datasource=datasource,
     )
     assert (
@@ -101,7 +101,7 @@ def batch_request(
 ):
     with pytest.raises(in_memory_batch_request_missing_dataframe_error_type):
         data_asset.build_batch_request()
-    return data_asset.build_batch_request(dataframe=pandas_test_df)
+    return data_asset.build_batch_request(options={"dataframe": pandas_test_df})
 
 
 @pytest.fixture
@@ -119,7 +119,7 @@ def expectation_suite(
     expectation_suite = gx.ExpectationSuite(name=expectation_suite_name)
     context.suites.add(expectation_suite)
 
-    expectation = gx.expectations.ExpectColumnValuesToNotBeNullExpectation(
+    expectation = gx.expectations.ExpectColumnValuesToNotBeNull(
         column="string",
         mostly=1,
     )
