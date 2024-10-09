@@ -81,7 +81,7 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
         success=True, results=[], suite_name="abc", id="78ebf58e-bdb5-4d79-88d5-79bae19bf7d0"
     )
     checkpoint.run.return_value.run_results = {identifier: result}
-    
+
     event.splitter_options = splitter_options
     action_result = action.run(event=event, id=id)
 
