@@ -48,7 +48,7 @@ def scheduled_checkpoint(
             },
         ],
     )
-    updated_checkpoint = context.add_or_update_checkpoint(
+    checkpoint = context.add_or_update_checkpoint(
         name=checkpoint_name,
         validations=[
             {
