@@ -60,6 +60,7 @@ from great_expectations_cloud.agent.models import (
     JobStatus,
     ScheduledEventBase,
     UnknownEvent,
+    UpdateJobStatusRequest,
     build_failed_job_completed_status,
 )
 
@@ -412,7 +413,7 @@ class GXAgent:
 
         # obtain the broker url and queue name from Cloud
         agent_sessions_url = (
-            f"{env_vars.gx_cloud_base_url}/organizations/"
+            f"{env_vars.gx_cloud_base_url}/api/v1/organizations/"
             f"{env_vars.gx_cloud_organization_id}/agent-sessions"
         )
 
@@ -458,11 +459,11 @@ class GXAgent:
             },
         )
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{org_id}"
+            f"{self._config.gx_cloud_base_url}/api/v1/organizations/{org_id}"
             + f"/agent-jobs/{correlation_id}"
         )
         with create_session(access_token=self.get_auth_key()) as session:
-            data = status.json()
+            data = UpdateJobStatusRequest(data=status).json()
             session.patch(agent_sessions_url, data=data)
             LOGGER.info(
                 "Status updated",
@@ -486,8 +487,8 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         data = {
+            **event_context.event.dict(),
             "correlation_id": event_context.correlation_id,
-            "event": event_context.event.dict(),
         }
         LOGGER.info(
             "Creating scheduled job and setting started",
@@ -499,7 +500,7 @@ class GXAgent:
         )
 
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{org_id}" + "/agent-jobs"
+            f"{self._config.gx_cloud_base_url}/api/v1/organizations/{org_id}" + "/agent-jobs"
         )
         with create_session(access_token=self.get_auth_key()) as session:
             payload = Payload(data=data)
