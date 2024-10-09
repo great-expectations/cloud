@@ -35,29 +35,29 @@ def scheduled_checkpoint(
     get_missing_checkpoint_error_type: type[Exception],
 ) -> Iterator[Checkpoint]:
     checkpoint_name = f"{data_asset.datasource.name} | {data_asset.name}"
-    _ = context.add_checkpoint(
+    checkpoint = context.checkpoints.add(
         name=checkpoint_name,
         validations=[
             {
-                "expectation_suite_name": expectation_suite.expectation_suite_name,
+                "expectation_suite_name": expectation_suite.name,
                 "batch_request": batch_request,
             },
             {
-                "expectation_suite_name": expectation_suite.expectation_suite_name,
+                "expectation_suite_name": expectation_suite.name,
                 "batch_request": batch_request,
             },
         ],
     )
-    _ = context.add_or_update_checkpoint(
+    checkpoint = context.add_or_update_checkpoint(
         name=checkpoint_name,
         validations=[
             {
-                "expectation_suite_name": expectation_suite.expectation_suite_name,
+                "expectation_suite_name": expectation_suite.name,
                 "batch_request": batch_request,
             }
         ],
     )
-    checkpoint = context.get_checkpoint(name=checkpoint_name)
+    # checkpoint = context.get(name=checkpoint_name)
     assert (
         len(checkpoint.validations) == 1
     ), "Checkpoint was not updated in the previous method call."
@@ -83,7 +83,7 @@ def checkpoint_event(scheduled_checkpoint, datasource_names_to_asset_names, org_
     )
 
 
-@pytest.mark.skip("Skipping integration tests until they are updated for v1.0")
+@pytest.mark.skip("This fails due to invalid datasource in db-seeder")
 def test_running_checkpoint_action(
     context, checkpoint_event, cloud_base_url: str, org_id_env_var: str, token_env_var: str
 ):

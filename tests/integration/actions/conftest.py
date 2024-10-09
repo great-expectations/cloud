@@ -30,7 +30,7 @@ def pandas_test_df() -> pd.DataFrame:
 
 @pytest.fixture(scope="module")
 def get_missing_datasource_error_type() -> type[Exception]:
-    return ValueError
+    return KeyError
 
 
 @pytest.fixture(scope="module")
