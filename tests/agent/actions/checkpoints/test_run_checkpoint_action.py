@@ -15,12 +15,10 @@ from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointA
 from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
     RunScheduledCheckpointAction,
 )
-from great_expectations_cloud.agent.actions.run_window_checkpoint import RunWindowCheckpointAction
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunCheckpointEvent,
     RunScheduledCheckpointEvent,
-    RunWindowCheckpointEvent,
 )
 
 if TYPE_CHECKING:
@@ -50,16 +48,6 @@ run_scheduled_checkpoint_action_class_and_event = (
         organization_id=uuid.uuid4(),
     ),
 )
-run_window_checkpoint_action_class_and_event = (
-    RunWindowCheckpointAction,
-    RunWindowCheckpointEvent(
-        type="run_window_checkpoint.received",
-        datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
-        checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
-        checkpoint_name="Checkpoint Z",
-        organization_id=uuid.uuid4(),
-    ),
-)
 
 
 @pytest.mark.parametrize(
@@ -78,7 +66,6 @@ run_window_checkpoint_action_class_and_event = (
     [
         run_checkpoint_action_class_and_event,
         run_scheduled_checkpoint_action_class_and_event,
-        run_window_checkpoint_action_class_and_event,
     ],
 )
 def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_result(
@@ -94,10 +81,13 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
         success=True, results=[], suite_name="abc", id="78ebf58e-bdb5-4d79-88d5-79bae19bf7d0"
     )
     checkpoint.run.return_value.run_results = {identifier: result}
+    
     event.splitter_options = splitter_options
     action_result = action.run(event=event, id=id)
 
-    checkpoint.run.assert_called_with(batch_parameters=splitter_options)
+    checkpoint.run.assert_called_with(
+        batch_parameters=splitter_options, expectation_parameters=None
+    )
     assert action_result.type == event.type
     assert action_result.id == id
     assert action_result.created_resources == [
@@ -113,7 +103,6 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
     [
         run_checkpoint_action_class_and_event,
         run_scheduled_checkpoint_action_class_and_event,
-        run_window_checkpoint_action_class_and_event,
     ],
 )
 def test_run_checkpoint_action_raises_on_test_connection_failure(

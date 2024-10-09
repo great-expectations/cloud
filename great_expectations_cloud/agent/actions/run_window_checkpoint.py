@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from great_expectations.core.http import create_session
+from great_expectations.exceptions import GXCloudError
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions.agent_action import (
@@ -16,9 +18,28 @@ from great_expectations_cloud.agent.models import (
 class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
     @override
     def run(self, event: RunWindowCheckpointEvent, id: str) -> ActionResult:
-        # TODO: https://greatexpectations.atlassian.net/browse/ZELDA-922
-        #  This currently only runs a normal checkpoint. Logic for window checkpoints needs to be added (e.g. call the backend to get the params and then construct the evaluation_parameters before passing them into context.run_checkpoint()) One way we can do this via a param in `run_checkpoint()` that takes a function to build the evaluation_parameters, defaulting to a noop for the other checkpoint action types.
-        return run_checkpoint(self._context, event, id)
+        with create_session(access_token=self._auth_key) as session:
+            expectation_parameters_for_checkpoint_url = f"{self._base_url}/api/v1/organizations/{self._organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
+            response = session.get(url=expectation_parameters_for_checkpoint_url)
+
+        if not response.ok:
+            raise GXCloudError(
+                message=f"RunWindowCheckpointAction encountered an error while connecting to GX Cloud. "
+                f"Unable to retrieve expectation_parameters for Checkpoint with ID={event.checkpoint_id}.",
+                response=response,
+            )
+        data = response.json()
+        try:
+            expectation_parameters = data["data"]["expectation_parameters"]
+        except KeyError as e:
+            raise GXCloudError(
+                message="Malformed response received from GX Cloud",
+                response=response,
+            ) from e
+
+        return run_checkpoint(
+            self._context, event, id, expectation_parameters=expectation_parameters
+        )
 
 
 register_event_action("1", RunWindowCheckpointEvent, RunWindowCheckpointAction)
