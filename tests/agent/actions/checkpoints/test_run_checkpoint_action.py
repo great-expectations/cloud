@@ -76,7 +76,6 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     checkpoint = mock_context.checkpoints.get.return_value
-
     identifier = create_autospec(ValidationResultIdentifier)
     result = ExpectationSuiteValidationResult(
         success=True, results=[], suite_name="abc", id="78ebf58e-bdb5-4d79-88d5-79bae19bf7d0"
