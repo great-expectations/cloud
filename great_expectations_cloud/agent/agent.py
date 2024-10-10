@@ -484,8 +484,6 @@ class GXAgent:
                 "correlation_id": str(event_context.correlation_id),
                 "event_type": str(event_context.event.type),
                 "organization_id": str(org_id),
-                "schedule_id": str(event_context.event.schedule_id),
-                "checkpoint_id": str(event_context.event.checkpoint_id),
             },
         )
 
@@ -501,8 +499,6 @@ class GXAgent:
                     "correlation_id": str(event_context.correlation_id),
                     "event_type": str(event_context.event.type),
                     "organization_id": str(org_id),
-                    "schedule_id": str(event_context.event.schedule_id),
-                    "checkpoint_id": str(event_context.event.checkpoint_id),
                 },
             )
 
