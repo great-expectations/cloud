@@ -476,11 +476,15 @@ class GXAgent:
         """
         data = {
             "correlation_id": event_context.correlation_id,
-            "event": event_context.event.dict(),
+            "event": event_context.event.type,
         }
         LOGGER.info(
             "Creating scheduled job and setting started",
-            extra={**data, "organization_id": str(org_id)},
+            extra={
+                "correlation_id": event_context.correlation_id,
+                "event_type": event_context.event.type,
+                "organization_id": str(org_id),
+            },
         )
 
         agent_sessions_url = (
@@ -491,7 +495,11 @@ class GXAgent:
             session.post(agent_sessions_url, data=payload.json())
             LOGGER.info(
                 "Created scheduled job and set started",
-                extra={**data, "organization_id": str(org_id)},
+                extra={
+                    "correlation_id": event_context.correlation_id,
+                    "event_type": event_context.event.type,
+                    "organization_id": str(org_id),
+                },
             )
 
     def get_header_name(self) -> type[HeaderName]:
