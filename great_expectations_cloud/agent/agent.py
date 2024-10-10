@@ -476,7 +476,7 @@ class GXAgent:
         """
         data = {
             "correlation_id": event_context.correlation_id,
-            "event": event_context.event.type,
+            "event": event_context.event.dict(),
         }
         LOGGER.info(
             "Creating scheduled job and setting started",
@@ -484,6 +484,8 @@ class GXAgent:
                 "correlation_id": event_context.correlation_id,
                 "event_type": event_context.event.type,
                 "organization_id": str(org_id),
+                "schedule_id": event_context.event.schedule_id,
+                "checkpoint_id": event_context.event.checkpoint_id,
             },
         )
 
@@ -499,6 +501,8 @@ class GXAgent:
                     "correlation_id": event_context.correlation_id,
                     "event_type": event_context.event.type,
                     "organization_id": str(org_id),
+                    "schedule_id": event_context.event.schedule_id,
+                    "checkpoint_id": event_context.event.checkpoint_id,
                 },
             )
 
