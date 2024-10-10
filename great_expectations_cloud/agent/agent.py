@@ -282,7 +282,7 @@ class GXAgent:
             self._create_scheduled_job_and_set_started(event_context, org_id)
         else:
             self._update_status(
-                job_id=event_context.correlation_id, status=JobStarted(), org_id=org_id
+                correlation_id=event_context.correlation_id, status=JobStarted(), org_id=org_id
             )
         print(f"Starting job {event_context.event.type} ({event_context.correlation_id}) ")
         LOGGER.info(
@@ -366,7 +366,9 @@ class GXAgent:
                 },
             )
 
-        self._update_status(job_id=event_context.correlation_id, status=status, org_id=org_id)
+        self._update_status(
+            correlation_id=event_context.correlation_id, status=status, org_id=org_id
+        )
 
         # ack message and cleanup resources
         event_context.processed_successfully()
@@ -440,26 +442,35 @@ class GXAgent:
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
 
-    def _update_status(self, job_id: str, status: JobStatus, org_id: UUID) -> None:
+    def _update_status(self, correlation_id: str, status: JobStatus, org_id: UUID) -> None:
         """Update GX Cloud on the status of a job.
 
         Args:
-            job_id: job identifier, also known as correlation_id
+            correlation_id: job identifier, also known as
             status: pydantic model encapsulating the current status
         """
         LOGGER.info(
             "Updating status",
-            extra={"job_id": job_id, "status": str(status), "organization_id": str(org_id)},
+            extra={
+                "correlation_id": correlation_id,
+                "status": str(status),
+                "organization_id": str(org_id),
+            },
         )
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{org_id}" + f"/agent-jobs/{job_id}"
+            f"{self._config.gx_cloud_base_url}/organizations/{org_id}"
+            + f"/agent-jobs/{correlation_id}"
         )
         with create_session(access_token=self.get_auth_key()) as session:
             data = status.json()
             session.patch(agent_sessions_url, data=data)
             LOGGER.info(
                 "Status updated",
-                extra={"job_id": job_id, "status": str(status), "organization_id": str(org_id)},
+                extra={
+                    "correlation_id": correlation_id,
+                    "status": str(status),
+                    "organization_id": str(org_id),
+                },
             )
 
     def _create_scheduled_job_and_set_started(
@@ -535,6 +546,7 @@ class GXAgent:
             extra={
                 "user_agent": header_name.USER_AGENT,
                 "agent_version": agent_version,
+                # why is there both the job_id and correlation_id here?
                 "job_id": header_name.AGENT_JOB_ID,
                 "correlation_id": correlation_id,
             },
