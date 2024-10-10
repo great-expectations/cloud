@@ -481,11 +481,11 @@ class GXAgent:
         LOGGER.info(
             "Creating scheduled job and setting started",
             extra={
-                "correlation_id": event_context.correlation_id,
-                "event_type": event_context.event.type,
+                "correlation_id": str(event_context.correlation_id),
+                "event_type": str(event_context.event.type),
                 "organization_id": str(org_id),
-                "schedule_id": event_context.event.schedule_id,
-                "checkpoint_id": event_context.event.checkpoint_id,
+                "schedule_id": str(event_context.event.schedule_id),
+                "checkpoint_id": str(event_context.event.checkpoint_id),
             },
         )
 
@@ -498,11 +498,11 @@ class GXAgent:
             LOGGER.info(
                 "Created scheduled job and set started",
                 extra={
-                    "correlation_id": event_context.correlation_id,
-                    "event_type": event_context.event.type,
+                    "correlation_id": str(event_context.correlation_id),
+                    "event_type": str(event_context.event.type),
                     "organization_id": str(org_id),
-                    "schedule_id": event_context.event.schedule_id,
-                    "checkpoint_id": event_context.event.checkpoint_id,
+                    "schedule_id": str(event_context.event.schedule_id),
+                    "checkpoint_id": str(event_context.event.checkpoint_id),
                 },
             )
 
