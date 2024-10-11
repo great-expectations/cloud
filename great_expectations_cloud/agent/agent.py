@@ -574,6 +574,8 @@ class GXAgent:
             if correlation_id:
                 headers[header_name.AGENT_JOB_ID] = correlation_id
             session.headers.update(headers)
+            print("HERERE")
+            print(session.headers)
             return session
 
         # TODO: this is relying on a private implementation detail

@@ -567,17 +567,54 @@ def test_correlation_id_header(
     base_url = gx_agent_config.gx_cloud_base_url
     org_id = gx_agent_config.gx_cloud_organization_id
     with responses.RequestsMock() as rsps:
-        (
-            rsps.add(
-                responses.GET,
-                f"{base_url}api/v1/organizations/{org_id}/accounts/me",
-                json={"user_id": str(uuid.uuid4())},
-            ),
-        )
         rsps.add(
             responses.GET,
             f"{base_url}api/v1/organizations/{org_id}/data-context-configuration",
             json=data_context_config,
+        )
+        rsps.add(
+            responses.GET,
+            f"{base_url}/api/v1/organizations/{org_id}/draft-datasources/{datasource_config_id_1}",
+            json={
+                "data": {
+                    "config": {
+                        "type": "sqlite",
+                        "connection_string": "sqlite:///",
+                        "name": "test-ds",
+                    }
+                }
+            },
+        )
+        rsps.add(
+            responses.GET,
+            f"{base_url}/api/v1/organizations/{org_id}/draft-datasources/{datasource_config_id_2}",
+            json={
+                "data": {
+                    "config": {
+                        "type": "sqlite",
+                        "connection_string": "sqlite:///",
+                        "name": "test-ds",
+                    }
+                }
+            },
+        )
+        rsps.add(
+            responses.PUT,
+            f"{base_url}/api/v1/organizations/{org_id}/draft-table-names/{datasource_config_id_1}",
+            json={
+                "data": {
+                    "table_names": [],
+                }
+            },
+        )
+        rsps.add(
+            responses.PUT,
+            f"{base_url}/api/v1/organizations/{org_id}/draft-table-names/{datasource_config_id_2}",
+            json={
+                "data": {
+                    "table_names": [],
+                }
+            },
         )
         agent = GXAgent()
         agent.run()
