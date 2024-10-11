@@ -489,19 +489,6 @@ def test_custom_user_agent(
                 )
             ],
         )
-        rsps.add(
-            responses.GET,
-            f"{base_url}api/v1/organizations/{org_id}/accounts/me",
-            json={"user_id": str(uuid.uuid4())},
-            # match will fail if the User-Agent header is not set
-            match=[
-                responses.matchers.header_matcher(
-                    {
-                        HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{GXAgent.get_current_gx_agent_version()}"
-                    }
-                )
-            ],
-        )
         GXAgent()
 
 
