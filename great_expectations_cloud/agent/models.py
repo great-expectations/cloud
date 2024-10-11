@@ -78,6 +78,17 @@ class RunWindowCheckpointEvent(EventBase):
     checkpoint_name: Optional[str] = None
 
 
+class RunScheduledWindowCheckpointEvent(ScheduledEventBase):
+    type: Literal["run_scheduled_window_checkpoint.received"] = (
+        "run_scheduled_window_checkpoint.received"
+    )
+    datasource_names_to_asset_names: Dict[str, Set[str]]
+    checkpoint_id: uuid.UUID
+    splitter_options: Optional[Dict[str, Any]] = None
+    # TODO: Remove optional once fully migrated to greatexpectations v1
+    checkpoint_name: Optional[str] = None
+
+
 class RunColumnDescriptiveMetricsEvent(EventBase):
     type: Literal["column_descriptive_metrics_request.received"] = (
         "column_descriptive_metrics_request.received"
