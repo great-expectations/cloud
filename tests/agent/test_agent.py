@@ -668,7 +668,7 @@ def test_correlation_id_header(
     random_uuid: str,
 ):
     """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
-    agent_job_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
+    agent_correlation_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
     datasource_config_id_1 = uuid.UUID("00000000-0000-0000-0000-000000000001")
     datasource_config_id_2 = uuid.UUID("00000000-0000-0000-0000-000000000002")
     checkpoint_id = uuid.UUID("00000000-0000-0000-0000-000000000003")
@@ -680,14 +680,14 @@ def test_correlation_id_header(
                     config_id=datasource_config_id_1,
                     organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
                 ),
-                agent_job_ids[0],
+                agent_correlation_ids[0],
             ),
             (
                 DraftDatasourceConfigEvent(
                     config_id=datasource_config_id_2,
                     organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
                 ),
-                agent_job_ids[1],
+                agent_correlation_ids[1],
             ),
             (
                 RunCheckpointEvent(
@@ -695,7 +695,7 @@ def test_correlation_id_header(
                     datasource_names_to_asset_names={},
                     organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
                 ),
-                agent_job_ids[2],
+                agent_correlation_ids[2],
             ),
         ]
     )
@@ -712,21 +712,33 @@ def test_correlation_id_header(
             f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_1}",
             json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-1")}}},
             # match will fail if correlation-id header is not set
-            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[0]})],
+            match=[
+                responses.matchers.header_matcher(
+                    {HeaderName.AGENT_JOB_ID: agent_correlation_ids[0]}
+                )
+            ],
         )
         rsps.add(
             responses.GET,
             f"{base_url}/organizations/{org_id}/datasources/drafts/{datasource_config_id_2}",
             json={"data": {"attributes": {"draft_config": ds_config_factory("test-ds-2")}}},
             # match will fail if correlation-id header is not set
-            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[1]})],
+            match=[
+                responses.matchers.header_matcher(
+                    {HeaderName.AGENT_JOB_ID: agent_correlation_ids[1]}
+                )
+            ],
         )
         rsps.add(
             responses.GET,
             f"{base_url}organizations/{org_id}/checkpoints/{checkpoint_id}",
             json={"data": {}},
             # match will fail if correlation-id header is not set
-            match=[responses.matchers.header_matcher({HeaderName.AGENT_JOB_ID: agent_job_ids[2]})],
+            match=[
+                responses.matchers.header_matcher(
+                    {HeaderName.AGENT_JOB_ID: agent_correlation_ids[2]}
+                )
+            ],
         )
         agent = GXAgent()
         agent.run()
