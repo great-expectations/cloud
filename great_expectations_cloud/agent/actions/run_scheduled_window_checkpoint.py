@@ -16,13 +16,13 @@ from great_expectations_cloud.agent.models import (
 class RunScheduledWindowCheckpointAction(AgentAction[RunScheduledWindowCheckpointEvent]):
     @override
     def run(self, event: RunScheduledWindowCheckpointEvent, id: str) -> ActionResult:
-        expectation_parameters_for_checkpoint_url = f"{self._base_url}/api/v1/organizations/{self._organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
+        expectation_parameters_url = f"{self._base_url}/api/v1/organizations/{self._organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
         return run_window_checkpoint(
             context=self._context,
             event=event,
             id=id,
             auth_key=self._auth_key,
-            url=expectation_parameters_for_checkpoint_url,
+            url=expectation_parameters_url,
         )
 
 
