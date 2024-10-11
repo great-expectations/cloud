@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from great_expectations.core.http import create_session
 from great_expectations.exceptions import GXCloudError
 from typing_extensions import override
@@ -14,6 +16,9 @@ from great_expectations_cloud.agent.models import (
     RunScheduledWindowCheckpointEvent,
     RunWindowCheckpointEvent,
 )
+
+if TYPE_CHECKING:
+    from great_expectations.data_context import CloudDataContext
 
 
 class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
@@ -33,7 +38,7 @@ register_event_action("1", RunWindowCheckpointEvent, RunWindowCheckpointAction)
 
 
 def run_window_checkpoint(
-    context,
+    context: CloudDataContext,
     event: RunWindowCheckpointEvent | RunScheduledWindowCheckpointEvent,
     id: str,
     auth_key: str,
