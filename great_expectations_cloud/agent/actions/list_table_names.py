@@ -28,7 +28,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
     @override
     def run(self, event: ListTableNamesEvent, id: str) -> ActionResult:
         datasource_name: str = event.datasource_name
-        datasource = self._context.get_datasource(datasource_name=datasource_name)
+        datasource = self._context.data_sources.get(name=datasource_name)
         if not isinstance(datasource, SQLDatasource):
             raise TypeError(  # noqa: TRY003 # one off error
                 f"This operation requires a SQL Data Source but got {type(datasource).__name__}."
@@ -49,12 +49,12 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
 
     def _add_or_update_table_names_list(self, datasource_id: str, table_names: list[str]) -> None:
         with create_session(access_token=self._auth_key) as session:
-            response = session.patch(
-                url=f"{self._base_url}/organizations/"
-                f"{self._organization_id}/datasources/{datasource_id}",
-                json={"table_names": table_names},
+            response = session.put(
+                url=f"{self._base_url}/api/v1/organizations/"
+                f"{self._organization_id}/table-names/{datasource_id}",
+                json={"data": {"table_names": table_names}},
             )
-        if response.status_code != 204:  # noqa: PLR2004
+        if response.status_code != 200:  # noqa: PLR2004
             raise GXCloudError(
                 message=f"ListTableNamesAction encountered an error while connecting to GX Cloud. "
                 f"Unable to update "
@@ -64,4 +64,4 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
             )
 
 
-register_event_action("0", ListTableNamesEvent, ListTableNamesAction)
+register_event_action("1", ListTableNamesEvent, ListTableNamesAction)
