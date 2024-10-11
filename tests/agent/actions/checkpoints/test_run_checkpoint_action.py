@@ -15,10 +15,12 @@ from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointA
 from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
     RunScheduledCheckpointAction,
 )
+from great_expectations_cloud.agent.actions.run_window_checkpoint import RunWindowCheckpointAction
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunCheckpointEvent,
     RunScheduledCheckpointEvent,
+    RunWindowCheckpointEvent,
 )
 
 if TYPE_CHECKING:
@@ -45,6 +47,15 @@ run_scheduled_checkpoint_action_class_and_event = (
         checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
         checkpoint_name="Checkpoint Z",
         schedule_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
+        organization_id=uuid.uuid4(),
+    ),
+)
+run_window_checkpoint_action_class_and_event = (
+    RunWindowCheckpointAction,
+    RunWindowCheckpointEvent(
+        type="run_window_checkpoint.received",
+        datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
+        checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
         organization_id=uuid.uuid4(),
     ),
 )
@@ -103,6 +114,7 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
     [
         run_checkpoint_action_class_and_event,
         run_scheduled_checkpoint_action_class_and_event,
+        run_window_checkpoint_action_class_and_event,
     ],
 )
 def test_run_checkpoint_action_raises_on_test_connection_failure(

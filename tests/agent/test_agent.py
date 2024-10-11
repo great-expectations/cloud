@@ -29,8 +29,10 @@ from great_expectations_cloud.agent.message_service.subscriber import (
     SubscriberError,
 )
 from great_expectations_cloud.agent.models import (
+    DraftDatasourceConfigEvent,
     JobCompleted,
     JobStarted,
+    RunCheckpointEvent,
     RunOnboardingDataAssistantEvent,
     RunScheduledCheckpointEvent,
     UpdateJobStatusRequest,
