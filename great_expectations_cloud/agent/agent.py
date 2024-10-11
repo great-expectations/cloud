@@ -446,8 +446,8 @@ class GXAgent:
         """Update GX Cloud on the status of a job.
 
         Args:
-            correlation_id: job identifier, also known as
-            status: pydantic model encapsulating the current status
+            correlation_id: job identifier
+            status: pydantic model encapsulating the current status.
         """
         LOGGER.info(
             "Updating status",
