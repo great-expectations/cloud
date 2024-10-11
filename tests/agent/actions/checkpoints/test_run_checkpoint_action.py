@@ -29,6 +29,11 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.unit
 
 
+@pytest.fixture
+def cloud_base_url() -> str:
+    return "http://localhost:5000"
+
+
 run_checkpoint_action_class_and_event = (
     RunCheckpointAction,
     RunCheckpointEvent(
@@ -77,13 +82,14 @@ run_window_checkpoint_action_class_and_event = (
     [
         run_checkpoint_action_class_and_event,
         run_scheduled_checkpoint_action_class_and_event,
+        run_window_checkpoint_action_class_and_event,
     ],
 )
 def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_result(
-    mock_context, action_class, event, splitter_options, batch_request
+    mock_context, action_class, event, splitter_options, batch_request, cloud_base_url
 ):
     action = action_class(
-        context=mock_context, base_url="", organization_id=uuid.uuid4(), auth_key=""
+        context=mock_context, base_url=cloud_base_url, organization_id=uuid.uuid4(), auth_key=""
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     checkpoint = mock_context.checkpoints.get.return_value
@@ -122,13 +128,14 @@ def test_run_checkpoint_action_raises_on_test_connection_failure(
     mocker: MockerFixture,
     action_class,
     event,
+    cloud_base_url,
 ):
     mock_datasource = mocker.Mock(spec=Datasource)
     mock_context.data_sources.get.return_value = mock_datasource
     mock_datasource.test_connection.side_effect = TestConnectionError()
 
     action = action_class(
-        context=mock_context, base_url="", organization_id=uuid.uuid4(), auth_key=""
+        context=mock_context, base_url=cloud_base_url, organization_id=uuid.uuid4(), auth_key=""
     )
 
     with pytest.raises(TestConnectionError):

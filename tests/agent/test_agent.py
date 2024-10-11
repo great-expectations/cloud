@@ -491,7 +491,7 @@ def test_custom_user_agent(
         )
         rsps.add(
             responses.GET,
-            f"{base_url}organizations/{org_id}/accounts/me",
+            f"{base_url}api/v1/organizations/{org_id}/accounts/me",
             json={"user_id": str(uuid.uuid4())},
             # match will fail if the User-Agent header is not set
             match=[
@@ -570,7 +570,7 @@ def test_correlation_id_header(
         (
             rsps.add(
                 responses.GET,
-                f"{base_url}organizations/{org_id}/accounts/me",
+                f"{base_url}api/v1/organizations/{org_id}/accounts/me",
                 json={"user_id": str(uuid.uuid4())},
             ),
         )
