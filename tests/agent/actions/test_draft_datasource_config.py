@@ -53,7 +53,6 @@ def build_get_draft_config_payload(
     }
 
 
-# try this
 @responses.activate
 def test_test_draft_datasource_config_success_non_sql_ds(
     mock_context, mocker: MockerFixture, set_required_env_vars: None
