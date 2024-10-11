@@ -13,6 +13,7 @@ from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunCheckpointEvent,
     RunScheduledCheckpointEvent,
+    RunScheduledWindowCheckpointEvent,
     RunWindowCheckpointEvent,
 )
 
@@ -32,7 +33,10 @@ class MissingCheckpointNameError(ValueError):
 
 def run_checkpoint(
     context: CloudDataContext,
-    event: RunCheckpointEvent | RunScheduledCheckpointEvent | RunWindowCheckpointEvent,
+    event: RunCheckpointEvent
+    | RunScheduledCheckpointEvent
+    | RunWindowCheckpointEvent
+    | RunScheduledWindowCheckpointEvent,
     id: str,
     expectation_parameters: dict[str, Any] | None = None,
 ) -> ActionResult:
