@@ -361,7 +361,7 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     """
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
     post_url = (
-        f"{gx_agent_config.gx_cloud_base_url}/organizations/"
+        f"{gx_agent_config.gx_cloud_base_url}/api/v1/organizations/"
         f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs"
     )
 
