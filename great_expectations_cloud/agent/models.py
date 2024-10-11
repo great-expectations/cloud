@@ -125,6 +125,7 @@ Event = Annotated[
         RunCheckpointEvent,
         RunScheduledCheckpointEvent,
         RunWindowCheckpointEvent,
+        RunScheduledCheckpointEvent,
         RunColumnDescriptiveMetricsEvent,
         RunMetricsListEvent,
         DraftDatasourceConfigEvent,
