@@ -16,4 +16,7 @@ from great_expectations_cloud.agent.actions.run_metric_list_action import Metric
 from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
     RunScheduledCheckpointAction,
 )
+from great_expectations_cloud.agent.actions.run_scheduled_window_checkpoint import (
+    RunScheduledWindowCheckpointAction,
+)
 from great_expectations_cloud.agent.actions.run_window_checkpoint import RunWindowCheckpointAction
