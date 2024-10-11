@@ -368,3 +368,16 @@ def is_release(ctx: Context) -> None:
         and not _get_local_version().is_prerelease
         and not _get_local_version().is_postrelease
     )
+
+
+@invoke.task(name="start-supporting-services")
+def start_supporting_services(ctx: Context) -> None:
+    """Start supporting services for development"""
+    for cmd in [
+        "docker compose up db mq -d",
+        "docker compose run db-provisioner",
+        "docker compose run db-seeder",
+        "docker compose run mq-wait",
+        "docker compose up mercury-service-api -d",
+    ]:
+        ctx.run(cmd, echo=True, pty=True)

@@ -146,6 +146,10 @@ class JobCompleted(AgentBaseExtraForbid):
 JobStatus = Union[JobStarted, JobCompleted]
 
 
+class UpdateJobStatusRequest(AgentBaseExtraForbid):
+    data: JobStatus
+
+
 def build_failed_job_completed_status(error: BaseException) -> JobCompleted:
     if isinstance(error, GXCoreError):
         status = JobCompleted(
