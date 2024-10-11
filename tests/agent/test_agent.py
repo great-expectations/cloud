@@ -35,7 +35,7 @@ from great_expectations_cloud.agent.models import (
     RunScheduledCheckpointEvent,
     UpdateJobStatusRequest,
 )
-from tests.agent.conftest import DummyEvent, FakeMessagePayload, FakeSubscriber
+from tests.agent.conftest import FakeSubscriber
 
 if TYPE_CHECKING:
     from tests.agent.conftest import DataContextConfigTD
