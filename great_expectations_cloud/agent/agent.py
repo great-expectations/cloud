@@ -456,10 +456,14 @@ class GXAgent:
         )
         with create_session(access_token=self.get_auth_key()) as session:
             data = status.json()
-            session.patch(agent_sessions_url, data=data)
+            response = session.patch(agent_sessions_url, data=data)
             LOGGER.info(
                 "Status updated",
                 extra={"job_id": job_id, "status": str(status), "organization_id": str(org_id)},
+            )
+        if not response.ok:
+            raise RuntimeError(  # noqa: TRY003 # one off error
+                "Status Update action had an error while connecting to GX Cloud."
             )
 
     def _create_scheduled_job_and_set_started(
@@ -492,7 +496,7 @@ class GXAgent:
         )
         with create_session(access_token=self.get_auth_key()) as session:
             payload = Payload(data=data)
-            session.post(agent_sessions_url, data=payload.json())
+            response = session.post(agent_sessions_url, data=payload.json())
             LOGGER.info(
                 "Created scheduled job and set started",
                 extra={
@@ -500,6 +504,11 @@ class GXAgent:
                     "event_type": str(event_context.event.type),
                     "organization_id": str(org_id),
                 },
+            )
+        if response.ok is not True:
+            raise GXAgentError(  # noqa: TRY003 # one off error
+                f"RunScheduledCheckpointAction encountered an error while connecting to GX Cloud."
+                f"Correlation ID of event: {event_context.correlation_id}"
             )
 
     def get_header_name(self) -> type[HeaderName]:

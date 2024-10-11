@@ -278,6 +278,74 @@ def test_gx_agent_run_handles_subscriber_error_on_close(
     agent.run()
 
 
+def test_gx_agent_updates_cloud_on_job_status_error(
+    subscriber, create_session, get_context, client, gx_agent_config, event_handler
+):
+    correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
+    url = (
+        f"{gx_agent_config.gx_cloud_base_url}/organizations/"
+        f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs/{correlation_id}"
+    )
+    job_started_data = JobStarted().json()
+    job_completed = JobCompleted(success=True, created_resources=[], processed_by="agent")
+    job_completed_data = job_completed.json()
+
+    async def redeliver_message():
+        return None
+
+    event = RunOnboardingDataAssistantEvent(
+        datasource_name="test-ds", data_asset_name="test-da", organization_id=uuid.uuid4()
+    )
+
+    end_test = False
+
+    def signal_subtask_finished():
+        nonlocal end_test
+        end_test = True
+
+    event_context = EventContext(
+        event=event,
+        correlation_id=correlation_id,
+        processed_successfully=signal_subtask_finished,
+        processed_with_failures=signal_subtask_finished,
+        redeliver_message=redeliver_message,
+    )
+    event_handler.return_value.handle_event.return_value = ActionResult(
+        id=correlation_id, type=event.type, created_resources=[]
+    )
+
+    def consume(queue: str, on_message: Callable[[EventContext], None]):
+        """util to allow testing agent behavior without a subscriber.
+
+        Replicates behavior of Subscriber.consume by invoking the on_message
+        parameter with an event_context.
+        """
+        nonlocal event_context
+        on_message(event_context)
+
+        # we need the main thread to remain alive until event handler has finished
+        nonlocal end_test
+        while end_test is False:
+            sleep(0)  # defer control
+
+    subscriber().consume = consume
+
+    agent = GXAgent()
+    create_session().__enter__().patch.return_value.ok = False
+    agent.run()
+
+    # sessions created with context managers now, so we need to
+    # test the runtime calls rather than the return value calls.
+    # the calls also appear to store in any order, hence the any_order=True
+    create_session().__enter__().patch.assert_has_calls(
+        any_order=True,
+        calls=[
+            call(url, data=job_started_data),
+            call(url, data=job_completed_data),
+        ],
+    )
+
+
 def test_gx_agent_updates_cloud_on_job_status(
     subscriber, create_session, get_context, client, gx_agent_config, event_handler
 ):
@@ -343,6 +411,83 @@ def test_gx_agent_updates_cloud_on_job_status(
             call(url, data=job_completed_data),
         ],
     )
+
+
+def test_gx_agent_handles_error_from_create_scheduled_job(
+    subscriber,
+    create_session,
+    get_context,
+    client,
+    gx_agent_config,
+    event_handler,
+):
+    """What does this test and why?
+
+    Scheduled jobs are submitted to mercury, POST request to the agent-jobs endpoint.
+    This test ensures that the agent handles errors from the POST request.
+    """
+    correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
+    post_url = (
+        f"{gx_agent_config.gx_cloud_base_url}/organizations/"
+        f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs"
+    )
+
+    checkpoint_id = uuid.uuid4()
+    schedule_id = uuid.uuid4()
+    event = RunScheduledCheckpointEvent(
+        checkpoint_id=checkpoint_id,
+        datasource_names_to_asset_names={},
+        splitter_options=None,
+        schedule_id=schedule_id,
+        organization_id=uuid.uuid4(),
+    )
+    payload = Payload(
+        data={
+            "correlation_id": correlation_id,
+            "event": event.dict(),
+        }
+    )
+    data = payload.json()
+
+    async def redeliver_message():
+        return None
+
+    end_test = False
+
+    def signal_subtask_finished():
+        nonlocal end_test
+        end_test = True
+
+    event_context = EventContext(
+        event=event,
+        correlation_id=correlation_id,
+        processed_successfully=signal_subtask_finished,
+        processed_with_failures=signal_subtask_finished,
+        redeliver_message=redeliver_message,
+    )
+    event_handler.return_value.handle_event.return_value = ActionResult(
+        id=correlation_id, type=event.type, created_resources=[]
+    )
+
+    def consume(queue: str, on_message: Callable[[EventContext], None]):
+        """util to allow testing agent behavior without a subscriber.
+
+        Replicates behavior of Subscriber.consume by invoking the on_message
+        parameter with an event_context.
+        """
+        nonlocal event_context
+        on_message(event_context)
+
+        # we need the main thread to remain alive until event handler has finished
+        nonlocal end_test
+        while end_test is False:
+            sleep(0)  # defer control
+
+    subscriber().consume = consume
+    agent = GXAgent()
+    create_session().__enter__().post.return_value.ok = False
+    agent.run()
+    create_session().__enter__().post.assert_any_call(post_url, data=data)
 
 
 def test_gx_agent_sends_request_to_create_scheduled_job(
@@ -420,7 +565,7 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
 
     # sessions created with context managers now, so we need to
     # test the runtime calls rather than the return value calls
-    return create_session().__enter__().post.assert_any_call(post_url, data=data)
+    create_session().__enter__().post.assert_any_call(post_url, data=data)
 
 
 def test_invalid_env_variables_missing_token(set_required_env_vars, monkeypatch):
