@@ -546,8 +546,7 @@ class GXAgent:
             extra={
                 "user_agent": header_name.USER_AGENT,
                 "agent_version": agent_version,
-                # why is there both the job_id and correlation_id here?
-                "job_id": header_name.AGENT_JOB_ID,
+                "header_name": header_name.AGENT_JOB_ID,
                 "correlation_id": correlation_id,
             },
         )
