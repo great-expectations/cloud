@@ -7,6 +7,7 @@ from uuid import UUID
 
 import pytest
 import responses
+from great_expectations.exceptions import GXCloudError
 
 from great_expectations_cloud.agent.actions.run_scheduled_window_checkpoint import (
     RunScheduledWindowCheckpointAction,
@@ -78,7 +79,6 @@ def test_run_scheduled_window_checkpoint(
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
         f"/checkpoints/{checkpoint_id}/expectation-parameters"
     )
-    # 'https://test-base-url/api/v1/organizations/81f4e105-e37d-4168-85a0-2526943f9956/checkpoints/120ba4c5-2004-4222-9d34-c59e6059a6f7/expectation-parameters'
     expectation_parameters = {"param_name_min": 4.0, "param_name_max": 6.0}
     responses.get(
         url=expected_url,
@@ -92,3 +92,39 @@ def test_run_scheduled_window_checkpoint(
     mock_run_checkpoint.assert_called_with(
         ANY, event, ANY, expectation_parameters=expectation_parameters
     )
+
+
+@pytest.mark.parametrize(
+    "response_kwargs",
+    [
+        pytest.param({"status": 500}, id="non-200"),
+        pytest.param({"json": {"malformed?": "yes"}}, id="malformed JSON"),
+    ],
+)
+@responses.activate
+def test_run_scheduled_window_checkpoint_failure(
+    mock_context, mocker: MockerFixture, set_required_env_vars: None, org_id, response_kwargs
+):
+    org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    env_vars = GxAgentEnvVars()
+    action = RunScheduledWindowCheckpointAction(
+        context=mock_context,
+        base_url="https://test-base-url",
+        auth_key="",
+        organization_id=org_id,
+    )
+
+    checkpoint_id = uuid.uuid4()
+    event = RunScheduledWindowCheckpointEvent(
+        datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
+        organization_id=UUID(env_vars.gx_cloud_organization_id),
+        checkpoint_id=checkpoint_id,
+        schedule_id=uuid.uuid4(),
+    )
+    expected_url: str = (
+        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/checkpoints/{checkpoint_id}/expectation-parameters"
+    )
+    responses.get(url=expected_url, **response_kwargs)
+    with pytest.raises(GXCloudError):
+        _ = action.run(event=event, id=str(uuid.uuid4()))
