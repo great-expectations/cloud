@@ -17,6 +17,7 @@ import orjson
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
+from great_expectations.exceptions import GXCloudError
 from pika.adapters.utils.connection_workflow import (
     AMQPConnectorException,
 )
@@ -461,9 +462,10 @@ class GXAgent:
                 "Status updated",
                 extra={"job_id": job_id, "status": str(status), "organization_id": str(org_id)},
             )
-        if not response.ok:
-            raise RuntimeError(  # noqa: TRY003 # one off error
-                "Status Update action had an error while connecting to GX Cloud."
+        if not response.status_code != 204:  # noqa: PLR2004
+            raise GXCloudError(
+                message="Status Update action had an error while connecting to GX Cloud.",
+                response=response,
             )
 
     def _create_scheduled_job_and_set_started(
@@ -505,10 +507,11 @@ class GXAgent:
                     "organization_id": str(org_id),
                 },
             )
-        if response.ok is not True:
-            raise GXAgentError(  # noqa: TRY003 # one off error
-                f"RunScheduledCheckpointAction encountered an error while connecting to GX Cloud."
-                f"Correlation ID of event: {event_context.correlation_id}"
+        if not response.status_code != 201:  # noqa: PLR2004
+            raise GXCloudError(
+                message=f"RunScheduledCheckpointAction encountered an error while connecting to GX Cloud."
+                f"Correlation ID of event: {event_context.correlation_id}",
+                response=response,
             )
 
     def get_header_name(self) -> type[HeaderName]:
