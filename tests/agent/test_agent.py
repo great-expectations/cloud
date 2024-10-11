@@ -332,7 +332,7 @@ def test_gx_agent_updates_cloud_on_job_status_error(
     subscriber().consume = consume
 
     agent = GXAgent()
-    create_session().__enter__().patch.return_value.ok = False
+    create_session().__enter__().patch.return_value.status_code = 404
     agent.run()
 
     # sessions created with context managers now, so we need to
@@ -488,7 +488,7 @@ def test_gx_agent_handles_error_from_create_scheduled_job(
 
     subscriber().consume = consume
     agent = GXAgent()
-    create_session().__enter__().post.return_value.ok = False
+    create_session().__enter__().post.return_value.status_code = 404
     agent.run()
     create_session().__enter__().post.assert_any_call(post_url, data=data)
 
