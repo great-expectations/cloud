@@ -279,6 +279,7 @@ def test_gx_agent_run_handles_subscriber_error_on_close(
     agent.run()
 
 
+@pytest.mark.unit
 def test_gx_agent_updates_cloud_on_job_status_error(
     subscriber, create_session, get_context, client, gx_agent_config, event_handler
 ):
@@ -416,6 +417,7 @@ def test_gx_agent_updates_cloud_on_job_status(
     )
 
 
+@pytest.mark.unit
 def test_gx_agent_handles_error_from_create_scheduled_job(
     subscriber,
     create_session,
