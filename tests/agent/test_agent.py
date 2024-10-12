@@ -449,7 +449,7 @@ def test_gx_agent_handles_error_from_create_scheduled_job(
         "correlation_id": correlation_id,
     }
     payload = Payload(data=data)
-    data = payload.json()
+    payload_str = payload.json()
 
     async def redeliver_message():
         return None
@@ -489,7 +489,7 @@ def test_gx_agent_handles_error_from_create_scheduled_job(
     agent = GXAgent()
     create_session().__enter__().post.return_value.status_code = 404
     agent.run()
-    create_session().__enter__().post.assert_any_call(post_url, data=data)
+    create_session().__enter__().post.assert_any_call(post_url, data=payload_str)
 
 
 def test_gx_agent_sends_request_to_create_scheduled_job(
