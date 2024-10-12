@@ -288,6 +288,10 @@ def test_gx_agent_updates_cloud_on_job_status_error(
         f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs/{correlation_id}"
     )
     job_started_data = UpdateJobStatusRequest(data=JobStarted()).json()
+    job_completed = UpdateJobStatusRequest(
+        data=JobCompleted(success=True, created_resources=[], processed_by="agent")
+    )
+    job_completed_data = job_completed.json()
 
     async def redeliver_message():
         return None
@@ -333,11 +337,14 @@ def test_gx_agent_updates_cloud_on_job_status_error(
     create_session().__enter__().patch.return_value.status_code = 404
     agent.run()
 
-    # sessions created with context managers now, so we need to
-    # test the runtime calls rather than the return value calls.
     # the calls also appear to store in any order, hence the any_order=True
-    print(f"job_started_data: {job_started_data}")
-    create_session().__enter__().patch.assert_any_call(url, data=job_started_data)
+    create_session().__enter__().patch.assert_has_calls(
+        any_order=True,
+        calls=[
+            call(url, data=job_started_data),
+            call(url, data=job_completed_data),
+        ],
+    )
 
 
 def test_gx_agent_updates_cloud_on_job_status(
