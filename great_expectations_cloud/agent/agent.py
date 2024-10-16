@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
 from uuid import UUID
 
 import orjson
+import requests
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
@@ -66,7 +67,6 @@ from great_expectations_cloud.agent.models import (
 )
 
 if TYPE_CHECKING:
-    import requests
     from great_expectations.data_context import CloudDataContext
     from typing_extensions import Self
 
