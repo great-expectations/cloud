@@ -86,4 +86,5 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
                 "One or more metrics failed to compute."
             )
 
+
 register_event_action("1", RunMetricsListEvent, MetricListAction)
