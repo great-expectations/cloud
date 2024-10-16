@@ -416,7 +416,31 @@ def test_gx_agent_updates_cloud_on_job_status(
     )
 
 
+@responses.activate
 def test_gx_agent_handles_error_from_create_scheduled_job(
+    subscriber,
+    create_session,
+    get_context,
+    client,
+    gx_agent_config,
+    event_handler,
+):
+    # correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
+    post_url = (
+        f"{gx_agent_config.gx_cloud_base_url}/api/v1/organizations/"
+        f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs"
+    )
+    responses.post(
+        post_url,
+        json={"type": "post"},
+        status=404,
+    )
+    agent = GXAgent()
+    # create_session().__enter__().post.return_value.status_code = 404
+    agent.run()
+
+
+def test_gx_agent_handles_error_from_create_scheduled_job_old(
     subscriber,
     create_session,
     get_context,
