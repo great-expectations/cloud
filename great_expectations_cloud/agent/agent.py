@@ -474,7 +474,7 @@ class GXAgent:
                     "organization_id": str(org_id),
                 },
             )
-        if not response.status_code != 204:  # noqa: PLR2004
+        if not response.status_code != requests.codes.no_content:
             raise GXCloudError(
                 message="Status Update action had an error while connecting to GX Cloud.",
                 response=response,
