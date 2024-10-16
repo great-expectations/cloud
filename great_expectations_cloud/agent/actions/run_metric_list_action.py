@@ -54,7 +54,7 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
 
     @override
     def run(self, event: RunMetricsListEvent, id: str) -> ActionResult:
-        datasource = self._context.get_datasource(event.datasource_name)
+        datasource = self._context.data_sources.get(event.datasource_name)
         data_asset = datasource.get_asset(event.data_asset_name)
         data_asset.test_connection()  # raises `TestConnectionError` on failure
 
@@ -87,5 +87,4 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
             )
 
 
-register_event_action("0", RunMetricsListEvent, MetricListAction)
 register_event_action("1", RunMetricsListEvent, MetricListAction)
