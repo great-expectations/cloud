@@ -173,7 +173,7 @@ def test_run_column_descriptive_metrics_raises_on_test_connection_to_data_asset_
     mock_batch_inspector = mocker.Mock(spec=BatchInspector)
 
     mock_datasource = mocker.Mock()
-    mock_context.get_datasource.return_value = mock_datasource
+    mock_context.data_sources.get.return_value = mock_datasource
     mock_data_asset = mocker.Mock()
     mock_datasource.get_asset.return_value = mock_data_asset
     mock_data_asset.test_connection.side_effect = TestConnectionError()
