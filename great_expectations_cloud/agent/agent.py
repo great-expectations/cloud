@@ -474,11 +474,7 @@ class GXAgent:
                     "organization_id": str(org_id),
                 },
             )
-        if not response.status_code != requests.codes.no_content:
-            raise GXCloudError(
-                message="Status Update action had an error while connecting to GX Cloud.",
-                response=response,
-            )
+            self._raise_gx_cloud_err_on_http_error(response)
 
     def _create_scheduled_job_and_set_started(
         self, event_context: EventContext, org_id: UUID
@@ -519,12 +515,7 @@ class GXAgent:
                     "organization_id": str(org_id),
                 },
             )
-        if not response.status_code != 201:  # noqa: PLR2004
-            raise GXCloudError(
-                message=f"RunScheduledCheckpointAction encountered an error while connecting to GX Cloud."
-                f"Correlation ID of event: {event_context.correlation_id}",
-                response=response,
-            )
+            self._raise_gx_cloud_err_on_http_error(response)
 
     def get_header_name(self) -> type[HeaderName]:
         return HeaderName
@@ -593,3 +584,15 @@ class GXAgent:
         # TODO: this is relying on a private implementation detail
         # use a public API once it is available
         http._update_headers = _update_headers_agent_patch
+
+    def _raise_gx_cloud_err_on_http_error(self, response: requests.Response) -> None:
+        """
+        Raise GXCloudError if the response is not successful.
+        """
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as http_err:
+            raise GXCloudError(
+                message="Status Update action had an error while connecting to GX Cloud.",
+                response=response,
+            ) from http_err
