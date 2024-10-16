@@ -12,11 +12,11 @@ from great_expectations.data_context.types.resource_identifiers import Validatio
 from great_expectations.datasource.fluent import Datasource
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
+from great_expectations_cloud.agent.actions import RunWindowCheckpointAction
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
 from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
     RunScheduledCheckpointAction,
 )
-from great_expectations_cloud.agent.actions.run_window_checkpoint import RunWindowCheckpointAction
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunCheckpointEvent,
