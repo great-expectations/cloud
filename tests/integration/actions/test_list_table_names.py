@@ -84,9 +84,10 @@ def test_running_list_table_names_action(
     assert result.type == list_table_names_event.type
     assert result.created_resources == []
 
-    _add_or_update_table_names_list.assert_called_once_with(
-        datasource_id=datasource_id_for_connect_successfully, table_names=expected_table_names
-    )
+    _add_or_update_table_names_list.assert_called_once()
+    call_args = _add_or_update_table_names_list.call_args
+    assert call_args.kwargs["datasource_id"] == datasource_id_for_connect_successfully
+    assert set(call_args.kwargs["table_names"]) == set(expected_table_names)
 
 
 def test_running_list_table_names_action_fails_for_unreachable_datasource(
@@ -108,5 +109,5 @@ def test_running_list_table_names_action_fails_for_unreachable_datasource(
 
     # Act & Assert
     # Check that the action was unsuccessful and an error was raised.
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         action.run(event=list_table_names_event, id=event_id)

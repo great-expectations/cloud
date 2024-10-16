@@ -60,6 +60,7 @@ from great_expectations_cloud.agent.models import (
     JobStatus,
     ScheduledEventBase,
     UnknownEvent,
+    UpdateJobStatusRequest,
     build_failed_job_completed_status,
 )
 
@@ -86,7 +87,7 @@ class GXAgentConfig(AgentBaseExtraForbid):
     queue: str
     connection_string: AmqpDsn
     # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL  # type: ignore[assignment] # pydantic will coerce
+    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
 
@@ -282,7 +283,7 @@ class GXAgent:
             self._create_scheduled_job_and_set_started(event_context, org_id)
         else:
             self._update_status(
-                job_id=event_context.correlation_id, status=JobStarted(), org_id=org_id
+                correlation_id=event_context.correlation_id, status=JobStarted(), org_id=org_id
             )
         print(f"Starting job {event_context.event.type} ({event_context.correlation_id}) ")
         LOGGER.info(
@@ -366,7 +367,9 @@ class GXAgent:
                 },
             )
 
-        self._update_status(job_id=event_context.correlation_id, status=status, org_id=org_id)
+        self._update_status(
+            correlation_id=event_context.correlation_id, status=status, org_id=org_id
+        )
 
         # ack message and cleanup resources
         event_context.processed_successfully()
@@ -410,7 +413,7 @@ class GXAgent:
 
         # obtain the broker url and queue name from Cloud
         agent_sessions_url = (
-            f"{env_vars.gx_cloud_base_url}/organizations/"
+            f"{env_vars.gx_cloud_base_url}/api/v1/organizations/"
             f"{env_vars.gx_cloud_organization_id}/agent-sessions"
         )
 
@@ -440,26 +443,35 @@ class GXAgent:
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
 
-    def _update_status(self, job_id: str, status: JobStatus, org_id: UUID) -> None:
+    def _update_status(self, correlation_id: str, status: JobStatus, org_id: UUID) -> None:
         """Update GX Cloud on the status of a job.
 
         Args:
-            job_id: job identifier, also known as correlation_id
-            status: pydantic model encapsulating the current status
+            correlation_id: job identifier
+            status: pydantic model encapsulating the current status.
         """
         LOGGER.info(
             "Updating status",
-            extra={"job_id": job_id, "status": str(status), "organization_id": str(org_id)},
+            extra={
+                "correlation_id": correlation_id,
+                "status": str(status),
+                "organization_id": str(org_id),
+            },
         )
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{org_id}" + f"/agent-jobs/{job_id}"
+            f"{self._config.gx_cloud_base_url}/api/v1/organizations/{org_id}"
+            + f"/agent-jobs/{correlation_id}"
         )
         with create_session(access_token=self.get_auth_key()) as session:
-            data = status.json()
+            data = UpdateJobStatusRequest(data=status).json()
             session.patch(agent_sessions_url, data=data)
             LOGGER.info(
                 "Status updated",
-                extra={"job_id": job_id, "status": str(status), "organization_id": str(org_id)},
+                extra={
+                    "correlation_id": correlation_id,
+                    "status": str(status),
+                    "organization_id": str(org_id),
+                },
             )
 
     def _create_scheduled_job_and_set_started(
@@ -475,23 +487,31 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         data = {
+            **event_context.event.dict(),
             "correlation_id": event_context.correlation_id,
-            "event": event_context.event.dict(),
         }
         LOGGER.info(
             "Creating scheduled job and setting started",
-            extra={**data, "organization_id": str(org_id)},
+            extra={
+                "correlation_id": str(event_context.correlation_id),
+                "event_type": str(event_context.event.type),
+                "organization_id": str(org_id),
+            },
         )
 
         agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/organizations/{org_id}" + "/agent-jobs"
+            f"{self._config.gx_cloud_base_url}/api/v1/organizations/{org_id}" + "/agent-jobs"
         )
         with create_session(access_token=self.get_auth_key()) as session:
             payload = Payload(data=data)
             session.post(agent_sessions_url, data=payload.json())
             LOGGER.info(
                 "Created scheduled job and set started",
-                extra={**data, "organization_id": str(org_id)},
+                extra={
+                    "correlation_id": str(event_context.correlation_id),
+                    "event_type": str(event_context.event.type),
+                    "organization_id": str(org_id),
+                },
             )
 
     def get_header_name(self) -> type[HeaderName]:
@@ -514,7 +534,7 @@ class GXAgent:
         Note: the Agent-Job-Id header value will be set for all GX Cloud request until this method is
         called again.
         """
-        from great_expectations import __version__  # type: ignore[attr-defined] # TODO: fix this
+        from great_expectations import __version__
         from great_expectations.core import http
         from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend
 
@@ -527,7 +547,7 @@ class GXAgent:
             extra={
                 "user_agent": header_name.USER_AGENT,
                 "agent_version": agent_version,
-                "job_id": header_name.AGENT_JOB_ID,
+                "header_name": header_name.AGENT_JOB_ID,
                 "correlation_id": correlation_id,
             },
         )
@@ -554,6 +574,8 @@ class GXAgent:
             if correlation_id:
                 headers[header_name.AGENT_JOB_ID] = correlation_id
             session.headers.update(headers)
+            print("HERERE")
+            print(session.headers)
             return session
 
         # TODO: this is relying on a private implementation detail

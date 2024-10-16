@@ -48,7 +48,7 @@ def build_get_draft_config_payload(
         "data": {
             "type": "draft_config",
             "id": str(id),
-            "attributes": {"draft_config": config},
+            "config": config,
         }
     }
 
@@ -71,11 +71,11 @@ def test_test_draft_datasource_config_success_non_sql_ds(
     _get_table_names_spy = mocker.spy(action, "_get_table_names")
     _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
 
-    job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
+    correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
     expected_url: str = (
-        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/datasources/drafts/{config_id}"
+        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/draft-datasources/{config_id}"
     )
 
     responses.get(
@@ -83,9 +83,9 @@ def test_test_draft_datasource_config_success_non_sql_ds(
         json=build_get_draft_config_payload(config=datasource_config, id=config_id),
     )
 
-    action_result = action.run(event=event, id=str(job_id))
+    action_result = action.run(event=event, id=str(correlation_id))
 
-    assert action_result.id == str(job_id)
+    assert action_result.id == str(correlation_id)
     assert action_result.type == event.type
     assert action_result.created_resources == []
 
@@ -107,7 +107,7 @@ def test_test_draft_datasource_config_success_sql_ds(
     datasource_cls = mocker.Mock(
         spec=SnowflakeDatasource, return_value=mocker.Mock(spec=SnowflakeDatasource)
     )
-    mock_context.sources.type_lookup = {ds_type: datasource_cls}
+    mock_context.data_sources.type_lookup = {ds_type: datasource_cls}
 
     datasource_config = {
         "name": "test_snowflake_ds",
@@ -140,27 +140,32 @@ def test_test_draft_datasource_config_success_sql_ds(
     _get_table_names_spy = mocker.spy(action, "_get_table_names")
     _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
 
-    job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
+    correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
-    expected_url: str = (
-        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/datasources/drafts/{config_id}"
+    expected_url_get: str = (
+        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/draft-datasources/{config_id}"
+    )
+
+    expected_url_put: str = (
+        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/draft-table-names/{config_id}"
     )
 
     responses.get(
-        url=expected_url,
+        url=expected_url_get,
         json=build_get_draft_config_payload(config=datasource_config, id=config_id),
     )
     # match will fail if patch not called with correct json data
-    responses.patch(
-        url=expected_url,
+    responses.put(
+        url=expected_url_put,
         status=204,
-        match=[responses.matchers.json_params_matcher({"table_names": table_names})],
+        match=[responses.matchers.json_params_matcher({"data": {"table_names": table_names}})],
     )
 
-    action_result = action.run(event=event, id=str(job_id))
+    action_result = action.run(event=event, id=str(correlation_id))
 
-    assert action_result.id == str(job_id)
+    assert action_result.id == str(correlation_id)
     assert action_result.type == event.type
     assert action_result.created_resources == []
 
@@ -181,7 +186,7 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
     datasource_cls = mocker.Mock(
         spec=SnowflakeDatasource, return_value=mocker.Mock(spec=SnowflakeDatasource)
     )
-    mock_context.sources.type_lookup = {ds_type: datasource_cls}
+    mock_context.data_sources.type_lookup = {ds_type: datasource_cls}
 
     datasource_config = {
         "name": "test_snowflake_ds",
@@ -210,26 +215,31 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
         organization_id=org_id,
     )
 
-    job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
+    correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
-    expected_url: str = (
-        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/datasources/drafts/{config_id}"
+
+    expected_url_get: str = (
+        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/draft-datasources/{config_id}"
     )
 
+    expected_url_put: str = (
+        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/draft-table-names/{config_id}"
+    )
     responses.get(
-        url=expected_url,
+        url=expected_url_get,
         json=build_get_draft_config_payload(config=datasource_config, id=config_id),
     )
     # match will fail if patch not called with correct json data
-    responses.patch(
-        url=expected_url,
+    responses.put(
+        url=expected_url_put,
         status=404,
-        match=[responses.matchers.json_params_matcher({"table_names": table_names})],
+        match=[responses.matchers.json_params_matcher({"data": {"table_names": table_names}})],
     )
 
     with pytest.raises(RuntimeError, match="Unable to update table_names for Draft Config with ID"):
-        action.run(event=event, id=str(job_id))
+        action.run(event=event, id=str(correlation_id))
 
 
 @responses.activate
@@ -249,14 +259,14 @@ def test_test_draft_datasource_config_failure(
         auth_key="",
         organization_id=org_id,
     )
-    job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
+    correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
     expected_url = (
-        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/datasources/drafts/{config_id}"
+        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/draft-datasources/{config_id}"
     )
     datasource_cls = mocker.Mock(autospec=SQLDatasource)
-    mock_context.sources.type_lookup = {ds_type: datasource_cls}
+    mock_context.data_sources.type_lookup = {ds_type: datasource_cls}
     datasource_cls.return_value.test_connection.side_effect = TestConnectionError
 
     responses.get(
@@ -265,7 +275,7 @@ def test_test_draft_datasource_config_failure(
     )
 
     with pytest.raises(GXCoreError):
-        action.run(event=event, id=str(job_id))
+        action.run(event=event, id=str(correlation_id))
 
 
 @responses.activate
@@ -282,18 +292,18 @@ def test_test_draft_datasource_config_raises_for_non_fds(mock_context, set_requi
         auth_key="",
         organization_id=org_id,
     )
-    job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
+    correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
     expected_url = (
-        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/datasources/drafts/{config_id}"
+        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/draft-datasources/{config_id}"
     )
     responses.get(
         url=expected_url,
         json=build_get_draft_config_payload(config=datasource_config, id=config_id),
     )
     with pytest.raises(TypeError, match="fluent-style Data Source"):
-        action.run(event=event, id=str(job_id))
+        action.run(event=event, id=str(correlation_id))
 
 
 @pytest.mark.parametrize(
@@ -349,14 +359,14 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
         auth_key="",
         organization_id=org_id,
     )
-    job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
+    correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
     expected_url = (
-        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/datasources/drafts/{config_id}"
+        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/draft-datasources/{config_id}"
     )
 
-    mock_context.sources.type_lookup = {}
+    mock_context.data_sources.type_lookup = {}
 
     responses.get(
         url=expected_url,
@@ -364,7 +374,7 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
     )
 
     with pytest.raises(TypeError, match="unknown Data Source type"):
-        action.run(event=event, id=str(job_id))
+        action.run(event=event, id=str(correlation_id))
 
 
 @responses.activate
@@ -383,11 +393,11 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
         auth_key="",
         organization_id=org_id,
     )
-    job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
+    correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
     expected_url = (
-        f"{env_vars.gx_cloud_base_url}/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/datasources/drafts/{config_id}"
+        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
+        f"/draft-datasources/{config_id}"
     )
 
     responses.get(
@@ -397,4 +407,4 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
     )
 
     with pytest.raises(RuntimeError, match="error while connecting to GX Cloud"):
-        action.run(event=event, id=str(job_id))
+        action.run(event=event, id=str(correlation_id))
