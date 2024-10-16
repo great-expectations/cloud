@@ -30,9 +30,6 @@ if TYPE_CHECKING:
 
 
 class MetricListAction(AgentAction[RunMetricsListEvent]):
-    # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
-    #  This action is registered for v0, see register_event_action()
-
     def __init__(  # noqa: PLR0913  # Refactor opportunity
         self,
         context: CloudDataContext,
