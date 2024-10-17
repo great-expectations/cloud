@@ -474,7 +474,9 @@ class GXAgent:
                     "organization_id": str(org_id),
                 },
             )
-            self._raise_gx_cloud_err_on_http_error(response)
+            GXAgent._raise_gx_cloud_err_on_http_error(
+                response, message="Status Update action had an error while connecting to GX Cloud."
+            )
 
     def _create_scheduled_job_and_set_started(
         self, event_context: EventContext, org_id: UUID
@@ -515,7 +517,10 @@ class GXAgent:
                     "organization_id": str(org_id),
                 },
             )
-            self._raise_gx_cloud_err_on_http_error(response)
+            GXAgent._raise_gx_cloud_err_on_http_error(
+                response,
+                message="Create schedule job action had an error while connecting to GX Cloud.",
+            )
 
     def get_header_name(self) -> type[HeaderName]:
         return HeaderName
@@ -577,8 +582,6 @@ class GXAgent:
             if correlation_id:
                 headers[header_name.AGENT_JOB_ID] = correlation_id
             session.headers.update(headers)
-            print("HERERE")
-            print(session.headers)
             return session
 
         # TODO: this is relying on a private implementation detail
@@ -586,7 +589,7 @@ class GXAgent:
         http._update_headers = _update_headers_agent_patch
 
     @staticmethod
-    def _raise_gx_cloud_err_on_http_error(response: requests.Response) -> None:
+    def _raise_gx_cloud_err_on_http_error(response: requests.Response, message: str) -> None:
         """
         Raise GXCloudError if the response is not successful.
         """
@@ -594,6 +597,6 @@ class GXAgent:
             response.raise_for_status()
         except requests.HTTPError as http_err:
             raise GXCloudError(
-                message="Status Update action had an error while connecting to GX Cloud.",
+                message=message,
                 response=response,
             ) from http_err
