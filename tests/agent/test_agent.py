@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Callable, Literal
 from unittest.mock import call
 
 import pytest
+import requests
 import responses
 from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
@@ -423,7 +424,7 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
 
     # sessions created with context managers now, so we need to
     # test the runtime calls rather than the return value calls
-    return create_session().__enter__().post.assert_any_call(post_url, data=data)
+    create_session().__enter__().post.assert_any_call(post_url, data=data)
 
 
 def test_invalid_env_variables_missing_token(set_required_env_vars, monkeypatch):
@@ -605,3 +606,19 @@ def test_correlation_id_header(
         )
         agent = GXAgent()
         agent.run()
+
+
+def test_raise_gx_cloud_err_on_http_error_error_response():
+    test_response = requests.Response()
+    # 404 - Not Found
+    test_response.status_code = 404
+    with pytest.raises(gx_exception.GXCloudError):
+        GXAgent._raise_gx_cloud_err_on_http_error(test_response, "Test error message")
+
+
+def test_raise_gx_cloud_err_on_http_error_success_response():
+    test_response = requests.Response()
+    # 200 - OK
+    test_response.status_code = 200
+    # no Exception raised
+    GXAgent._raise_gx_cloud_err_on_http_error(test_response, "Test error message")
