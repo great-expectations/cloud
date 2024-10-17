@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Callable, Literal
 from unittest.mock import call
 
 import pytest
+import requests
 import responses
 from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import AuthenticationError, ProbableAuthenticationError
@@ -416,106 +417,6 @@ def test_gx_agent_updates_cloud_on_job_status(
     )
 
 
-@responses.activate
-def test_gx_agent_handles_error_from_create_scheduled_job(
-    subscriber,
-    create_session,
-    get_context,
-    client,
-    gx_agent_config,
-    event_handler,
-):
-    # correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
-    post_url = (
-        f"{gx_agent_config.gx_cloud_base_url}/api/v1/organizations/"
-        f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs"
-    )
-    responses.post(
-        post_url,
-        json={"type": "post"},
-        status=404,
-    )
-    agent = GXAgent()
-    # create_session().__enter__().post.return_value.status_code = 404
-    agent.run()
-
-
-def test_gx_agent_handles_error_from_create_scheduled_job_old(
-    subscriber,
-    create_session,
-    get_context,
-    client,
-    gx_agent_config,
-    event_handler,
-):
-    """What does this test and why?
-
-    Scheduled jobs are submitted to mercury, POST request to the agent-jobs endpoint.
-    This test ensures that the agent handles errors from the POST request.
-    """
-    correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
-    post_url = (
-        f"{gx_agent_config.gx_cloud_base_url}/api/v1/organizations/"
-        f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs"
-    )
-
-    checkpoint_id = uuid.uuid4()
-    schedule_id = uuid.uuid4()
-    event = RunScheduledCheckpointEvent(
-        checkpoint_id=checkpoint_id,
-        datasource_names_to_asset_names={},
-        splitter_options=None,
-        schedule_id=schedule_id,
-        organization_id=uuid.uuid4(),
-    )
-    data = {
-        **event.dict(),
-        "correlation_id": correlation_id,
-    }
-    payload = Payload(data=data)
-    payload_str = payload.json()
-
-    async def redeliver_message():
-        return None
-
-    end_test = False
-
-    def signal_subtask_finished():
-        nonlocal end_test
-        end_test = True
-
-    event_context = EventContext(
-        event=event,
-        correlation_id=correlation_id,
-        processed_successfully=signal_subtask_finished,
-        processed_with_failures=signal_subtask_finished,
-        redeliver_message=redeliver_message,
-    )
-    event_handler.return_value.handle_event.return_value = ActionResult(
-        id=correlation_id, type=event.type, created_resources=[]
-    )
-
-    def consume(queue: str, on_message: Callable[[EventContext], None]):
-        """util to allow testing agent behavior without a subscriber.
-
-        Replicates behavior of Subscriber.consume by invoking the on_message
-        parameter with an event_context.
-        """
-        nonlocal event_context
-        on_message(event_context)
-
-        # we need the main thread to remain alive until event handler has finished
-        nonlocal end_test
-        while end_test is False:
-            sleep(0)  # defer control
-
-    subscriber().consume = consume
-    agent = GXAgent()
-    create_session().__enter__().post.return_value.status_code = 404
-    agent.run()
-    create_session().__enter__().post.assert_any_call(post_url, data=payload_str)
-
-
 def test_gx_agent_sends_request_to_create_scheduled_job(
     subscriber, create_session, get_context, client, gx_agent_config, event_handler
 ):
@@ -773,3 +674,21 @@ def test_correlation_id_header(
         )
         agent = GXAgent()
         agent.run()
+
+
+def test_raise_gx_cloud_err_on_http_error_error_response():
+    agent = GXAgent()
+    test_response = requests.Response()
+    test_response.status_code = 404
+    test_response.json = {"error": "test error"}
+    with pytest.raises(gx_exception.GXCloudError):
+        agent._raise_gx_cloud_err_on_http_error(test_response)
+
+
+def test_raise_gx_cloud_err_on_http_error_success_response():
+    agent = GXAgent()
+    test_response = requests.Response()
+    test_response.status_code = 200
+    test_response.json = {"i": "am_happy"}
+    # no Exception raised
+    agent._raise_gx_cloud_err_on_http_error(test_response)
