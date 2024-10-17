@@ -611,8 +611,8 @@ def test_correlation_id_header(
 def test_raise_gx_cloud_err_on_http_error_error_response():
     agent = GXAgent()
     test_response = requests.Response()
+    # 404 - Not Found
     test_response.status_code = 404
-    test_response.json = {"error": "test error"}
     with pytest.raises(gx_exception.GXCloudError):
         agent._raise_gx_cloud_err_on_http_error(test_response)
 
@@ -620,7 +620,7 @@ def test_raise_gx_cloud_err_on_http_error_error_response():
 def test_raise_gx_cloud_err_on_http_error_success_response():
     agent = GXAgent()
     test_response = requests.Response()
+    # 200 - OK
     test_response.status_code = 200
-    test_response.json = {"i": "am_happy"}
     # no Exception raised
     agent._raise_gx_cloud_err_on_http_error(test_response)
