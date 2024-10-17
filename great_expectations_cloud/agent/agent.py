@@ -585,7 +585,7 @@ class GXAgent:
         # use a public API once it is available
         http._update_headers = _update_headers_agent_patch
 
-    @classmethod
+    @staticmethod
     def _raise_gx_cloud_err_on_http_error(response: requests.Response) -> None:
         """
         Raise GXCloudError if the response is not successful.

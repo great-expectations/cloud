@@ -621,4 +621,4 @@ def test_raise_gx_cloud_err_on_http_error_success_response():
     # 200 - OK
     test_response.status_code = 200
     # no Exception raised
-    GxAgent._raise_gx_cloud_err_on_http_error(test_response)
+    GXAgent._raise_gx_cloud_err_on_http_error(test_response)
