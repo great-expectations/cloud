@@ -613,7 +613,7 @@ def test_raise_gx_cloud_err_on_http_error_error_response():
     # 404 - Not Found
     test_response.status_code = 404
     with pytest.raises(gx_exception.GXCloudError):
-        GXAgent._raise_gx_cloud_err_on_http_error(test_response)
+        GXAgent._raise_gx_cloud_err_on_http_error(test_response, "Test error message")
 
 
 def test_raise_gx_cloud_err_on_http_error_success_response():
@@ -621,4 +621,4 @@ def test_raise_gx_cloud_err_on_http_error_success_response():
     # 200 - OK
     test_response.status_code = 200
     # no Exception raised
-    GXAgent._raise_gx_cloud_err_on_http_error(test_response)
+    GXAgent._raise_gx_cloud_err_on_http_error(test_response, "Test error message")
