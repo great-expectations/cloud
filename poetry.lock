@@ -413,13 +413,13 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "databricks-sql-connector"
-version = "3.4.0"
+version = "3.5.0"
 description = "Databricks SQL Connector for Python"
 optional = false
 python-versions = "<4.0.0,>=3.8.0"
 files = [
-    {file = "databricks_sql_connector-3.4.0-py3-none-any.whl", hash = "sha256:7ba2efa4149529dee418ec467bacff1cb34c321a43e597d41fd020e569cbba3f"},
-    {file = "databricks_sql_connector-3.4.0.tar.gz", hash = "sha256:5def7762a398e025db6a5740649f3ea856f07dc04a87cb7818af335f4157c030"},
+    {file = "databricks_sql_connector-3.5.0-py3-none-any.whl", hash = "sha256:d88a0b7a810e7a02dfd0964e4d597ecddc7e27602db194e37bb7e05dac0b6a91"},
+    {file = "databricks_sql_connector-3.5.0.tar.gz", hash = "sha256:5d08341c81dad16920c5a2e9e2de2456f04bd08d327018bab392354c0734b122"},
 ]
 
 [package.dependencies]
