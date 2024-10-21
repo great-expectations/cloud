@@ -69,6 +69,7 @@ def test_running_list_table_names_action(
         "organization_users",
         "user_asset_alerts",
         "validations",
+        "pg_stat_statements",
     ]
 
     # add spy to the action method
