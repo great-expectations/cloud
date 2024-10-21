@@ -36,9 +36,10 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
 
         inspector: Inspector = inspect(datasource.get_engine())
         table_names: list[str] = inspector.get_table_names()
+        view_names: list[str] = inspector.get_view_names()
 
         self._add_or_update_table_names_list(
-            datasource_id=str(datasource.id), table_names=table_names
+            datasource_id=str(datasource.id), table_names=[*table_names, *view_names]
         )
 
         return ActionResult(
