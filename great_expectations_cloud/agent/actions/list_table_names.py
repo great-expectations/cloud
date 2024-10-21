@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 
 
 class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
+    """Return a list of the current table names (and views) for a given SQL based Datasource using the sqlalchemy inspector."""
+
     # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
     #  This action is registered for v0, see register_event_action()
 
@@ -36,10 +38,11 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
 
         inspector: Inspector = inspect(datasource.get_engine())
         table_names: list[str] = inspector.get_table_names()
-        view_names: list[str] = inspector.get_view_names()
+        # consider views as well
+        table_names.extend(inspector.get_view_names())
 
         self._add_or_update_table_names_list(
-            datasource_id=str(datasource.id), table_names=[*table_names, *view_names]
+            datasource_id=str(datasource.id), table_names=table_names
         )
 
         return ActionResult(
