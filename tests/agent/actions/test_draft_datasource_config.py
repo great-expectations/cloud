@@ -170,7 +170,9 @@ def test_test_draft_datasource_config_success_sql_ds(
     assert action_result.created_resources == []
 
     # assert that the action properly calls helper methods to get table names and update the draft config
-    _get_table_names_spy.assert_called_with(datasource=datasource_cls(**datasource_config))
+    _get_table_names_spy.assert_called_with(
+        datasource=datasource_cls(**datasource_config), include_views=True
+    )
     _update_table_names_list_spy.assert_called_with(config_id=config_id, table_names=table_names)
 
 

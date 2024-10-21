@@ -69,7 +69,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             created_resources=[],
         )
 
-    def _get_table_names(self, datasource: Datasource, include_views: bool = False) -> list[str]:
+    def _get_table_names(self, datasource: Datasource, *, include_views: bool) -> list[str]:
         inspector: Inspector = inspect(datasource.get_engine())
         names: list[str] = inspector.get_table_names()
         if include_views:
