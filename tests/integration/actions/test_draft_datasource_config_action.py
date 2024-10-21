@@ -72,6 +72,7 @@ def test_running_draft_datasource_config_action(
         "organization_users",
         "validations",
         "api_tokens",
+        "pg_stat_statements",  # view
     ]
     # add spies to the action methods
     _get_table_names_spy = mocker.spy(action, "_get_table_names")
