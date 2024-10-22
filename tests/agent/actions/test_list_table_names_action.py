@@ -105,8 +105,10 @@ def test_run_list_table_names_action_returns_action_result(
     )
 
     table_names = ["table_1", "table_2", "table_3"]
+    view_names = ["view_1", "view_2"]
     inspector = mocker.Mock(spec=Inspector)
     inspector.get_table_names.return_value = table_names
+    inspector.get_view_names.return_value = view_names
 
     mock_inspect.return_value = inspector
 
