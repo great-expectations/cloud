@@ -19,7 +19,11 @@ from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import GXAgentConfig, Payload
+from great_expectations_cloud.agent.agent import (
+    GXAgentConfig,
+    Payload,
+    construct_url_from_base_plus_path,
+)
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.exceptions import GXAgentConfigError
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
@@ -622,3 +626,37 @@ def test_raise_gx_cloud_err_on_http_error_success_response():
     test_response.status_code = 200
     # no Exception raised
     GXAgent._raise_gx_cloud_err_on_http_error(test_response, "Test error message")
+
+
+@pytest.mark.parametrize(
+    "base,path,expected_url",
+    [
+        pytest.param(
+            "http://localhost:5000/",
+            "/api/v1/something",
+            "http://localhost:5000/api/v1/something",
+            id="base_slash + path_slash",
+        ),
+        pytest.param(
+            "http://localhost:5000",
+            "/api/v1/something",
+            "http://localhost:5000/api/v1/something",
+            id="base_no_slash + path_slash",
+        ),
+        pytest.param(
+            "http://localhost:5000/",
+            "api/v1/something",
+            "http://localhost:5000/api/v1/something",
+            id="base_slash + path_no_slash",
+        ),
+        pytest.param(
+            "http://localhost:5000",
+            "api/v1/something",
+            "http://localhost:5000/api/v1/something",
+            id="base_no_slash + path_no_slash",
+        ),
+    ],
+)
+def test_construct_url_from_base_plus_path(base: str, path: str, expected_url: str):
+    constructed_url = construct_url_from_base_plus_path(base, path)
+    assert constructed_url == expected_url

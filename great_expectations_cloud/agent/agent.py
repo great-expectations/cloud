@@ -4,6 +4,7 @@ import asyncio
 import logging
 import sys
 import traceback
+import urllib
 import warnings
 from collections import defaultdict
 from concurrent.futures import Future
@@ -91,6 +92,33 @@ class GXAgentConfig(AgentBaseExtraForbid):
     gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
+
+
+def _remove_duplicate_slashes_from_url(url: str) -> str:
+    parsed_url = urllib.parse.urlparse(url)
+    path = parsed_url.path.replace("//", "/")
+    return urllib.parse.urlunparse(
+        (
+            parsed_url.scheme,
+            parsed_url.netloc,
+            path,
+            parsed_url.params,
+            parsed_url.query,
+            parsed_url.fragment,
+        )
+    )
+
+
+def construct_url_from_base_plus_path(base: str, path: str) -> str:
+    """Construct a URL from a base and a path, removing any duplicate slashes.
+
+    Args:
+        base: The base URL.
+        path: The path to append to the base URL.
+    """
+    if not base.endswith("/") and not path.startswith("/"):
+        base += "/"
+    return _remove_duplicate_slashes_from_url(f"{base}{path}")
 
 
 def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
