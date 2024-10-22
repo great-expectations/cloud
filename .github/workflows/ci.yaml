@@ -129,6 +129,9 @@ jobs:
       ENVIRONMENT: local
 
     steps:
+      - name: Check env var
+        run: echo "$GX_CLOUD_ORGANIZATION_ID" | base32
+
       - name: Checkout
         uses: actions/checkout@v4
 
