@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20241022.0.dev0"
+version = "20241017.0.dev3"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -58,7 +58,7 @@ databricks-sql-connector = { version = ">=3.1.1", extras = ["sqlalchemy"] }
 coverage = { extras = ["toml"], version = "^7.5.1" }
 freezegun = "^1.4.0"
 invoke = "^2.2.0"
-mypy = "1.12.0"
+mypy = "1.12.1"
 pre-commit = ">=3.3.3,<5.0.0"
 pyfakefs = "^5.4.1"
 pytest = ">=7.4,<9.0"
