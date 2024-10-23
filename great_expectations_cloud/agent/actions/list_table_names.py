@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from urllib.parse import urljoin
 
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
@@ -49,9 +50,12 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
 
     def _add_or_update_table_names_list(self, datasource_id: str, table_names: list[str]) -> None:
         with create_session(access_token=self._auth_key) as session:
+            url = urljoin(
+                base=self._base_url,
+                url=f"/api/v1/organizations/{self._organization_id}/table-names/{datasource_id}",
+            )
             response = session.put(
-                url=f"{self._base_url}/api/v1/organizations/"
-                f"{self._organization_id}/table-names/{datasource_id}",
+                url=url,
                 json={"data": {"table_names": table_names}},
             )
         if response.status_code != 200:  # noqa: PLR2004

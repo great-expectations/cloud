@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urljoin
 from uuid import UUID
 
 from great_expectations.core.http import create_session
@@ -75,7 +76,10 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
 
     def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
         with create_session(access_token=self._auth_key) as session:
-            url = f"{self._base_url}/api/v1/organizations/{self._organization_id}/draft-table-names/{config_id}"
+            url = urljoin(
+                base=self._base_url,
+                url=f"/api/v1/organizations/{self._organization_id}/draft-table-names/{config_id}",
+            )
             response = session.put(
                 url=url,
                 json={"data": {"table_names": table_names}},
@@ -89,9 +93,9 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             )
 
     def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
-        resource_url = (
-            f"{self._base_url}/api/v1/organizations/"
-            f"{self._organization_id}/draft-datasources/{config_id}"
+        resource_url = urljoin(
+            base=self._base_url,
+            url=f"/api/v1/organizations/{self._organization_id}/draft-datasources/{config_id}",
         )
         with create_session(access_token=self._auth_key) as session:
             response = session.get(resource_url)
