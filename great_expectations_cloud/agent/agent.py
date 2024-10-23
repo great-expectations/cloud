@@ -531,7 +531,9 @@ class GXAgent:
     def _get_version(self) -> str:
         return self.get_current_gx_agent_version()
 
-    def _set_data_context_store_headers(self, data_context: CloudDataContext, headers: dict) -> None:
+    def _set_data_context_store_headers(
+        self, data_context: CloudDataContext, headers: dict
+    ) -> None:
         """
         Sets headers on all stores in the data context.
         """
@@ -546,9 +548,8 @@ class GXAgent:
             if isinstance(backend, GXCloudStoreBackend):
                 backend._session.headers.update(headers)
 
-
     def _set_http_session_headers(
-            self, data_context: CloudDataContext, correlation_id: str | None = None
+        self, data_context: CloudDataContext, correlation_id: str | None = None
     ) -> None:
         """
         Set the session headers for requests to GX Cloud.
@@ -577,9 +578,7 @@ class GXAgent:
             },
         )
 
-        core_headers = {
-            header_name.USER_AGENT: user_agent_header_value
-        }
+        core_headers = {header_name.USER_AGENT: user_agent_header_value}
         if correlation_id:
             core_headers.update({header_name.AGENT_JOB_ID: correlation_id})
         self._set_data_context_store_headers(data_context=data_context, headers=core_headers)
