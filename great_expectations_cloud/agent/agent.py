@@ -542,9 +542,7 @@ class GXAgent:
         stores.extend([data_context._datasource_store, data_context._data_asset_store])
         for store in stores:
             backend = store._store_backend
-            print(f"WTF: found store {backend.store_name}")
             if isinstance(backend, GXCloudStoreBackend):
-                print(f"WTF: setting header on backend {backend.store_name}")
                 backend._session.headers.update(headers)
 
 
@@ -569,9 +567,9 @@ class GXAgent:
         LOGGER.error(
             "Setting session headers for GX Cloud",
             extra={
-                "user_agent": header_name.USER_AGENT,
+                "user_agent_header_name": header_name.USER_AGENT,
                 "agent_version": agent_version,
-                "header_name": header_name.AGENT_JOB_ID,
+                "correlation_id_header_name": header_name.AGENT_JOB_ID,
                 "correlation_id": correlation_id,
             },
         )
