@@ -542,7 +542,7 @@ class GXAgent:
         from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend
 
         # OSS doesn't use the same session for all requests, so we need to set the header for each store
-        stores = [store for store in data_context.stores.values()]
+        stores = list(data_context.stores.values())
         # some stores are treated differently
         stores.extend([data_context._datasource_store, data_context._data_asset_store])
         for store in stores:
