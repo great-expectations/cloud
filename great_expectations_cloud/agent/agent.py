@@ -18,7 +18,6 @@ import requests
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
-from great_expectations.data_context.store import GXCloudStoreBackend
 from great_expectations.exceptions import GXCloudError
 from pika.adapters.utils.connection_workflow import (
     AMQPConnectorException,
@@ -536,6 +535,8 @@ class GXAgent:
         """
         Sets headers on all stores in the data context.
         """
+        from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend
+
         # OSS doesn't use the same session for all requests, so we need to set the header for each store
         stores = [store for store in data_context.stores.values()]
         # some stores are treated differently
