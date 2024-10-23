@@ -11,6 +11,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
+from urllib.parse import urljoin
 from uuid import UUID
 
 import orjson
@@ -413,9 +414,9 @@ class GXAgent:
             ) from validation_err
 
         # obtain the broker url and queue name from Cloud
-        agent_sessions_url = (
-            f"{env_vars.gx_cloud_base_url}/api/v1/organizations/"
-            f"{env_vars.gx_cloud_organization_id}/agent-sessions"
+        agent_sessions_url = urljoin(
+            env_vars.gx_cloud_base_url,
+            f"/api/v1/organizations/{env_vars.gx_cloud_organization_id}/agent-sessions",
         )
 
         session = create_session(access_token=env_vars.gx_cloud_access_token)
@@ -459,9 +460,9 @@ class GXAgent:
                 "organization_id": str(org_id),
             },
         )
-        agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/api/v1/organizations/{org_id}"
-            + f"/agent-jobs/{correlation_id}"
+        agent_sessions_url = urljoin(
+            self._config.gx_cloud_base_url,
+            f"/api/v1/organizations/{org_id}/agent-jobs/{correlation_id}",
         )
         with create_session(access_token=self.get_auth_key()) as session:
             data = UpdateJobStatusRequest(data=status).json()
@@ -503,8 +504,9 @@ class GXAgent:
             },
         )
 
-        agent_sessions_url = (
-            f"{self._config.gx_cloud_base_url}/api/v1/organizations/{org_id}" + "/agent-jobs"
+        agent_sessions_url = urljoin(
+            self._config.gx_cloud_base_url,
+            f"/api/v1/organizations/{org_id}/agent-jobs",
         )
         with create_session(access_token=self.get_auth_key()) as session:
             payload = Payload(data=data)
