@@ -659,5 +659,6 @@ def test_raise_gx_cloud_err_on_http_error_success_response():
     ],
 )
 def test_construct_url_from_base_plus_path(base: str, path: str, expected_url: str):
+    """Test that urljoin constructs all combinations of urls correctly."""
     constructed_url = urljoin(base, path)
     assert constructed_url == expected_url

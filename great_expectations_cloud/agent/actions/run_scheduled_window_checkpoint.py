@@ -20,7 +20,7 @@ class RunScheduledWindowCheckpointAction(AgentAction[RunScheduledWindowCheckpoin
     def run(self, event: RunScheduledWindowCheckpointEvent, id: str) -> ActionResult:
         expectation_parameters_url = urljoin(
             base=self._base_url,
-            path=f"/api/v1/organizations/{self._organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
+            url=f"/api/v1/organizations/{self._organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
         )
         return run_window_checkpoint(
             context=self._context,
