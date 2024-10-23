@@ -561,22 +561,27 @@ class GXAgent:
         from great_expectations.core import http
 
         header_name = self.get_header_name()
-        user_agent_header = self.get_user_agent_header()
-
+        user_agent_header_prefix = self.get_user_agent_header()
         agent_version = self._get_version()
-        LOGGER.error(
+        user_agent_header_value = f"{user_agent_header_prefix}/{agent_version}"
+
+        LOGGER.debug(
             "Setting session headers for GX Cloud",
             extra={
                 "user_agent_header_name": header_name.USER_AGENT,
-                "agent_version": agent_version,
+                "user_agent_header_value": user_agent_header_value,
                 "correlation_id_header_name": header_name.AGENT_JOB_ID,
+                "correlation_id_header_value": correlation_id,
                 "correlation_id": correlation_id,
             },
         )
 
+        core_headers = {
+            header_name.USER_AGENT: user_agent_header_value
+        }
         if correlation_id:
-            headers = {header_name.AGENT_JOB_ID: correlation_id}
-            self._set_data_context_store_headers(data_context=data_context, headers=headers)
+            core_headers.update({header_name.AGENT_JOB_ID: correlation_id})
+        self._set_data_context_store_headers(data_context=data_context, headers=core_headers)
 
         def _update_headers_agent_patch(
             session: requests.Session, access_token: str
@@ -588,7 +593,7 @@ class GXAgent:
                 "Content-Type": "application/vnd.api+json",
                 "Authorization": f"Bearer {access_token}",
                 "Gx-Version": __version__,
-                header_name.USER_AGENT: f"{user_agent_header}/{agent_version}",
+                header_name.USER_AGENT: user_agent_header_value,
             }
             if correlation_id:
                 headers[header_name.AGENT_JOB_ID] = correlation_id
