@@ -6,6 +6,7 @@ import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
 from unittest.mock import call
+from urllib.parse import urljoin
 
 import pytest
 import requests
@@ -22,7 +23,6 @@ from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.agent import (
     GXAgentConfig,
     Payload,
-    construct_url_from_base_plus_path,
 )
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.exceptions import GXAgentConfigError
@@ -289,7 +289,7 @@ def test_gx_agent_updates_cloud_on_job_status(
 ):
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
     url = (
-        f"{gx_agent_config.gx_cloud_base_url}/api/v1/organizations/"
+        f"http://localhost:5000/api/v1/organizations/"
         f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs/{correlation_id}"
     )
     job_started_data = UpdateJobStatusRequest(data=JobStarted()).json()
@@ -366,7 +366,7 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     """
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
     post_url = (
-        f"{gx_agent_config.gx_cloud_base_url}/api/v1/organizations/"
+        f"http://localhost:5000/api/v1/organizations/"
         f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs"
     )
 
@@ -523,6 +523,7 @@ def test_correlation_id_header(
     gx_agent_config: GXAgentConfig,
     fake_subscriber: FakeSubscriber,
     random_uuid: str,
+    local_mercury: str,
 ):
     """Ensure agent-job-id/correlation-id header is set on GX Cloud api calls and updated for every new job."""
     agent_correlation_ids: list[str] = [str(uuid.uuid4()) for _ in range(3)]
@@ -556,7 +557,7 @@ def test_correlation_id_header(
             ),
         ]
     )
-    base_url = gx_agent_config.gx_cloud_base_url
+    base_url = local_mercury
     org_id = gx_agent_config.gx_cloud_organization_id
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -566,7 +567,7 @@ def test_correlation_id_header(
         )
         rsps.add(
             responses.GET,
-            f"{base_url}/api/v1/organizations/{org_id}/draft-datasources/{datasource_config_id_1}",
+            f"{base_url}api/v1/organizations/{org_id}/draft-datasources/{datasource_config_id_1}",
             json={
                 "data": {
                     "config": {
@@ -579,7 +580,7 @@ def test_correlation_id_header(
         )
         rsps.add(
             responses.GET,
-            f"{base_url}/api/v1/organizations/{org_id}/draft-datasources/{datasource_config_id_2}",
+            f"{base_url}api/v1/organizations/{org_id}/draft-datasources/{datasource_config_id_2}",
             json={
                 "data": {
                     "config": {
@@ -592,7 +593,7 @@ def test_correlation_id_header(
         )
         rsps.add(
             responses.PUT,
-            f"{base_url}/api/v1/organizations/{org_id}/draft-table-names/{datasource_config_id_1}",
+            f"{base_url}api/v1/organizations/{org_id}/draft-table-names/{datasource_config_id_1}",
             json={
                 "data": {
                     "table_names": [],
@@ -601,7 +602,7 @@ def test_correlation_id_header(
         )
         rsps.add(
             responses.PUT,
-            f"{base_url}/api/v1/organizations/{org_id}/draft-table-names/{datasource_config_id_2}",
+            f"{base_url}api/v1/organizations/{org_id}/draft-table-names/{datasource_config_id_2}",
             json={
                 "data": {
                     "table_names": [],
@@ -658,5 +659,5 @@ def test_raise_gx_cloud_err_on_http_error_success_response():
     ],
 )
 def test_construct_url_from_base_plus_path(base: str, path: str, expected_url: str):
-    constructed_url = construct_url_from_base_plus_path(base, path)
+    constructed_url = urljoin(base, path)
     assert constructed_url == expected_url

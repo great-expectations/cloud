@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from urllib.parse import urljoin
 
 from great_expectations.core.http import create_session
 from great_expectations.exceptions import GXCloudError
@@ -11,7 +12,6 @@ from great_expectations_cloud.agent.actions.agent_action import (
     AgentAction,
 )
 from great_expectations_cloud.agent.actions.run_checkpoint import run_checkpoint
-from great_expectations_cloud.agent.agent import construct_url_from_base_plus_path
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     RunScheduledWindowCheckpointEvent,
@@ -25,9 +25,9 @@ if TYPE_CHECKING:
 class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
     @override
     def run(self, event: RunWindowCheckpointEvent, id: str) -> ActionResult:
-        expectation_parameters_url = construct_url_from_base_plus_path(
+        expectation_parameters_url = urljoin(
             base=self._base_url,
-            path=f"/api/v1/organizations/{self._organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
+            url=f"/api/v1/organizations/{self._organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
         )
         return run_window_checkpoint(
             self._context,

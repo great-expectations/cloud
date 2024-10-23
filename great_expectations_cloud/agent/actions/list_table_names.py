@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from urllib.parse import urljoin
 
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
@@ -12,7 +13,6 @@ from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
-from great_expectations_cloud.agent.agent import construct_url_from_base_plus_path
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     ListTableNamesEvent,
@@ -50,9 +50,9 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
 
     def _add_or_update_table_names_list(self, datasource_id: str, table_names: list[str]) -> None:
         with create_session(access_token=self._auth_key) as session:
-            url = construct_url_from_base_plus_path(
+            url = urljoin(
                 base=self._base_url,
-                path=f"/api/v1/organizations/{self._organization_id}/table-names/{datasource_id}",
+                url=f"/api/v1/organizations/{self._organization_id}/table-names/{datasource_id}",
             )
             response = session.put(
                 url=url,

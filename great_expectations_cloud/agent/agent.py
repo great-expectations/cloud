@@ -4,7 +4,6 @@ import asyncio
 import logging
 import sys
 import traceback
-import urllib
 import warnings
 from collections import defaultdict
 from concurrent.futures import Future
@@ -12,6 +11,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
+from urllib.parse import urljoin
 from uuid import UUID
 
 import orjson
@@ -92,33 +92,6 @@ class GXAgentConfig(AgentBaseExtraForbid):
     gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
-
-
-def _remove_duplicate_slashes_from_url(url: str) -> str:
-    parsed_url = urllib.parse.urlparse(url)
-    path = parsed_url.path.replace("//", "/")
-    return urllib.parse.urlunparse(
-        (
-            parsed_url.scheme,
-            parsed_url.netloc,
-            path,
-            parsed_url.params,
-            parsed_url.query,
-            parsed_url.fragment,
-        )
-    )
-
-
-def construct_url_from_base_plus_path(base: str, path: str) -> str:
-    """Construct a URL from a base and a path, removing any duplicate slashes.
-
-    Args:
-        base: The base URL.
-        path: The path to append to the base URL.
-    """
-    if not base.endswith("/") and not path.startswith("/"):
-        base += "/"
-    return _remove_duplicate_slashes_from_url(f"{base}{path}")
 
 
 def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
@@ -441,7 +414,7 @@ class GXAgent:
             ) from validation_err
 
         # obtain the broker url and queue name from Cloud
-        agent_sessions_url = construct_url_from_base_plus_path(
+        agent_sessions_url = urljoin(
             env_vars.gx_cloud_base_url,
             f"/api/v1/organizations/{env_vars.gx_cloud_organization_id}/agent-sessions",
         )
@@ -487,7 +460,7 @@ class GXAgent:
                 "organization_id": str(org_id),
             },
         )
-        agent_sessions_url = construct_url_from_base_plus_path(
+        agent_sessions_url = urljoin(
             self._config.gx_cloud_base_url,
             f"/api/v1/organizations/{org_id}/agent-jobs/{correlation_id}",
         )
@@ -531,7 +504,7 @@ class GXAgent:
             },
         )
 
-        agent_sessions_url = construct_url_from_base_plus_path(
+        agent_sessions_url = urljoin(
             self._config.gx_cloud_base_url,
             f"/api/v1/organizations/{org_id}/agent-jobs",
         )
