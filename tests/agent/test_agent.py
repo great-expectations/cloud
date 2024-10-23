@@ -6,7 +6,6 @@ import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
 from unittest.mock import call
-from urllib.parse import urljoin
 
 import pytest
 import requests
@@ -627,38 +626,3 @@ def test_raise_gx_cloud_err_on_http_error_success_response():
     test_response.status_code = 200
     # no Exception raised
     GXAgent._raise_gx_cloud_err_on_http_error(test_response, "Test error message")
-
-
-@pytest.mark.parametrize(
-    "base,path,expected_url",
-    [
-        pytest.param(
-            "http://localhost:5000/",
-            "/api/v1/something",
-            "http://localhost:5000/api/v1/something",
-            id="base_slash + path_slash",
-        ),
-        pytest.param(
-            "http://localhost:5000",
-            "/api/v1/something",
-            "http://localhost:5000/api/v1/something",
-            id="base_no_slash + path_slash",
-        ),
-        pytest.param(
-            "http://localhost:5000/",
-            "api/v1/something",
-            "http://localhost:5000/api/v1/something",
-            id="base_slash + path_no_slash",
-        ),
-        pytest.param(
-            "http://localhost:5000",
-            "api/v1/something",
-            "http://localhost:5000/api/v1/something",
-            id="base_no_slash + path_no_slash",
-        ),
-    ],
-)
-def test_construct_url_from_base_plus_path(base: str, path: str, expected_url: str):
-    """Test that urljoin constructs all combinations of urls correctly."""
-    constructed_url = urljoin(base, path)
-    assert constructed_url == expected_url
