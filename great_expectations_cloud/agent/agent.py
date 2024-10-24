@@ -534,7 +534,7 @@ class GXAgent:
         return self.get_current_gx_agent_version()
 
     def _set_data_context_store_headers(
-        self, data_context: CloudDataContext, headers: dict
+        self, data_context: CloudDataContext, headers: Dict[str, str]
     ) -> None:
         """
         Sets headers on all stores in the data context.
