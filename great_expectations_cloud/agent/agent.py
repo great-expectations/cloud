@@ -58,6 +58,8 @@ from great_expectations_cloud.agent.message_service.subscriber import (
 )
 from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
+    CreateScheduledJobAndSetJobStarted,
+    CreateScheduledJobAndSetJobStartedRequest,
     JobCompleted,
     JobStarted,
     JobStatus,
@@ -491,10 +493,11 @@ class GXAgent:
         Args:
             event_context: event with related properties and actions.
         """
-        data = {
-            **event_context.event.dict(),
-            "correlation_id": event_context.correlation_id,
-        }
+        if not isinstance(event_context.event, ScheduledEventBase):
+            raise GXAgentError(  # noqa: TRY003
+                "Unable to create a scheduled job for a non-scheduled event."
+            )
+
         LOGGER.info(
             "Creating scheduled job and setting started",
             extra={
@@ -508,9 +511,18 @@ class GXAgent:
             self._config.gx_cloud_base_url,
             f"/api/v1/organizations/{org_id}/agent-jobs",
         )
+        data = CreateScheduledJobAndSetJobStarted(
+            type="run_scheduled_checkpoint.received",
+            correlation_id=UUID(event_context.correlation_id),
+            schedule_id=event_context.event.schedule_id,
+            checkpoint_id=event_context.event.checkpoint_id,
+            datasource_names_to_asset_names=event_context.event.datasource_names_to_asset_names,
+            splitter_options=event_context.event.splitter_options,
+            checkpoint_name=event_context.event.checkpoint_name,
+        )
         with create_session(access_token=self.get_auth_key()) as session:
-            payload = Payload(data=data)
-            response = session.post(agent_sessions_url, data=payload.json())
+            payload = CreateScheduledJobAndSetJobStartedRequest(data=data).json()
+            response = session.post(agent_sessions_url, data=payload)
             LOGGER.info(
                 "Created scheduled job and set started",
                 extra={

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import random
 import string
 import uuid
@@ -21,7 +22,6 @@ from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.agent import (
     GXAgentConfig,
-    Payload,
 )
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.exceptions import GXAgentConfigError
@@ -378,13 +378,6 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
         schedule_id=schedule_id,
         organization_id=uuid.uuid4(),
     )
-    payload = Payload(
-        data={
-            **event.dict(),
-            "correlation_id": correlation_id,
-        }
-    )
-    data = payload.json()
 
     async def redeliver_message():
         return None
@@ -425,9 +418,21 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     agent = GXAgent()
     agent.run()
 
+    data = {
+        "data": {
+            "type": "run_scheduled_checkpoint.received",
+            "correlation_id": str(correlation_id),
+            "schedule_id": str(schedule_id),
+            "checkpoint_id": str(event.checkpoint_id),
+            "datasource_names_to_asset_names": {},
+            "splitter_options": None,
+            "checkpoint_name": None,
+        }
+    }
+
     # sessions created with context managers now, so we need to
     # test the runtime calls rather than the return value calls
-    create_session().__enter__().post.assert_any_call(post_url, data=data)
+    create_session().__enter__().post.assert_any_call(post_url, data=json.dumps(data))
 
 
 def test_invalid_env_variables_missing_token(set_required_env_vars, monkeypatch):

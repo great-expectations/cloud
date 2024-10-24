@@ -162,6 +162,21 @@ class UpdateJobStatusRequest(AgentBaseExtraForbid):
     data: JobStatus
 
 
+class CreateScheduledJobAndSetJobStarted(AgentBaseExtraForbid):
+    type: Literal["run_scheduled_checkpoint.received"] = "run_scheduled_checkpoint.received"
+    correlation_id: UUID
+    schedule_id: UUID
+    checkpoint_id: UUID
+    datasource_names_to_asset_names: Dict[str, Set[str]]
+    splitter_options: Optional[Dict[str, Any]] = None
+    # TODO: Remove optional once fully migrated to greatexpectations v1
+    checkpoint_name: Optional[str] = None
+
+
+class CreateScheduledJobAndSetJobStartedRequest(AgentBaseExtraForbid):
+    data: CreateScheduledJobAndSetJobStarted
+
+
 def build_failed_job_completed_status(error: BaseException) -> JobCompleted:
     if isinstance(error, GXCoreError):
         status = JobCompleted(
