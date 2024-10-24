@@ -533,6 +533,23 @@ class GXAgent:
     def _get_version(self) -> str:
         return self.get_current_gx_agent_version()
 
+    def _set_data_context_store_headers(
+        self, data_context: CloudDataContext, headers: dict[HeaderName, str]
+    ) -> None:
+        """
+        Sets headers on all stores in the data context.
+        """
+        from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend
+
+        # OSS doesn't use the same session for all requests, so we need to set the header for each store
+        stores = list(data_context.stores.values())
+        # some stores are treated differently
+        stores.extend([data_context._datasource_store, data_context._data_asset_store])
+        for store in stores:
+            backend = store._store_backend
+            if isinstance(backend, GXCloudStoreBackend):
+                backend._session.headers.update(headers)
+
     def _set_http_session_headers(
         self, data_context: CloudDataContext, correlation_id: str | None = None
     ) -> None:
@@ -546,28 +563,27 @@ class GXAgent:
         """
         from great_expectations import __version__
         from great_expectations.core import http
-        from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend
 
         header_name = self.get_header_name()
-        user_agent_header = self.get_user_agent_header()
-
+        user_agent_header_prefix = self.get_user_agent_header()
         agent_version = self._get_version()
+        user_agent_header_value = f"{user_agent_header_prefix}/{agent_version}"
+
         LOGGER.debug(
             "Setting session headers for GX Cloud",
             extra={
-                "user_agent": header_name.USER_AGENT,
-                "agent_version": agent_version,
-                "header_name": header_name.AGENT_JOB_ID,
+                "user_agent_header_name": header_name.USER_AGENT,
+                "user_agent_header_value": user_agent_header_value,
+                "correlation_id_header_name": header_name.AGENT_JOB_ID,
+                "correlation_id_header_value": correlation_id,
                 "correlation_id": correlation_id,
             },
         )
 
+        core_headers = {header_name.USER_AGENT: user_agent_header_value}
         if correlation_id:
-            # OSS doesn't use the same session for all requests, so we need to set the header for each store
-            for store in data_context.stores.values():
-                backend = store._store_backend
-                if isinstance(backend, GXCloudStoreBackend):
-                    backend._session.headers[header_name.AGENT_JOB_ID] = correlation_id
+            core_headers.update({header_name.AGENT_JOB_ID: correlation_id})
+        self._set_data_context_store_headers(data_context=data_context, headers=core_headers)
 
         def _update_headers_agent_patch(
             session: requests.Session, access_token: str
@@ -579,7 +595,7 @@ class GXAgent:
                 "Content-Type": "application/vnd.api+json",
                 "Authorization": f"Bearer {access_token}",
                 "Gx-Version": __version__,
-                header_name.USER_AGENT: f"{user_agent_header}/{agent_version}",
+                header_name.USER_AGENT: user_agent_header_value,
             }
             if correlation_id:
                 headers[header_name.AGENT_JOB_ID] = correlation_id
