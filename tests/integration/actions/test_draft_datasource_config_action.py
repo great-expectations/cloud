@@ -74,7 +74,10 @@ def test_running_draft_datasource_config_action(
         "api_tokens",
     ]
     # add spies to the action methods
-    _get_table_names_spy = mocker.spy(action, "_get_table_names")
+    _get_table_names_spy = mocker.patch(
+        "great_expectations_cloud.agent.actions.draft_datasource_config_action.get_table_names",
+        wraps=True,
+    )
     _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
 
     # Act
