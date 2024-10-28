@@ -100,9 +100,9 @@ def test_running_draft_datasource_config_action(
     )
 
     # Ensure table name introspection was successful and that the table names were updated on the draft config
-    updated_draft_config = context.data_sources.get(
-        draft_datasource_id_for_connect_successfully
-    ).get_config()
+    updated_draft_config = action.get_draft_config(
+        config_id=UUID(draft_datasource_id_for_connect_successfully)
+    )
     assert sorted(updated_draft_config.get("table_names")) == sorted(expected_table_names)
 
 
