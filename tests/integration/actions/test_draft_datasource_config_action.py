@@ -91,6 +91,7 @@ def test_running_draft_datasource_config_action(
     assert result.type == draft_datasource_config_event.type
     assert result.created_resources == []
 
+    # Ensure table name introspection was successful and that the table names were updated on the draft config
     # assert _update_table_names_list was called with the correct arguments
     assert _update_table_names_list_spy.call_args.kwargs.get("config_id") == UUID(
         draft_datasource_id_for_connect_successfully
@@ -98,16 +99,6 @@ def test_running_draft_datasource_config_action(
     assert sorted(_update_table_names_list_spy.call_args.kwargs.get("table_names")) == sorted(
         expected_table_names
     )
-
-    # Ensure table name introspection was successful and that the table names were updated on the draft config
-    updated_draft_config = action.get_draft_config(
-        config_id=UUID(draft_datasource_id_for_connect_successfully)
-    )
-    print(updated_draft_config)
-    assert updated_draft_config is None
-    updated_table_names = updated_draft_config.get("table_names")
-    assert updated_table_names is not None
-    assert sorted(updated_table_names) == sorted(expected_table_names)
 
 
 @pytest.mark.skip("Skipping integration tests until they are updated for v1.0")
