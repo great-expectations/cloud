@@ -226,14 +226,13 @@ class AsyncRabbitMQClient:
         self, _unused_connection: AsyncioConnection, reason: pika.Exception
     ) -> None:
         """Callback invoked when there is an error while opening connection."""
-        self._reconnect()
         LOGGER.error(
             "Connection open failed",
             extra={
-                "reply_code": reason.reply_code,
-                "reply_text": reason.reply_text,
+                "reason": reason,
             },
         )
+        self._reconnect()
 
     def _on_connection_closed(
         self, connection: AsyncioConnection, _unused_reason: pika.Exception
@@ -245,6 +244,12 @@ class AsyncRabbitMQClient:
         if self._closing:
             connection.ioloop.stop()
         else:
+            LOGGER.warning(
+                "Connection closed, reconnect necessary",
+                extra={
+                    "reason": reason,
+                },
+            )
             self._reconnect()
 
     def _close_connection(self, reason: pika.Exception) -> None:
