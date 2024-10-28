@@ -92,7 +92,7 @@ def test_running_draft_datasource_config_action(
     assert result.created_resources == []
 
     # Ensure table name introspection was successful and that the table names were updated on the draft config
-    assert sorted(_get_table_names_spy.spy_return) == sorted(expected_table_names)
+    assert sorted(_get_table_names_spy.return_value) == sorted(expected_table_names)
 
     # assert _update_table_names_list was called with the correct arguments
     assert _update_table_names_list_spy.call_args.kwargs.get("config_id") == UUID(
