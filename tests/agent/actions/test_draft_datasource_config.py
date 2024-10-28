@@ -12,6 +12,7 @@ from great_expectations.datasource.fluent.interfaces import TestConnectionError
 from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
     DraftDatasourceConfigAction,
 )
+from great_expectations_cloud.agent.actions.utils import get_table_names
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.exceptions import ErrorCode, GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
@@ -68,7 +69,10 @@ def test_test_draft_datasource_config_success_non_sql_ds(
         organization_id=org_id,
     )
 
-    _get_table_names_spy = mocker.spy(action, "_get_table_names")
+    _get_table_names_spy = mocker.patch(
+        "great_expectations_cloud.agent.actions.draft_datasource_config_action.get_table_names",
+        wraps=get_table_names,
+    )
     _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
 
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -120,9 +124,7 @@ def test_test_draft_datasource_config_success_sql_ds(
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
     # mock the sqlalchemy inspector, which is used to get table names
-    inspect = mocker.patch(
-        "great_expectations_cloud.agent.actions.draft_datasource_config_action.inspect"
-    )
+    inspect = mocker.patch("great_expectations_cloud.agent.actions.utils.inspect")
     table_names = ["table_1", "table_2", "table_3"]
     mock_inspector = inspect.return_value
     mock_inspector.get_table_names.return_value = table_names
@@ -137,7 +139,10 @@ def test_test_draft_datasource_config_success_sql_ds(
     )
 
     # add spies to the action methods
-    _get_table_names_spy = mocker.spy(action, "_get_table_names")
+    _get_table_names_spy = mocker.patch(
+        "great_expectations_cloud.agent.actions.draft_datasource_config_action.get_table_names",
+        wraps=get_table_names,
+    )
     _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
 
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -170,7 +175,7 @@ def test_test_draft_datasource_config_success_sql_ds(
     assert action_result.created_resources == []
 
     # assert that the action properly calls helper methods to get table names and update the draft config
-    _get_table_names_spy.assert_called_with(datasource=datasource_cls(**datasource_config))
+    _get_table_names_spy.assert_called_with(datasource_cls(**datasource_config))
     _update_table_names_list_spy.assert_called_with(config_id=config_id, table_names=table_names)
 
 
@@ -199,9 +204,7 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
 
     # mock the sqlalchemy inspector, which is used to get table names
-    inspect = mocker.patch(
-        "great_expectations_cloud.agent.actions.draft_datasource_config_action.inspect"
-    )
+    inspect = mocker.patch("great_expectations_cloud.agent.actions.utils.inspect")
     table_names = ["table_1", "table_2", "table_3"]
     mock_inspector = inspect.return_value
     mock_inspector.get_table_names.return_value = table_names

@@ -1,22 +1,19 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from urllib.parse import urljoin
 from uuid import UUID
 
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
-from great_expectations.datasource.fluent.interfaces import Datasource, TestConnectionError
-from sqlalchemy import inspect
+from great_expectations.datasource.fluent.interfaces import TestConnectionError
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
+from great_expectations_cloud.agent.actions.utils import get_table_names
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.exceptions import ErrorCode, raise_with_error_code
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
-
-if TYPE_CHECKING:
-    from sqlalchemy.engine import Inspector
 
 
 class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
@@ -61,7 +58,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
 
         if isinstance(datasource, SQLDatasource):
-            table_names = self._get_table_names(datasource=datasource)
+            table_names = get_table_names(datasource)
             self._update_table_names_list(config_id=event.config_id, table_names=table_names)
 
         return ActionResult(
@@ -69,10 +66,6 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             type=event.type,
             created_resources=[],
         )
-
-    def _get_table_names(self, datasource: Datasource) -> list[str]:
-        inspector: Inspector = inspect(datasource.get_engine())
-        return inspector.get_table_names()
 
     def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
         with create_session(access_token=self._auth_key) as session:

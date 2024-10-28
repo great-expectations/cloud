@@ -1,25 +1,21 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from urllib.parse import urljoin
 
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.exceptions import GXCloudError
-from sqlalchemy import inspect
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
+from great_expectations_cloud.agent.actions.utils import get_table_names
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     ListTableNamesEvent,
 )
-
-if TYPE_CHECKING:
-    from sqlalchemy.engine.reflection import Inspector
 
 
 class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
@@ -35,8 +31,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
                 f"This operation requires a SQL Data Source but got {type(datasource).__name__}."
             )
 
-        inspector: Inspector = inspect(datasource.get_engine())
-        table_names: list[str] = inspector.get_table_names()
+        table_names = get_table_names(datasource)
 
         self._add_or_update_table_names_list(
             datasource_id=str(datasource.id), table_names=table_names
