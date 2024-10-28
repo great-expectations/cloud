@@ -103,7 +103,11 @@ def test_running_draft_datasource_config_action(
     updated_draft_config = action.get_draft_config(
         config_id=UUID(draft_datasource_id_for_connect_successfully)
     )
-    assert sorted(updated_draft_config.get("table_names")) == sorted(expected_table_names)
+    print(updated_draft_config)
+    assert updated_draft_config is None
+    updated_table_names = updated_draft_config.get("table_names")
+    assert updated_table_names is not None
+    assert sorted(updated_table_names) == sorted(expected_table_names)
 
 
 @pytest.mark.skip("Skipping integration tests until they are updated for v1.0")
