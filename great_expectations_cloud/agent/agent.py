@@ -37,7 +37,11 @@ from great_expectations_cloud.agent.config import (
     GxAgentEnvVars,
     generate_config_validation_error_text,
 )
-from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
+from great_expectations_cloud.agent.constants import (
+    JOB_TIMEOUT_IN_SECONDS,
+    USER_AGENT_HEADER,
+    HeaderName,
+)
 from great_expectations_cloud.agent.event_handler import (
     EventHandler,
 )
@@ -323,42 +327,21 @@ class GXAgent:
         org_id = self.get_organization_id(event_context)
 
         # get results or errors from the thread
-        error = future.exception()
-        if error is None:
-            result: ActionResult = future.result()
+        try:
+            error = future.exception(timeout=JOB_TIMEOUT_IN_SECONDS)
+        except TimeoutError as e:
+            error = e
 
-            if result.type == UnknownEvent().type:
-                status = JobCompleted(
-                    success=False,
-                    created_resources=[],
-                    error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
-                    processed_by=self._get_processed_by(),
-                )
-                LOGGER.error(
-                    "Job completed with error. Ensure agent is up-to-date.",
-                    extra={
-                        "event_type": event_context.event.type,
-                        "id": event_context.correlation_id,
-                        "organization_id": str(org_id),
-                    },
-                )
-            else:
-                status = JobCompleted(
-                    success=True,
-                    created_resources=result.created_resources,
-                    processed_by=self._get_processed_by(),
-                )
-                LOGGER.info(
-                    "Completed job",
-                    extra={
-                        "event_type": event_context.event.type,
-                        "correlation_id": event_context.correlation_id,
-                        "job_duration": (
-                            result.job_duration.total_seconds() if result.job_duration else None
-                        ),
-                        "organization_id": str(org_id),
-                    },
-                )
+        if error is None:
+            try:
+                result: ActionResult = future.result(timeout=JOB_TIMEOUT_IN_SECONDS)
+                status = self._get_job_status_with_no_error(event_context, org_id, result)
+            except TimeoutError:
+                status = self._get_status_from_timeout_error(event_context, org_id)
+
+        elif error is TimeoutError:
+            status = self._get_status_from_timeout_error(event_context, org_id)
+
         else:
             status = build_failed_job_completed_status(error)
             LOGGER.info(traceback.format_exc())
@@ -378,6 +361,60 @@ class GXAgent:
         # ack message and cleanup resources
         event_context.processed_successfully()
         self._current_task = None
+
+    def _get_status_from_timeout_error(self, event_context, org_id):
+        status = JobCompleted(
+            success=False,
+            created_resources=[],
+            error_stack_trace=f"The job you ran exceeded the timeout limit of {JOB_TIMEOUT_IN_SECONDS} seconds. If you have reason to believe this job can be completed within the timeout, you may wish to retry. If you continue to experience issues, please contact support.",
+            processed_by=self._get_processed_by(),
+        )
+        LOGGER.error(
+            "Job completed with timeout error.",
+            extra={
+                "event_type": event_context.event.type,
+                "id": event_context.correlation_id,
+                "organization_id": str(org_id),
+            },
+        )
+        return status
+
+    def _get_job_status_with_no_error(
+        self, event_context: EventContext, org_id: UUID, result: ActionResult
+    ) -> JobStatus:
+        if result.type == UnknownEvent().type:
+            status = JobCompleted(
+                success=False,
+                created_resources=[],
+                error_stack_trace="The version of the GX Agent you are using does not support this functionality. Please upgrade to the most recent image tagged with `stable`.",
+                processed_by=self._get_processed_by(),
+            )
+            LOGGER.error(
+                "Job completed with error. Ensure agent is up-to-date.",
+                extra={
+                    "event_type": event_context.event.type,
+                    "id": event_context.correlation_id,
+                    "organization_id": str(org_id),
+                },
+            )
+        else:
+            status = JobCompleted(
+                success=True,
+                created_resources=result.created_resources,
+                processed_by=self._get_processed_by(),
+            )
+            LOGGER.info(
+                "Completed job",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                    "job_duration": (
+                        result.job_duration.total_seconds() if result.job_duration else None
+                    ),
+                    "organization_id": str(org_id),
+                },
+            )
+        return status
 
     def _get_processed_by(self) -> Literal["agent", "runner"]:
         """Return the name of the service that processed the event."""
