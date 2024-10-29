@@ -103,10 +103,11 @@ class Subscriber:
             except GXAgentUnrecoverableConnectionError:
                 self.client.stop()
                 raise
-            if self.client.should_reconnect:
-                self.client.reset()
-            else:
-                break  # exit
+            finally:
+                if self.client.should_reconnect:
+                    # TODO: Right now, this block will not actually reconnect the client. The client code needs to be
+                    #  finished so that there is actually a way to reconnect
+                    self.client.reset()
 
     def _on_message_handler(
         self,

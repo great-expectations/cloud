@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import sys
+import os
+import signal
 import traceback
 import warnings
 from collections import defaultdict
@@ -163,9 +164,12 @@ class GXAgent:
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
-
         LOGGER.debug("Opening connection to GX Cloud.")
         self._listen()
+        # we need a heavy-handed approach here to kill the main process to prevent a scenario where the agent is
+        # hanging due to a thread that has entered an unhealthy state where it will never finish, for example, in the
+        # case of a RabbitMQ delivery acknowledgement timeout
+        os.kill(os.getpid(), signal.SIGKILL)
         LOGGER.debug("The connection to GX Cloud has been closed.")
 
     # ZEL-505: A race condition can occur if two or more agents are started at the same time
@@ -198,7 +202,6 @@ class GXAgent:
             LOGGER.exception("The connection to GX Cloud has encountered an error.")
         except GXAgentUnrecoverableConnectionError:
             LOGGER.exception("The connection to GX Cloud has encountered an unrecoverable error.")
-            sys.exit(1)
         except (
             AuthenticationError,
             ProbableAuthenticationError,
@@ -322,7 +325,6 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         # warning:  this method will not be executed in the main thread
-
         org_id = self.get_organization_id(event_context)
 
         # get results or errors from the thread
@@ -364,8 +366,8 @@ class GXAgent:
                 )
         else:
             status = build_failed_job_completed_status(error)
-            LOGGER.info(traceback.format_exc())
-            LOGGER.info(
+            LOGGER.error(traceback.format_exc())
+            LOGGER.error(
                 "Job completed with error",
                 extra={
                     "event_type": event_context.event.type,
