@@ -197,8 +197,8 @@ class GXAgent:
         except (SubscriberError, ClientError):
             LOGGER.exception("The connection to GX Cloud has encountered an error.")
         except GXAgentUnrecoverableConnectionError:
-            sys.exit(1)
             LOGGER.exception("The connection to GX Cloud has encountered an unrecoverable error.")
+            sys.exit(1)
         except (
             AuthenticationError,
             ProbableAuthenticationError,
