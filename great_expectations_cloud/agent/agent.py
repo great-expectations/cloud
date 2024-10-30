@@ -339,7 +339,7 @@ class GXAgent:
             except TimeoutError:
                 status = self._get_status_from_timeout_error(event_context, org_id)
 
-        elif error is TimeoutError:
+        elif isinstance(error, TimeoutError):
             status = self._get_status_from_timeout_error(event_context, org_id)
 
         else:

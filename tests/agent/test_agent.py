@@ -23,7 +23,11 @@ from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.agent import (
     GXAgentConfig,
 )
-from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
+from great_expectations_cloud.agent.constants import (
+    JOB_TIMEOUT_IN_SECONDS,
+    USER_AGENT_HEADER,
+    HeaderName,
+)
 from great_expectations_cloud.agent.exceptions import GXAgentConfigError
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     ClientError,
@@ -153,6 +157,12 @@ def subscriber(mocker):
 def event_handler(mocker):
     event_handler = mocker.patch("great_expectations_cloud.agent.agent.EventHandler")
     return event_handler
+
+
+@pytest.fixture
+def update_job_status(mocker):
+    update_job_status = mocker.patch("great_expectations_cloud.agent.agent.GXAgent._update_status")
+    return update_job_status
 
 
 @pytest.fixture
@@ -433,6 +443,68 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     # sessions created with context managers now, so we need to
     # test the runtime calls rather than the return value calls
     create_session().__enter__().post.assert_any_call(post_url, data=json.dumps(data))
+
+
+def test_job_timeout(
+    subscriber,
+    create_session,
+    get_context,
+    client,
+    gx_agent_config,
+    event_handler,
+    update_job_status,
+):
+    correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
+    event = RunCheckpointEvent(datasource_names_to_asset_names={}, checkpoint_id=uuid.uuid4())
+
+    end_test = False
+
+    async def redeliver_message():
+        return None
+
+    def signal_subtask_finished():
+        nonlocal end_test
+        end_test = True
+
+    event_context = EventContext(
+        event=event,
+        correlation_id=correlation_id,
+        processed_successfully=signal_subtask_finished,
+        processed_with_failures=signal_subtask_finished,
+        redeliver_message=redeliver_message,
+    )
+    event_handler.return_value.handle_event.side_effect = TimeoutError
+
+    def consume(queue: str, on_message: Callable[[EventContext], None]):
+        """util to allow testing agent behavior without a subscriber.
+
+        Replicates behavior of Subscriber.consume by invoking the on_message
+        parameter with an event_context.
+        """
+        nonlocal event_context
+        on_message(event_context)
+
+        # we need the main thread to remain alive until event handler has finished
+        nonlocal end_test
+        while end_test is False:
+            sleep(0)  # defer control
+
+    subscriber().consume = consume
+
+    agent = GXAgent()
+    agent.run()
+
+    expected_status = JobCompleted(
+        success=False,
+        created_resources=[],
+        error_stack_trace=f"The job you ran exceeded the timeout limit of {JOB_TIMEOUT_IN_SECONDS} seconds. If you have reason to believe this job can be completed within the timeout, you may wish to retry. If you continue to experience issues, please contact support.",
+        processed_by=agent._get_processed_by(),
+    )
+    update_job_status.assert_called_with(
+        correlation_id=event_context.correlation_id,
+        status=expected_status,
+        org_id=uuid.UUID(gx_agent_config.gx_cloud_organization_id),
+    )
 
 
 def test_invalid_env_variables_missing_token(set_required_env_vars, monkeypatch):
