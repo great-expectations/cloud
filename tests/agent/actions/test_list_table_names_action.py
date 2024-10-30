@@ -93,7 +93,7 @@ def test_run_list_table_names_action_returns_action_result(
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
-    mock_inspect = mocker.patch("great_expectations_cloud.agent.actions.list_table_names.inspect")
+    mock_inspect = mocker.patch("great_expectations_cloud.agent.actions.utils.inspect")
     datasource = mocker.Mock(spec=SQLDatasource)
     datasource_id = str(uuid.uuid4())
     datasource.id = datasource_id
