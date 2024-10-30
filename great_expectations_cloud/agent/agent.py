@@ -163,6 +163,7 @@ class GXAgent:
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
+
         LOGGER.debug("Opening connection to GX Cloud.")
         self._listen()
         LOGGER.debug("The connection to GX Cloud has been closed.")
@@ -187,7 +188,6 @@ class GXAgent:
             subscriber = Subscriber(client=client)
             LOGGER.info("The GX Agent is ready.")
             # Open a connection until encountering a shutdown event
-
             subscriber.consume(
                 queue=self._config.queue,
                 on_message=self._handle_event_as_thread_enter,
