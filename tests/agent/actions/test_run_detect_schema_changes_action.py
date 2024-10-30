@@ -46,7 +46,7 @@ def test_run_detect_schema_changes_smoke_test(
     action.run(
         event=SchemaChangeDetectedEvent(
             type="schema_fetch_request.received",
-            organiozation_id=uuid.uuid4(),
+            organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=["test-data-asset1", "test-data-asset2"],
             create_expectations=True,
