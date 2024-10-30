@@ -192,6 +192,7 @@ class GXAgent:
             subscriber = Subscriber(client=client)
             LOGGER.info("The GX Agent is ready.")
             # Open a connection until encountering a shutdown event
+
             subscriber.consume(
                 queue=self._config.queue,
                 on_message=self._handle_event_as_thread_enter,

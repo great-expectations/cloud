@@ -86,11 +86,12 @@ class AsyncRabbitMQClient:
         LOGGER.debug("Shutting down the connection to RabbitMQ.")
         if not self._closing:
             self._closing = True
-
-        if self._consuming:
-            self._stop_consuming()
-        self._connection.ioloop.stop()
-        LOGGER.debug("The connection to RabbitMQ has been shut down.")
+            if self._consuming:
+                self._stop_consuming()
+                self._connection.ioloop.run_forever()
+            else:
+                self._connection.ioloop.stop()
+            LOGGER.debug("The connection to RabbitMQ has been shut down.")
 
     def reset(self) -> None:
         """Reset client to allow a restart."""
@@ -229,28 +230,24 @@ class AsyncRabbitMQClient:
         LOGGER.error(
             "Connection open failed",
             extra={
-                "reason": reason,
+                "reply_code": reason.reply_code,
+                "reply_text": reason.reply_text,
             },
         )
-        self._reconnect()
+        # TODO: Fix reconnect logic before this can be uncommented
+        # self._reconnect()
 
     def _on_connection_closed(
         self, connection: AsyncioConnection, _unused_reason: pika.Exception
     ) -> None:
         """Callback invoked after the broker closes the connection"""
+        # TODO: Fix reconnect logic and add a call here to reconnect if appropriate
         LOGGER.debug("Connection to RabbitMQ has been closed")
         self._channel = None
         self._is_unrecoverable = True
-        if self._closing:
-            connection.ioloop.stop()
-        else:
-            LOGGER.warning(
-                "Connection closed, reconnect necessary",
-                extra={
-                    "reason": reason,
-                },
-            )
-            self._reconnect()
+        # we need to call stop to break out of the run_forever call,
+        # see: https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_forever
+        self._connection.ioloop.stop()
 
     def _close_connection(self, reason: pika.Exception) -> None:
         """Close the connection to the broker."""
