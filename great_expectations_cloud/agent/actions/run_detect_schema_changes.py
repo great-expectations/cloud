@@ -16,6 +16,7 @@ from great_expectations.experimental.metric_repository.metric_list_metric_retrie
 from great_expectations.experimental.metric_repository.metric_repository import (
     MetricRepository,
 )
+from great_expectations.experimental.metric_repository.metrics import MetricTypes
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
@@ -51,8 +52,22 @@ class DetectSchemaChangesAction(AgentAction[SchemaChangeDetectedEvent]):
 
     @override
     def run(self, event: SchemaChangeDetectedEvent, id: str) -> ActionResult:
-        # currently returns a dummy value
         metric_run_id = uuid.uuid4()
+
+        for asset in event.data_assets:
+            datasource = self._context.data_sources.get(event.datasource_name)
+            data_asset = datasource.get_asset(asset)
+            data_asset.test_connection()
+            batch_request = data_asset.build_batch_request()
+
+            self._batch_inspector.compute_metric_list_run(
+                data_asset_id=data_asset.id,
+                batch_request=batch_request,
+                metric_list=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+            )
+            # TODO - Update with full logic in ZELDA-1058
+
+        # TODO - Update this after the full implementation in ZELDA-1058
         return ActionResult(
             id=id,
             type=event.type,
