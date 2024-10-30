@@ -134,17 +134,21 @@ class GXAgent:
     def __init__(self: Self):
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
-        print(f"GX Agent version: {agent_version}")
-        print(f"Great Expectations version: {great_expectations_version}")
-        print("Initializing the GX Agent.")
+        LOGGER.info(
+            "Initializing GX Agent",
+            extra={
+                "agent_version": agent_version,
+                "great_expectations_version": great_expectations_version,
+            },
+        )
         self._config = self._get_config()
-        print("Loading a DataContext - this might take a moment.")
+        LOGGER.debug("Loading a DataContext - this might take a moment.")
 
         with warnings.catch_warnings():
             # suppress warnings about GX version
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
             self._context: CloudDataContext = get_context(cloud_mode=True)
-        print("DataContext is ready.")
+        LOGGER.debug("DataContext is ready.")
 
         self._set_http_session_headers(data_context=self._context)
 
@@ -159,10 +163,9 @@ class GXAgent:
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
-
-        print("Opening connection to GX Cloud.")
+        LOGGER.debug("Opening connection to GX Cloud.")
         self._listen()
-        print("The connection to GX Cloud has been closed.")
+        LOGGER.debug("The connection to GX Cloud has been closed.")
 
     # ZEL-505: A race condition can occur if two or more agents are started at the same time
     #          due to the generation of passwords for rabbitMQ queues. This can be mitigated
@@ -182,19 +185,20 @@ class GXAgent:
         try:
             client = AsyncRabbitMQClient(url=str(self._config.connection_string))
             subscriber = Subscriber(client=client)
-            print("The GX Agent is ready.")
+            LOGGER.info("The GX Agent is ready.")
             # Open a connection until encountering a shutdown event
+
             subscriber.consume(
                 queue=self._config.queue,
                 on_message=self._handle_event_as_thread_enter,
             )
         except KeyboardInterrupt:
-            print("Received request to shut down.")
+            LOGGER.debug("Received request to shut down.")
         except (SubscriberError, ClientError):
-            print("The connection to GX Cloud has encountered an error.")
+            LOGGER.exception("The connection to GX Cloud has encountered an error.")
         except GXAgentUnrecoverableConnectionError:
-            print("The connection to GX Cloud has encountered an unrecoverable error.")
             sys.exit(1)
+            LOGGER.exception("The connection to GX Cloud has encountered an unrecoverable error.")
         except (
             AuthenticationError,
             ProbableAuthenticationError,
@@ -289,7 +293,6 @@ class GXAgent:
             self._update_status(
                 correlation_id=event_context.correlation_id, status=JobStarted(), org_id=org_id
             )
-        print(f"Starting job {event_context.event.type} ({event_context.correlation_id}) ")
         LOGGER.info(
             "Starting job",
             extra={
