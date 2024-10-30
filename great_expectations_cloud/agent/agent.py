@@ -367,8 +367,8 @@ class GXAgent:
                 )
         else:
             status = build_failed_job_completed_status(error)
-            LOGGER.error(traceback.format_exc())
-            LOGGER.error(
+            LOGGER.info(traceback.format_exc())
+            LOGGER.info(
                 "Job completed with error",
                 extra={
                     "event_type": event_context.event.type,
