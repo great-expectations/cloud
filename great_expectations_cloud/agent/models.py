@@ -114,6 +114,13 @@ class DraftDatasourceConfigEvent(EventBase):
     config_id: UUID
 
 
+class SchemaChangeDetectedEvent(EventBase):
+    type: Literal["schema_fetch_request.received"] = "schema_fetch_request.received"
+    datasource_name: str
+    data_assets: Sequence[str]
+    create_expectations: bool = False
+
+
 class UnknownEvent(AgentBaseExtraForbid):
     type: Literal["unknown_event"] = "unknown_event"
 
@@ -130,6 +137,7 @@ Event = Annotated[
         RunMetricsListEvent,
         DraftDatasourceConfigEvent,
         ListTableNamesEvent,
+        SchemaChangeDetectedEvent,
         UnknownEvent,
     ],
     Field(discriminator="type"),
