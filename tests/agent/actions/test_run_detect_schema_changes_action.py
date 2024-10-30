@@ -40,9 +40,6 @@ def test_run_detect_schema_changes_smoke_test(
         organization_id=uuid.uuid4(),
     )
 
-    action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
-    # mock so that we don't raise
-
     action.run(
         event=SchemaChangeDetectedEvent(
             type="schema_fetch_request.received",
