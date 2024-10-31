@@ -23,14 +23,14 @@ from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     CreatedResource,
-    SchemaChangeDetectedEvent,
+    GenerateSchemaChangeExpectationsEvent,
 )
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
 
-class DetectSchemaChangesAction(AgentAction[SchemaChangeDetectedEvent]):
+class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExpectationsEvent]):
     def __init__(  # noqa: PLR0913  # Refactor opportunity
         self,
         context: CloudDataContext,
@@ -51,7 +51,7 @@ class DetectSchemaChangesAction(AgentAction[SchemaChangeDetectedEvent]):
         )
 
     @override
-    def run(self, event: SchemaChangeDetectedEvent, id: str) -> ActionResult:
+    def run(self, event: GenerateSchemaChangeExpectationsEvent, id: str) -> ActionResult:
         metric_run_id = uuid.uuid4()
 
         for asset in event.data_assets:
@@ -77,4 +77,6 @@ class DetectSchemaChangesAction(AgentAction[SchemaChangeDetectedEvent]):
         )
 
 
-register_event_action("1", SchemaChangeDetectedEvent, DetectSchemaChangesAction)
+register_event_action(
+    "1", GenerateSchemaChangeExpectationsEvent, GenerateSchemaChangeExpectationsAction
+)

@@ -114,10 +114,13 @@ class DraftDatasourceConfigEvent(EventBase):
     config_id: UUID
 
 
-class SchemaChangeDetectedEvent(EventBase):
-    type: Literal["schema_fetch_request.received"] = "schema_fetch_request.received"
+class GenerateSchemaChangeExpectationsEvent(EventBase):
+    type: Literal["generate_schema_change_expectations_request.received"] = (
+        "generate_schema_change_expectations_request.received"
+    )
     datasource_name: str
     data_assets: Sequence[str]
+    expectation_suite_id: UUID
     create_expectations: bool = False
 
 
@@ -137,7 +140,7 @@ Event = Annotated[
         RunMetricsListEvent,
         DraftDatasourceConfigEvent,
         ListTableNamesEvent,
-        SchemaChangeDetectedEvent,
+        GenerateSchemaChangeExpectationsEvent,
         UnknownEvent,
     ],
     Field(discriminator="type"),
