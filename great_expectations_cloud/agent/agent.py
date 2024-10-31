@@ -135,7 +135,7 @@ class GXAgent:
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
         LOGGER.info(
-            "Initializing GX Agent",
+            "Initializing GX agent",
             extra={
                 "agent_version": agent_version,
                 "great_expectations_version": great_expectations_version,
