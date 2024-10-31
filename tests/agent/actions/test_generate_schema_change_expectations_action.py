@@ -23,10 +23,10 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.unit
 
 
-def test_run_detect_schema_changes_smoke_test(
+def test_generate_schema_change_expectations_action_smoke_test(
     mock_context: CloudDataContext, mocker: MockerFixture
 ):
-    """Smoke test for DetectSchemaChangesAction. Until we have a better way to test this in ZELDA-1058,
+    """Smoke test for GenerateSchemaChangeExpectationsAction. Until we have a better way to test this in ZELDA-1058,
     we will just test that the calls to`compute_metric_list_run` are made."""
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
     mock_batch_inspector = mocker.Mock(spec=BatchInspector)
