@@ -299,6 +299,9 @@ class GXAgent:
                 "event_type": event_context.event.type,
                 "correlation_id": event_context.correlation_id,
                 "organization_id": str(org_id),
+                "schedule_id": event_context.event.schedule_id
+                if isinstance(event_context.event, ScheduledEventBase)
+                else None,
             },
         )
         handler = EventHandler(context=data_context)
@@ -343,6 +346,9 @@ class GXAgent:
                         "event_type": event_context.event.type,
                         "id": event_context.correlation_id,
                         "organization_id": str(org_id),
+                        "schedule_id": event_context.event.schedule_id
+                        if isinstance(event_context.event, ScheduledEventBase)
+                        else None,
                     },
                 )
             else:
@@ -360,6 +366,9 @@ class GXAgent:
                             result.job_duration.total_seconds() if result.job_duration else None
                         ),
                         "organization_id": str(org_id),
+                        "schedule_id": event_context.event.schedule_id
+                        if isinstance(event_context.event, ScheduledEventBase)
+                        else None,
                     },
                 )
         else:
@@ -507,6 +516,7 @@ class GXAgent:
                 "correlation_id": str(event_context.correlation_id),
                 "event_type": str(event_context.event.type),
                 "organization_id": str(org_id),
+                "schedule_id": str(event_context.event.schedule_id),
             },
         )
 
@@ -532,6 +542,7 @@ class GXAgent:
                     "correlation_id": str(event_context.correlation_id),
                     "event_type": str(event_context.event.type),
                     "organization_id": str(org_id),
+                    "schedule_id": str(event_context.event.schedule_id),
                 },
             )
             GXAgent._raise_gx_cloud_err_on_http_error(
