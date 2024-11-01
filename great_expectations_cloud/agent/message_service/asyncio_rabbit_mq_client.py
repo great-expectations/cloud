@@ -93,7 +93,6 @@ class AsyncRabbitMQClient:
                 self._connection.ioloop.stop()
         LOGGER.debug("The connection to RabbitMQ has been shut down.")
 
-
     def reset(self) -> None:
         """Reset client to allow a restart."""
         LOGGER.debug("Resetting client")
