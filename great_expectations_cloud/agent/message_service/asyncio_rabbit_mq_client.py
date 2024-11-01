@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import ssl
 from asyncio import AbstractEventLoop
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Callable, Protocol
+from typing import TYPE_CHECKING, Callable, Final, Protocol
 
 import pika
 from pika.adapters.asyncio_connection import AsyncioConnection
@@ -15,6 +16,9 @@ from great_expectations_cloud.agent.exceptions import GXAgentUnrecoverableConnec
 if TYPE_CHECKING:
     from pika.channel import Channel
     from pika.spec import Basic, BasicProperties
+
+LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
 
 
 @dataclass(frozen=True)
@@ -79,15 +83,18 @@ class AsyncRabbitMQClient:
         """Close the connection to RabbitMQ."""
         if self._connection is None:
             return
+        LOGGER.debug("Shutting down the connection to RabbitMQ.")
         if not self._closing:
             self._closing = True
 
         if self._consuming:
             self._stop_consuming()
         self._connection.ioloop.stop()
+        LOGGER.debug("The connection to RabbitMQ has been shut down.")
 
     def reset(self) -> None:
         """Reset client to allow a restart."""
+        LOGGER.debug("Resetting client")
         self.should_reconnect = False
         self.was_consuming = False
 
@@ -173,43 +180,66 @@ class AsyncRabbitMQClient:
 
     def _start_consuming(self, queue: str, on_message: OnMessageFn, channel: Channel) -> None:
         """Consume from a channel with the on_message callback."""
+        LOGGER.debug("Issuing consumer-related RPC commands")
         channel.add_on_cancel_callback(self._on_consumer_canceled)
         self._consumer_tag = channel.basic_consume(queue=queue, on_message_callback=on_message)
 
     def _on_consumer_canceled(self, method_frame: Basic.Cancel) -> None:
         """Callback invoked when the broker cancels the client's connection."""
         if self._channel is not None:
+            LOGGER.info(
+                "Consumer was cancelled remotely, shutting down",
+                extra={
+                    "method_frame": method_frame,
+                },
+            )
             self._channel.close()
 
     def _reconnect(self) -> None:
         """Prepare the client to reconnect."""
+        LOGGER.debug("Preparing client to reconnect")
         self.should_reconnect = True
         self.stop()
 
     def _stop_consuming(self) -> None:
         """Cancel the channel, if it exists."""
         if self._channel is not None:
+            LOGGER.debug("Sending a Basic.Cancel RPC command to RabbitMQ")
             self._channel.basic_cancel(self._consumer_tag, callback=self._on_cancel_ok)
 
-    def _on_cancel_ok(self, method_frame: Basic.CancelOk) -> None:
+    def _on_cancel_ok(self, _unused_frame: Basic.CancelOk) -> None:
         """Callback invoked after broker confirms cancel."""
         self._consuming = False
         if self._channel is not None:
+            LOGGER.debug("RabbitMQ acknowledged the cancellation of the consumer")
             self._channel.close()
 
     def _on_connection_open(
         self, connection: AsyncioConnection, queue: str, on_message: OnMessageFn
     ) -> None:
         """Callback invoked after the broker opens the connection."""
+        LOGGER.debug("Connection to RabbitMQ has been opened")
         on_channel_open = partial(self._on_channel_open, queue=queue, on_message=on_message)
         connection.channel(on_open_callback=on_channel_open)
 
-    def _on_connection_open_error(self, connection: AsyncioConnection, reason: str) -> None:
+    def _on_connection_open_error(
+        self, _unused_connection: AsyncioConnection, reason: pika.Exception
+    ) -> None:
         """Callback invoked when there is an error while opening connection."""
         self._reconnect()
+        LOGGER.error(
+            "Connection open failed",
+            extra={
+                "reply_code": reason.reply_code,
+                "reply_text": reason.reply_text,
+            },
+        )
 
-    def _on_connection_closed(self, connection: AsyncioConnection, reason: str) -> None:
+    def _on_connection_closed(
+        self, connection: AsyncioConnection, _unused_reason: pika.Exception
+    ) -> None:
         """Callback invoked after the broker closes the connection"""
+        LOGGER.debug("Connection to RabbitMQ has been closed")
         self._channel = None
         self._is_unrecoverable = True
         if self._closing:
@@ -217,23 +247,34 @@ class AsyncRabbitMQClient:
         else:
             self._reconnect()
 
-    def _close_connection(self) -> None:
+    def _close_connection(self, reason: pika.Exception) -> None:
         """Close the connection to the broker."""
         self._consuming = False
         if self._connection is None or self._connection.is_closing or self._connection.is_closed:
+            LOGGER.debug("Connection to RabbitMQ is closing or is already closed")
             pass
         else:
-            self._connection.close()
+            LOGGER.debug("Closing connection to RabbitMQ")
+            self._connection.close(reply_code=reason.reply_code, reply_text=reason.reply_text)
 
     def _on_channel_open(self, channel: Channel, queue: str, on_message: OnMessageFn) -> None:
         """Callback invoked after the broker opens the channel."""
+        LOGGER.debug("Channel opened")
         self._channel = channel
         channel.add_on_close_callback(self._on_channel_closed)
         self._start_consuming(queue=queue, on_message=on_message, channel=channel)
 
-    def _on_channel_closed(self, channel: Channel, reason: str) -> None:
+    def _on_channel_closed(self, channel: Channel, reason: pika.Exception) -> None:
         """Callback invoked after the broker closes the channel."""
-        self._close_connection()
+        LOGGER.warning(
+            "Channel closed",
+            extra={
+                "channel": channel,
+                "reply_code": reason.reply_code,
+                "reply_text": reason.reply_text,
+            },
+        )
+        self._close_connection(reason)
 
     def _build_client_parameters(self, url: str) -> pika.URLParameters:
         """Configure parameters used to connect to the broker."""
