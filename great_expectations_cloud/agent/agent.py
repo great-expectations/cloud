@@ -164,6 +164,7 @@ class GXAgent:
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
+
         LOGGER.debug("Opening connection to GX Cloud.")
         self._listen()
         # we need a heavy-handed approach here to kill the main process to prevent a scenario where the agent is
@@ -192,7 +193,6 @@ class GXAgent:
             subscriber = Subscriber(client=client)
             LOGGER.info("The GX Agent is ready.")
             # Open a connection until encountering a shutdown event
-
             subscriber.consume(
                 queue=self._config.queue,
                 on_message=self._handle_event_as_thread_enter,
@@ -326,6 +326,7 @@ class GXAgent:
             event_context: event with related properties and actions.
         """
         # warning:  this method will not be executed in the main thread
+
         org_id = self.get_organization_id(event_context)
 
         # get results or errors from the thread
