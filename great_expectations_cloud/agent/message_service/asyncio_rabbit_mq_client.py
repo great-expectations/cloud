@@ -238,7 +238,7 @@ class AsyncRabbitMQClient:
         # self._reconnect()
 
     def _on_connection_closed(
-        self, connection: AsyncioConnection, _unused_reason: pika.Exception
+        self, _unused_connection: AsyncioConnection, _unused_reason: pika.Exception
     ) -> None:
         """Callback invoked after the broker closes the connection"""
         # TODO: Fix reconnect logic and add a call here to reconnect if appropriate
@@ -247,7 +247,8 @@ class AsyncRabbitMQClient:
         self._is_unrecoverable = True
         # we need to call stop to break out of the run_forever call,
         # see: https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_forever
-        self._connection.ioloop.stop()
+        if self._connection is not None:
+            self._connection.ioloop.stop()
 
     def _close_connection(self, reason: pika.Exception) -> None:
         """Close the connection to the broker."""
