@@ -223,7 +223,7 @@ class AsyncRabbitMQClient:
         connection.channel(on_open_callback=on_channel_open)
 
     def _on_connection_open_error(
-        self, _unused_connection: AsyncioConnection, reason: Exception
+        self, _unused_connection: AsyncioConnection, reason: pika.Exception
     ) -> None:
         """Callback invoked when there is an error while opening connection."""
         self._reconnect()
@@ -235,7 +235,9 @@ class AsyncRabbitMQClient:
             },
         )
 
-    def _on_connection_closed(self, connection: AsyncioConnection, reason: Exception) -> None:
+    def _on_connection_closed(
+        self, connection: AsyncioConnection, _unused_reason: pika.Exception
+    ) -> None:
         """Callback invoked after the broker closes the connection"""
         LOGGER.debug("Connection to RabbitMQ has been closed")
         self._channel = None
@@ -245,7 +247,7 @@ class AsyncRabbitMQClient:
         else:
             self._reconnect()
 
-    def _close_connection(self, reason: Exception) -> None:
+    def _close_connection(self, reason: pika.Exception) -> None:
         """Close the connection to the broker."""
         self._consuming = False
         if self._connection is None or self._connection.is_closing or self._connection.is_closed:
@@ -262,7 +264,7 @@ class AsyncRabbitMQClient:
         channel.add_on_close_callback(self._on_channel_closed)
         self._start_consuming(queue=queue, on_message=on_message, channel=channel)
 
-    def _on_channel_closed(self, channel: Channel, reason: Exception) -> None:
+    def _on_channel_closed(self, channel: Channel, reason: pika.Exception) -> None:
         """Callback invoked after the broker closes the channel."""
         LOGGER.warning(
             "Channel closed",
