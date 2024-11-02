@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -16,7 +15,7 @@ from great_expectations.experimental.metric_repository.metric_list_metric_retrie
 from great_expectations.experimental.metric_repository.metric_repository import (
     MetricRepository,
 )
-from great_expectations.experimental.metric_repository.metrics import MetricTypes
+from great_expectations.experimental.metric_repository.metrics import MetricRun, MetricTypes
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
@@ -52,29 +51,44 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
 
     @override
     def run(self, event: GenerateSchemaChangeExpectationsEvent, id: str) -> ActionResult:
-        metric_run_id = uuid.uuid4()
-
+        created_resources: list[CreatedResource] = []
         for asset in event.data_assets:
+            print(f"hi this is the first asset: {asset}")
             datasource = self._context.data_sources.get(event.datasource_name)
             data_asset = datasource.get_asset(asset)
             data_asset.test_connection()
             batch_request = data_asset.build_batch_request()
 
-            self._batch_inspector.compute_metric_list_run(
+            metric_run = self._batch_inspector.compute_metric_list_run(
                 data_asset_id=data_asset.id,
                 batch_request=batch_request,
-                metric_list=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
+                # Table Column Types included for future-proofing
+                metric_list=[MetricTypes.TABLE_COLUMNS, MetricTypes.TABLE_COLUMN_TYPES],
             )
-            # TODO - Update with full logic in ZELDA-1058
+            metric_run_id = self._metric_repository.add_metric_run(metric_run)
 
-        # TODO - Update this after the full implementation in ZELDA-1058
+            # Note: This exception is raised after the metric run is added to the repository so that
+            # the user can still access any computed metrics even if one of the metrics fails.
+            self._raise_on_any_metric_exception(metric_run)
+
+            created_resources.append(
+                CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
+            )
+
+            # TODO: Update this to include the Expectation creation
+
         return ActionResult(
             id=id,
             type=event.type,
-            created_resources=[
-                CreatedResource(resource_id=str(metric_run_id), type="MetricRun"),
-            ],
+            created_resources=created_resources,
         )
+
+    @staticmethod
+    def _raise_on_any_metric_exception(metric_run: MetricRun) -> None:
+        if any(metric.exception for metric in metric_run.metrics):
+            raise RuntimeError(  # noqa: TRY003 # one off error
+                "One or more metrics failed to compute."
+            )
 
 
 register_event_action(

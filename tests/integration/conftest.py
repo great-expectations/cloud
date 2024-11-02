@@ -13,13 +13,14 @@ LOGGER: Final = logging.getLogger("tests")
 
 @pytest.fixture(scope="module")
 def cloud_base_url() -> str:
-    return "http://localhost:5000"
+    return "http://localhost:7000"
 
 
 @pytest.fixture(scope="module")
 def org_id_env_var() -> str:
     org_id = os.environ.get("GX_CLOUD_ORGANIZATION_ID")
     assert org_id, "No GX_CLOUD_ORGANIZATION_ID env var"
+    # this had to be set locally for me
     return org_id
 
 
@@ -27,6 +28,7 @@ def org_id_env_var() -> str:
 def token_env_var() -> str:
     gx_token = os.environ.get("GX_CLOUD_ACCESS_TOKEN")
     assert gx_token, "No GX_CLOUD_ACCESS_TOKEN env var"
+    # This had to be set locally for me
     return gx_token
 
 
@@ -34,7 +36,7 @@ def token_env_var() -> str:
 def context(org_id_env_var: str, token_env_var: str) -> CloudDataContext:
     context = gx.get_context(
         mode="cloud",
-        cloud_base_url=os.environ.get("GX_CLOUD_BASE_URL"),
+        cloud_base_url="http://localhost:7000",
         cloud_organization_id=org_id_env_var,
         cloud_access_token=token_env_var,
     )
