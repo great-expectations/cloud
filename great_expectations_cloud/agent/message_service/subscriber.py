@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import time
+from concurrent.futures import Future
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Callable, Coroutine, Protocol
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Protocol
 
 from pika.exceptions import (
     AMQPError,
@@ -12,6 +13,7 @@ from pika.exceptions import (
     ChannelError,
 )
 
+from great_expectations_cloud.agent.constants import JOB_TIMEOUT_IN_SECONDS
 from great_expectations_cloud.agent.event_handler import EventHandler
 from great_expectations_cloud.agent.exceptions import GXAgentUnrecoverableConnectionError
 
@@ -71,6 +73,8 @@ class Subscriber:
         self,
         queue: str,
         on_message: OnMessageCallback,
+        current_task: Future[Any] | None = None,
+        current_task_started_at: int | None = None,
     ) -> None:
         """Subscribe to queue with on_message callback.
 
@@ -85,7 +89,19 @@ class Subscriber:
 
         while True:
             try:
+                print("In consume before client.run")
                 self.client.run(queue=queue, on_message=callback)
+                print("In consume after client.run")
+                # TODO: Is this a good place to check if the task has taken too long?
+                if current_task:
+                    if int(time.time()) - current_task_started_at > JOB_TIMEOUT_IN_SECONDS:
+                        # TODO: Do we need to do more than just cancel?
+                        print("Cancelling task")
+                        current_task.cancel()
+                        print("Cancelled task")
+                        # TODO: What should exception message be?
+                        raise TimeoutError("Task took too long to complete.")  # noqa: TRY003 # just for debugging - remove before merge
+
             except AuthenticationError:
                 # If an authentication error happens when trying to connect to rabbitMQ,
                 # it means that the connection string is incorrect. Retrying would not

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import logging
 import sys
+import time
 import traceback
 import warnings
 from collections import defaultdict
@@ -158,6 +160,7 @@ class GXAgent:
         # it isn't safe to increase the number of workers running GX jobs.
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._current_task: Future[Any] | None = None
+        self._current_task_started_at: int | None = None
         self._redeliver_msg_task: asyncio.Task[Any] | None = None
         self._correlation_ids: defaultdict[str, int] = defaultdict(lambda: 0)
 
@@ -191,6 +194,8 @@ class GXAgent:
             subscriber.consume(
                 queue=self._config.queue,
                 on_message=self._handle_event_as_thread_enter,
+                current_task=self._current_task,
+                current_task_started_at=self._current_task_started_at,
             )
         except KeyboardInterrupt:
             print("Received request to shut down.")
@@ -242,10 +247,16 @@ class GXAgent:
             self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
             return
 
+        # TODO: Set time the task started
+        self._current_task_started_at = int(
+            time.time()
+        )  # Epoch time in seconds, maybe better to use datetime?
+        print(f"Task started at {self._current_task_started_at}")
         self._current_task = self._executor.submit(
             self._handle_event,
             event_context=event_context,
         )
+        print("Task submitted to executor.")
 
         if self._current_task is not None:
             # add a callback for when the thread exits and pass it the event context
@@ -329,14 +340,21 @@ class GXAgent:
         # get results or errors from the thread
         try:
             error = future.exception(timeout=JOB_TIMEOUT_IN_SECONDS)
+            print("Job completed w error")
+            print(error)
+        except concurrent.futures.TimeoutError:
+            print("concurrent.futures.TimeoutError")
         except TimeoutError as e:
+            print("TimeoutError in future.exception()")
             error = e
 
         if error is None:
             try:
                 result: ActionResult = future.result(timeout=JOB_TIMEOUT_IN_SECONDS)
+                print("Job completed w/o error")
                 status = self._get_job_status_with_no_error(event_context, org_id, result)
             except TimeoutError:
+                print("TimeoutError in future.result()")
                 status = self._get_status_from_timeout_error(event_context, org_id)
 
         elif isinstance(error, TimeoutError):
@@ -360,6 +378,7 @@ class GXAgent:
 
         # ack message and cleanup resources
         event_context.processed_successfully()
+        self._current_task_started_at = None  # Restart timer
         self._current_task = None
 
     def _get_status_from_timeout_error(self, event_context, org_id):

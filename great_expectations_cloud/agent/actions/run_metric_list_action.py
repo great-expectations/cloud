@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -51,6 +52,13 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
 
     @override
     def run(self, event: RunMetricsListEvent, id: str) -> ActionResult:
+        print("sleeping for 5 sec")
+        time.sleep(5)
+        print("done sleeping")
+        # raise concurrent.futures.TimeoutError("timeout error")
+        # raise SystemExit("system exit")
+        # print("Print after raising exception")
+        print("After sleeping, job should not run successfully")
         datasource = self._context.data_sources.get(event.datasource_name)
         data_asset = datasource.get_asset(event.data_asset_name)
         data_asset.test_connection()  # raises `TestConnectionError` on failure
@@ -68,6 +76,8 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
         # Note: This exception is raised after the metric run is added to the repository so that
         # the user can still access any computed metrics even if one of the metrics fails.
         self._raise_on_any_metric_exception(metric_run)
+
+        print("We should not see this message, this is after the metric run is processed")
 
         return ActionResult(
             id=id,
