@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, Literal, Optional, Sequence, Set, Union
+from typing import Any, Dict, Literal, Optional, Sequence, Set, TypeVar, Union
 from uuid import UUID
 
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
@@ -124,25 +124,13 @@ class GenerateSchemaChangeExpectationsEvent(EventBase):
     create_expectations: bool = False
 
 
-class UnknownEvent(AgentBaseExtraForbid):
+class UnknownEvent(EventBase):
     type: Literal["unknown_event"] = "unknown_event"
 
 
+_EventBaseT = TypeVar("_EventBaseT", bound=EventBase)
 Event = Annotated[
-    Union[
-        RunOnboardingDataAssistantEvent,
-        RunMissingnessDataAssistantEvent,
-        RunCheckpointEvent,
-        RunScheduledCheckpointEvent,
-        RunWindowCheckpointEvent,
-        RunScheduledWindowCheckpointEvent,
-        RunColumnDescriptiveMetricsEvent,
-        RunMetricsListEvent,
-        DraftDatasourceConfigEvent,
-        ListTableNamesEvent,
-        GenerateSchemaChangeExpectationsEvent,
-        UnknownEvent,
-    ],
+    _EventBaseT,
     Field(discriminator="type"),
 ]
 
