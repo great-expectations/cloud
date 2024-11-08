@@ -299,6 +299,7 @@ class GXAgent:
                 "event_type": event_context.event.type,
                 "correlation_id": event_context.correlation_id,
                 "organization_id": str(org_id),
+                "event_payload": event_context.event,
             },
         )
         handler = EventHandler(context=data_context)
