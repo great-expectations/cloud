@@ -14,7 +14,6 @@ from great_expectations_cloud.agent.actions.agent_action import (
 from great_expectations_cloud.agent.actions.run_checkpoint import run_checkpoint
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
-    RunScheduledWindowCheckpointEvent,
     RunWindowCheckpointEvent,
 )
 
@@ -43,7 +42,7 @@ register_event_action("1", RunWindowCheckpointEvent, RunWindowCheckpointAction)
 
 def run_window_checkpoint(
     context: CloudDataContext,
-    event: RunWindowCheckpointEvent | RunScheduledWindowCheckpointEvent,
+    event: RunWindowCheckpointEvent,
     id: str,
     auth_key: str,
     url: str,
