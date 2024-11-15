@@ -260,22 +260,25 @@ class AsyncRabbitMQClient:
             self._connection.close(reply_code=reply_code, reply_text=reply_text)
 
     def _log_pika_exception(
-        self, message: str, reason: pika.Exception, extra: dict | None = None
+        self, message: str, reason: pika.Exception, extra: dict[str, str] | None = None
     ) -> None:
         """Log a pika exception. Extra is key-value pairs to include in the log message."""
         if not extra:
             extra = {}
         if isinstance(reason, (ConnectionClosed, ChannelClosed)):
+            default_extra: dict[str, str] = {
+                "reply_code": str(reason.reply_code),
+                "reply_text": str(reason.reply_text),
+            }
             LOGGER.error(
                 message,
-                extra={
-                    "reply_code": reason.reply_code,
-                    "reply_text": reason.reply_text,
-                }
-                | extra,
+                # mypy not happy with dict | dict, so we use the dict constructor
+                extra={**default_extra, **extra},
             )
         else:
-            LOGGER.error(message, extra={"reason": str(reason)} | extra)
+            default_extra = {"reason": str(reason)}
+            # mypy not happy with dict | dict, so we use the dict constructor
+            LOGGER.error(message, extra={**default_extra, **extra})
 
     def _on_channel_open(self, channel: Channel, queue: str, on_message: OnMessageFn) -> None:
         """Callback invoked after the broker opens the channel."""
