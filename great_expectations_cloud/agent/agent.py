@@ -393,6 +393,8 @@ class GXAgent:
             # Otherwise, it would attempt to handle the error again via this done callback
             event_context.processed_with_failures()
             self._current_task = None
+            # Return so we don't also ack as processed successfully
+            return
 
         # ack message and cleanup resources
         event_context.processed_successfully()
