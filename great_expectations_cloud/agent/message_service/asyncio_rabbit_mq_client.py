@@ -255,8 +255,8 @@ class AsyncRabbitMQClient:
                 reply_code = reason.reply_code
                 reply_text = reason.reply_text
             else:
-                reply_code = 0
-                reply_text = "Unknown error"
+                reply_code = 999  # arbitrary value, not in the list of AMQP reply codes: https://www.rabbitmq.com/amqp-0-9-1-reference#constants
+                reply_text = str(reason)
             self._connection.close(reply_code=reply_code, reply_text=reply_text)
 
     def _log_pika_exception(
