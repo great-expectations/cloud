@@ -44,6 +44,36 @@ services:
 
   mercury-service-api:
     platform: linux/amd64
+    image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api
+    restart: always
+    volumes:
+      - ./services/ge_cloud/:/code
+    ports:
+      - 5000:5000
+    environment:
+      LOGGING_LEVEL: ${LOGGING_LEVEL}
+      ENVIRONMENT: ${ENVIRONMENT}
+      MERCURY_DIALECT: postgresql
+      MERCURY_USER: gx_mercury_user
+      MERCURY_PASSWORD: postgres
+      MERCURY_HOST: db
+      MERCURY_DATABASE: mercury
+      GE_USAGE_STATISTICS_URL: ${GE_USAGE_STATISTICS_URL}
+      AMQP_CONNECTION_STRING: amqp://gx_prod:password@mq:5672
+      AMQP_REST_PORT: 15672
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN}
+      AUTH0_API_AUDIENCE: ${AUTH0_API_AUDIENCE}
+      AUTH0_MERCURY_API_CLIENT_ID: ${AUTH0_MERCURY_API_CLIENT_ID}
+      AUTH0_MERCURY_API_CLIENT_SECRET: ${AUTH0_MERCURY_API_CLIENT_SECRET}
+      SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      SLACK_REDIRECT_URI: ${SLACK_REDIRECT_URI}
+      SLACK_CLIENT_ID: ${SLACK_CLIENT_ID}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      LD_SDK_KEY: ${LD_SDK_KEY}
+
+  mercury-service-api-v1:
+    platform: linux/amd64
     image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api:v1api-latest
     restart: always
     volumes:
