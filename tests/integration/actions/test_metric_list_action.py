@@ -114,9 +114,10 @@ def test_running_metric_list_action(
     local_mercury_db_datasource: PostgresDatasource,
     local_mercury_db_organizations_table_asset: TableAsset,
     org_id_env_var: str,
-    cloud_base_url: str,
     token_env_var: str,
 ):
+    cloud_base_url = "http://localhost:7000"
+
     # MetricListEvent with only the Table Metrics requested
     metrics_list_event = RunMetricsListEvent(
         type="metrics_list_request.received",
