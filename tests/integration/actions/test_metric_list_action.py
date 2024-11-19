@@ -74,14 +74,12 @@ def graphql_test_client(
                 payload_dict["variables"] = variables
 
             payload = json.dumps(payload_dict)
-
+            graphql_endpoint = f"http://{mercury_api_host}:{mercury_api_port}/organizations/{org_id_env_var}/graphql"
             res = self.client.post(
-                f"http://{mercury_api_host}:{mercury_api_port}/organizations"
-                f"/{org_id_env_var}/graphql",
+                url=graphql_endpoint,
                 data=payload,
                 headers=headers,
             )
-
             if status_code is not None:
                 assert res.status_code == status_code
 
@@ -95,7 +93,7 @@ def local_mercury_db_datasource(
     context: CloudDataContext,
 ) -> PostgresDatasource:
     datasource_name = "local_mercury_db"
-    datasource = context.get_datasource(name=datasource_name)
+    datasource = context.data_sources.get(datasource_name)
     yield datasource
 
 
@@ -108,7 +106,6 @@ def local_mercury_db_organizations_table_asset(
     yield data_asset
 
 
-@pytest.mark.skip("Skipping integration tests until they are updated for v1.0")
 def test_running_metric_list_action(
     context: CloudDataContext,
     graphql_test_client,
