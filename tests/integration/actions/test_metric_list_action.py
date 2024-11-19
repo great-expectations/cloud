@@ -80,6 +80,7 @@ def graphql_test_client(
                 data=payload,
                 headers=headers,
             )
+            print(f"Response: {res}")
             if status_code is not None:
                 assert res.status_code == status_code
 
