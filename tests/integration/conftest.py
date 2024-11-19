@@ -13,7 +13,7 @@ LOGGER: Final = logging.getLogger("tests")
 
 @pytest.fixture(scope="module")
 def cloud_base_url() -> str:
-    return "http://localhost:5000"
+    return "http://localhost:7000"
 
 
 @pytest.fixture(scope="module")
