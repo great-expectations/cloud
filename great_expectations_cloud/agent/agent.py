@@ -95,7 +95,7 @@ class GXAgentConfig(AgentBaseExtraForbid):
     gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
-    enable_progress_bars: bool = False
+    enable_progress_bars: bool = True
 
 
 def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
