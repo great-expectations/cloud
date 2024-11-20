@@ -9,6 +9,7 @@ class GxAgentEnvVars(BaseSettings):
     gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
+    enable_progress_bars: bool = False
 
     def __init__(self, **overrides: str | AnyUrl) -> None:
         """
