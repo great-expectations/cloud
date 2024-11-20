@@ -66,7 +66,6 @@ def gx_agent_config(
     random_uuid,
     random_string,
     local_mercury,
-    enable_progress_bars,
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
@@ -74,7 +73,6 @@ def gx_agent_config(
         gx_cloud_access_token=random_string,
         gx_cloud_organization_id=random_uuid,
         gx_cloud_base_url=local_mercury,
-        enable_progress_bars=enable_progress_bars,
     )
     return config
 
