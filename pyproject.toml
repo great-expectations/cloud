@@ -255,6 +255,11 @@ filterwarnings = [
     "module: The GenericFunction 'flatten' is already registered and is going to be overridden:sqlalchemy.exc.SAWarning",
     #  RuntimeWarning: coroutine 'FastStream.run' was never awaited. We are already handling FastStream.run() as part of asyncio
     "ignore: coroutine 'FastStream.run' was never awaited",
+        # distutils
+    "ignore:The distutils package is deprecated",
+
+
+
 ]
 
 [tool.coverage.report]

@@ -61,7 +61,7 @@ def graphql_test_client(
     org_id_env_var,
 ):
     mercury_api_host = "localhost"
-    mercury_api_port = 5000
+    mercury_api_port = 7000
 
     class GraphQlTestClient:
         client = requests.Session()
@@ -118,6 +118,7 @@ def test_running_metric_list_action(
     cloud_base_url: str,
     token_env_var: str,
 ):
+    cloud_base_url = "http://localhost:7000"
     # MetricListEvent with only the Table Metrics requested
     metrics_list_event = RunMetricsListEvent(
         type="metrics_list_request.received",
@@ -159,7 +160,6 @@ def test_running_metric_list_action(
             "assetId": f"{local_mercury_db_organizations_table_asset.id}",
         },
     )
-
     assert result["data"]["dataAsset"]["id"] == f"{local_mercury_db_organizations_table_asset.id}"
     assert result["data"]["dataAsset"]["name"] == local_mercury_db_organizations_table_asset.name
     assert result["data"]["dataAsset"]["datasourceId"] == f"{local_mercury_db_datasource.id}"
