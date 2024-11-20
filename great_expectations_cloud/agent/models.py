@@ -113,6 +113,14 @@ class GenerateSchemaChangeExpectationsEvent(EventBase):
     create_expectations: bool = False
 
 
+class RunRdAgentEvent(EventBase):
+    type: Literal["rd_agent_action.received"] = "rd_agent_action.received"
+    datasource_name: str
+    data_asset_name: str
+    batch_definition_name: str
+    batch_parameters: Dict[str, Any]
+
+
 class UnknownEvent(AgentBaseExtraForbid):
     type: Literal["unknown_event"] = "unknown_event"
 
@@ -129,6 +137,7 @@ Event = Annotated[
         DraftDatasourceConfigEvent,
         ListTableNamesEvent,
         GenerateSchemaChangeExpectationsEvent,
+        RunRdAgentEvent,
         UnknownEvent,
     ],
     Field(discriminator="type"),
