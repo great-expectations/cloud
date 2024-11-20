@@ -118,7 +118,7 @@ class RunRdAgentEvent(EventBase):
     datasource_name: str
     data_asset_name: str
     batch_definition_name: str
-    splitter_options: Optional[Dict[str, Any]] = None
+    batch_parameters: Dict[str, Any] = None
 
 
 class UnknownEvent(AgentBaseExtraForbid):
