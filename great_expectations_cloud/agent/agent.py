@@ -456,6 +456,7 @@ class GXAgent:
                 gx_cloud_base_url=env_vars.gx_cloud_base_url,
                 gx_cloud_organization_id=env_vars.gx_cloud_organization_id,
                 gx_cloud_access_token=env_vars.gx_cloud_access_token,
+                enable_progress_bars=env_vars.enable_progress_bars,
             )
         except pydantic_v1.ValidationError as validation_err:
             raise GXAgentConfigError(
