@@ -11,7 +11,7 @@ class GxAgentEnvVars(BaseSettings):
     gx_cloud_access_token: str
     enable_progress_bars: bool = False
 
-    def __init__(self, **overrides: str | bool | AnyUrl) -> None:
+    def __init__(self, **overrides: str | AnyUrl) -> None:
         """
         Custom __init__ to prevent type error when relying on environment variables.
 
