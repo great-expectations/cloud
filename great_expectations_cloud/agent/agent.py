@@ -77,7 +77,7 @@ if TYPE_CHECKING:
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 # TODO Set in log dict
-LOGGER.setLevel(logging.DEBUG)
+# LOGGER.setLevel(logging.DEBUG)
 HandlerMap = Dict[str, OnMessageCallback]
 
 
@@ -142,13 +142,13 @@ class GXAgent:
             },
         )
         self._config = self._get_config()
-        LOGGER.debug("Loading a DataContext - this might take a moment.")
+        LOGGER.info("Loading a DataContext - this might take a moment.")
 
         with warnings.catch_warnings():
             # suppress warnings about GX version
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
             self._context: CloudDataContext = get_context(cloud_mode=True)
-        LOGGER.debug("DataContext is ready.")
+        LOGGER.info("DataContext is ready.")
 
         self._set_http_session_headers(data_context=self._context)
 
@@ -373,10 +373,11 @@ class GXAgent:
                 )
         else:
             status = build_failed_job_completed_status(error)
-            LOGGER.info(traceback.format_exc())
+            # Note: this is not a critical error, so we log it as info
             LOGGER.info(
                 "Job completed with error",
                 extra={
+                    "exception": traceback.format_exc(),
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
                     "organization_id": str(org_id),

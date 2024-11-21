@@ -9,6 +9,9 @@ class GxAgentEnvVars(BaseSettings):
     gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
+    environment: str = "local"  # Default set for local development
+    service_name: str = "gx-agent"
+    logging_version: str = "1"
 
     def __init__(self, **overrides: str | AnyUrl) -> None:
         """

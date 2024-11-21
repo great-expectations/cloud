@@ -7,10 +7,17 @@ import logging
 import logging.config
 import logging.handlers
 import pathlib
+from collections.abc import Callable, MutableMapping, Sequence
 from datetime import datetime, timezone
-from typing import Any, ClassVar, Final, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal
 
+import structlog
 from typing_extensions import override
+
+if TYPE_CHECKING:
+    from structlog.types import Processor
+
+    from great_expectations_cloud.agent.config import GxAgentEnvVars
 
 LOGGER = logging.getLogger(__name__)
 
@@ -18,27 +25,6 @@ DEFAULT_LOG_FILE: Final[str] = "logfile"
 DEFAULT_LOG_DIR = "logs"
 SERVICE_NAME: Final[str] = "gx-agent"
 DEFAULT_FILE_LOGGING_LEVEL: Final[int] = logging.DEBUG
-
-# Consider moving to file
-DEFAULT_LOGGING_CFG = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {"default_fmt": {"format": "[%(levelname)s] %(name)s: %(message)s"}},
-    "handlers": {
-        "default_handler": {
-            "formatter": "default_fmt",
-            "class": "logging.StreamHandler",
-            "stream": "ext://sys.stdout",
-        },
-    },
-    "loggers": {
-        "": {
-            "handlers": ["default_handler"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-    },
-}
 
 
 @dc.dataclass
@@ -76,8 +62,83 @@ class LogLevel(str, enum.Enum):
         )
 
 
+def _logging_level_from_str(level: str) -> int:
+    if not level:
+        return logging.INFO
+
+    log_level = logging.getLevelName(level.upper())
+    if isinstance(log_level, int):
+        return log_level
+    return logging.INFO
+
+
+def _build_processors(config: GxAgentEnvVars) -> Sequence[Processor]:
+    result: list[Processor] = [
+        structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+    ]
+
+    if config.environment.lower() == "local":
+        result.append(structlog.dev.ConsoleRenderer())
+    else:
+        result.append(structlog.processors.JSONRenderer())
+
+    return result
+
+
+def _add_default_tags(
+    tags: dict[str, Any] | None = None,
+) -> Callable[
+    [structlog.types.WrappedLogger, str, MutableMapping[str, Any]], MutableMapping[str, Any]
+]:
+    def add(
+        logger: structlog.types.WrappedLogger,
+        method_name: str,
+        event_dict: MutableMapping[str, Any],
+    ) -> MutableMapping[str, Any]:
+        if tags is not None:
+            event_dict.update(tags)
+        return event_dict
+
+    return add
+
+
+def _logging_configuration_processor(
+    config: GxAgentEnvVars,
+) -> Callable[
+    [structlog.types.WrappedLogger, str, MutableMapping[str, Any]], MutableMapping[str, Any]
+]:
+    def _logging_configuration_processor_inner(
+        logger: structlog.types.WrappedLogger,
+        method_name: str,
+        event_dict: MutableMapping[str, Any],
+    ) -> MutableMapping[str, Any]:
+        event_dict["service"] = config.service_name
+        event_dict["logging_version"] = config.logging_version
+        event_dict["env"] = config.environment
+        return event_dict
+
+    return _logging_configuration_processor_inner
+
+
+def _build_pre_processors(
+    config: GxAgentEnvVars, tags: dict[str, Any] | None = None
+) -> Sequence[Processor]:
+    return [
+        structlog.stdlib.ExtraAdder(),
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.contextvars.merge_contextvars,
+        _logging_configuration_processor(config),
+        _add_default_tags(tags=tags),
+    ]
+
+
 # TODO Add org ID
-def configure_logger(log_settings: LogSettings) -> None:
+def configure_logger(log_settings: LogSettings, config: GxAgentEnvVars) -> None:
     """
     Configure the root logger for the application.
     If a log configuration file is provided, other arguments are ignored.
@@ -91,21 +152,38 @@ def configure_logger(log_settings: LogSettings) -> None:
     if log_settings.log_cfg_file:
         _load_cfg_from_file(log_settings.log_cfg_file)
         return
-    logging.config.dictConfig(DEFAULT_LOGGING_CFG)
 
     root = logging.getLogger()
-    if log_settings.json_log and len(root.handlers) == 1:
-        fmt = JSONFormatter(custom_tags=log_settings.custom_tags)
-        root.handlers[0].setFormatter(fmt)
 
-    root.setLevel(log_settings.log_level.numeric_level)
+    log_level = _logging_level_from_str(log_settings.log_level)
+
+    formatter = structlog.stdlib.ProcessorFormatter(
+        processors=_build_processors(config),
+        foreign_pre_chain=_build_pre_processors(config=config, tags=log_settings.custom_tags),
+    )
+    structlog_handler = logging.StreamHandler()
+    structlog_handler.setFormatter(formatter)
+    structlog_handler.setLevel(log_level)
+
+    root.setLevel(log_level)
+
+    root.addHandler(structlog_handler)
+
     # 2024-08-12: Reduce noise of pika reconnects
     logging.getLogger("pika").setLevel(logging.WARNING)
+
+    # Reduce noise from GX Core
+    logging.getLogger("great_expectations").setLevel(logging.WARNING)
+
+    # Reduce noise from GX Core version checker
+    logging.getLogger("great_expectations.data_context._version_checker").setLevel(logging.ERROR)
 
     # TODO Define file loggers as dictConfig as well
     if not log_settings.skip_log_file:
         file_handler = _get_file_handler()
         root.addHandler(file_handler)
+
+    logging.getLogger(__name__).setLevel(log_level)
 
 
 def _get_file_handler() -> logging.handlers.TimedRotatingFileHandler:

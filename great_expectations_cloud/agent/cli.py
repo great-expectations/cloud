@@ -8,6 +8,7 @@ import pathlib
 import sys
 from typing import Any
 
+from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.logging.logging_cfg import LogLevel, LogSettings, configure_logger
 
 LOGGER = logging.getLogger(__name__)
@@ -31,8 +32,8 @@ def _parse_args() -> Arguments:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--log-level",
-        help="Level of logging to use. Defaults to WARNING.",
-        default="WARNING",
+        help="Level of logging to use. Defaults to INFO.",
+        default="INFO",
         type=LogLevel,
     )
     parser.add_argument(
@@ -80,14 +81,16 @@ def main() -> None:
         print(f"Failed to parse custom tags {args.custom_log_tags} due to {e}")
         sys.exit(1)
 
+    config = GxAgentEnvVars()
     configure_logger(
-        LogSettings(
+        log_settings=LogSettings(
             log_level=args.log_level,
             skip_log_file=args.skip_log_file,
             log_cfg_file=args.log_cfg_file,
             json_log=args.json_log,
             custom_tags=custom_tags,
-        )
+        ),
+        config=config,
     )
 
     if args.version:
