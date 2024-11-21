@@ -46,7 +46,6 @@ def test_generate_schema_change_expectations_action_smoke_test(
             organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=["test-data-asset1", "test-data-asset2"],
-            expectation_suite_id=uuid.uuid4(),
             create_expectations=True,
         ),
         id="test-id",
