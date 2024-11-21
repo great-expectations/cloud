@@ -661,5 +661,4 @@ class GXAgent:
         try:
             response.raise_for_status()
         except requests.HTTPError:
-            # LOGGER.error(traceback.format_exc(), extra={"response": response, "error_message": message})
             LOGGER.exception(message, extra={"response": response})

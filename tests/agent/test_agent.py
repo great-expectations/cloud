@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import random
 import string
 import uuid
@@ -634,7 +633,6 @@ def test_correlation_id_header(
 
 
 def test_log_err_on_http_error_error_response(caplog):
-    caplog.set_level(logging.ERROR)
     test_response = requests.Response()
     # 404 - Not Found
     test_response.status_code = 404
