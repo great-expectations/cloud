@@ -60,7 +60,12 @@ def set_required_env_vars(monkeypatch, random_uuid, random_string, local_mercury
 
 @pytest.fixture
 def gx_agent_config(
-    set_required_env_vars, queue, connection_string, random_uuid, random_string, local_mercury
+    set_required_env_vars,
+    queue,
+    connection_string,
+    random_uuid,
+    random_string,
+    local_mercury,
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
@@ -192,6 +197,16 @@ def requests_post(mocker, queue, connection_string):
 def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config, requests_post):
     agent = GXAgent()
     assert agent._config == gx_agent_config
+
+
+@pytest.mark.parametrize("enable_progress_bars", [True, False])
+def test_gx_agent_configures_progress_bars_on_init(
+    monkeypatch, enable_progress_bars, get_context, gx_agent_config, requests_post
+):
+    monkeypatch.setenv("ENABLE_PROGRESS_BARS", str(enable_progress_bars))
+    agent = GXAgent()
+    assert agent._context.variables.progress_bars.globally == enable_progress_bars
+    assert agent._context.variables.progress_bars.metric_calculations == enable_progress_bars
 
 
 def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
