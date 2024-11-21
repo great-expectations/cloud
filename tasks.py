@@ -379,5 +379,7 @@ def start_supporting_services(ctx: Context) -> None:
         "docker compose run db-seeder",
         "docker compose run mq-wait",
         "docker compose up mercury-service-api -d",
+        "docker compose up mercury-service-api-v1 -d",
+        "docker compose up nginx -d",
     ]:
         ctx.run(cmd, echo=True, pty=True)
