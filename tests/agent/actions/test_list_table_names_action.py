@@ -75,7 +75,7 @@ def test_list_table_names_event_raises_for_non_sql_datasource(
     mock_context.get_expectation_suite.side_effect = StoreBackendError("test-message")
     mock_context.get_checkpoint.side_effect = StoreBackendError("test-message")
     datasource = mocker.Mock(spec=PandasDatasource)
-    mock_context.get_datasource.return_value = datasource
+    mock_context.data_sources.get.return_value = datasource
 
     with pytest.raises(TypeError, match=r"This operation requires a SQL Data Source but got"):
         action.run(event=event, id=id)
