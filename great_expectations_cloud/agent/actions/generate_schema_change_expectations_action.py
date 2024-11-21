@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 import great_expectations.expectations as gx_expectations
-from great_expectations import ExpectationSuite, ValidationDefinition
+from great_expectations import ExpectationSuite
 from great_expectations.exceptions import DataContextError
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
@@ -29,8 +29,7 @@ from great_expectations_cloud.agent.models import (
 )
 
 if TYPE_CHECKING:
-    from great_expectations.core.batch import BatchRequest
-    from great_expectations.core.batch_definition import BatchDefinition
+    from great_expectations.data_asset import DataAsset
     from great_expectations.data_context import CloudDataContext
 
 
@@ -57,69 +56,44 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
     @override
     def run(self, event: GenerateSchemaChangeExpectationsEvent, id: str) -> ActionResult:
         created_resources: list[CreatedResource] = []
-
         for asset_name in event.data_assets:
-            datasource = self._context.data_sources.get(event.datasource_name)
-            data_asset = datasource.get_asset(asset_name)
-            # breakpoint()
-            data_asset.test_connection()  # raises `TestConnectionError` on failure
-            batch_request = data_asset.build_batch_request()
-
-            (metric_run, metric_run_id) = self._calculate_metrics(
-                data_asset_id=data_asset.id,
-                batch_request=batch_request,
-                metric_list=[MetricTypes.TABLE_COLUMNS, MetricTypes.TABLE_COLUMN_TYPES],
-            )
-
-            expectation_suite = self._get_expectation_suite(data_asset.name)
-
-            expectation = expectation_suite.add_expectation(
-                expectation=gx_expectations.ExpectTableColumnsToMatchSet(
-                    column_set=metric_run.metrics[0].value
+            try:
+                data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
+                metric_run, metric_run_id = self._get_metrics(data_asset, event)
+                expectation_suite, expectation = self._add_schema_change_expectation(
+                    metric_run, event
                 )
-            )
-            expectation_suite.save()
 
-            batch_definition = self._get_batch_definition(event.datasource_name, asset_name)
-            validation_definition = self._get_validation_definition(
-                batch_definition=batch_definition,
-                expectation_suite=expectation_suite,
-                asset_name=asset_name,
-            )
+                created_resources.append(
+                    CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
+                )
+                created_resources.append(
+                    CreatedResource(resource_id=expectation.id, type="Expectation")
+                )
 
-            created_resources.append(
-                CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
-            )
-            created_resources.append(
-                CreatedResource(resource_id=expectation_suite.id, type="ExpectationSuite")
-            )
-            created_resources.append(
-                CreatedResource(resource_id=expectation.id, type="Expectation")
-            )
-            created_resources.append(
-                CreatedResource(resource_id=validation_definition.id, type="ValidationDefinition")
-            )
-
+            except Exception:
+                # TODO - log error and save asset name to a list. Continue
+                # capturing all of the errors one by one, and then re-raise them as a mutiple one.
+                print("this will log the error")
+                pass
         return ActionResult(
             id=id,
             type=event.type,
             created_resources=created_resources,
         )
 
-    def _raise_on_any_metric_exception(self, metric_run: MetricRun) -> None:
-        if any(metric.exception for metric in metric_run.metrics):
-            raise RuntimeError(  # noqa: TRY003 # one off error
-                "One or more metrics failed to compute."
-            )
+    def _retrieve_asset_from_asset_name(self, event, asset_name) -> DataAsset:
+        datasource = self._context.data_sources.get(event.datasource_name)
+        data_asset = datasource.get_asset(asset_name)
+        data_asset.test_connection()  # raises `TestConnectionError` on failure
+        return data_asset
 
-    def _calculate_metrics(
-        self, data_asset_id: UUID, batch_request: BatchRequest, metric_list: list[MetricTypes]
-    ) -> tuple[MetricRun, UUID]:
-        """Helper method for calculating metrics."""
+    def _get_metrics(self, data_asset, event) -> tuple[MetricRun, UUID]:
+        batch_request = data_asset.build_batch_request()
         metric_run = self._batch_inspector.compute_metric_list_run(
-            data_asset_id=data_asset_id,
+            data_asset_id=data_asset.id,
             batch_request=batch_request,
-            metric_list=metric_list,
+            metric_list=[MetricTypes.TABLE_COLUMNS, MetricTypes.TABLE_COLUMN_TYPES],
         )
         metric_run_id = self._metric_repository.add_metric_run(metric_run)
         # Note: This exception is raised after the metric run is added to the repository so that
@@ -128,41 +102,32 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
 
         return metric_run, metric_run_id
 
+    def _add_schema_change_expectation(
+        self, metric_run, event
+    ) -> tuple[ExpectationSuite, gx_expectations.Expectation]:
+        expectation_suite = self._get_expectation_suite(event.expectation_suite_id)
+        expectation = expectation_suite.add_expectation(
+            expectation=gx_expectations.ExpectTableColumnsToMatchSet(
+                column_set=metric_run.metrics[0].value
+            )
+        )
+        expectation_suite.save()
+        return expectation_suite, expectation
+
+    def _raise_on_any_metric_exception(self, metric_run: MetricRun) -> None:
+        if any(metric.exception for metric in metric_run.metrics):
+            raise RuntimeError(  # noqa: TRY003 # one off error
+                "One or more metrics failed to compute."
+            )
+
     def _get_expectation_suite(self, name: str | None) -> ExpectationSuite:
-        """Helper method for getting or creating an Expectation Suite."""
-        # TODO - see if error handling should be done here
+        """TODO this will change because we will be sending in a mapping"""
         try:
             expectation_suite = self._context.suites.add(ExpectationSuite(name=name))
         except DataContextError:
             expectation_suite = self._context.suites.get(name=name)
 
         return expectation_suite
-
-    def _get_batch_definition(self, datasource_name: str, asset_name: str) -> BatchDefinition:
-        """Helper method for getting a Batch Definition."""
-        return (
-            self._context.data_sources.get(datasource_name)
-            .get_asset(asset_name)
-            .get_batch_definition(asset_name)
-        )
-
-    def _get_validation_definition(
-        self,
-        batch_definition: BatchDefinition,
-        expectation_suite: ExpectationSuite,
-        asset_name: str,
-    ) -> ValidationDefinition:
-        """Helper method for getting or creating a Validation Definition"""
-        validation_definition = ValidationDefinition(
-            data=batch_definition, suite=expectation_suite, name=asset_name
-        )
-        try:
-            validation_definition = self._context.validation_definitions.add(validation_definition)
-        except DataContextError:
-            validation_definition = self._context.validation_definitions.get(
-                validation_definition.name
-            )
-        return validation_definition
 
 
 register_event_action(
