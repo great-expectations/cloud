@@ -62,7 +62,7 @@ services:
       - ./services/ge_cloud/:/code
     ports:
       # V1 runs on external port 7000
-      - 5000:7000
+      - 7000:7000
     environment:
       LOGGING_LEVEL: ${LOGGING_LEVEL}
       ENVIRONMENT: ${ENVIRONMENT}
