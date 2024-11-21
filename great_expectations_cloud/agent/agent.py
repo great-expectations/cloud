@@ -150,7 +150,7 @@ class GXAgent:
             # suppress warnings about GX version
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
             self._context: CloudDataContext = get_context(cloud_mode=True)
-            self._configure_progress_bars()
+            self._configure_progress_bars(data_context=self._context)
         LOGGER.debug("DataContext is ready.")
 
         self._set_http_session_headers(data_context=self._context)
@@ -463,15 +463,15 @@ class GXAgent:
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
 
-    def _configure_progress_bars(self) -> None:
+    def _configure_progress_bars(self, data_context: CloudDataContext) -> None:
         progress_bars_enabled = self._config.enable_progress_bars
 
         try:
-            self._context.variables.progress_bars = ProgressBarsConfig(
+            data_context.variables.progress_bars = ProgressBarsConfig(
                 globally=progress_bars_enabled,
                 metric_calculations=progress_bars_enabled,
             )
-            self._context.variables.save()
+            data_context.variables.save()
         except Exception:
             # Progress bars are not critical, so log and continue
             # This is a known issue with FastAPI mercury V1 API for data-context-variables
