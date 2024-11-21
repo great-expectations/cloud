@@ -379,7 +379,11 @@ def start_supporting_services(ctx: Context) -> None:
         "docker compose run db-seeder",
         "docker compose run mq-wait",
         "docker compose up mercury-service-api -d",
+<<<<<<< HEAD
         "docker compose up mercury-service-api-v1 -d",
         "docker compose up nginx -d",
+=======
+        "docker compose up mercury-service-api-v0 -d",
+>>>>>>> 42b2f84 (add mercury v0 service to run during integration tests)
     ]:
         ctx.run(cmd, echo=True, pty=True)

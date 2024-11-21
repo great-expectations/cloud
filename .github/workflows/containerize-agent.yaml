@@ -99,10 +99,15 @@ jobs:
           docker compose run mq-wait
           echo "STARTING mercury-service-api"
           docker compose up mercury-service-api -d
+<<<<<<< HEAD
           echo "STARTING mercury-service-api-v1"
           docker compose up mercury-service-api-v1 -d
           echo "STARTING nginx"
           docker compose up nginx -d
+=======
+          echo "STARTING mercury-service-api-v0"
+          docker compose up mercury-service-api-v0 -d
+>>>>>>> 42b2f84 (add mercury v0 service to run during integration tests)
           echo "STARTING gx-agent"
           docker compose up gx-agent -d
           echo "RUNNING TESTS"
