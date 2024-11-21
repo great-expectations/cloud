@@ -19,6 +19,7 @@ import requests
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
+from great_expectations.data_context.types.base import ProgressBarsConfig
 from great_expectations.exceptions import GXCloudError
 from pika.adapters.utils.connection_workflow import (
     AMQPConnectorException,
@@ -94,6 +95,7 @@ class GXAgentConfig(AgentBaseExtraForbid):
     gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
+    enable_progress_bars: bool = True
 
 
 def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
@@ -148,6 +150,7 @@ class GXAgent:
             # suppress warnings about GX version
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
             self._context: CloudDataContext = get_context(cloud_mode=True)
+            self._configure_progress_bars(data_context=self._context)
         LOGGER.debug("DataContext is ready.")
 
         self._set_http_session_headers(data_context=self._context)
@@ -453,11 +456,30 @@ class GXAgent:
                 gx_cloud_base_url=env_vars.gx_cloud_base_url,
                 gx_cloud_organization_id=env_vars.gx_cloud_organization_id,
                 gx_cloud_access_token=env_vars.gx_cloud_access_token,
+                enable_progress_bars=env_vars.enable_progress_bars,
             )
         except pydantic_v1.ValidationError as validation_err:
             raise GXAgentConfigError(
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
+
+    def _configure_progress_bars(self, data_context: CloudDataContext) -> None:
+        progress_bars_enabled = self._config.enable_progress_bars
+
+        try:
+            data_context.variables.progress_bars = ProgressBarsConfig(
+                globally=progress_bars_enabled,
+                metric_calculations=progress_bars_enabled,
+            )
+            data_context.variables.save()
+        except Exception:
+            # Progress bars are not critical, so log and continue
+            # This is a known issue with FastAPI mercury V1 API for data-context-variables
+            LOGGER.warning(
+                "Failed to {set} progress bars".format(
+                    set="enable" if progress_bars_enabled else "disable"
+                )
+            )
 
     def _update_status(self, correlation_id: str, status: JobStatus, org_id: UUID) -> None:
         """Update GX Cloud on the status of a job.
