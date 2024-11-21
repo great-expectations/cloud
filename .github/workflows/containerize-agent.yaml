@@ -100,6 +100,7 @@ jobs:
           echo "STARTING mercury-service-api"
           docker compose up mercury-service-api -d
 <<<<<<< HEAD
+<<<<<<< HEAD
           echo "STARTING mercury-service-api-v1"
           docker compose up mercury-service-api-v1 -d
           echo "STARTING nginx"
@@ -108,6 +109,10 @@ jobs:
           echo "STARTING mercury-service-api-v0"
           docker compose up mercury-service-api-v0 -d
 >>>>>>> 42b2f84 (add mercury v0 service to run during integration tests)
+=======
+          echo "STARTING mercury-service-api-v1"
+          docker compose up mercury-service-api-v1 -d
+>>>>>>> b6f215f (add nginx for routing to mercury api versions)
           echo "STARTING gx-agent"
           docker compose up gx-agent -d
           echo "RUNNING TESTS"
