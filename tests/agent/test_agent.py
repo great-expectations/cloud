@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import random
 import string
 import uuid
@@ -632,17 +633,19 @@ def test_correlation_id_header(
         agent.run()
 
 
-def test_raise_gx_cloud_err_on_http_error_error_response():
+def test_log_err_on_http_error_error_response(caplog):
+    caplog.set_level(logging.ERROR)
     test_response = requests.Response()
     # 404 - Not Found
     test_response.status_code = 404
-    with pytest.raises(gx_exception.GXCloudError):
-        GXAgent._raise_gx_cloud_err_on_http_error(test_response, "Test error message")
+    error_msg = "Test error message"
+    GXAgent._log_http_error(test_response, error_msg)
+    assert caplog.records[0].message == error_msg
 
 
-def test_raise_gx_cloud_err_on_http_error_success_response():
+def test_log_err_on_http_error_success_response(caplog):
     test_response = requests.Response()
     # 200 - OK
     test_response.status_code = 200
-    # no Exception raised
-    GXAgent._raise_gx_cloud_err_on_http_error(test_response, "Test error message")
+    # no Exception logged
+    assert caplog.records == []
