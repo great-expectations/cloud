@@ -20,7 +20,6 @@ from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
 from great_expectations.data_context.types.base import ProgressBarsConfig
-from great_expectations.exceptions import GXCloudError
 from pika.adapters.utils.connection_workflow import (
     AMQPConnectorException,
 )
@@ -511,7 +510,7 @@ class GXAgent:
                     "organization_id": str(org_id),
                 },
             )
-            GXAgent._raise_gx_cloud_err_on_http_error(
+            GXAgent._log_http_error(
                 response, message="Status Update action had an error while connecting to GX Cloud."
             )
 
@@ -567,7 +566,7 @@ class GXAgent:
                     "schedule_id": str(event_context.event.schedule_id),
                 },
             )
-            GXAgent._raise_gx_cloud_err_on_http_error(
+            GXAgent._log_http_error(
                 response,
                 message="Create schedule job action had an error while connecting to GX Cloud.",
             )
@@ -655,14 +654,11 @@ class GXAgent:
         http._update_headers = _update_headers_agent_patch
 
     @staticmethod
-    def _raise_gx_cloud_err_on_http_error(response: requests.Response, message: str) -> None:
+    def _log_http_error(response: requests.Response, message: str) -> None:
         """
-        Raise GXCloudError if the response is not successful.
+        Log the http error if the response is not successful.
         """
         try:
             response.raise_for_status()
-        except requests.HTTPError as http_err:
-            raise GXCloudError(
-                message=message,
-                response=response,
-            ) from http_err
+        except requests.HTTPError:
+            LOGGER.exception(message, extra={"response": response})
