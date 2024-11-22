@@ -46,4 +46,7 @@ RUN apt-get remove -y \
     cpp-12 \
     cpp
 
+# Disable analytics in OSS
+RUN export GX_ANALYTICS_ENABLED=false
+
 ENTRYPOINT ["poetry", "run", "gx-agent"]
