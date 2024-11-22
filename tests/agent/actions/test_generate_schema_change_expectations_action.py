@@ -94,13 +94,13 @@ def test_generate_schema_change_expectations_action_success(
     )
 
     # mock the methods
-    action._retrieve_asset_from_asset_name = mocker.Mock()
+    action._retrieve_asset_from_asset_name = mocker.Mock()  # type: ignore[method-assign]
     action._retrieve_asset_from_asset_name.return_value = data_asset
 
-    action._get_metrics = mocker.Mock()
+    action._get_metrics = mocker.Mock()  # type: ignore[method-assign]
     action._get_metrics.return_value = (metric_run, uuid.uuid4())
 
-    action._add_schema_change_expectation = mocker.Mock()
+    action._add_schema_change_expectation = mocker.Mock()  # type: ignore[method-assign]
     expectation = gx_expectations.ExpectTableColumnsToMatchSet(
         column_set=metric_run.metrics[0].value
     )
@@ -141,15 +141,15 @@ def test_action_failure_in_retrieve_asset_from_asset_name(
     )
 
     # mock the methods
-    action._retrieve_asset_from_asset_name = mocker.Mock()
+    action._retrieve_asset_from_asset_name = mocker.Mock()  # type: ignore[method-assign]
     action._retrieve_asset_from_asset_name.side_effect = RuntimeError(
         "Failed to retrieve asset: data-asset1"
     )
 
-    action._get_metrics = mocker.Mock()
+    action._get_metrics = mocker.Mock()  # type: ignore[method-assign]
     action._get_metrics.return_value = (metric_run, uuid.uuid4())
 
-    action._add_schema_change_expectation = mocker.Mock()
+    action._add_schema_change_expectation = mocker.Mock()  # type: ignore[method-assign]
     expectation = gx_expectations.ExpectTableColumnsToMatchSet(
         column_set=metric_run.metrics[0].value
     )
@@ -192,13 +192,13 @@ def test_action_failure_in_get_metrics(
     )
 
     # mock the methods
-    action._retrieve_asset_from_asset_name = mocker.Mock()
+    action._retrieve_asset_from_asset_name = mocker.Mock()  # type: ignore[method-assign]
     action._retrieve_asset_from_asset_name.return_value = data_asset
 
-    action._get_metrics = mocker.Mock()
+    action._get_metrics = mocker.Mock()  # type: ignore[method-assign]
     action._get_metrics.side_effect = RuntimeError("One or more metrics failed to compute.")
 
-    action._add_schema_change_expectation = mocker.Mock()
+    action._add_schema_change_expectation = mocker.Mock()  # type: ignore[method-assign]
     expectation = gx_expectations.ExpectTableColumnsToMatchSet(
         column_set=metric_run.metrics[0].value
     )
@@ -241,13 +241,13 @@ def test_action_failure_in_add_schema_change_expectation(
     )
 
     # mock the methods
-    action._retrieve_asset_from_asset_name = mocker.Mock()
+    action._retrieve_asset_from_asset_name = mocker.Mock()  # type: ignore[method-assign]
     action._retrieve_asset_from_asset_name.return_value = data_asset
 
-    action._get_metrics = mocker.Mock()
+    action._get_metrics = mocker.Mock()  # type: ignore[method-assign]
     action._get_metrics.return_value = (metric_run, uuid.uuid4())
 
-    action._add_schema_change_expectation = mocker.Mock()
+    action._add_schema_change_expectation = mocker.Mock()  # type: ignore[method-assign]
     gx_expectations.ExpectTableColumnsToMatchSet(column_set=metric_run.metrics[0].value)
     action._add_schema_change_expectation.side_effect = RuntimeError(
         "Failed to add expectation to suite: test-suite"
