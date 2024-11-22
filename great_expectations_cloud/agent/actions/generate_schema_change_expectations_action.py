@@ -29,8 +29,8 @@ from great_expectations_cloud.agent.models import (
 )
 
 if TYPE_CHECKING:
-    from great_expectations.data_asset import DataAsset
     from great_expectations.data_context import CloudDataContext
+    from great_expectations.datasource.fluent import DataAsset
 
 
 class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExpectationsEvent]):
@@ -59,22 +59,18 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
         for asset_name in event.data_assets:
             try:
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
-                metric_run, metric_run_id = self._get_metrics(data_asset, event)
-                expectation_suite, expectation = self._add_schema_change_expectation(
-                    metric_run, event
-                )
-
+                metric_run, metric_run_id = self._get_metrics(data_asset)
+                # this logic will change with ZELDA-????
+                expectation = self._add_schema_change_expectation(metric_run, event)
                 created_resources.append(
                     CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
                 )
                 created_resources.append(
                     CreatedResource(resource_id=expectation.id, type="Expectation")
                 )
-
-            except Exception:
-                # TODO - log error and save asset name to a list. Continue
-                # capturing all of the errors one by one, and then re-raise them as a mutiple one.
-                print("this will log the error")
+            except Exception as e:
+                # TODO - Log error and save asset name to a list. Continue looping through Asset
+                print(f"asset_name: {asset_name} failed with error: {e}")
                 pass
         return ActionResult(
             id=id,
@@ -88,7 +84,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
         data_asset.test_connection()  # raises `TestConnectionError` on failure
         return data_asset
 
-    def _get_metrics(self, data_asset, event) -> tuple[MetricRun, UUID]:
+    def _get_metrics(self, data_asset) -> tuple[MetricRun, UUID]:
         batch_request = data_asset.build_batch_request()
         metric_run = self._batch_inspector.compute_metric_list_run(
             data_asset_id=data_asset.id,
@@ -102,9 +98,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
 
         return metric_run, metric_run_id
 
-    def _add_schema_change_expectation(
-        self, metric_run, event
-    ) -> tuple[ExpectationSuite, gx_expectations.Expectation]:
+    def _add_schema_change_expectation(self, metric_run, event) -> gx_expectations.Expectation:
         expectation_suite = self._get_expectation_suite(event.expectation_suite_id)
         expectation = expectation_suite.add_expectation(
             expectation=gx_expectations.ExpectTableColumnsToMatchSet(
@@ -112,7 +106,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
             )
         )
         expectation_suite.save()
-        return expectation_suite, expectation
+        return expectation
 
     def _raise_on_any_metric_exception(self, metric_run: MetricRun) -> None:
         if any(metric.exception for metric in metric_run.metrics):
