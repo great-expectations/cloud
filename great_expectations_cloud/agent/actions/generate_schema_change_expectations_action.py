@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import logging
+from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
 import great_expectations.expectations as gx_expectations
-from great_expectations import ExpectationSuite
 from great_expectations.exceptions import DataContextError
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
@@ -31,6 +31,9 @@ from great_expectations_cloud.agent.models import (
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent import DataAsset
+
+LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
 
 
 class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExpectationsEvent]):
@@ -60,8 +63,11 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
             try:
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
                 metric_run, metric_run_id = self._get_metrics(data_asset)
-                # this logic will change with ZELDA-????
-                expectation = self._add_schema_change_expectation(metric_run, event)
+                # this logic will change with ZELDA-???? and we will be pulling this in from a mapping
+                expectation_suite_name = f"{data_asset.name} - Expectation Suite"
+                expectation = self._add_schema_change_expectation(
+                    metric_run, expectation_suite_name
+                )
                 created_resources.append(
                     CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
                 )
@@ -69,8 +75,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
                     CreatedResource(resource_id=expectation.id, type="Expectation")
                 )
             except Exception as e:
-                # TODO - Log error and save asset name to a list. Continue looping through Asset
-                print(f"asset_name: {asset_name} failed with error: {e}")
+                LOGGER.warning(f"asset_name: {asset_name} failed with error: {e}")
                 pass
         return ActionResult(
             id=id,
@@ -79,9 +84,15 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
         )
 
     def _retrieve_asset_from_asset_name(self, event, asset_name) -> DataAsset:
-        datasource = self._context.data_sources.get(event.datasource_name)
-        data_asset = datasource.get_asset(asset_name)
-        data_asset.test_connection()  # raises `TestConnectionError` on failure
+        try:
+            datasource = self._context.data_sources.get(event.datasource_name)
+            data_asset = datasource.get_asset(asset_name)
+            data_asset.test_connection()  # raises `TestConnectionError` on failure
+
+        except Exception as e:
+            # TODO - see if this can be made more specific
+            raise RuntimeError(f"Failed to retrieve asset: {e}") from e  # noqa: TRY003 # want to keep this informative for now
+
         return data_asset
 
     def _get_metrics(self, data_asset) -> tuple[MetricRun, UUID]:
@@ -98,14 +109,25 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
 
         return metric_run, metric_run_id
 
-    def _add_schema_change_expectation(self, metric_run, event) -> gx_expectations.Expectation:
-        expectation_suite = self._get_expectation_suite(event.expectation_suite_id)
-        expectation = expectation_suite.add_expectation(
-            expectation=gx_expectations.ExpectTableColumnsToMatchSet(
-                column_set=metric_run.metrics[0].value
+    def _add_schema_change_expectation(
+        self, metric_run, expectation_suite_name
+    ) -> gx_expectations.Expectation:
+        try:
+            expectation_suite = self._context.suites.get(name=expectation_suite_name)
+        except DataContextError as e:
+            raise RuntimeError(  # noqa: TRY003 # want to keep this informative for now
+                f"Expectation Suite with name {expectation_suite_name} was not found."
+            ) from e
+
+        try:
+            expectation = expectation_suite.add_expectation(
+                expectation=gx_expectations.ExpectTableColumnsToMatchSet(
+                    column_set=metric_run.metrics[0].value
+                )
             )
-        )
-        expectation_suite.save()
+            expectation_suite.save()
+        except Exception as e:
+            raise RuntimeError(f"Failed to add expectation to suite: {e}") from e  # noqa: TRY003 # want to keep this informative for now
         return expectation
 
     def _raise_on_any_metric_exception(self, metric_run: MetricRun) -> None:
@@ -113,15 +135,6 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
             raise RuntimeError(  # noqa: TRY003 # one off error
                 "One or more metrics failed to compute."
             )
-
-    def _get_expectation_suite(self, name: str | None) -> ExpectationSuite:
-        """TODO this will change because we will be sending in a mapping"""
-        try:
-            expectation_suite = self._context.suites.add(ExpectationSuite(name=name))
-        except DataContextError:
-            expectation_suite = self._context.suites.get(name=name)
-
-        return expectation_suite
 
 
 register_event_action(
