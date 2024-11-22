@@ -109,7 +109,6 @@ class GenerateSchemaChangeExpectationsEvent(EventBase):
     )
     datasource_name: str
     data_assets: Sequence[str]
-    expectation_suite_id: UUID
     create_expectations: bool = False
 
 
