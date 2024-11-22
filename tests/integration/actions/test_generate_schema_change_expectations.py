@@ -63,7 +63,6 @@ def local_mercury_db_organizations_table_asset(
     yield data_asset
 
 
-@pytest.mark.skip(reason="This test will be updated in a follow-up PR")
 def test_running_schema_change_expectation_action(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
