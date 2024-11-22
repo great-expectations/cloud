@@ -77,7 +77,7 @@ def test_running_schema_change_expectation_action(
         type="generate_schema_change_expectations_request.received",
         datasource_name="local_mercury_db",
         data_assets=["checkpoints"],
-        organization_id=org_id_env_var_local,
+        organization_id=uuid.UUID(org_id_env_var_local),
     )
 
     action = GenerateSchemaChangeExpectationsAction(
