@@ -75,6 +75,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
                     CreatedResource(resource_id=expectation.id, type="Expectation")
                 )
             except Exception as e:
+                # TODO - follow up in ZELDA-1153
                 LOGGER.warning(f"asset_name: {asset_name} failed with error: {e}")
                 pass
         return ActionResult(
@@ -83,7 +84,9 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
             created_resources=created_resources,
         )
 
-    def _retrieve_asset_from_asset_name(self, event, asset_name) -> DataAsset:
+    def _retrieve_asset_from_asset_name(
+        self, event: GenerateSchemaChangeExpectationsEvent, asset_name: str
+    ) -> DataAsset:
         try:
             datasource = self._context.data_sources.get(event.datasource_name)
             data_asset = datasource.get_asset(asset_name)
@@ -95,7 +98,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
 
         return data_asset
 
-    def _get_metrics(self, data_asset) -> tuple[MetricRun, UUID]:
+    def _get_metrics(self, data_asset: DataAsset) -> tuple[MetricRun, UUID]:
         batch_request = data_asset.build_batch_request()
         metric_run = self._batch_inspector.compute_metric_list_run(
             data_asset_id=data_asset.id,
@@ -110,7 +113,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
         return metric_run, metric_run_id
 
     def _add_schema_change_expectation(
-        self, metric_run, expectation_suite_name
+        self, metric_run: MetricRun, expectation_suite_name: str
     ) -> gx_expectations.Expectation:
         try:
             expectation_suite = self._context.suites.get(name=expectation_suite_name)
