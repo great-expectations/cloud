@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import uuid
 from typing import TYPE_CHECKING
 
@@ -23,8 +22,8 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def user_api_token_headers_org_admin_sc_org():
-    api_token = os.environ.get("GX_CLOUD_ACCESS_TOKEN")
+def user_api_token_headers_org_admin_sc_org(token_env_var):
+    api_token = token_env_var
     return {
         "Authorization": f"Bearer {api_token}",
         "Content-Type": "application/vnd.api+json",
@@ -95,7 +94,7 @@ def local_mercury_db_datasource(
     context: CloudDataContext,
 ) -> PostgresDatasource:
     datasource_name = "local_mercury_db"
-    datasource = context.get_datasource(name=datasource_name)
+    datasource = context.data_sources.get(name=datasource_name)
     yield datasource
 
 
@@ -108,7 +107,6 @@ def local_mercury_db_organizations_table_asset(
     yield data_asset
 
 
-@pytest.mark.skip("Skipping integration tests until they are updated for v1.0")
 def test_running_metric_list_action(
     context: CloudDataContext,
     graphql_test_client,

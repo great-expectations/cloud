@@ -99,6 +99,10 @@ jobs:
           docker compose run mq-wait
           echo "STARTING mercury-service-api"
           docker compose up mercury-service-api -d
+          echo "STARTING mercury-service-api-v1"
+          docker compose up mercury-service-api-v1 -d
+          echo "STARTING nginx"
+          docker compose up nginx -d
           echo "STARTING gx-agent"
           docker compose up gx-agent -d
           echo "RUNNING TESTS"
