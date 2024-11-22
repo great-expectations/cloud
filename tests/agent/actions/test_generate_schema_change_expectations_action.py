@@ -25,6 +25,7 @@ from great_expectations_cloud.agent.models import GenerateSchemaChangeExpectatio
 
 if TYPE_CHECKING:
     from great_expectations.data_context.data_context.cloud_data_context import CloudDataContext
+    from great_expectations.datasource.fluent import DataAsset
     from pytest_mock import MockerFixture
 
 pytestmark = pytest.mark.unit
@@ -32,37 +33,165 @@ pytestmark = pytest.mark.unit
 LOGGER = logging.getLogger(__name__)
 
 
+# https://docs.pytest.org/en/7.1.x/how-to/monkeypatch.html
 @pytest.fixture
-def data_asset() -> TableAsset:
-    return TableAsset(
-        name="test-data-asset",
-        table_name="test_table",
-        schema_name="test_schema",
+def mock_response_success(monkeypatch):
+    def mock_data_asset(self, event: GenerateSchemaChangeExpectationsEvent, asset_name: str):
+        return TableAsset(
+            name="test-data-asset",
+            table_name="test_table",
+            schema_name="test_schema",
+        )
+
+    def mock_metrics(self, data_asset: DataAsset):
+        return MetricRun(
+            metrics=[
+                TableMetric(
+                    batch_id="batch_id",
+                    metric_name="table.columns",
+                    value=["col1", "col2"],
+                    exception=None,
+                ),
+                TableMetric(
+                    batch_id="batch_id",
+                    metric_name="table.column_types",
+                    value=[
+                        {"name": "col1", "type": "INT"},
+                        {"name": "col2", "type": "INT"},
+                    ],
+                    exception=None,
+                ),
+            ]
+        )
+
+    def mock_schema_change_expectation(self, metric_run: MetricRun, expectation_suite_name: str):
+        return gx_expectations.ExpectTableColumnsToMatchSet(
+            column_set=["col1", "col2"], id=str(uuid.uuid4())
+        )
+
+    monkeypatch.setattr(
+        GenerateSchemaChangeExpectationsAction, "_retrieve_asset_from_asset_name", mock_data_asset
+    )
+    monkeypatch.setattr(GenerateSchemaChangeExpectationsAction, "_get_metrics", mock_metrics)
+    monkeypatch.setattr(
+        GenerateSchemaChangeExpectationsAction,
+        "_add_schema_change_expectation",
+        mock_schema_change_expectation,
     )
 
 
 @pytest.fixture
-def metric_run() -> MetricRun:
-    mock_metric_run = MetricRun(
-        metrics=[
-            TableMetric(
-                batch_id="batch_id",
-                metric_name="table.columns",
-                value=["col1", "col2"],
-                exception=None,
-            ),
-            TableMetric(
-                batch_id="batch_id",
-                metric_name="table.column_types",
-                value=[
-                    {"name": "col1", "type": "INT"},
-                    {"name": "col2", "type": "INT"},
-                ],
-                exception=None,
-            ),
-        ]
+def mock_response_failed_asset(monkeypatch):
+    def mock_data_asset(self, event: GenerateSchemaChangeExpectationsEvent, asset_name: str):
+        raise RuntimeError(f"Failed to retrieve asset: {asset_name}")  # noqa: TRY003 # following pattern in code
+
+    def mock_metrics(self, data_asset: DataAsset):
+        return MetricRun(
+            metrics=[
+                TableMetric(
+                    batch_id="batch_id",
+                    metric_name="table.columns",
+                    value=["col1", "col2"],
+                    exception=None,
+                ),
+                TableMetric(
+                    batch_id="batch_id",
+                    metric_name="table.column_types",
+                    value=[
+                        {"name": "col1", "type": "INT"},
+                        {"name": "col2", "type": "INT"},
+                    ],
+                    exception=None,
+                ),
+            ]
+        )
+
+    def mock_schema_change_expectation(self, metric_run: MetricRun, expectation_suite_name: str):
+        return gx_expectations.ExpectTableColumnsToMatchSet(
+            column_set=["col1", "col2"], id=str(uuid.uuid4())
+        )
+
+    monkeypatch.setattr(
+        GenerateSchemaChangeExpectationsAction, "_retrieve_asset_from_asset_name", mock_data_asset
     )
-    return mock_metric_run
+    monkeypatch.setattr(GenerateSchemaChangeExpectationsAction, "_get_metrics", mock_metrics)
+    monkeypatch.setattr(
+        GenerateSchemaChangeExpectationsAction,
+        "_add_schema_change_expectation",
+        mock_schema_change_expectation,
+    )
+
+
+@pytest.fixture
+def mock_response_failed_metrics(monkeypatch):
+    def mock_data_asset(self, event: GenerateSchemaChangeExpectationsEvent, asset_name: str):
+        return TableAsset(
+            name="test-data-asset",
+            table_name="test_table",
+            schema_name="test_schema",
+        )
+
+    def mock_metrics(self, data_asset: DataAsset):
+        raise RuntimeError("One or more metrics failed to compute.")  # noqa: TRY003 # following pattern in code
+
+    def mock_schema_change_expectation(self, metric_run: MetricRun, expectation_suite_name: str):
+        return gx_expectations.ExpectTableColumnsToMatchSet(
+            column_set=["col1", "col2"], id=str(uuid.uuid4())
+        )
+
+    monkeypatch.setattr(
+        GenerateSchemaChangeExpectationsAction, "_retrieve_asset_from_asset_name", mock_data_asset
+    )
+    monkeypatch.setattr(GenerateSchemaChangeExpectationsAction, "_get_metrics", mock_metrics)
+    monkeypatch.setattr(
+        GenerateSchemaChangeExpectationsAction,
+        "_add_schema_change_expectation",
+        mock_schema_change_expectation,
+    )
+
+
+@pytest.fixture
+def mock_response_failed_schema_change(monkeypatch):
+    def mock_data_asset(self, event: GenerateSchemaChangeExpectationsEvent, asset_name: str):
+        return TableAsset(
+            name="test-data-asset",
+            table_name="test_table",
+            schema_name="test_schema",
+        )
+
+    def mock_metrics(self, data_asset: DataAsset):
+        return MetricRun(
+            metrics=[
+                TableMetric(
+                    batch_id="batch_id",
+                    metric_name="table.columns",
+                    value=["col1", "col2"],
+                    exception=None,
+                ),
+                TableMetric(
+                    batch_id="batch_id",
+                    metric_name="table.column_types",
+                    value=[
+                        {"name": "col1", "type": "INT"},
+                        {"name": "col2", "type": "INT"},
+                    ],
+                    exception=None,
+                ),
+            ]
+        )
+
+    def mock_schema_change_expectation(self, metric_run: MetricRun, expectation_suite_name: str):
+        raise RuntimeError("Failed to add expectation to suite: test-suite")  # noqa: TRY003 # following pattern in code
+
+    monkeypatch.setattr(
+        GenerateSchemaChangeExpectationsAction, "_retrieve_asset_from_asset_name", mock_data_asset
+    )
+    monkeypatch.setattr(GenerateSchemaChangeExpectationsAction, "_get_metrics", mock_metrics)
+    monkeypatch.setattr(
+        GenerateSchemaChangeExpectationsAction,
+        "_add_schema_change_expectation",
+        mock_schema_change_expectation,
+    )
 
 
 @pytest.mark.parametrize(
@@ -73,12 +202,11 @@ def metric_run() -> MetricRun:
     ],
 )
 def test_generate_schema_change_expectations_action_success(
+    mock_response_success,
     mock_context: CloudDataContext,
     mocker: MockerFixture,
     data_asset_names,
     expected_created_resources,
-    data_asset,
-    metric_run,
 ):
     # setup
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
@@ -92,20 +220,6 @@ def test_generate_schema_change_expectations_action_success(
         auth_key="",
         organization_id=uuid.uuid4(),
     )
-
-    # mock the methods
-    action._retrieve_asset_from_asset_name = mocker.Mock()  # type: ignore[method-assign]
-    action._retrieve_asset_from_asset_name.return_value = data_asset
-
-    action._get_metrics = mocker.Mock()  # type: ignore[method-assign]
-    action._get_metrics.return_value = (metric_run, uuid.uuid4())
-
-    action._add_schema_change_expectation = mocker.Mock()  # type: ignore[method-assign]
-    expectation = gx_expectations.ExpectTableColumnsToMatchSet(
-        column_set=metric_run.metrics[0].value
-    )
-    expectation.id = str(uuid.uuid4())
-    action._add_schema_change_expectation.return_value = expectation
 
     # run the action
     return_value = action.run(
@@ -125,7 +239,7 @@ def test_generate_schema_change_expectations_action_success(
 
 
 def test_action_failure_in_retrieve_asset_from_asset_name(
-    mock_context: CloudDataContext, mocker: MockerFixture, data_asset, metric_run, caplog
+    mock_response_failed_asset, mock_context: CloudDataContext, mocker: MockerFixture, caplog
 ):
     # setup
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
@@ -139,22 +253,6 @@ def test_action_failure_in_retrieve_asset_from_asset_name(
         auth_key="",
         organization_id=uuid.uuid4(),
     )
-
-    # mock the methods
-    action._retrieve_asset_from_asset_name = mocker.Mock()  # type: ignore[method-assign]
-    action._retrieve_asset_from_asset_name.side_effect = RuntimeError(
-        "Failed to retrieve asset: data-asset1"
-    )
-
-    action._get_metrics = mocker.Mock()  # type: ignore[method-assign]
-    action._get_metrics.return_value = (metric_run, uuid.uuid4())
-
-    action._add_schema_change_expectation = mocker.Mock()  # type: ignore[method-assign]
-    expectation = gx_expectations.ExpectTableColumnsToMatchSet(
-        column_set=metric_run.metrics[0].value
-    )
-    expectation.id = str(uuid.uuid4())
-    action._add_schema_change_expectation.return_value = expectation
 
     # run the action
     return_value = action.run(
@@ -176,7 +274,7 @@ def test_action_failure_in_retrieve_asset_from_asset_name(
 
 
 def test_action_failure_in_get_metrics(
-    mock_context: CloudDataContext, mocker: MockerFixture, data_asset, metric_run, caplog
+    mock_response_failed_metrics, mock_context: CloudDataContext, mocker: MockerFixture, caplog
 ):
     # setup
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
@@ -190,21 +288,6 @@ def test_action_failure_in_get_metrics(
         auth_key="",
         organization_id=uuid.uuid4(),
     )
-
-    # mock the methods
-    action._retrieve_asset_from_asset_name = mocker.Mock()  # type: ignore[method-assign]
-    action._retrieve_asset_from_asset_name.return_value = data_asset
-
-    action._get_metrics = mocker.Mock()  # type: ignore[method-assign]
-    action._get_metrics.side_effect = RuntimeError("One or more metrics failed to compute.")
-
-    action._add_schema_change_expectation = mocker.Mock()  # type: ignore[method-assign]
-    expectation = gx_expectations.ExpectTableColumnsToMatchSet(
-        column_set=metric_run.metrics[0].value
-    )
-    expectation.id = str(uuid.uuid4())
-    action._add_schema_change_expectation.return_value = expectation
-
     # run the action
     return_value = action.run(
         event=GenerateSchemaChangeExpectationsEvent(
@@ -225,7 +308,10 @@ def test_action_failure_in_get_metrics(
 
 
 def test_action_failure_in_add_schema_change_expectation(
-    mock_context: CloudDataContext, mocker: MockerFixture, data_asset, metric_run, caplog
+    mock_response_failed_schema_change,
+    mock_context: CloudDataContext,
+    mocker: MockerFixture,
+    caplog,
 ):
     # setup
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
@@ -238,19 +324,6 @@ def test_action_failure_in_add_schema_change_expectation(
         base_url="",
         auth_key="",
         organization_id=uuid.uuid4(),
-    )
-
-    # mock the methods
-    action._retrieve_asset_from_asset_name = mocker.Mock()  # type: ignore[method-assign]
-    action._retrieve_asset_from_asset_name.return_value = data_asset
-
-    action._get_metrics = mocker.Mock()  # type: ignore[method-assign]
-    action._get_metrics.return_value = (metric_run, uuid.uuid4())
-
-    action._add_schema_change_expectation = mocker.Mock()  # type: ignore[method-assign]
-    gx_expectations.ExpectTableColumnsToMatchSet(column_set=metric_run.metrics[0].value)
-    action._add_schema_change_expectation.side_effect = RuntimeError(
-        "Failed to add expectation to suite: test-suite"
     )
 
     # run the action

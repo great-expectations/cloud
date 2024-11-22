@@ -63,7 +63,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
             try:
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
                 metric_run, metric_run_id = self._get_metrics(data_asset)
-                # this logic will change with ZELDA-???? and we will be pulling this in from a mapping
+                # this logic will change with ZELDA-1154 and we will be pulling this in from a mapping
                 expectation_suite_name = f"{data_asset.name} - Expectation Suite"
                 expectation = self._add_schema_change_expectation(
                     metric_run, expectation_suite_name
