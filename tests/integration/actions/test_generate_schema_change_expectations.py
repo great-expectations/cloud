@@ -90,6 +90,9 @@ def test_running_schema_change_expectation_action(
     action_result = action.run(event=generate_schema_change_expectations_event, id=event_id)
 
     # Assert
-    # Check that the action was successful e.g. that we can create metrics_list_request action
     assert action_result.type == generate_schema_change_expectations_event.type
     assert action_result.id == event_id
+    # expected resources were created
+    assert len(action_result.created_resources) == 2
+    assert action_result.created_resources[0].type == "MetricRun"
+    assert action_result.created_resources[1].type == "Expectation"
