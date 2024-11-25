@@ -23,6 +23,7 @@ from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.event_handler import register_event_action
+from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     GenerateSchemaChangeExpectationsEvent,
@@ -34,6 +35,31 @@ if TYPE_CHECKING:
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
+
+
+class PartialSchemaChangeExpectationError(GXAgentError):
+    def __init__(self, asset_to_error_map: dict[str, Exception], assets_attempted: int):
+        self.max_errors_to_display = 5
+        self.asset_to_error_map = asset_to_error_map
+        num_assets_with_errors = len(self.asset_to_error_map)
+        self.message = f"Failed to generate schema change expectations for {num_assets_with_errors} of the {assets_attempted} assets."
+        super().__init__(self.message)
+
+    def __str__(self):
+        if len(self.asset_to_error_map) > self.max_errors_to_display:
+            errors_to_display = dict(
+                list(self.asset_to_error_map.items())[: self.max_errors_to_display]
+            )
+            num_error_display_msg = (
+                f"Only displaying the first {self.max_errors_to_display} errors. "
+            )
+        else:
+            errors_to_display = self.asset_to_error_map
+            num_error_display_msg = ""
+        errors = "\n".join(
+            f"Asset: {asset_name} Error: {error}" for asset_name, error in errors_to_display.items()
+        )
+        return f"{self.message}\n{num_error_display_msg}Errors:{errors}"
 
 
 class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExpectationsEvent]):
@@ -59,6 +85,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
     @override
     def run(self, event: GenerateSchemaChangeExpectationsEvent, id: str) -> ActionResult:
         created_resources: list[CreatedResource] = []
+        asset_to_error_map: dict[str, Exception] = {}
         for asset_name in event.data_assets:
             try:
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
@@ -75,9 +102,14 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
                     CreatedResource(resource_id=expectation.id, type="Expectation")
                 )
             except Exception as e:
-                # TODO - follow up in ZELDA-1153
-                LOGGER.warning(f"asset_name: {asset_name} failed with error: {e}")
-                pass
+                asset_to_error_map[asset_name] = e
+
+        if asset_to_error_map:
+            raise PartialSchemaChangeExpectationError(
+                asset_to_error_map=asset_to_error_map,
+                assets_attempted=len(event.data_assets),
+            )
+
         return ActionResult(
             id=id,
             type=event.type,
