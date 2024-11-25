@@ -43,9 +43,9 @@ class PartialSchemaChangeExpectationError(GXAgentError):
         self.asset_to_error_map = asset_to_error_map
         num_assets_with_errors = len(self.asset_to_error_map)
         self.message = f"Failed to generate schema change expectations for {num_assets_with_errors} of the {assets_attempted} assets."
-        super().__init__(self.message)
+        super().__init__(self._build_error_message())
 
-    def __str__(self):
+    def _build_error_message(self) -> str:
         if len(self.asset_to_error_map) > self.max_errors_to_display:
             errors_to_display = dict(
                 list(self.asset_to_error_map.items())[: self.max_errors_to_display]
@@ -59,7 +59,10 @@ class PartialSchemaChangeExpectationError(GXAgentError):
         errors = "\n".join(
             f"Asset: {asset_name} Error: {error}" for asset_name, error in errors_to_display.items()
         )
-        return f"{self.message}\n{num_error_display_msg}Errors:{errors}"
+        return f"{self.message}\n{num_error_display_msg}Errors:\n{errors}"
+
+    def __str__(self):
+        return self._build_error_message()
 
 
 class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExpectationsEvent]):
