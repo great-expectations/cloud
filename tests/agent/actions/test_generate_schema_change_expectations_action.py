@@ -344,10 +344,25 @@ def test_action_failure_in_get_metrics(
         assert "One or more metrics failed to compute." in str(e.value)
 
 
+@pytest.mark.parametrize(
+    "data_asset_names, expected_error_message",
+    [
+        (
+            ["test-data-asset1"],
+            "Failed to generate schema change expectations for 1 of the 1 assets.",
+        ),
+        (
+            ["test-data-asset1", "test-data-asset2"],
+            "Failed to generate schema change expectations for 2 of the 2 assets.",
+        ),
+    ],
+)
 def test_action_failure_in_add_schema_change_expectation(
     mock_response_failed_schema_change,
     mock_context: CloudDataContext,
     mocker: MockerFixture,
+    data_asset_names: list[str],
+    expected_error_message: str,
 ):
     # setup
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
@@ -369,13 +384,14 @@ def test_action_failure_in_add_schema_change_expectation(
                 type="generate_schema_change_expectations_request.received",
                 organization_id=uuid.uuid4(),
                 datasource_name="test-datasource",
-                data_assets=["data-asset1"],
+                data_assets=data_asset_names,
                 create_expectations=True,
             ),
             id="test-id",
         )
 
     # These are part of the same message
-    assert "Failed to generate schema change expectations for 1 of the 1 assets." in str(e.value)
-    assert "Failed to add expectation to suite: test-suite" in str(e.value)
-    assert "Asset: data-asset1" in str(e.value)
+    assert expected_error_message in str(e.value)
+    for asset_name in data_asset_names:
+        assert f"Asset: {asset_name}" in str(e.value)
+        assert "Failed to add expectation to suite: test-suite" in str(e.value)
