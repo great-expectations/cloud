@@ -181,9 +181,14 @@ def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[Ta
             return MetricRun(metrics=mock_metrics_list)
 
     def mock_schema_change_expectation(self, metric_run: MetricRun, expectation_suite_name: str):
-        return gx_expectations.ExpectTableColumnsToMatchSet(
-            column_set=["col1", "col2"], id=str(uuid.uuid4())
-        )
+        # The data asset name is contained in the expectation_suite_name
+        # Here we are simulating a failure to add an expectation to the suite, for suite names that contain "schema-fail"
+        if "schema-fail" in expectation_suite_name:
+            raise RuntimeError("Failed to add expectation to suite: test-suite")  # noqa: TRY003 # following pattern in code
+        else:
+            return gx_expectations.ExpectTableColumnsToMatchSet(
+                column_set=["col1", "col2"], id=str(uuid.uuid4())
+            )
 
     monkeypatch.setattr(
         GenerateSchemaChangeExpectationsAction, "_retrieve_asset_from_asset_name", mock_data_asset
@@ -453,8 +458,8 @@ def test_action_failure_in_add_schema_change_expectation(
                 "Failed to add expectation to suite: test-suite",
                 "Failed to add expectation to suite: test-suite",
             ],
-            "Only displaying the first 5 errors. There is 1 additional error.",
             "Failed to generate schema change expectations for 6 of the 8 assets.",
+            "Only displaying the first 5 errors. There is 1 additional error.",
             id="Multiple assets passing, multiple assets failing, one more than max display errors",
         ),
         # More than one more than max errors to display
@@ -482,8 +487,8 @@ def test_action_failure_in_add_schema_change_expectation(
                 "Failed to add expectation to suite: test-suite",
                 "Failed to add expectation to suite: test-suite",
             ],
-            "Only displaying the first 5 errors. There are 4 additional errors.",
             "Failed to generate schema change expectations for 9 of the 11 assets.",
+            "Only displaying the first 5 errors. There are 4 additional errors.",
             id="Multiple assets passing, multiple assets failing, more than max display errors",
         ),
     ],
@@ -528,6 +533,10 @@ def test_succeeding_and_failing_assets_together(
     assert expected_error_message in str(e.value)
     if expected_truncation_message:
         assert expected_truncation_message in str(e.value)
-    for idx, asset_name in enumerate(failing_data_asset_names):
-        assert f"Asset: {asset_name}" in str(e.value)
-        assert failing_data_asset_error_messages[idx] in str(e.value)
+    else:
+        # If there is no truncation message, we don't know which errors are displayed and in which order.
+        # So we just check that the error messages are in the exception message
+        # if there is no truncation message.
+        for idx, asset_name in enumerate(failing_data_asset_names):
+            assert f"Asset: {asset_name}" in str(e.value)
+            assert failing_data_asset_error_messages[idx] in str(e.value)
