@@ -162,6 +162,40 @@ def mock_response_failed_schema_change(monkeypatch, mock_metrics_list: list[Tabl
     )
 
 
+@pytest.fixture
+def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[TableMetric]):
+    def mock_data_asset(self, event: GenerateSchemaChangeExpectationsEvent, asset_name: str):
+        if "retrieve_fail" in asset_name:
+            raise RuntimeError(f"Failed to retrieve asset: {asset_name}")  # noqa: TRY003 # following pattern in code
+        else:
+            return TableAsset(
+                name=asset_name,
+                table_name="test_table",
+                schema_name="test_schema",
+            )
+
+    def mock_metrics(self, data_asset: DataAsset):
+        if "metric_fail" in data_asset.name:
+            raise RuntimeError("One or more metrics failed to compute.")  # noqa: TRY003 # following pattern in code
+        else:
+            return MetricRun(metrics=mock_metrics_list)
+
+    def mock_schema_change_expectation(self, metric_run: MetricRun, expectation_suite_name: str):
+        return gx_expectations.ExpectTableColumnsToMatchSet(
+            column_set=["col1", "col2"], id=str(uuid.uuid4())
+        )
+
+    monkeypatch.setattr(
+        GenerateSchemaChangeExpectationsAction, "_retrieve_asset_from_asset_name", mock_data_asset
+    )
+    monkeypatch.setattr(GenerateSchemaChangeExpectationsAction, "_get_metrics", mock_metrics)
+    monkeypatch.setattr(
+        GenerateSchemaChangeExpectationsAction,
+        "_add_schema_change_expectation",
+        mock_schema_change_expectation,
+    )
+
+
 @pytest.mark.parametrize(
     "data_asset_names, expected_created_resources",
     [
