@@ -399,13 +399,14 @@ def test_action_failure_in_add_schema_change_expectation(
 
 
 @pytest.mark.parametrize(
-    "succeeding_data_asset_names, failing_data_asset_names, failing_data_asset_error_messages, expected_error_message",
+    "succeeding_data_asset_names, failing_data_asset_names, failing_data_asset_error_messages, expected_error_message, expected_truncation_message",
     [
         pytest.param(
             ["test-data-asset1"],
             ["retrieve-fail-asset-1"],
             ["Failed to retrieve asset: retrieve-fail-asset-1"],
             "Failed to generate schema change expectations for 1 of the 2 assets.",
+            "",
             id="Single asset passing, single asset failing",
         ),
         pytest.param(
@@ -413,6 +414,7 @@ def test_action_failure_in_add_schema_change_expectation(
             ["retrieve-fail-asset-1"],
             ["Failed to retrieve asset: retrieve-fail-asset-1"],
             "Failed to generate schema change expectations for 1 of the 3 assets.",
+            "",
             id="Multiple assets passing, single asset failing",
         ),
         pytest.param(
@@ -430,7 +432,59 @@ def test_action_failure_in_add_schema_change_expectation(
                 "One or more metrics failed to compute.",
             ],
             "Failed to generate schema change expectations for 4 of the 6 assets.",
+            "",
             id="Multiple assets passing, multiple assets failing",
+        ),
+        pytest.param(
+            ["test-data-asset1", "test-data-asset2"],
+            [
+                "retrieve-fail-asset-1",
+                "retrieve-fail-asset-2",
+                "metric-fail-asset-1",
+                "metric-fail-asset-2",
+                "schema-fail-asset-1",
+                "schema-fail-asset-2",
+            ],
+            [
+                "Failed to retrieve asset: retrieve-fail-asset-1",
+                "Failed to retrieve asset: retrieve-fail-asset-2",
+                "One or more metrics failed to compute.",
+                "One or more metrics failed to compute.",
+                "Failed to add expectation to suite: test-suite",
+                "Failed to add expectation to suite: test-suite",
+            ],
+            "Only displaying the first 5 errors. There is 1 additional error.",
+            "Failed to generate schema change expectations for 6 of the 8 assets.",
+            id="Multiple assets passing, multiple assets failing, one more than max display errors",
+        ),
+        # More than one more than max errors to display
+        pytest.param(
+            ["test-data-asset1", "test-data-asset2"],
+            [
+                "retrieve-fail-asset-1",
+                "retrieve-fail-asset-2",
+                "metric-fail-asset-1",
+                "metric-fail-asset-2",
+                "schema-fail-asset-1",
+                "schema-fail-asset-2",
+                "schema-fail-asset-3",
+                "schema-fail-asset-4",
+                "schema-fail-asset-5",
+            ],
+            [
+                "Failed to retrieve asset: retrieve-fail-asset-1",
+                "Failed to retrieve asset: retrieve-fail-asset-2",
+                "One or more metrics failed to compute.",
+                "One or more metrics failed to compute.",
+                "Failed to add expectation to suite: test-suite",
+                "Failed to add expectation to suite: test-suite",
+                "Failed to add expectation to suite: test-suite",
+                "Failed to add expectation to suite: test-suite",
+                "Failed to add expectation to suite: test-suite",
+            ],
+            "Only displaying the first 5 errors. There are 4 additional errors.",
+            "Failed to generate schema change expectations for 9 of the 11 assets.",
+            id="Multiple assets passing, multiple assets failing, more than max display errors",
         ),
     ],
 )
@@ -442,6 +496,7 @@ def test_succeeding_and_failing_assets_together(
     failing_data_asset_names: list[str],
     failing_data_asset_error_messages: list[str],
     expected_error_message: str,
+    expected_truncation_message: str,
 ):
     # setup
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
@@ -471,6 +526,8 @@ def test_succeeding_and_failing_assets_together(
 
     # These are part of the same message
     assert expected_error_message in str(e.value)
+    if expected_truncation_message:
+        assert expected_truncation_message in str(e.value)
     for idx, asset_name in enumerate(failing_data_asset_names):
         assert f"Asset: {asset_name}" in str(e.value)
         assert failing_data_asset_error_messages[idx] in str(e.value)
