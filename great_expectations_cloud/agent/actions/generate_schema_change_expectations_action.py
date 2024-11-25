@@ -50,9 +50,8 @@ class PartialSchemaChangeExpectationError(GXAgentError):
             errors_to_display = dict(
                 list(self.asset_to_error_map.items())[: self.max_errors_to_display]
             )
-            num_error_display_msg = (
-                f"Only displaying the first {self.max_errors_to_display} errors. "
-            )
+            errors_not_displayed = len(self.asset_to_error_map) - self.max_errors_to_display
+            num_error_display_msg = f"Only displaying the first {self.max_errors_to_display} errors. There {'is' if errors_not_displayed == 1 else 'are'} {errors_not_displayed} additional error{'' if errors_not_displayed == 1 else 's'}."
         else:
             errors_to_display = self.asset_to_error_map
             num_error_display_msg = ""
