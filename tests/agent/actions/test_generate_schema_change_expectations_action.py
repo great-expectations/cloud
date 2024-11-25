@@ -256,22 +256,22 @@ def test_action_failure_in_retrieve_asset_from_asset_name(
     )
 
     # run the action
-    return_value = action.run(
-        event=GenerateSchemaChangeExpectationsEvent(
-            type="generate_schema_change_expectations_request.received",
-            organization_id=uuid.uuid4(),
-            datasource_name="test-datasource",
-            data_assets=["data-asset1"],
-            create_expectations=True,
-        ),
-        id="test-id",
-    )
+    with pytest.raises(PartialSchemaChangeExpectationError) as e:
+        action.run(
+            event=GenerateSchemaChangeExpectationsEvent(
+                type="generate_schema_change_expectations_request.received",
+                organization_id=uuid.uuid4(),
+                datasource_name="test-datasource",
+                data_assets=["data-asset1"],
+                create_expectations=True,
+            ),
+            id="test-id",
+        )
 
-    assert len(return_value.created_resources) == 0
-    assert return_value.type == "generate_schema_change_expectations_request.received"
-    # both of these are part of the same message
-    assert "asset_name: data-asset1 failed with error" in caplog.text
-    assert "Failed to retrieve asset: data-asset1" in caplog.text
+    # These are part of the same message
+    assert "Failed to generate schema change expectations for 1 of the 1 assets." in str(e.value)
+    assert "Asset: data-asset1" in str(e.value)
+    assert "Failed to retrieve asset: data-asset1" in str(e.value)
 
 
 def test_action_failure_in_get_metrics(
