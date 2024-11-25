@@ -5,6 +5,7 @@ import uuid
 from typing import TYPE_CHECKING
 
 import pytest
+from great_expectations import ExpectationSuite
 
 from great_expectations_cloud.agent.actions.generate_schema_change_expectations_action import (
     GenerateSchemaChangeExpectationsAction,
@@ -28,6 +29,26 @@ def user_api_token_headers_org_admin_sc_org():
         "Authorization": f"Bearer {api_token}",
         "Content-Type": "application/vnd.api+json",
     }
+
+
+@pytest.fixture
+def seed_and_cleanup_test_data(context: CloudDataContext):
+    # Seed data
+    data_source_name = "local_mercury_db"
+    data_source = context.data_sources.get(data_source_name)
+
+    table_data_asset = data_source.add_table_asset(
+        table_name="checkpoints", name="local-mercury-db-checkpoints-table"
+    )
+
+    suite = context.suites.add(ExpectationSuite(name="local-mercury-db-checkpoints-table Suite"))
+
+    # Yield
+    yield table_data_asset, suite
+
+    # clean up
+    data_source.delete_asset(name="local-mercury-db-checkpoints-table")
+    context.suites.delete(name="local-mercury-db-checkpoints-table Suite")
 
 
 @pytest.fixture
@@ -71,6 +92,7 @@ def test_running_schema_change_expectation_action(
     org_id_env_var_local: str,
     cloud_base_url_local: str,
     token_env_var_local: str,
+    seed_and_cleanup_test_data,
 ):
     generate_schema_change_expectations_event = GenerateSchemaChangeExpectationsEvent(
         type="generate_schema_change_expectations_request.received",
