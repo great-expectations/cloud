@@ -34,9 +34,30 @@ pytestmark = pytest.mark.unit
 LOGGER = logging.getLogger(__name__)
 
 
+@pytest.fixture
+def mock_metrics_list() -> list[TableMetric]:
+    return [
+        TableMetric(
+            batch_id="batch_id",
+            metric_name="table.columns",
+            value=["col1", "col2"],
+            exception=None,
+        ),
+        TableMetric(
+            batch_id="batch_id",
+            metric_name="table.column_types",
+            value=[
+                {"name": "col1", "type": "INT"},
+                {"name": "col2", "type": "INT"},
+            ],
+            exception=None,
+        ),
+    ]
+
+
 # https://docs.pytest.org/en/7.1.x/how-to/monkeypatch.html
 @pytest.fixture
-def mock_response_success(monkeypatch):
+def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric]):
     def mock_data_asset(self, event: GenerateSchemaChangeExpectationsEvent, asset_name: str):
         return TableAsset(
             name="test-data-asset",
@@ -45,25 +66,7 @@ def mock_response_success(monkeypatch):
         )
 
     def mock_metrics(self, data_asset: DataAsset):
-        return MetricRun(
-            metrics=[
-                TableMetric(
-                    batch_id="batch_id",
-                    metric_name="table.columns",
-                    value=["col1", "col2"],
-                    exception=None,
-                ),
-                TableMetric(
-                    batch_id="batch_id",
-                    metric_name="table.column_types",
-                    value=[
-                        {"name": "col1", "type": "INT"},
-                        {"name": "col2", "type": "INT"},
-                    ],
-                    exception=None,
-                ),
-            ]
-        )
+        return MetricRun(metrics=mock_metrics_list)
 
     def mock_schema_change_expectation(self, metric_run: MetricRun, expectation_suite_name: str):
         return gx_expectations.ExpectTableColumnsToMatchSet(
@@ -82,30 +85,12 @@ def mock_response_success(monkeypatch):
 
 
 @pytest.fixture
-def mock_response_failed_asset(monkeypatch):
+def mock_response_failed_asset(monkeypatch, mock_metrics_list: list[TableMetric]):
     def mock_data_asset(self, event: GenerateSchemaChangeExpectationsEvent, asset_name: str):
         raise RuntimeError(f"Failed to retrieve asset: {asset_name}")  # noqa: TRY003 # following pattern in code
 
     def mock_metrics(self, data_asset: DataAsset):
-        return MetricRun(
-            metrics=[
-                TableMetric(
-                    batch_id="batch_id",
-                    metric_name="table.columns",
-                    value=["col1", "col2"],
-                    exception=None,
-                ),
-                TableMetric(
-                    batch_id="batch_id",
-                    metric_name="table.column_types",
-                    value=[
-                        {"name": "col1", "type": "INT"},
-                        {"name": "col2", "type": "INT"},
-                    ],
-                    exception=None,
-                ),
-            ]
-        )
+        return MetricRun(metrics=mock_metrics_list)
 
     def mock_schema_change_expectation(self, metric_run: MetricRun, expectation_suite_name: str):
         return gx_expectations.ExpectTableColumnsToMatchSet(
@@ -152,7 +137,7 @@ def mock_response_failed_metrics(monkeypatch):
 
 
 @pytest.fixture
-def mock_response_failed_schema_change(monkeypatch):
+def mock_response_failed_schema_change(monkeypatch, mock_metrics_list: list[TableMetric]):
     def mock_data_asset(self, event: GenerateSchemaChangeExpectationsEvent, asset_name: str):
         return TableAsset(
             name="test-data-asset",
@@ -161,25 +146,7 @@ def mock_response_failed_schema_change(monkeypatch):
         )
 
     def mock_metrics(self, data_asset: DataAsset):
-        return MetricRun(
-            metrics=[
-                TableMetric(
-                    batch_id="batch_id",
-                    metric_name="table.columns",
-                    value=["col1", "col2"],
-                    exception=None,
-                ),
-                TableMetric(
-                    batch_id="batch_id",
-                    metric_name="table.column_types",
-                    value=[
-                        {"name": "col1", "type": "INT"},
-                        {"name": "col2", "type": "INT"},
-                    ],
-                    exception=None,
-                ),
-            ]
-        )
+        return MetricRun(metrics=mock_metrics_list)
 
     def mock_schema_change_expectation(self, metric_run: MetricRun, expectation_suite_name: str):
         raise RuntimeError("Failed to add expectation to suite: test-suite")  # noqa: TRY003 # following pattern in code
