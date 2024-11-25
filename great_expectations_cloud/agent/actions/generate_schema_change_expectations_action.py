@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from itertools import islice
 from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
@@ -47,11 +48,13 @@ class PartialSchemaChangeExpectationError(GXAgentError):
 
     def _build_error_message(self) -> str:
         if len(self.asset_to_error_map) > self.MAX_ERRORS_TO_DISPLAY:
+            # Get the first MAX_ERRORS_TO_DISPLAY errors to display:
             errors_to_display = dict(
-                list(self.asset_to_error_map.items())[: self.MAX_ERRORS_TO_DISPLAY]
+                islice(self.asset_to_error_map.items(), self.MAX_ERRORS_TO_DISPLAY)
             )
-            errors_not_displayed = len(self.asset_to_error_map) - self.MAX_ERRORS_TO_DISPLAY
-            num_error_display_msg = f"Only displaying the first {self.MAX_ERRORS_TO_DISPLAY} errors. There {'is' if errors_not_displayed == 1 else 'are'} {errors_not_displayed} additional error{'' if errors_not_displayed == 1 else 's'}."
+            num_errors_not_displayed = len(self.asset_to_error_map) - self.MAX_ERRORS_TO_DISPLAY
+
+            num_error_display_msg = f"Only displaying the first {self.MAX_ERRORS_TO_DISPLAY} errors. There {'is' if num_errors_not_displayed == 1 else 'are'} {num_errors_not_displayed} additional error{'' if num_errors_not_displayed == 1 else 's'}."
         else:
             errors_to_display = self.asset_to_error_map
             num_error_display_msg = ""
