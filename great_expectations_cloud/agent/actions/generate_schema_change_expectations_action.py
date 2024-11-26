@@ -40,7 +40,7 @@ LOGGER.setLevel(logging.DEBUG)
 class PartialSchemaChangeExpectationError(GXAgentError):
     def __init__(self, assets_with_errors: list[str], assets_attempted: int):
         message_header = f"Unable to fetch schemas for {len(assets_with_errors)} of {assets_attempted} Data Assets."
-        errors = " ,".join(assets_with_errors)
+        errors = ", ".join(assets_with_errors)
         message_footer = "Check your connection details, delete and recreate these Data Assets."
         message = f"{message_header}\n- {errors}\n{message_footer}"
         super().__init__(message)
