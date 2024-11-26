@@ -19,7 +19,7 @@ import requests
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
-from great_expectations.exceptions import GXCloudError
+from great_expectations.data_context.types.base import ProgressBarsConfig
 from pika.adapters.utils.connection_workflow import (
     AMQPConnectorException,
 )
@@ -94,6 +94,7 @@ class GXAgentConfig(AgentBaseExtraForbid):
     gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
+    enable_progress_bars: bool = True
 
 
 def orjson_dumps(v: Any, *, default: Callable[[Any], Any] | None) -> str:
@@ -148,6 +149,7 @@ class GXAgent:
             # suppress warnings about GX version
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
             self._context: CloudDataContext = get_context(cloud_mode=True)
+            self._configure_progress_bars(data_context=self._context)
         LOGGER.debug("DataContext is ready.")
 
         self._set_http_session_headers(data_context=self._context)
@@ -299,7 +301,9 @@ class GXAgent:
                 "event_type": event_context.event.type,
                 "correlation_id": event_context.correlation_id,
                 "organization_id": str(org_id),
-                "event_payload": event_context.event,
+                "schedule_id": event_context.event.schedule_id
+                if isinstance(event_context.event, ScheduledEventBase)
+                else None,
             },
         )
         handler = EventHandler(context=data_context)
@@ -344,6 +348,9 @@ class GXAgent:
                         "event_type": event_context.event.type,
                         "id": event_context.correlation_id,
                         "organization_id": str(org_id),
+                        "schedule_id": event_context.event.schedule_id
+                        if isinstance(event_context.event, ScheduledEventBase)
+                        else None,
                     },
                 )
             else:
@@ -361,6 +368,9 @@ class GXAgent:
                             result.job_duration.total_seconds() if result.job_duration else None
                         ),
                         "organization_id": str(org_id),
+                        "schedule_id": event_context.event.schedule_id
+                        if isinstance(event_context.event, ScheduledEventBase)
+                        else None,
                     },
                 )
         else:
@@ -462,11 +472,30 @@ class GXAgent:
                 gx_cloud_base_url=env_vars.gx_cloud_base_url,
                 gx_cloud_organization_id=env_vars.gx_cloud_organization_id,
                 gx_cloud_access_token=env_vars.gx_cloud_access_token,
+                enable_progress_bars=env_vars.enable_progress_bars,
             )
         except pydantic_v1.ValidationError as validation_err:
             raise GXAgentConfigError(
                 generate_config_validation_error_text(validation_err)
             ) from validation_err
+
+    def _configure_progress_bars(self, data_context: CloudDataContext) -> None:
+        progress_bars_enabled = self._config.enable_progress_bars
+
+        try:
+            data_context.variables.progress_bars = ProgressBarsConfig(
+                globally=progress_bars_enabled,
+                metric_calculations=progress_bars_enabled,
+            )
+            data_context.variables.save()
+        except Exception:
+            # Progress bars are not critical, so log and continue
+            # This is a known issue with FastAPI mercury V1 API for data-context-variables
+            LOGGER.warning(
+                "Failed to {set} progress bars".format(
+                    set="enable" if progress_bars_enabled else "disable"
+                )
+            )
 
     def _update_status(self, correlation_id: str, status: JobStatus, org_id: UUID) -> None:
         """Update GX Cloud on the status of a job.
@@ -498,7 +527,7 @@ class GXAgent:
                     "organization_id": str(org_id),
                 },
             )
-            GXAgent._raise_gx_cloud_err_on_http_error(
+            GXAgent._log_http_error(
                 response, message="Status Update action had an error while connecting to GX Cloud."
             )
 
@@ -525,6 +554,7 @@ class GXAgent:
                 "correlation_id": str(event_context.correlation_id),
                 "event_type": str(event_context.event.type),
                 "organization_id": str(org_id),
+                "schedule_id": str(event_context.event.schedule_id),
             },
         )
 
@@ -550,9 +580,10 @@ class GXAgent:
                     "correlation_id": str(event_context.correlation_id),
                     "event_type": str(event_context.event.type),
                     "organization_id": str(org_id),
+                    "schedule_id": str(event_context.event.schedule_id),
                 },
             )
-            GXAgent._raise_gx_cloud_err_on_http_error(
+            GXAgent._log_http_error(
                 response,
                 message="Create schedule job action had an error while connecting to GX Cloud.",
             )
@@ -640,14 +671,11 @@ class GXAgent:
         http._update_headers = _update_headers_agent_patch
 
     @staticmethod
-    def _raise_gx_cloud_err_on_http_error(response: requests.Response, message: str) -> None:
+    def _log_http_error(response: requests.Response, message: str) -> None:
         """
-        Raise GXCloudError if the response is not successful.
+        Log the http error if the response is not successful.
         """
         try:
             response.raise_for_status()
-        except requests.HTTPError as http_err:
-            raise GXCloudError(
-                message=message,
-                response=response,
-            ) from http_err
+        except requests.HTTPError:
+            LOGGER.exception(message, extra={"response": response})

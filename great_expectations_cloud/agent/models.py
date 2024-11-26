@@ -109,8 +109,17 @@ class GenerateSchemaChangeExpectationsEvent(EventBase):
     )
     datasource_name: str
     data_assets: Sequence[str]
-    expectation_suite_id: UUID
+    # TODO - Enable this in ZELDA-1154
+    # data_asset_to_expectation_suite_name: Dict[str, str]
     create_expectations: bool = False
+
+
+class RunRdAgentEvent(EventBase):
+    type: Literal["rd_agent_action.received"] = "rd_agent_action.received"
+    datasource_name: str
+    data_asset_name: str
+    batch_definition_name: str
+    batch_parameters: Dict[str, Any]
 
 
 class UnknownEvent(AgentBaseExtraForbid):
@@ -129,6 +138,7 @@ Event = Annotated[
         DraftDatasourceConfigEvent,
         ListTableNamesEvent,
         GenerateSchemaChangeExpectationsEvent,
+        RunRdAgentEvent,
         UnknownEvent,
     ],
     Field(discriminator="type"),

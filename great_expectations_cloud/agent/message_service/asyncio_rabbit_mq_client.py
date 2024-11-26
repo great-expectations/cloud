@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Callable, Final, Protocol
 
 import pika
 from pika.adapters.asyncio_connection import AsyncioConnection
+from pika.exceptions import ChannelClosed, ConnectionClosed
 
 from great_expectations_cloud.agent.exceptions import GXAgentUnrecoverableConnectionError
 
@@ -227,13 +228,7 @@ class AsyncRabbitMQClient:
     ) -> None:
         """Callback invoked when there is an error while opening connection."""
         self._reconnect()
-        LOGGER.error(
-            "Connection open failed",
-            extra={
-                "reply_code": reason.reply_code,
-                "reply_text": reason.reply_text,
-            },
-        )
+        self._log_pika_exception("Connection open failed", reason)
 
     def _on_connection_closed(
         self, connection: AsyncioConnection, _unused_reason: pika.Exception
@@ -255,7 +250,35 @@ class AsyncRabbitMQClient:
             pass
         else:
             LOGGER.debug("Closing connection to RabbitMQ")
-            self._connection.close(reply_code=reason.reply_code, reply_text=reason.reply_text)
+
+            if isinstance(reason, (ConnectionClosed, ChannelClosed)):
+                reply_code = reason.reply_code
+                reply_text = reason.reply_text
+            else:
+                reply_code = 999  # arbitrary value, not in the list of AMQP reply codes: https://www.rabbitmq.com/amqp-0-9-1-reference#constants
+                reply_text = str(reason)
+            self._connection.close(reply_code=reply_code, reply_text=reply_text)
+
+    def _log_pika_exception(
+        self, message: str, reason: pika.Exception, extra: dict[str, str] | None = None
+    ) -> None:
+        """Log a pika exception. Extra is key-value pairs to include in the log message."""
+        if not extra:
+            extra = {}
+        if isinstance(reason, (ConnectionClosed, ChannelClosed)):
+            default_extra: dict[str, str] = {
+                "reply_code": str(reason.reply_code),
+                "reply_text": str(reason.reply_text),
+            }
+            LOGGER.error(
+                message,
+                # mypy not happy with dict | dict, so we use the dict constructor
+                extra={**default_extra, **extra},
+            )
+        else:
+            default_extra = {"reason": str(reason)}
+            # mypy not happy with dict | dict, so we use the dict constructor
+            LOGGER.error(message, extra={**default_extra, **extra})
 
     def _on_channel_open(self, channel: Channel, queue: str, on_message: OnMessageFn) -> None:
         """Callback invoked after the broker opens the channel."""
@@ -264,16 +287,9 @@ class AsyncRabbitMQClient:
         channel.add_on_close_callback(self._on_channel_closed)
         self._start_consuming(queue=queue, on_message=on_message, channel=channel)
 
-    def _on_channel_closed(self, channel: Channel, reason: pika.Exception) -> None:
+    def _on_channel_closed(self, channel: Channel, reason: ChannelClosed) -> None:
         """Callback invoked after the broker closes the channel."""
-        LOGGER.warning(
-            "Channel closed",
-            extra={
-                "channel": channel,
-                "reply_code": reason.reply_code,
-                "reply_text": reason.reply_text,
-            },
-        )
+        self._log_pika_exception("Channel closed", reason, extra={"channel": channel})
         self._close_connection(reason)
 
     def _build_client_parameters(self, url: str) -> pika.URLParameters:

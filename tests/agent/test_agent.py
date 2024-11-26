@@ -60,7 +60,12 @@ def set_required_env_vars(monkeypatch, random_uuid, random_string, local_mercury
 
 @pytest.fixture
 def gx_agent_config(
-    set_required_env_vars, queue, connection_string, random_uuid, random_string, local_mercury
+    set_required_env_vars,
+    queue,
+    connection_string,
+    random_uuid,
+    random_string,
+    local_mercury,
 ) -> GXAgentConfig:
     config = GXAgentConfig(
         queue=queue,
@@ -192,6 +197,16 @@ def requests_post(mocker, queue, connection_string):
 def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config, requests_post):
     agent = GXAgent()
     assert agent._config == gx_agent_config
+
+
+@pytest.mark.parametrize("enable_progress_bars", [True, False])
+def test_gx_agent_configures_progress_bars_on_init(
+    monkeypatch, enable_progress_bars, get_context, gx_agent_config, requests_post
+):
+    monkeypatch.setenv("ENABLE_PROGRESS_BARS", str(enable_progress_bars))
+    agent = GXAgent()
+    assert agent._context.variables.progress_bars.globally == enable_progress_bars
+    assert agent._context.variables.progress_bars.metric_calculations == enable_progress_bars
 
 
 def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
@@ -617,20 +632,21 @@ def test_correlation_id_header(
         agent.run()
 
 
-def test_raise_gx_cloud_err_on_http_error_error_response():
+def test_log_err_on_http_error_error_response(caplog):
     test_response = requests.Response()
     # 404 - Not Found
     test_response.status_code = 404
-    with pytest.raises(gx_exception.GXCloudError):
-        GXAgent._raise_gx_cloud_err_on_http_error(test_response, "Test error message")
+    error_msg = "Test error message"
+    GXAgent._log_http_error(test_response, error_msg)
+    assert caplog.records[0].message == error_msg
 
 
-def test_raise_gx_cloud_err_on_http_error_success_response():
+def test_log_err_on_http_error_success_response(caplog):
     test_response = requests.Response()
     # 200 - OK
     test_response.status_code = 200
-    # no Exception raised
-    GXAgent._raise_gx_cloud_err_on_http_error(test_response, "Test error message")
+    # no Exception logged
+    assert caplog.records == []
 
 
 def test_handle_event_as_thread_exit_succeeds_when_job_succeeds(
@@ -736,3 +752,4 @@ def test_handle_event_as_thread_exit_update_status_failure(mocker, gx_agent_conf
     # Should nack the message since we failed to update the status
     event_context.processed_with_failures.assert_called_once()
     assert agent._current_task is None
+
