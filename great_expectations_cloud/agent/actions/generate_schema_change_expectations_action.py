@@ -63,9 +63,6 @@ class PartialSchemaChangeExpectationError(GXAgentError):
         )
         return f"{self.message}\n{num_error_display_msg}Errors:\n----- {errors}"
 
-    def __str__(self):
-        return self._build_error_message()
-
 
 class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExpectationsEvent]):
     def __init__(  # noqa: PLR0913  # Refactor opportunity
