@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from itertools import islice
 from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
@@ -39,29 +38,12 @@ LOGGER.setLevel(logging.DEBUG)
 
 
 class PartialSchemaChangeExpectationError(GXAgentError):
-    def __init__(self, asset_to_error_map: dict[str, Exception], assets_attempted: int):
-        self.MAX_ERRORS_TO_DISPLAY = 5
-        self.asset_to_error_map = asset_to_error_map
-        num_assets_with_errors = len(self.asset_to_error_map)
-        self.message = f"Failed to generate schema change expectations for {num_assets_with_errors} of the {assets_attempted} assets."
-        super().__init__(self._build_error_message())
-
-    def _build_error_message(self) -> str:
-        if len(self.asset_to_error_map) > self.MAX_ERRORS_TO_DISPLAY:
-            # Get the first MAX_ERRORS_TO_DISPLAY errors to display:
-            errors_to_display = dict(
-                islice(self.asset_to_error_map.items(), self.MAX_ERRORS_TO_DISPLAY)
-            )
-            num_errors_not_displayed = len(self.asset_to_error_map) - self.MAX_ERRORS_TO_DISPLAY
-
-            num_error_display_msg = f"Only displaying the first {self.MAX_ERRORS_TO_DISPLAY} errors. There {'is' if num_errors_not_displayed == 1 else 'are'} {num_errors_not_displayed} additional error{'' if num_errors_not_displayed == 1 else 's'}. "
-        else:
-            errors_to_display = self.asset_to_error_map
-            num_error_display_msg = ""
-        errors = " ----- \n".join(
-            f"Asset: {asset_name} Error: {error}" for asset_name, error in errors_to_display.items()
-        )
-        return f"{self.message}\n{num_error_display_msg}Errors:\n----- {errors}"
+    def __init__(self, assets_with_errors: list[str], assets_attempted: int):
+        message_header = f"Unable to fetch schemas for {len(assets_with_errors)} of {assets_attempted} Data Assets."
+        errors = " ,".join(assets_with_errors)
+        message_footer = "Check your connection details, delete and recreate these Data Assets."
+        message = f"{message_header}\n- {errors}\n{message_footer}"
+        super().__init__(message)
 
 
 class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExpectationsEvent]):
@@ -87,7 +69,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
     @override
     def run(self, event: GenerateSchemaChangeExpectationsEvent, id: str) -> ActionResult:
         created_resources: list[CreatedResource] = []
-        asset_to_error_map: dict[str, Exception] = {}
+        assets_with_errors: list[str] = []
         for asset_name in event.data_assets:
             try:
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
@@ -103,12 +85,12 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
                 created_resources.append(
                     CreatedResource(resource_id=expectation.id, type="Expectation")
                 )
-            except Exception as e:
-                asset_to_error_map[asset_name] = e
+            except Exception:
+                assets_with_errors.append(asset_name)
 
-        if asset_to_error_map:
+        if assets_with_errors:
             raise PartialSchemaChangeExpectationError(
-                asset_to_error_map=asset_to_error_map,
+                assets_with_errors=assets_with_errors,
                 assets_attempted=len(event.data_assets),
             )
 
