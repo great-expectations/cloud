@@ -168,22 +168,18 @@ def test_generate_schema_change_expectations_action_success(
 
 
 @pytest.mark.parametrize(
-    "succeeding_data_asset_names, failing_data_asset_names, failing_data_asset_error_messages, expected_error_message, expected_truncation_message",
+    "succeeding_data_asset_names, failing_data_asset_names, error_message_header",
     [
         pytest.param(
             ["test-data-asset1"],
             ["retrieve-fail-asset-1"],
-            ["Failed to retrieve asset: retrieve-fail-asset-1"],
             "Unable to fetch schemas for 1 of 2 Data Assets.",
-            "",
             id="Single asset passing, single asset failing",
         ),
         pytest.param(
             ["test-data-asset1", "test-data-asset2"],
             ["retrieve-fail-asset-1"],
-            ["Failed to retrieve asset: retrieve-fail-asset-1"],
             "Unable to fetch schemas for 1 of 3 Data Assets.",
-            "",
             id="Multiple assets passing, single asset failing",
         ),
         pytest.param(
@@ -194,14 +190,7 @@ def test_generate_schema_change_expectations_action_success(
                 "metric-fail-asset-1",
                 "metric-fail-asset-2",
             ],
-            [
-                "Failed to retrieve asset: retrieve-fail-asset-1",
-                "Failed to retrieve asset: retrieve-fail-asset-2",
-                "One or more metrics failed to compute.",
-                "One or more metrics failed to compute.",
-            ],
             "Unable to fetch schemas for 4 of 6 Data Assets.",
-            "",
             id="Multiple assets passing, multiple assets failing",
         ),
         pytest.param(
@@ -217,19 +206,7 @@ def test_generate_schema_change_expectations_action_success(
                 "schema-fail-asset-4",
                 "schema-fail-asset-5",
             ],
-            [
-                "Failed to retrieve asset: retrieve-fail-asset-1",
-                "Failed to retrieve asset: retrieve-fail-asset-2",
-                "One or more metrics failed to compute.",
-                "One or more metrics failed to compute.",
-                "Failed to add expectation to suite: test-suite",
-                "Failed to add expectation to suite: test-suite",
-                "Failed to add expectation to suite: test-suite",
-                "Failed to add expectation to suite: test-suite",
-                "Failed to add expectation to suite: test-suite",
-            ],
             "Unable to fetch schemas for 9 of 11 Data Assets.",
-            "Only displaying the first 5 errors. There are 4 additional errors.",
             id="Multiple assets passing, multiple assets failing, more than max display errors",
         ),
     ],
@@ -240,9 +217,7 @@ def test_succeeding_and_failing_assets_together(
     mocker: MockerFixture,
     succeeding_data_asset_names: list[str],
     failing_data_asset_names: list[str],
-    failing_data_asset_error_messages: list[str],
-    expected_error_message: str,
-    expected_truncation_message: str,
+    error_message_header: str,
 ):
     # setup
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
@@ -270,14 +245,9 @@ def test_succeeding_and_failing_assets_together(
             id="test-id",
         )
 
-    # These are part of same message
-    assert expected_error_message in str(e.value)
-    if expected_truncation_message:
-        assert expected_truncation_message in str(e.value)
-    else:
-        # If there is no truncation message, we don't know which errors are displayed and in which order.
-        # So we just check that the error messages are in the exception message
-        # if there is no truncation message.
-        for idx, asset_name in enumerate(failing_data_asset_names):
-            assert asset_name in str(e.value)
-            assert failing_data_asset_error_messages[idx] in str(e.value)
+    # These are part of the same message
+    assert error_message_header in str(e.value)
+    error_message_footer = "Check your connection details, delete and recreate these Data Assets."
+    assert error_message_footer in str(e.value)
+    for asset_name in failing_data_asset_names:
+        assert asset_name in str(e.value)
