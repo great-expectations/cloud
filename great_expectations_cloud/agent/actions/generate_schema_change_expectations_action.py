@@ -42,7 +42,7 @@ class PartialSchemaChangeExpectationError(GXAgentError):
         message_header = f"Unable to fetch schemas for {len(assets_with_errors)} of {assets_attempted} Data Assets."
         errors = ", ".join(assets_with_errors)
         message_footer = "Check your connection details, delete and recreate these Data Assets."
-        message = f"{message_header}\n- {errors}\n{message_footer}"
+        message = f"{message_header}\n\u2022 {errors}\n{message_footer}"
         super().__init__(message)
 
 
