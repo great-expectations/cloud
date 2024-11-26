@@ -752,4 +752,3 @@ def test_handle_event_as_thread_exit_update_status_failure(mocker, gx_agent_conf
     # Should nack the message since we failed to update the status
     event_context.processed_with_failures.assert_called_once()
     assert agent._current_task is None
-
