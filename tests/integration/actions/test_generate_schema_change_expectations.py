@@ -5,6 +5,7 @@ import uuid
 from typing import TYPE_CHECKING
 
 import pytest
+from great_expectations import ExpectationSuite
 
 from great_expectations_cloud.agent.actions.generate_schema_change_expectations_action import (
     GenerateSchemaChangeExpectationsAction,
@@ -28,6 +29,26 @@ def user_api_token_headers_org_admin_sc_org():
         "Authorization": f"Bearer {api_token}",
         "Content-Type": "application/vnd.api+json",
     }
+
+
+@pytest.fixture
+def seed_and_cleanup_test_data(context: CloudDataContext):
+    # Seed data
+    data_source_name = "local_mercury_db"
+    data_source = context.data_sources.get(data_source_name)
+
+    table_data_asset = data_source.add_table_asset(
+        table_name="checkpoints", name="local-mercury-db-checkpoints-table"
+    )
+
+    suite = context.suites.add(ExpectationSuite(name="local-mercury-db-checkpoints-table Suite"))
+
+    # Yield
+    yield table_data_asset, suite
+
+    # clean up
+    data_source.delete_asset(name="local-mercury-db-checkpoints-table")
+    context.suites.delete(name="local-mercury-db-checkpoints-table Suite")
 
 
 @pytest.fixture
@@ -63,7 +84,6 @@ def local_mercury_db_organizations_table_asset(
     yield data_asset
 
 
-@pytest.mark.skip(reason="This test will be updated in a follow-up PR")
 def test_running_schema_change_expectation_action(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
@@ -72,11 +92,12 @@ def test_running_schema_change_expectation_action(
     org_id_env_var_local: str,
     cloud_base_url_local: str,
     token_env_var_local: str,
+    seed_and_cleanup_test_data,
 ):
     generate_schema_change_expectations_event = GenerateSchemaChangeExpectationsEvent(
         type="generate_schema_change_expectations_request.received",
         datasource_name="local_mercury_db",
-        data_assets=["checkpoints"],
+        data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
     )
 
@@ -91,6 +112,9 @@ def test_running_schema_change_expectation_action(
     action_result = action.run(event=generate_schema_change_expectations_event, id=event_id)
 
     # Assert
-    # Check that the action was successful e.g. that we can create metrics_list_request action
     assert action_result.type == generate_schema_change_expectations_event.type
     assert action_result.id == event_id
+    # expected resources were created
+    assert len(action_result.created_resources) == 2
+    assert action_result.created_resources[0].type == "MetricRun"
+    assert action_result.created_resources[1].type == "Expectation"
