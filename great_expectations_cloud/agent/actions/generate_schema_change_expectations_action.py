@@ -54,14 +54,14 @@ class PartialSchemaChangeExpectationError(GXAgentError):
             )
             num_errors_not_displayed = len(self.asset_to_error_map) - self.MAX_ERRORS_TO_DISPLAY
 
-            num_error_display_msg = f"Only displaying the first {self.MAX_ERRORS_TO_DISPLAY} errors. There {'is' if num_errors_not_displayed == 1 else 'are'} {num_errors_not_displayed} additional error{'' if num_errors_not_displayed == 1 else 's'}."
+            num_error_display_msg = f"Only displaying the first {self.MAX_ERRORS_TO_DISPLAY} errors. There {'is' if num_errors_not_displayed == 1 else 'are'} {num_errors_not_displayed} additional error{'' if num_errors_not_displayed == 1 else 's'}. "
         else:
             errors_to_display = self.asset_to_error_map
             num_error_display_msg = ""
-        errors = "\n".join(
+        errors = " ----- \n".join(
             f"Asset: {asset_name} Error: {error}" for asset_name, error in errors_to_display.items()
         )
-        return f"{self.message}\n{num_error_display_msg}Errors:\n{errors}"
+        return f"{self.message}\n{num_error_display_msg}Errors:\n----- {errors}"
 
     def __str__(self):
         return self._build_error_message()
