@@ -385,9 +385,26 @@ class GXAgent:
                 },
             )
 
-        self._update_status(
-            correlation_id=event_context.correlation_id, status=status, org_id=org_id
-        )
+        try:
+            self._update_status(
+                correlation_id=event_context.correlation_id, status=status, org_id=org_id
+            )
+        except Exception:
+            LOGGER.exception(
+                "Error updating status, removing message from queue",
+                extra={
+                    "correlation_id": event_context.correlation_id,
+                    "status": str(status),
+                    "organization_id": str(org_id),
+                },
+            )
+            # We do not want to cause an infinite loop of errors
+            # If the status update fails, remove the message from the queue
+            # Otherwise, it would attempt to handle the error again via this done callback
+            event_context.processed_with_failures()
+            self._current_task = None
+            # Return so we don't also ack as processed successfully
+            return
 
         # ack message and cleanup resources
         event_context.processed_successfully()

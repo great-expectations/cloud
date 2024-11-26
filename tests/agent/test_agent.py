@@ -647,3 +647,108 @@ def test_log_err_on_http_error_success_response(caplog):
     test_response.status_code = 200
     # no Exception logged
     assert caplog.records == []
+
+
+def test_handle_event_as_thread_exit_succeeds_when_job_succeeds(
+    mocker, gx_agent_config, get_context
+):
+    event_context = mocker.Mock()
+    event_context.correlation_id = "test-correlation-id"
+    event_context.event.type = "test-event-type"
+    event_context.processed_successfully = mocker.Mock()
+    event_context.processed_with_failures = mocker.Mock()
+
+    future = mocker.Mock()
+    future.exception.return_value = None
+    future.result.return_value = ActionResult(
+        id="test-correlation-id",
+        type="test-event-type",
+        created_resources=[],
+        job_duration=None,
+    )
+
+    agent = GXAgent()
+    update_status = mocker.patch.object(agent, "_update_status")
+    agent._handle_event_as_thread_exit(future, event_context)
+
+    update_status.assert_called_once_with(
+        correlation_id="test-correlation-id",
+        status=JobCompleted(
+            success=True,
+            created_resources=[],
+            processed_by="agent",
+        ),
+        org_id=uuid.UUID(gx_agent_config.gx_cloud_organization_id),
+    )
+    event_context.processed_successfully.assert_called_once()
+    event_context.processed_with_failures.assert_not_called()
+    assert agent._current_task is None
+
+
+def test_handle_event_as_thread_exit_succeeds_when_job_has_failure(
+    mocker, gx_agent_config, get_context
+):
+    event_context = mocker.Mock()
+    event_context.correlation_id = "test-correlation-id"
+    event_context.event.type = "test-event-type"
+    event_context.processed_successfully = mocker.Mock()
+    event_context.processed_with_failures = mocker.Mock()
+
+    future = mocker.Mock()
+    future.exception.return_value = Exception("Test error")
+    future.result.side_effect = Exception("Test error")
+
+    agent = GXAgent()
+    update_status = mocker.patch.object(agent, "_update_status")
+    agent._handle_event_as_thread_exit(future, event_context)
+
+    update_status.assert_called_once_with(
+        correlation_id="test-correlation-id",
+        status=JobCompleted(
+            success=False,
+            created_resources=[],
+            error_stack_trace="Test error",
+        ),
+        org_id=uuid.UUID(gx_agent_config.gx_cloud_organization_id),
+    )
+    # Should ACK the message since we ran the job
+    event_context.processed_successfully.assert_called_once()
+    event_context.processed_with_failures.assert_not_called()
+    assert agent._current_task is None
+
+
+def test_handle_event_as_thread_exit_update_status_failure(mocker, gx_agent_config, get_context):
+    event_context = mocker.Mock()
+    event_context.correlation_id = "test-correlation-id"
+    event_context.event.type = "test-event-type"
+    event_context.processed_successfully = mocker.Mock()
+    event_context.processed_with_failures = mocker.Mock()
+
+    future = mocker.Mock()
+    future.exception.return_value = None
+    future.result.return_value = ActionResult(
+        id="test-correlation-id",
+        type="test-event-type",
+        created_resources=[],
+        job_duration=None,
+    )
+
+    agent = GXAgent()
+    update_status = mocker.patch.object(agent, "_update_status")
+    update_status.side_effect = Exception("Update status error")
+
+    agent._handle_event_as_thread_exit(future, event_context)
+
+    update_status.assert_called_once_with(
+        correlation_id="test-correlation-id",
+        status=JobCompleted(
+            success=True,
+            created_resources=[],
+            processed_by="agent",
+        ),
+        org_id=uuid.UUID(gx_agent_config.gx_cloud_organization_id),
+    )
+    event_context.processed_successfully.assert_not_called()
+    # Should nack the message since we failed to update the status
+    event_context.processed_with_failures.assert_called_once()
+    assert agent._current_task is None
