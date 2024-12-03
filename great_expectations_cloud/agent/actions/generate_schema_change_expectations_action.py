@@ -23,6 +23,7 @@ from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.event_handler import register_event_action
+from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     GenerateSchemaChangeExpectationsEvent,
@@ -34,6 +35,15 @@ if TYPE_CHECKING:
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
+
+
+class PartialSchemaChangeExpectationError(GXAgentError):
+    def __init__(self, assets_with_errors: list[str], assets_attempted: int):
+        message_header = f"Unable to fetch schemas for {len(assets_with_errors)} of {assets_attempted} Data Assets."
+        errors = ", ".join(assets_with_errors)
+        message_footer = "Check your connection details, delete and recreate these Data Assets."
+        message = f"{message_header}\n\u2022 {errors}\n{message_footer}"
+        super().__init__(message)
 
 
 class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExpectationsEvent]):
@@ -59,12 +69,12 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
     @override
     def run(self, event: GenerateSchemaChangeExpectationsEvent, id: str) -> ActionResult:
         created_resources: list[CreatedResource] = []
+        assets_with_errors: list[str] = []
         for asset_name in event.data_assets:
             try:
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
                 metric_run, metric_run_id = self._get_metrics(data_asset)
-                # this logic will change with ZELDA-1154 and we will be pulling this in from a mapping
-                expectation_suite_name = f"{data_asset.name} - Expectation Suite"
+                expectation_suite_name = event.data_asset_to_expectation_suite_name[asset_name]
                 expectation = self._add_schema_change_expectation(
                     metric_run, expectation_suite_name
                 )
@@ -74,10 +84,15 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
                 created_resources.append(
                     CreatedResource(resource_id=expectation.id, type="Expectation")
                 )
-            except Exception as e:
-                # TODO - follow up in ZELDA-1153
-                LOGGER.warning(f"asset_name: {asset_name} failed with error: {e}")
-                pass
+            except Exception:
+                assets_with_errors.append(asset_name)
+
+        if assets_with_errors:
+            raise PartialSchemaChangeExpectationError(
+                assets_with_errors=assets_with_errors,
+                assets_attempted=len(event.data_assets),
+            )
+
         return ActionResult(
             id=id,
             type=event.type,
