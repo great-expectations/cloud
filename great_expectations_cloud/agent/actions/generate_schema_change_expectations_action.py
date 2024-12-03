@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import json
 import logging
 from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
 import great_expectations.expectations as gx_expectations
-from great_expectations.exceptions import DataContextError
+from great_expectations.core.http import create_session
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
 )
@@ -27,6 +28,7 @@ from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     GenerateSchemaChangeExpectationsEvent,
+    RunCheckpointEvent,
 )
 
 if TYPE_CHECKING:
@@ -65,6 +67,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
         self._batch_inspector = batch_inspector or BatchInspector(
             context, [MetricListMetricRetriever(self._context)]
         )
+        self._organization_id = organization_id
 
     @override
     def run(self, event: GenerateSchemaChangeExpectationsEvent, id: str) -> ActionResult:
@@ -72,15 +75,18 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
         assets_with_errors: list[str] = []
         for asset_name in event.data_assets:
             try:
-                data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
-                metric_run, metric_run_id = self._get_metrics(data_asset)
-                expectation_suite_name = event.data_asset_to_expectation_suite_name[asset_name]
+                # data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
+                # data_asset_id = data_asset.id
+                # metric_run, metric_run_id = self._get_metrics(data_asset)
+                # expectation_suite_name = event.data_asset_to_expectation_suite_name[asset_name]
+                data_asset_id = UUID("bb117d82-3e2d-497c-84fe-627df5f39b52")
                 expectation = self._add_schema_change_expectation(
-                    metric_run, expectation_suite_name
+                    # metric_run, expectation_suite_name, data_asset_id=data_asset_id
+                    data_asset_id=data_asset_id
                 )
-                created_resources.append(
-                    CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
-                )
+                # created_resources.append(
+                #     CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
+                # )
                 created_resources.append(
                     CreatedResource(resource_id=expectation.id, type="Expectation")
                 )
@@ -128,25 +134,93 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
         return metric_run, metric_run_id
 
     def _add_schema_change_expectation(
-        self, metric_run: MetricRun, expectation_suite_name: str
+        self,
+        # metric_run: MetricRun, expectation_suite_name: str,
+        data_asset_id: UUID,
     ) -> gx_expectations.Expectation:
-        try:
-            expectation_suite = self._context.suites.get(name=expectation_suite_name)
-        except DataContextError as e:
-            raise RuntimeError(  # noqa: TRY003 # want to keep this informative for now
-                f"Expectation Suite with name {expectation_suite_name} was not found."
-            ) from e
+        # TODO: use mercury API to add expectation to suite
+        # Should we use the GraphQL API to add the expectation to the suite?
+        # Or the REST API like Core which fetches the suite and adds the expectation?
+        pass
 
-        try:
-            expectation = expectation_suite.add_expectation(
-                expectation=gx_expectations.ExpectTableColumnsToMatchSet(
-                    column_set=metric_run.metrics[0].value
-                )
-            )
-            expectation_suite.save()
-        except Exception as e:
-            raise RuntimeError(f"Failed to add expectation to suite: {e}") from e  # noqa: TRY003 # want to keep this informative for now
+        # REST
+        #
+        # # Get the suite - I think we can do this with core.
+        # try:
+        #     expectation_suite = self._context.suites.get(name=expectation_suite_name)
+        # except DataContextError as e:
+        #     raise RuntimeError(  # want to keep this informative for now
+        #         f"Expectation Suite with name {expectation_suite_name} was not found."
+        #     ) from e
+        # # Add the expectation
+        # try:
+        #     expectation = expectation_suite.add_expectation(
+        #         expectation=gx_expectations.ExpectTableColumnsToMatchSet(
+        #             column_set=metric_run.metrics[0].value
+        #         )
+        #     )
+        #     # Do not save the suite
+        #     # expectation_suite.save()
+        # except Exception as e:
+        #     raise RuntimeError(f"Failed to add expectation to suite: {e}") from e  # want to keep this informative for now
+        # return expectation
+
+        # Update the suite using the REST endpoint
+
+        # Graphql
+
+        # column_set=metric_run.metrics[0].value
+        column_set = ["created_at", "updated_at"]
+
+        expectation = gx_expectations.ExpectTableColumnsToMatchSet(column_set=column_set)
+        expectation_dict = expectation.model_dump()
+        expectation_dict["autogenerated"] = True
+        expectation_json = json.dumps(expectation_dict)
+
+        # TODO: What is the right query here?
+        add_expectation_to_asset_mutation = f"""
+                mutation {{
+                    addExpectationToDataAsset(input: {{
+                        dataAssetId: "{data_asset_id}",
+                        expectationConfiguration: {expectation_json}
+                    }}) {{
+                        geCloudId
+                        expectationType
+                        kwargs
+                    }}
+                }}
+            """
+
+        payload = {"query": add_expectation_to_asset_mutation}
+        url = f"/organizations/{self._organization_id}/graphql"
+        headers = {"Content-Type": "application/json"}
+        with create_session(access_token=self._auth_key) as session:
+            res = session.post(url=url, data=payload, headers=headers)
+
+        res.raise_for_status()
+
+        expectation.id = res.json()["data"]["addExpectationToDataAsset"]["geCloudId"]
+
         return expectation
+
+        # Original w Core
+        # try:
+        #     expectation_suite = self._context.suites.get(name=expectation_suite_name)
+        # except DataContextError as e:
+        #     raise RuntimeError(  # want to keep this informative for now
+        #         f"Expectation Suite with name {expectation_suite_name} was not found."
+        #     ) from e
+        #
+        # try:
+        #     expectation = expectation_suite.add_expectation(
+        #         expectation=gx_expectations.ExpectTableColumnsToMatchSet(
+        #             column_set=metric_run.metrics[0].value
+        #         )
+        #     )
+        #     expectation_suite.save()
+        # except Exception as e:
+        #     raise RuntimeError(f"Failed to add expectation to suite: {e}") from e  # want to keep this informative for now
+        # return expectation
 
     def _raise_on_any_metric_exception(self, metric_run: MetricRun) -> None:
         if any(metric.exception for metric in metric_run.metrics):
@@ -155,6 +229,5 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
             )
 
 
-register_event_action(
-    "1", GenerateSchemaChangeExpectationsEvent, GenerateSchemaChangeExpectationsAction
-)
+# TODO: Revert this change, only for testing:
+register_event_action("1", RunCheckpointEvent, GenerateSchemaChangeExpectationsAction)
