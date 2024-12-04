@@ -124,7 +124,7 @@ def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[Ta
     monkeypatch.setattr(GenerateDataQualityCheckExpectationsAction, "_get_metrics", mock_metrics)
     monkeypatch.setattr(
         GenerateDataQualityCheckExpectationsAction,
-        "_add_schema_change_expectation",
+        "_add_dataquality_check_expectation",
         mock_schema_change_expectation,
     )
 
