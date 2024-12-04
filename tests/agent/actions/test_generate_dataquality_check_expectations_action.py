@@ -18,11 +18,11 @@ from great_expectations.experimental.metric_repository.metrics import (
     TableMetric,
 )
 
-from great_expectations_cloud.agent.actions.generate_schema_change_expectations_action import (
-    GenerateSchemaChangeExpectationsAction,
+from great_expectations_cloud.agent.actions.generate_dataquality_check_expectations_action import (
+    GenerateDataQualityCheckExpectationsAction,
     PartialSchemaChangeExpectationError,
 )
-from great_expectations_cloud.agent.models import GenerateSchemaChangeExpectationsEvent
+from great_expectations_cloud.agent.models import GenerateDataQualityCheckExpectationsEvent
 
 if TYPE_CHECKING:
     from great_expectations.data_context.data_context.cloud_data_context import CloudDataContext
@@ -58,7 +58,7 @@ def mock_metrics_list() -> list[TableMetric]:
 # https://docs.pytest.org/en/7.1.x/how-to/monkeypatch.html
 @pytest.fixture
 def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric]):
-    def mock_data_asset(self, event: GenerateSchemaChangeExpectationsEvent, asset_name: str):
+    def mock_data_asset(self, event: GenerateDataQualityCheckExpectationsEvent, asset_name: str):
         return TableAsset(
             name="test-data-asset",
             table_name="test_table",
@@ -74,11 +74,13 @@ def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric]):
         )
 
     monkeypatch.setattr(
-        GenerateSchemaChangeExpectationsAction, "_retrieve_asset_from_asset_name", mock_data_asset
+        GenerateDataQualityCheckExpectationsAction,
+        "_retrieve_asset_from_asset_name",
+        mock_data_asset,
     )
-    monkeypatch.setattr(GenerateSchemaChangeExpectationsAction, "_get_metrics", mock_metrics)
+    monkeypatch.setattr(GenerateDataQualityCheckExpectationsAction, "_get_metrics", mock_metrics)
     monkeypatch.setattr(
-        GenerateSchemaChangeExpectationsAction,
+        GenerateDataQualityCheckExpectationsAction,
         "_add_schema_change_expectation",
         mock_schema_change_expectation,
     )
@@ -86,7 +88,7 @@ def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric]):
 
 @pytest.fixture
 def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[TableMetric]):
-    def mock_data_asset(self, event: GenerateSchemaChangeExpectationsEvent, asset_name: str):
+    def mock_data_asset(self, event: GenerateDataQualityCheckExpectationsEvent, asset_name: str):
         if "retrieve-fail" in asset_name:
             raise RuntimeError(f"Failed to retrieve asset: {asset_name}")  # noqa: TRY003 # following pattern in code
         else:
@@ -113,11 +115,13 @@ def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[Ta
             )
 
     monkeypatch.setattr(
-        GenerateSchemaChangeExpectationsAction, "_retrieve_asset_from_asset_name", mock_data_asset
+        GenerateDataQualityCheckExpectationsAction,
+        "_retrieve_asset_from_asset_name",
+        mock_data_asset,
     )
-    monkeypatch.setattr(GenerateSchemaChangeExpectationsAction, "_get_metrics", mock_metrics)
+    monkeypatch.setattr(GenerateDataQualityCheckExpectationsAction, "_get_metrics", mock_metrics)
     monkeypatch.setattr(
-        GenerateSchemaChangeExpectationsAction,
+        GenerateDataQualityCheckExpectationsAction,
         "_add_schema_change_expectation",
         mock_schema_change_expectation,
     )
@@ -149,7 +153,7 @@ def test_generate_schema_change_expectations_action_success(
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
     mock_batch_inspector = mocker.Mock(spec=BatchInspector)
 
-    action = GenerateSchemaChangeExpectationsAction(
+    action = GenerateDataQualityCheckExpectationsAction(
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
@@ -160,7 +164,7 @@ def test_generate_schema_change_expectations_action_success(
 
     # run the action
     return_value = action.run(
-        event=GenerateSchemaChangeExpectationsEvent(
+        event=GenerateDataQualityCheckExpectationsEvent(
             type="generate_schema_change_expectations_request.received",
             organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
@@ -246,7 +250,7 @@ def test_succeeding_and_failing_assets_together(
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
     mock_batch_inspector = mocker.Mock(spec=BatchInspector)
 
-    action = GenerateSchemaChangeExpectationsAction(
+    action = GenerateDataQualityCheckExpectationsAction(
         context=mock_context,
         metric_repository=mock_metric_repository,
         batch_inspector=mock_batch_inspector,
@@ -258,7 +262,7 @@ def test_succeeding_and_failing_assets_together(
     # run the action
     with pytest.raises(PartialSchemaChangeExpectationError) as e:
         action.run(
-            event=GenerateSchemaChangeExpectationsEvent(
+            event=GenerateDataQualityCheckExpectationsEvent(
                 type="generate_schema_change_expectations_request.received",
                 organization_id=uuid.uuid4(),
                 datasource_name="test-datasource",

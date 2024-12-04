@@ -103,7 +103,7 @@ class DraftDatasourceConfigEvent(EventBase):
     config_id: UUID
 
 
-class GenerateSchemaChangeExpectationsEvent(EventBase):
+class GenerateDataQualityCheckExpectationsEvent(EventBase):
     type: Literal["generate_schema_change_expectations_request.received"] = (
         "generate_schema_change_expectations_request.received"
     )
@@ -136,7 +136,7 @@ Event = Annotated[
         RunMetricsListEvent,
         DraftDatasourceConfigEvent,
         ListTableNamesEvent,
-        GenerateSchemaChangeExpectationsEvent,
+        GenerateDataQualityCheckExpectationsEvent,
         RunRdAgentEvent,
         UnknownEvent,
     ],
