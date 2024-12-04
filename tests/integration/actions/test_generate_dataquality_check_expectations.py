@@ -7,11 +7,11 @@ from typing import TYPE_CHECKING
 import pytest
 from great_expectations import ExpectationSuite
 
-from great_expectations_cloud.agent.actions.generate_schema_change_expectations_action import (
-    GenerateSchemaChangeExpectationsAction,
+from great_expectations_cloud.agent.actions.generate_dataquality_check_expectations_action import (
+    GenerateDataQualityCheckExpectationsAction,
 )
 from great_expectations_cloud.agent.models import (
-    GenerateSchemaChangeExpectationsEvent,
+    GenerateDataQualityCheckExpectationsEvent,
 )
 
 if TYPE_CHECKING:
@@ -84,7 +84,7 @@ def local_mercury_db_organizations_table_asset(
     yield data_asset
 
 
-def test_running_schema_change_expectation_action(
+def test_running__expectation_action(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     local_mercury_db_datasource: PostgresDatasource,
@@ -94,8 +94,8 @@ def test_running_schema_change_expectation_action(
     token_env_var_local: str,
     seed_and_cleanup_test_data,
 ):
-    generate_schema_change_expectations_event = GenerateSchemaChangeExpectationsEvent(
-        type="generate_schema_change_expectations_request.received",
+    generate_schema_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
+        type="generate_dataquality_check_expectations_request.received",
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
         data_asset_to_expectation_suite_name={
@@ -104,7 +104,7 @@ def test_running_schema_change_expectation_action(
         organization_id=uuid.UUID(org_id_env_var_local),
     )
 
-    action = GenerateSchemaChangeExpectationsAction(
+    action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url_local,
         organization_id=uuid.UUID(org_id_env_var_local),

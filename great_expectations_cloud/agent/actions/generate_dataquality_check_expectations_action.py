@@ -26,7 +26,7 @@ from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     CreatedResource,
-    GenerateSchemaChangeExpectationsEvent,
+    GenerateDataQualityCheckExpectationsEvent,
 )
 
 if TYPE_CHECKING:
@@ -37,7 +37,7 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
 
-class PartialSchemaChangeExpectationError(GXAgentError):
+class PartialDataQualityCheckExpectationError(GXAgentError):
     def __init__(self, assets_with_errors: list[str], assets_attempted: int):
         message_header = f"Unable to fetch schemas for {len(assets_with_errors)} of {assets_attempted} Data Assets."
         errors = ", ".join(assets_with_errors)
@@ -46,7 +46,9 @@ class PartialSchemaChangeExpectationError(GXAgentError):
         super().__init__(message)
 
 
-class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExpectationsEvent]):
+class GenerateDataQualityCheckExpectationsAction(
+    AgentAction[GenerateDataQualityCheckExpectationsEvent]
+):
     def __init__(  # noqa: PLR0913  # Refactor opportunity
         self,
         context: CloudDataContext,
@@ -67,7 +69,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
         )
 
     @override
-    def run(self, event: GenerateSchemaChangeExpectationsEvent, id: str) -> ActionResult:
+    def run(self, event: GenerateDataQualityCheckExpectationsEvent, id: str) -> ActionResult:
         created_resources: list[CreatedResource] = []
         assets_with_errors: list[str] = []
         for asset_name in event.data_assets:
@@ -75,7 +77,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
                 metric_run, metric_run_id = self._get_metrics(data_asset)
                 expectation_suite_name = event.data_asset_to_expectation_suite_name[asset_name]
-                expectation = self._add_schema_change_expectation(
+                expectation = self._add_dataquality_check_expectation(
                     metric_run, expectation_suite_name
                 )
                 created_resources.append(
@@ -88,7 +90,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
                 assets_with_errors.append(asset_name)
 
         if assets_with_errors:
-            raise PartialSchemaChangeExpectationError(
+            raise PartialDataQualityCheckExpectationError(
                 assets_with_errors=assets_with_errors,
                 assets_attempted=len(event.data_assets),
             )
@@ -100,7 +102,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
         )
 
     def _retrieve_asset_from_asset_name(
-        self, event: GenerateSchemaChangeExpectationsEvent, asset_name: str
+        self, event: GenerateDataQualityCheckExpectationsEvent, asset_name: str
     ) -> DataAsset:
         try:
             datasource = self._context.data_sources.get(event.datasource_name)
@@ -127,7 +129,7 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
 
         return metric_run, metric_run_id
 
-    def _add_schema_change_expectation(
+    def _add_dataquality_check_expectation(
         self, metric_run: MetricRun, expectation_suite_name: str
     ) -> gx_expectations.Expectation:
         try:
@@ -156,5 +158,5 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
 
 
 register_event_action(
-    "1", GenerateSchemaChangeExpectationsEvent, GenerateSchemaChangeExpectationsAction
+    "1", GenerateDataQualityCheckExpectationsEvent, GenerateDataQualityCheckExpectationsAction
 )
