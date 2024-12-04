@@ -535,13 +535,13 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "1.2.4"
+version = "1.2.5"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = "<3.13,>=3.9"
 files = [
-    {file = "great_expectations-1.2.4-py3-none-any.whl", hash = "sha256:809528d00e52274209889c80eaa76a1ae56a349c4f0cac20c07efb54c4faef81"},
-    {file = "great_expectations-1.2.4.tar.gz", hash = "sha256:8e87608efb7e5b67e407e9d55a61d0eb882813aa1348095165470f876b47f655"},
+    {file = "great_expectations-1.2.5-py3-none-any.whl", hash = "sha256:2d8aa0315e272490f286b65992c9927584011ec08c3da0f84b00b729bbf41246"},
+    {file = "great_expectations-1.2.5.tar.gz", hash = "sha256:11ad76fde42c83744ffc4c3355a4fd90a81226e23765fb68b3c98206f98af37e"},
 ]
 
 [package.dependencies]
@@ -591,7 +591,7 @@ pagerduty = ["pypd (==1.1.0)"]
 postgresql = ["psycopg2-binary (>=2.7.6)", "sqlalchemy (>=1.4.0)"]
 redshift = ["psycopg2-binary (>=2.7.6)", "sqlalchemy (<2.0.0)", "sqlalchemy-redshift (>=0.8.8)"]
 s3 = ["boto3 (>=1.17.106)"]
-snowflake = ["pandas (<2.2.0)", "snowflake-connector-python (>2.9.0)", "snowflake-connector-python (>=2.5.0)", "snowflake-sqlalchemy (>=1.2.3,!=1.5.2)", "sqlalchemy (>=1.4.0)"]
+snowflake = ["pandas (<2.2.0)", "snowflake-connector-python (>2.9.0)", "snowflake-connector-python (>=2.5.0)", "snowflake-sqlalchemy (>=1.2.3,<1.7.0)", "sqlalchemy (>=1.4.0)"]
 spark = ["pyspark (>=2.3.2)"]
 spark-connect = ["googleapis-common-protos (>=1.56.4)", "grpcio (>=1.48.1)", "grpcio-status (>=1.48.1)"]
 teradata = ["sqlalchemy (<2.0.0)", "teradatasqlalchemy (==17.0.0.5)"]
