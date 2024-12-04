@@ -37,7 +37,7 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
 
-class PartialSchemaChangeExpectationError(GXAgentError):
+class PartialDataQualityCheckExpectationError(GXAgentError):
     def __init__(self, assets_with_errors: list[str], assets_attempted: int):
         message_header = f"Unable to fetch schemas for {len(assets_with_errors)} of {assets_attempted} Data Assets."
         errors = ", ".join(assets_with_errors)
@@ -90,7 +90,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 assets_with_errors.append(asset_name)
 
         if assets_with_errors:
-            raise PartialSchemaChangeExpectationError(
+            raise PartialDataQualityCheckExpectationError(
                 assets_with_errors=assets_with_errors,
                 assets_attempted=len(event.data_assets),
             )

@@ -20,7 +20,7 @@ from great_expectations.experimental.metric_repository.metrics import (
 
 from great_expectations_cloud.agent.actions.generate_dataquality_check_expectations_action import (
     GenerateDataQualityCheckExpectationsAction,
-    PartialSchemaChangeExpectationError,
+    PartialDataQualityCheckExpectationError,
 )
 from great_expectations_cloud.agent.models import GenerateDataQualityCheckExpectationsEvent
 
@@ -260,7 +260,7 @@ def test_succeeding_and_failing_assets_together(
     )
 
     # run the action
-    with pytest.raises(PartialSchemaChangeExpectationError) as e:
+    with pytest.raises(PartialDataQualityCheckExpectationError) as e:
         action.run(
             event=GenerateDataQualityCheckExpectationsEvent(
                 type="generate_schema_change_expectations_request.received",
