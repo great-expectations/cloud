@@ -68,7 +68,9 @@ def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric]):
     def mock_metrics(self, data_asset: DataAsset):
         return MetricRun(metrics=mock_metrics_list)
 
-    def mock_schema_change_expectation(self, metric_run: MetricRun, expectation_suite_name: str):
+    def mock_dataquality_check_expectation(
+        self, metric_run: MetricRun, expectation_suite_name: str
+    ):
         return gx_expectations.ExpectTableColumnsToMatchSet(
             column_set=["col1", "col2"], id=str(uuid.uuid4())
         )
@@ -81,8 +83,8 @@ def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric]):
     monkeypatch.setattr(GenerateDataQualityCheckExpectationsAction, "_get_metrics", mock_metrics)
     monkeypatch.setattr(
         GenerateDataQualityCheckExpectationsAction,
-        "_add_schema_change_expectation",
-        mock_schema_change_expectation,
+        "_add_dataquality_check_expectation",
+        mock_dataquality_check_expectation,
     )
 
 
@@ -141,7 +143,7 @@ def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[Ta
         ),
     ],
 )
-def test_generate_schema_change_expectations_action_success(
+def test_generate_dataquality_check_expectations_action_success(
     mock_response_success,
     mock_context: CloudDataContext,
     mocker: MockerFixture,
@@ -165,7 +167,7 @@ def test_generate_schema_change_expectations_action_success(
     # run the action
     return_value = action.run(
         event=GenerateDataQualityCheckExpectationsEvent(
-            type="generate_schema_change_expectations_request.received",
+            type="generate_dataquality_check_expectations_request.received",
             organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=data_asset_names,
@@ -177,7 +179,7 @@ def test_generate_schema_change_expectations_action_success(
 
     # assert
     assert len(return_value.created_resources) == expected_created_resources
-    assert return_value.type == "generate_schema_change_expectations_request.received"
+    assert return_value.type == "generate_dataquality_check_expectations_request.received"
 
 
 @pytest.mark.parametrize(
@@ -263,7 +265,7 @@ def test_succeeding_and_failing_assets_together(
     with pytest.raises(PartialDataQualityCheckExpectationError) as e:
         action.run(
             event=GenerateDataQualityCheckExpectationsEvent(
-                type="generate_schema_change_expectations_request.received",
+                type="generate_dataquality_check_expectations_request.received",
                 organization_id=uuid.uuid4(),
                 datasource_name="test-datasource",
                 data_assets=succeeding_data_asset_names + failing_data_asset_names,
