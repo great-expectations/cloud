@@ -104,8 +104,8 @@ class DraftDatasourceConfigEvent(EventBase):
 
 
 class GenerateDataQualityCheckExpectationsEvent(EventBase):
-    type: Literal["generate_schema_change_expectations_request.received"] = (
-        "generate_schema_change_expectations_request.received"
+    type: Literal["generate_dataquality_check_expectations_request.received"] = (
+        "generate_dataquality_check_expectations_request.received"
     )
     datasource_name: str
     data_assets: Sequence[str]
