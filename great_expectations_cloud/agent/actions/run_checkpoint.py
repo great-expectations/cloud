@@ -8,6 +8,7 @@ from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
+from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunCheckpointEvent,
@@ -75,4 +76,4 @@ def run_checkpoint(
     )
 
 
-# register_event_action("1", RunCheckpointEvent, RunCheckpointAction)
+register_event_action("1", RunCheckpointEvent, RunCheckpointAction)

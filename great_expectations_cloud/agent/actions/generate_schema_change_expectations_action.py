@@ -29,7 +29,6 @@ from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     GenerateSchemaChangeExpectationsEvent,
-    RunCheckpointEvent,
 )
 
 if TYPE_CHECKING:
@@ -168,8 +167,6 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
             )
 
 
-# register_event_action(
-#     "1", GenerateSchemaChangeExpectationsEvent, GenerateSchemaChangeExpectationsAction
-# )
-# TODO: Revert this change, only for testing:
-register_event_action("1", RunCheckpointEvent, GenerateSchemaChangeExpectationsAction)
+register_event_action(
+    "1", GenerateSchemaChangeExpectationsEvent, GenerateSchemaChangeExpectationsAction
+)
