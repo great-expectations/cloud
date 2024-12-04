@@ -84,7 +84,7 @@ def local_mercury_db_organizations_table_asset(
     yield data_asset
 
 
-def test_running_schema_change_expectation_action(
+def test_running__expectation_action(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     local_mercury_db_datasource: PostgresDatasource,
@@ -95,7 +95,7 @@ def test_running_schema_change_expectation_action(
     seed_and_cleanup_test_data,
 ):
     generate_schema_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
-        type="generate_schema_change_expectations_request.received",
+        type="generate_dataquality_check_expectations_request.received",
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
         data_asset_to_expectation_suite_name={
