@@ -49,4 +49,7 @@ RUN apt-get remove -y \
 # Disable analytics in OSS
 ENV GX_ANALYTICS_ENABLED=false
 
+# Disable progress bars
+ENV ENABLE_PROGRESS_BARS=false
+
 ENTRYPOINT ["poetry", "run", "gx-agent"]
