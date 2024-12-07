@@ -55,7 +55,7 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
     )
 
     # Mark the validation as managed by GE Cloud
-    engine = sa.create_engine("postgresql://api:postgres@localhost:5432/mercury")
+    engine = sa.create_engine("postgresql://postgres:postgres@localhost:5432/mercury")
     with engine.begin() as conn:
         query = f"UPDATE validations SET gx_managed=true WHERE id='{validation.id}'"
         conn.execute(sa.text(query))
