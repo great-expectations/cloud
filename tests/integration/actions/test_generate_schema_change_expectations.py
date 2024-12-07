@@ -5,7 +5,8 @@ import uuid
 from typing import TYPE_CHECKING
 
 import pytest
-from great_expectations import ExpectationSuite
+import sqlalchemy as sa
+from great_expectations import ExpectationSuite, ValidationDefinition
 
 from great_expectations_cloud.agent.actions.generate_schema_change_expectations_action import (
     GenerateSchemaChangeExpectationsAction,
@@ -16,8 +17,6 @@ from great_expectations_cloud.agent.models import (
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
-    from great_expectations.datasource.fluent import PostgresDatasource
-    from great_expectations.datasource.fluent.sql_datasource import TableAsset
 
 pytestmark = pytest.mark.integration
 
@@ -43,12 +42,32 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
 
     suite = context.suites.add(ExpectationSuite(name="local-mercury-db-checkpoints-table Suite"))
 
+    # Create validation
+    batch_definition = table_data_asset.add_batch_definition_whole_table(
+        name="local-mercury-db-checkpoints-table-batch-definition"
+    )
+    validation = context.validation_definitions.add(
+        ValidationDefinition(
+            name="local-mercury-db-checkpoints-table Validation",
+            suite=suite,
+            data=batch_definition,
+        )
+    )
+
+    # Mark the suite as managed by GE Cloud
+    engine = sa.create_engine("postgresql://api:postgres@localhost:5432/mercury")
+    with engine.begin() as conn:
+        query = f"UPDATE validations SET gx_managed=true WHERE id='{validation.id}'"
+        conn.execute(sa.text(query))
+        conn.commit()
+
     # Yield
     yield table_data_asset, suite
 
     # clean up
     data_source.delete_asset(name="local-mercury-db-checkpoints-table")
     context.suites.delete(name="local-mercury-db-checkpoints-table Suite")
+    context.validation_definitions.delete(name="local-mercury-db-checkpoints-table Validation")
 
 
 @pytest.fixture
@@ -66,29 +85,9 @@ def token_env_var_local():
     return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
 
 
-@pytest.fixture
-def local_mercury_db_datasource(
-    context: CloudDataContext,
-) -> PostgresDatasource:
-    datasource_name = "local_mercury_db"
-    datasource = context.data_sources.get(datasource_name)
-    yield datasource
-
-
-@pytest.fixture
-def local_mercury_db_organizations_table_asset(
-    local_mercury_db_datasource: PostgresDatasource,
-) -> TableAsset:
-    data_asset_name = "local-mercury-db-organizations-table"
-    data_asset = local_mercury_db_datasource.get_asset(name=data_asset_name)
-    yield data_asset
-
-
 def test_running_schema_change_expectation_action(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
-    local_mercury_db_datasource: PostgresDatasource,
-    local_mercury_db_organizations_table_asset: TableAsset,
     org_id_env_var_local: str,
     cloud_base_url_local: str,
     token_env_var_local: str,
