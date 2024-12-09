@@ -29,7 +29,6 @@ from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     GenerateSchemaChangeExpectationsEvent,
-    RunMetricsListEvent,
 )
 
 if TYPE_CHECKING:
@@ -72,37 +71,31 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
     @override
     def run(self, event: GenerateSchemaChangeExpectationsEvent, id: str) -> ActionResult:
         created_resources: list[CreatedResource] = []
+        assets_with_errors: list[str] = []
+        for asset_name in event.data_assets:
+            try:
+                data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
+                metric_run, metric_run_id = self._get_metrics(data_asset)
 
-        # TODO: Fix for merge:
-        # assets_with_errors: list[str] = []
-        # data_assets = event.data_assets
-        # data_assets = ["local-mercury-db-organizations-table"]
-        data_assets = ["local-mercury-db-checkpoints-table"]
-        print("processing data assets: ", data_assets)
-        for asset_name in data_assets:
-            # try:
-            data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
-            metric_run, metric_run_id = self._get_metrics(data_asset)
+                expectation_id = self._add_schema_change_expectation(
+                    metric_run=metric_run, asset_id=data_asset.id
+                )
+                print("Created expectation_id: ", expectation_id)
 
-            expectation_id = self._add_schema_change_expectation(
-                metric_run=metric_run, asset_id=data_asset.id
-            )
-            print("Created expectation_id: ", expectation_id)
+                created_resources.append(
+                    CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
+                )
+                created_resources.append(
+                    CreatedResource(resource_id=str(expectation_id), type="Expectation")
+                )
+            except Exception:
+                assets_with_errors.append(asset_name)
 
-            created_resources.append(
-                CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
+        if assets_with_errors:
+            raise PartialSchemaChangeExpectationError(
+                assets_with_errors=assets_with_errors,
+                assets_attempted=len(event.data_assets),
             )
-            created_resources.append(
-                CreatedResource(resource_id=str(expectation_id), type="Expectation")
-            )
-        #     except Exception:
-        #         assets_with_errors.append(asset_name)
-        #
-        # if assets_with_errors:
-        #     raise PartialSchemaChangeExpectationError(
-        #         assets_with_errors=assets_with_errors,
-        #         assets_attempted=len(event.data_assets),
-        #     )
 
         return ActionResult(
             id=id,
@@ -177,4 +170,6 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
             )
 
 
-register_event_action("1", RunMetricsListEvent, GenerateSchemaChangeExpectationsAction)
+register_event_action(
+    "1", GenerateSchemaChangeExpectationsEvent, GenerateSchemaChangeExpectationsAction
+)
