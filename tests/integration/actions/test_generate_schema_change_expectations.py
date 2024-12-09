@@ -55,7 +55,7 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
     )
 
     # Mark the validation as gx_managed
-    engine = sa.create_engine("postgresql://postgres:postgres@localhost:5432/mercury")
+    engine = sa.create_engine("postgresql://postgres:postgres@db:5432/mercury")
     with engine.begin() as conn:
         query = f"UPDATE validations SET gx_managed=true WHERE id='{validation.id}'"
         conn.execute(sa.text(query))
@@ -104,9 +104,6 @@ def token_env_var_local():
     return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
 
 
-@pytest.mark.skip(
-    "This test fails due to a connection error when attempting to call the backend. It is a problem with the test setup, not the code which was demoed, and this test passes locally."
-)
 def test_running_schema_change_expectation_action(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
