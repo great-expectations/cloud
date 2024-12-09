@@ -54,10 +54,16 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
         )
     )
 
-    # Mark the validation as managed by GE Cloud
+    # Mark the validation as gx_managed
     engine = sa.create_engine("postgresql://postgres:postgres@localhost:5432/mercury")
     with engine.begin() as conn:
         query = f"UPDATE validations SET gx_managed=true WHERE id='{validation.id}'"
+        conn.execute(sa.text(query))
+        conn.commit()
+
+    # Mark the suite as gx_managed
+    with engine.begin() as conn:
+        query = f"UPDATE expectation_suites SET gx_managed=true WHERE id='{suite.id}'"
         conn.execute(sa.text(query))
         conn.commit()
 
@@ -66,11 +72,18 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
 
     # clean up
 
-    # Mark the validation as not managed by GE Cloud
+    # Mark the validation as not gx_managed
     with engine.begin() as conn:
         query = f"UPDATE validations SET gx_managed=false WHERE id='{validation.id}'"
         conn.execute(sa.text(query))
         conn.commit()
+
+    # Mark the suite as not gx_managed
+    with engine.begin() as conn:
+        query = f"UPDATE expectation_suites SET gx_managed=false WHERE id='{suite.id}'"
+        conn.execute(sa.text(query))
+        conn.commit()
+
     context.validation_definitions.delete(name="local-mercury-db-checkpoints-table Validation")
     context.suites.delete(name="local-mercury-db-checkpoints-table Suite")
     data_source.delete_asset(name="local-mercury-db-checkpoints-table")
