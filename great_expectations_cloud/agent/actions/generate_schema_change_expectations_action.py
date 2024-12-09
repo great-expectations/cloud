@@ -80,8 +80,6 @@ class GenerateSchemaChangeExpectationsAction(AgentAction[GenerateSchemaChangeExp
                 expectation_id = self._add_schema_change_expectation(
                     metric_run=metric_run, asset_id=data_asset.id
                 )
-                print("Created expectation_id: ", expectation_id)
-
                 created_resources.append(
                     CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
                 )
