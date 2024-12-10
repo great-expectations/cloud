@@ -126,15 +126,11 @@ def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[Ta
 
 
 @pytest.mark.parametrize(
-    "data_asset_names, data_assets_to_expectation_suite_names, expected_created_resources",
+    "data_asset_names, expected_created_resources",
     [
-        (["test-data-asset1"], {"test-data-asset1": "test-data-asset1 Suite"}, 2),
+        (["test-data-asset1"], 2),
         (
             ["test-data-asset1", "test-data-asset2"],
-            {
-                "test-data-asset1": "test-data-asset1 Suite",
-                "test-data-asset2": "test-data-asset2 Suite",
-            },
             4,
         ),
     ],
@@ -144,7 +140,6 @@ def test_generate_schema_change_expectations_action_success(
     mock_context: CloudDataContext,
     mocker: MockerFixture,
     data_asset_names,
-    data_assets_to_expectation_suite_names,  # TODO: Remove data_asset_to_expectation_suite_name from the event
     expected_created_resources,
 ):
     # setup
@@ -174,8 +169,6 @@ def test_generate_schema_change_expectations_action_success(
             organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=data_asset_names,
-            # TODO: Remove data_asset_to_expectation_suite_name from the event
-            data_asset_to_expectation_suite_name=data_assets_to_expectation_suite_names,
             create_expectations=True,
         ),
         id="test-id",
@@ -194,31 +187,22 @@ def test_generate_schema_change_expectations_action_success(
 
 
 @pytest.mark.parametrize(
-    "succeeding_data_asset_names, suceeding_data_assets_to_expectation_suite_names, failing_data_asset_names, error_message_header",
+    "succeeding_data_asset_names, failing_data_asset_names, error_message_header",
     [
         pytest.param(
             ["test-data-asset1"],
-            {"test-data-asset1": "test-data-asset1 Suite"},
             ["retrieve-fail-asset-1"],
             "Unable to fetch schemas for 1 of 2 Data Assets.",
             id="Single asset passing, single asset failing",
         ),
         pytest.param(
             ["test-data-asset1", "test-data-asset2"],
-            {
-                "test-data-asset1": "test-data-asset1 Suite",
-                "test-data-asset2": "test-data-asset2 Suite",
-            },
             ["retrieve-fail-asset-1"],
             "Unable to fetch schemas for 1 of 3 Data Assets.",
             id="Multiple assets passing, single asset failing",
         ),
         pytest.param(
             ["test-data-asset1", "test-data-asset2"],
-            {
-                "test-data-asset1": "test-data-asset1 Suite",
-                "test-data-asset2": "test-data-asset2 Suite",
-            },
             [
                 "retrieve-fail-asset-1",
                 "retrieve-fail-asset-2",
@@ -230,10 +214,6 @@ def test_generate_schema_change_expectations_action_success(
         ),
         pytest.param(
             ["test-data-asset1", "test-data-asset2"],
-            {
-                "test-data-asset1": "test-data-asset1 Suite",
-                "test-data-asset2": "test-data-asset2 Suite",
-            },
             [
                 "retrieve-fail-asset-1",
                 "retrieve-fail-asset-2",
@@ -256,7 +236,6 @@ def test_succeeding_and_failing_assets_together(
     mocker: MockerFixture,
     succeeding_data_asset_names: list[str],
     failing_data_asset_names: list[str],
-    suceeding_data_assets_to_expectation_suite_names,
     error_message_header: str,
 ):
     # setup
@@ -280,8 +259,6 @@ def test_succeeding_and_failing_assets_together(
                 organization_id=uuid.uuid4(),
                 datasource_name="test-datasource",
                 data_assets=succeeding_data_asset_names + failing_data_asset_names,
-                # TODO: Remove data_asset_to_expectation_suite_name from the event
-                data_asset_to_expectation_suite_name=suceeding_data_assets_to_expectation_suite_names,
                 create_expectations=True,
             ),
             id="test-id",
