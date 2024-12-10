@@ -109,8 +109,6 @@ class GenerateSchemaChangeExpectationsEvent(EventBase):
     )
     datasource_name: str
     data_assets: Sequence[str]
-    # TODO: Remove data_asset_to_expectation_suite_name from the event
-    data_asset_to_expectation_suite_name: Dict[str, str]
     create_expectations: bool = False
 
 
