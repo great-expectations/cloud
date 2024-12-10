@@ -94,11 +94,6 @@ def org_id_env_var_local():
     return "0ccac18e-7631-4bdd-8a42-3c35cce574c6"
 
 
-@pytest.fixture(scope="module")
-def cloud_base_url_local() -> str:
-    return "http://localhost:5000"
-
-
 @pytest.fixture
 def token_env_var_local():
     return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
@@ -108,7 +103,7 @@ def test_running_schema_change_expectation_action(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
-    cloud_base_url_local: str,
+    cloud_base_url: str,
     token_env_var_local: str,
     seed_and_cleanup_test_data,
 ):
@@ -124,7 +119,7 @@ def test_running_schema_change_expectation_action(
 
     action = GenerateSchemaChangeExpectationsAction(
         context=context,
-        base_url=cloud_base_url_local,
+        base_url=cloud_base_url,
         organization_id=uuid.UUID(org_id_env_var_local),
         auth_key=token_env_var_local,
     )
