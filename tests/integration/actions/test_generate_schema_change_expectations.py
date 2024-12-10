@@ -55,7 +55,7 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
     )
 
     # Mark the validation as gx_managed
-    engine = sa.create_engine("postgresql://api:postgres@localhost:5432/mercury")
+    engine = sa.create_engine("postgresql://postgres:postgres@localhost:5432/mercury")
     with engine.begin() as conn:
         query = f"UPDATE validations SET gx_managed=true WHERE id='{validation.id}'"
         conn.execute(sa.text(query))
@@ -96,7 +96,7 @@ def org_id_env_var_local():
 
 @pytest.fixture(scope="module")
 def cloud_base_url_local() -> str:
-    return "http://localhost:7000"
+    return "http://localhost:5000"
 
 
 @pytest.fixture
