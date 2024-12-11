@@ -103,9 +103,9 @@ class DraftDatasourceConfigEvent(EventBase):
     config_id: UUID
 
 
-class GenerateSchemaChangeExpectationsEvent(EventBase):
-    type: Literal["generate_schema_change_expectations_request.received"] = (
-        "generate_schema_change_expectations_request.received"
+class GenerateDataQualityCheckExpectationsEvent(EventBase):
+    type: Literal["generate_data_quality_check_expectations_request.received"] = (
+        "generate_data_quality_check_expectations_request.received"
     )
     datasource_name: str
     data_assets: Sequence[str]
@@ -135,7 +135,7 @@ Event = Annotated[
         RunMetricsListEvent,
         DraftDatasourceConfigEvent,
         ListTableNamesEvent,
-        GenerateSchemaChangeExpectationsEvent,
+        GenerateDataQualityCheckExpectationsEvent,
         RunRdAgentEvent,
         UnknownEvent,
     ],

@@ -8,11 +8,11 @@ import pytest
 import sqlalchemy as sa
 from great_expectations import ExpectationSuite, ValidationDefinition
 
-from great_expectations_cloud.agent.actions.generate_schema_change_expectations_action import (
-    GenerateSchemaChangeExpectationsAction,
+from great_expectations_cloud.agent.actions.generate_data_quality_check_expectations_action import (
+    GenerateDataQualityCheckExpectationsAction,
 )
 from great_expectations_cloud.agent.models import (
-    GenerateSchemaChangeExpectationsEvent,
+    GenerateDataQualityCheckExpectationsEvent,
 )
 
 if TYPE_CHECKING:
@@ -107,14 +107,14 @@ def test_running_schema_change_expectation_action(
     token_env_var_local: str,
     seed_and_cleanup_test_data,
 ):
-    generate_schema_change_expectations_event = GenerateSchemaChangeExpectationsEvent(
-        type="generate_schema_change_expectations_request.received",
+    generate_schema_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
+        type="generate_data_quality_check_expectations_request.received",
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
     )
 
-    action = GenerateSchemaChangeExpectationsAction(
+    action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
         organization_id=uuid.UUID(org_id_env_var_local),

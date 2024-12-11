@@ -10,8 +10,8 @@ from great_expectations_cloud.agent.actions.agent_action import (
 from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
     DraftDatasourceConfigAction,
 )
-from great_expectations_cloud.agent.actions.generate_schema_change_expectations_action import (
-    GenerateSchemaChangeExpectationsAction,
+from great_expectations_cloud.agent.actions.generate_data_quality_check_expectations_action import (
+    GenerateDataQualityCheckExpectationsAction,
 )
 from great_expectations_cloud.agent.actions.list_table_names import ListTableNamesAction
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
