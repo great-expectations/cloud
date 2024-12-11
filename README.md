@@ -13,7 +13,7 @@ To use the GX Agent, you will need to have a Great Expectations Cloud account. Y
 
 Deployment instructions for the GX Agent can be found in the [GX Cloud documentation](https://docs.greatexpectations.io/docs/cloud/deploy/deploy_gx_agent).
 
-## Dev Setup
+## Dev Setup 
 
 The following instructions are for those who are contributing to the GX Agent, to deploy and use the GX agent please see the Quick Start section above.
 
