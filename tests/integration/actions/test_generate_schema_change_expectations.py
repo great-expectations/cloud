@@ -111,9 +111,6 @@ def test_running_schema_change_expectation_action(
         type="generate_schema_change_expectations_request.received",
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
-        data_asset_to_expectation_suite_name={
-            "local-mercury-db-checkpoints-table": "local-mercury-db-checkpoints-table Suite"
-        },
         organization_id=uuid.UUID(org_id_env_var_local),
     )
 
