@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/gh/great-expectations/cloud/graph/badge.svg?token=8WNA5ti8nm)](https://codecov.io/gh/great-expectations/cloud)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-## Quick Start 
+## Quick Start
 
 To use the GX Agent, you will need to have a Great Expectations Cloud account. You can sign up for free at [https://app.greatexpectations.io](https://app.greatexpectations.io).
 
