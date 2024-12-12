@@ -5,9 +5,10 @@ import pathlib
 import re
 import sys
 import warnings
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pprint import pformat as pf
-from typing import TYPE_CHECKING, Any, Final, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Final
 
 import pytest
 import tomlkit
