@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections.abc import Coroutine
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Callable, Coroutine, Protocol
+from typing import TYPE_CHECKING, Callable, Protocol
 
 from pika.exceptions import (
     AMQPError,

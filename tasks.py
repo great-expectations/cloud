@@ -5,8 +5,9 @@ import functools
 import logging
 import os
 import pathlib
+from collections.abc import MutableMapping
 from pprint import pformat as pf
-from typing import TYPE_CHECKING, Any, Final, Literal, MutableMapping
+from typing import TYPE_CHECKING, Any, Final, Literal
 
 import invoke
 import requests

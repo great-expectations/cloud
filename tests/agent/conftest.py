@@ -4,7 +4,8 @@ import logging
 import time
 import uuid
 from collections import deque
-from typing import TYPE_CHECKING, Any, Iterable, Literal, NamedTuple, TypedDict
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypedDict
 
 import pytest
 from great_expectations import (
