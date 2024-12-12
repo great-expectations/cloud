@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, Literal, Optional, Sequence, Set, Union
+from collections.abc import Sequence
+from typing import Annotated, Any, Literal, Optional, Union
 from uuid import UUID
 
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
 from pydantic.v1 import BaseModel, Extra, Field
-from typing_extensions import Annotated
 
 from great_expectations_cloud.agent.exceptions import GXCoreError
 
@@ -53,27 +53,27 @@ class RunMissingnessDataAssistantEvent(RunDataAssistantEvent):
 
 class RunCheckpointEvent(EventBase):
     type: Literal["run_checkpoint_request"] = "run_checkpoint_request"
-    datasource_names_to_asset_names: Dict[str, Set[str]]
+    datasource_names_to_asset_names: dict[str, set[str]]
     checkpoint_id: uuid.UUID
-    splitter_options: Optional[Dict[str, Any]] = None
+    splitter_options: Optional[dict[str, Any]] = None
     # TODO: Remove optional once fully migrated to greatexpectations v1
     checkpoint_name: Optional[str] = None
 
 
 class RunScheduledCheckpointEvent(ScheduledEventBase):
     type: Literal["run_scheduled_checkpoint.received"] = "run_scheduled_checkpoint.received"
-    datasource_names_to_asset_names: Dict[str, Set[str]]
+    datasource_names_to_asset_names: dict[str, set[str]]
     checkpoint_id: uuid.UUID
-    splitter_options: Optional[Dict[str, Any]] = None
+    splitter_options: Optional[dict[str, Any]] = None
     # TODO: Remove optional once fully migrated to greatexpectations v1
     checkpoint_name: Optional[str] = None
 
 
 class RunWindowCheckpointEvent(EventBase):
     type: Literal["run_window_checkpoint.received"] = "run_window_checkpoint.received"
-    datasource_names_to_asset_names: Dict[str, Set[str]]
+    datasource_names_to_asset_names: dict[str, set[str]]
     checkpoint_id: uuid.UUID
-    splitter_options: Optional[Dict[str, Any]] = None
+    splitter_options: Optional[dict[str, Any]] = None
     # TODO: Remove optional once fully migrated to greatexpectations v1
     checkpoint_name: Optional[str] = None
 
@@ -117,7 +117,7 @@ class RunRdAgentEvent(EventBase):
     datasource_name: str
     data_asset_name: str
     batch_definition_name: str
-    batch_parameters: Optional[Dict[str, Any]] = None
+    batch_parameters: Optional[dict[str, Any]] = None
 
 
 class UnknownEvent(AgentBaseExtraForbid):
@@ -158,7 +158,7 @@ class JobCompleted(AgentBaseExtraForbid):
     created_resources: Sequence[CreatedResource] = []
     error_stack_trace: Union[str, None] = None
     error_code: Union[str, None] = None
-    error_params: Union[Dict[str, str], None] = None
+    error_params: Union[dict[str, str], None] = None
     processed_by: Union[Literal["agent", "runner"], None] = None
 
 
@@ -174,8 +174,8 @@ class CreateScheduledJobAndSetJobStarted(AgentBaseExtraForbid):
     correlation_id: UUID
     schedule_id: UUID
     checkpoint_id: UUID
-    datasource_names_to_asset_names: Dict[str, Set[str]]
-    splitter_options: Optional[Dict[str, Any]] = None
+    datasource_names_to_asset_names: dict[str, set[str]]
+    splitter_options: Optional[dict[str, Any]] = None
     # TODO: Remove optional once fully migrated to greatexpectations v1
     checkpoint_name: Optional[str] = None
 
