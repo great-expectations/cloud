@@ -10,7 +10,7 @@ from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
-from typing import TYPE_CHECKING, Any, Callable, Dict, Final, Literal
+from typing import TYPE_CHECKING, Any, Callable, Final, Literal
 from urllib.parse import urljoin
 from uuid import UUID
 
@@ -78,7 +78,7 @@ if TYPE_CHECKING:
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 # TODO Set in log dict
 LOGGER.setLevel(logging.DEBUG)
-HandlerMap = Dict[str, OnMessageCallback]
+HandlerMap = dict[str, OnMessageCallback]
 
 
 class GXAgentConfig(AgentBaseExtraForbid):
@@ -112,7 +112,7 @@ def orjson_loads(v: bytes | bytearray | memoryview | str) -> Any:
 
 
 class Payload(AgentBaseExtraForbid):
-    data: Dict[str, Any]  # noqa: UP006  # Python 3.8 requires Dict instead of dict
+    data: dict[str, Any]
 
     class Config:
         extra = "forbid"

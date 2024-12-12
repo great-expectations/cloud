@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import datetime
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Generic, Optional, Sequence, TypeVar
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Generic, Optional, TypeVar
 from uuid import UUID
 
 from pydantic.v1 import BaseModel
