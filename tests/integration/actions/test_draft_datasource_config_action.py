@@ -66,6 +66,7 @@ def test_running_draft_datasource_config_action(
         "system_users",
         "checkpoints",
         "organizations",
+        "organizations_auth0_orgs",
         "metric_runs",
         "users",
         "auth0_users",
