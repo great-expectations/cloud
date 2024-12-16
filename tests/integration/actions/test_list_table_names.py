@@ -49,6 +49,7 @@ def test_running_list_table_names_action(
         "datasources",
         "expectation_suites",
         "organizations",
+        "organizations_auth0_orgs",
         "api_tokens",
         "users",
         "agent_job_created_resources",

@@ -79,7 +79,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
                 metric_run, metric_run_id = self._get_metrics(data_asset)
 
-                expectation_id = self._add_data_quality_check_expectation(
+                expectation_id = self._add_schema_change_expectation(
                     metric_run=metric_run, asset_id=data_asset.id
                 )
                 created_resources.append(
@@ -131,7 +131,7 @@ class GenerateDataQualityCheckExpectationsAction(
 
         return metric_run, metric_run_id
 
-    def _add_data_quality_check_expectation(self, metric_run: MetricRun, asset_id: UUID) -> UUID:
+    def _add_schema_change_expectation(self, metric_run: MetricRun, asset_id: UUID) -> UUID:
         expectation = gx_expectations.ExpectTableColumnsToMatchSet(
             column_set=metric_run.metrics[0].value
         )
