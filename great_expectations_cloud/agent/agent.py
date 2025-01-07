@@ -224,6 +224,7 @@ class GXAgent:
         version: str = metadata_version(cls._PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME)
         return version
 
+    # THREAD ENTER
     def _handle_event_as_thread_enter(self, event_context: EventContext) -> None:
         """Schedule _handle_event to run in a thread.
 
@@ -244,6 +245,7 @@ class GXAgent:
             self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
             return
 
+        # here we can access the correlation ID through event_context.correlation_id
         self._current_task = self._executor.submit(
             self._handle_event,
             event_context=event_context,
@@ -268,6 +270,10 @@ class GXAgent:
         """Helper method to get the auth key. Overridden in GX-Runner."""
         return self._config.gx_cloud_access_token
 
+    def _set_sentry_tags(self, event_context: EventContext) -> None:
+        """Used by GX-Runner to set tags for Sentry logging. No-op in the Agent."""
+        pass
+
     def _handle_event(self, event_context: EventContext) -> ActionResult:
         """Pass events to EventHandler.
 
@@ -279,6 +285,7 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
+        # this is the branching point
         data_context = self.get_data_context(event_context=event_context)
         # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
         self._set_http_session_headers(
@@ -288,6 +295,8 @@ class GXAgent:
         org_id = self.get_organization_id(event_context)
         base_url = self._config.gx_cloud_base_url
         auth_key = self.get_auth_key()
+
+        self._set_sentry_tags(event_context)
 
         if isinstance(event_context.event, ScheduledEventBase):
             self._create_scheduled_job_and_set_started(event_context, org_id)
@@ -299,6 +308,7 @@ class GXAgent:
             "Starting job",
             extra={
                 "event_type": event_context.event.type,
+                # this already has the correlation ID
                 "correlation_id": event_context.correlation_id,
                 "organization_id": str(org_id),
                 "schedule_id": event_context.event.schedule_id
@@ -306,8 +316,12 @@ class GXAgent:
                 else None,
             },
         )
+
+        # TODO - set the tag for Sentry here in the Runner. This is a placeholder for now.
+
         handler = EventHandler(context=data_context)
         # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
+
         result = handler.handle_event(
             event=event_context.event,
             id=event_context.correlation_id,
