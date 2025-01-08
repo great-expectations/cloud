@@ -268,6 +268,10 @@ class GXAgent:
         """Helper method to get the auth key. Overridden in GX-Runner."""
         return self._config.gx_cloud_access_token
 
+    def _set_sentry_tags(self, correlation_id: str | None) -> None:
+        """Used by GX-Runner to set tags for Sentry logging. No-op in the Agent."""
+        pass
+
     def _handle_event(self, event_context: EventContext) -> ActionResult:
         """Pass events to EventHandler.
 
@@ -306,6 +310,9 @@ class GXAgent:
                 else None,
             },
         )
+
+        self._set_sentry_tags(event_context.correlation_id)
+
         handler = EventHandler(context=data_context)
         # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
         result = handler.handle_event(
