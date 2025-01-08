@@ -239,7 +239,7 @@ class GXAgent:
                 extra={
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
-                    "organization_id": event_context.organization.id,
+                    "organization_id": self.get_organization_id(event_context),
                     "schedule_id": event_context.event.schedule_id
                     if isinstance(event_context.event, ScheduledEventBase)
                     else None,
@@ -253,7 +253,7 @@ class GXAgent:
                 extra={
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
-                    "organization_id": event_context.organization.id,
+                    "organization_id": self.get_organization_id(event_context),
                     "schedule_id": event_context.event.schedule_id
                     if isinstance(event_context.event, ScheduledEventBase)
                     else None,
