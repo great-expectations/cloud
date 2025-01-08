@@ -283,7 +283,6 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
-        # this is the branching point
         data_context = self.get_data_context(event_context=event_context)
         # ensure that great_expectations.http requests to GX Cloud include the job_id/correlation_id
         self._set_http_session_headers(
