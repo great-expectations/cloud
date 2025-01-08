@@ -240,7 +240,9 @@ class GXAgent:
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
                     "organization_id": event_context.organization.id,
-                    "schedule_id": event_context.event.schedule_id,
+                    "schedule_id": event_context.event.schedule_id
+                    if isinstance(event_context.event, ScheduledEventBase)
+                    else None,
                 },
             )
             event_context.processed_with_failures()
@@ -252,7 +254,9 @@ class GXAgent:
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
                     "organization_id": event_context.organization.id,
-                    "schedule_id": event_context.event.schedule_id,
+                    "schedule_id": event_context.event.schedule_id
+                    if isinstance(event_context.event, ScheduledEventBase)
+                    else None,
                 },
             )
             # request that this message is redelivered later
