@@ -238,6 +238,15 @@ class GXAgent:
             event_context.processed_with_failures()
             return
         elif self._can_accept_new_task() is not True:
+            logging.info(
+                "Cannot accept new task, redelivering",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                    "organization_id": event_context.organization.id,
+                    "schedule_id": event_context.event.schedule_id,
+                },
+            )
             # request that this message is redelivered later
             loop = asyncio.get_event_loop()
             # store a reference the task to ensure it isn't garbage collected
