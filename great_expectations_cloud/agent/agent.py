@@ -234,7 +234,7 @@ class GXAgent:
             event_context: An Event with related properties and actions.
         """
         if self._reject_correlation_id(event_context.correlation_id) is True:
-            logging.info(
+            LOGGER.info(
                 "This event has exceeded its redelivery limit, removing from circulation",
                 extra={
                     "event_type": event_context.event.type,
@@ -246,7 +246,7 @@ class GXAgent:
             event_context.processed_with_failures()
             return
         elif self._can_accept_new_task() is not True:
-            logging.info(
+            LOGGER.info(
                 "Cannot accept new task, redelivering",
                 extra={
                     "event_type": event_context.event.type,
