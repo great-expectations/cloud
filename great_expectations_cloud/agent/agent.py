@@ -234,7 +234,15 @@ class GXAgent:
             event_context: An Event with related properties and actions.
         """
         if self._reject_correlation_id(event_context.correlation_id) is True:
-            # this event has been redelivered too many times - remove it from circulation
+            logging.info(
+                "This event has exceeded its redelivery limit, removing from circulation",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                    "organization_id": event_context.organization.id,
+                    "schedule_id": event_context.event.schedule_id,
+                },
+            )
             event_context.processed_with_failures()
             return
         elif self._can_accept_new_task() is not True:
