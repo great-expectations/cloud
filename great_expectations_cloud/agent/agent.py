@@ -1,19 +1,19 @@
 from __future__ import annotations
 
-from collections import defaultdict
-from concurrent.futures import Future
-from importlib.metadata import version as metadata_version
-
 import asyncio
 import logging
 import sys
 import traceback
 import warnings
+from collections import defaultdict
+from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
+from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Final, Literal
 from urllib.parse import urljoin, urlparse
 from uuid import UUID
+
 import orjson
 import requests
 from great_expectations.core.http import create_session
@@ -476,10 +476,10 @@ class GXAgent:
         parsed = urlparse(connection_string)
         if env_vars.amqp_host_override:
             netloc = f"{parsed.username}:{parsed.password}@{env_vars.amqp_host_override}:{parsed.port}"
-            parsed = parsed._replace(netloc=netloc)  # noqa  # documented in urllib docs
+            parsed = parsed._replace(netloc=netloc)  # documented in urllib docs
         if env_vars.amqp_port_override:
             netloc = f"{parsed.username}:{parsed.password}@{parsed.hostname}:{env_vars.amqp_port_override}"
-            parsed = parsed._replace(netloc=netloc)  # noqa  # documented in urllib docs
+            parsed = parsed._replace(netloc=netloc)  # documented in urllib docs
         connection_string = parsed.geturl()
         print(f"\n\nconnection_string: {connection_string}\n\n")
 
