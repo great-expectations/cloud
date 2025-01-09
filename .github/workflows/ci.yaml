@@ -46,7 +46,7 @@ jobs:
   unit-tests:
     strategy:
       matrix:
-        python-version: "3.11"
+        python-version: ["3.11"]
     runs-on: ubuntu-latest
 
     steps:
