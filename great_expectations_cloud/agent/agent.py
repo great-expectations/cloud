@@ -475,7 +475,9 @@ class GXAgent:
         # to localhost, for example.
         parsed = urlparse(connection_string)
         if env_vars.amqp_host_override:
-            netloc = f"{parsed.username}:{parsed.password}@{env_vars.amqp_host_override}:{parsed.port}"
+            netloc = (
+                f"{parsed.username}:{parsed.password}@{env_vars.amqp_host_override}:{parsed.port}"
+            )
             parsed = parsed._replace(netloc=netloc)  # documented in urllib docs
         if env_vars.amqp_port_override:
             netloc = f"{parsed.username}:{parsed.password}@{parsed.hostname}:{env_vars.amqp_port_override}"
