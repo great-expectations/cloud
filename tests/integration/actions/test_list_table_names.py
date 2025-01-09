@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from uuid import UUID
-
 import pytest
 
 from great_expectations_cloud.agent.actions import ListTableNamesAction
@@ -44,6 +43,8 @@ def test_running_list_table_names_action(
         "alembic_version",
         "organization_api_tokens",
         "asset_refs",
+        "alert_emails",
+        "asset_alert_emails",
         "checkpoints",
         "data_context_variables",
         "datasources",
