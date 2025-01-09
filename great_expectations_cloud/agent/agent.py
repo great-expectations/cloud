@@ -483,7 +483,6 @@ class GXAgent:
             netloc = f"{parsed.username}:{parsed.password}@{parsed.hostname}:{env_vars.amqp_port_override}"
             parsed = parsed._replace(netloc=netloc)  # documented in urllib docs
         connection_string = parsed.geturl()
-        print(f"\n\nconnection_string: {connection_string}\n\n")
 
         try:
             # pydantic will coerce the url to the correct type
