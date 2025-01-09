@@ -32,7 +32,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local # the path depends on the OS
-          key: poetry-${{ steps.python-version.outputs.PYTHON_VERSION }} # increment to reset cache
+          key: poetry-${{ steps.python-version.outputs.PYTHON_VERSION }}-1 # increment to reset cache
 
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
@@ -66,7 +66,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local # the path depends on the OS
-          key: poetry-${{ matrix.python-version  }} # increment to reset cache
+          key: poetry-${{ matrix.python-version  }}-1 # increment to reset cache
 
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
@@ -147,7 +147,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local # the path depends on the OS
-          key: poetry-${{ matrix.python-version  }} # increment to reset cache
+          key: poetry-${{ matrix.python-version  }}-1 # increment to reset cache
 
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
@@ -219,7 +219,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local # the path depends on the OS
-          key: poetry-3.10 # increment to reset cache
+          key: poetry-3.10-1 # increment to reset cache
 
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
@@ -274,7 +274,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local # the path depends on the OS
-          key: poetry-3.8 # increment to reset cache
+          key: poetry-3.8-1 # increment to reset cache
 
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
@@ -325,7 +325,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local # the path depends on the OS
-          key: poetry-3.8 # increment to reset cache
+          key: poetry-3.8-1 # increment to reset cache
 
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
