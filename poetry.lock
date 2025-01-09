@@ -535,13 +535,13 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "1.3.0"
+version = "1.3.1"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = "<3.13,>=3.9"
 files = [
-    {file = "great_expectations-1.3.0-py3-none-any.whl", hash = "sha256:b4c2a1cef356f8ccbee986b8bbee6a0841abb9147aa9150ed378f88d73e791ab"},
-    {file = "great_expectations-1.3.0.tar.gz", hash = "sha256:b8d42a7364af3090dd982815dfedcc507d26ccfaa33785585049b3fc565b1ef7"},
+    {file = "great_expectations-1.3.1-py3-none-any.whl", hash = "sha256:5df4e480d7a312487955b29e7b75bf343ff09c6c26556c7681b5054257b26761"},
+    {file = "great_expectations-1.3.1.tar.gz", hash = "sha256:af4b4d619ef10cefe4e3bf0dcd7ad3208ddc89d53b4304d4444cbee311b63586"},
 ]
 
 [package.dependencies]
@@ -560,7 +560,7 @@ pandas = [
     {version = ">=1.1.3,<2.2", markers = "python_version == \"3.9\""},
     {version = ">=1.3.0,<2.2", markers = "python_version >= \"3.10\""},
 ]
-posthog = ">=2.1.0,<3"
+posthog = ">3,<4"
 pydantic = ">=1.10.7"
 pyparsing = ">=2.4"
 python-dateutil = ">=2.8.1"
@@ -1326,13 +1326,13 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "posthog"
-version = "2.5.0"
+version = "3.7.5"
 description = "Integrate PostHog into any python application."
 optional = false
 python-versions = "*"
 files = [
-    {file = "posthog-2.5.0-py2.py3-none-any.whl", hash = "sha256:3d3ece06c3fe4135497c239f211c82344962b93e4fd4ba5afd20bd4ad12d77be"},
-    {file = "posthog-2.5.0.tar.gz", hash = "sha256:7601ef75b483eb67a6229cafec02da9624f6d46df61066771ca9e3f986284fc3"},
+    {file = "posthog-3.7.5-py2.py3-none-any.whl", hash = "sha256:022132c17069dde03c5c5904e2ae1b9bd68d5059cbc5a8dffc5c1537a1b71cb5"},
+    {file = "posthog-3.7.5.tar.gz", hash = "sha256:8ba40ab623da35db72715fc87fe7dccb7fc272ced92581fe31db2d4dbe7ad761"},
 ]
 
 [package.dependencies]
@@ -1345,7 +1345,7 @@ six = ">=1.5"
 [package.extras]
 dev = ["black", "flake8", "flake8-print", "isort", "pre-commit"]
 sentry = ["django", "sentry-sdk"]
-test = ["coverage", "flake8", "freezegun (==0.3.15)", "mock (>=2.0.0)", "pylint", "pytest"]
+test = ["coverage", "django", "flake8", "freezegun (==0.3.15)", "mock (>=2.0.0)", "pylint", "pytest", "pytest-timeout"]
 
 [[package]]
 name = "pprintpp"
