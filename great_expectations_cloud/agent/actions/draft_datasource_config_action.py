@@ -44,8 +44,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         datasource_type = draft_config.get("type", None)
         if datasource_type is None:
             raise TypeError(  # noqa: TRY003 # one off error
-                "The DraftDatasourceConfigAction can only be used with a "
-                "fluent-style Data Source."
+                "The DraftDatasourceConfigAction can only be used with a fluent-style Data Source."
             )
         try:
             datasource_cls = self._context.data_sources.type_lookup[datasource_type]
@@ -94,8 +93,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             response = session.get(resource_url)
             if not response.ok:
                 raise RuntimeError(  # noqa: TRY003 # one off error
-                    "DraftDatasourceConfigAction encountered an error while "
-                    "connecting to GX Cloud"
+                    "DraftDatasourceConfigAction encountered an error while connecting to GX Cloud"
                 )
         data = response.json()
         try:
