@@ -57,9 +57,9 @@ def checkpoint(
         ],
     )
     checkpoint = context.get_checkpoint(name=checkpoint_name)
-    assert (
-        len(checkpoint.validations) == 1
-    ), "Checkpoint was not updated in the previous method call."
+    assert len(checkpoint.validations) == 1, (
+        "Checkpoint was not updated in the previous method call."
+    )
     yield checkpoint
     # PP-691: this is a bug
     # you should only have to pass name
@@ -104,8 +104,7 @@ def test_running_checkpoint_action(
     # Check that the checkpoint was successful by querying the DB.
     validation_result_id = action_result.created_resources[0].resource_id
     resource_url = (
-        f"{cloud_base_url}/organizations/"
-        f"{org_id_env_var}/validation-results/{validation_result_id}"
+        f"{cloud_base_url}/organizations/{org_id_env_var}/validation-results/{validation_result_id}"
     )
     with create_session(access_token=token_env_var) as session:
         response = session.get(resource_url)

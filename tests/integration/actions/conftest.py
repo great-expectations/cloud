@@ -69,9 +69,9 @@ def datasource(
     datasource = context.data_sources.add_or_update_pandas(
         datasource=datasource,
     )
-    assert (
-        datasource.name == datasource_name
-    ), "The datasource was not updated in the previous method call."
+    assert datasource.name == datasource_name, (
+        "The datasource was not updated in the previous method call."
+    )
     yield datasource
     context.data_sources.delete(name=datasource_name)
     with pytest.raises(get_missing_datasource_error_type):
@@ -129,9 +129,9 @@ def expectation_suite(
     )
 
     expectation_suite = context.suites.get(name=expectation_suite_name)
-    assert (
-        len(expectation_suite.expectations) == 1
-    ), "Expectation Suite was not updated in the previous method call."
+    assert len(expectation_suite.expectations) == 1, (
+        "Expectation Suite was not updated in the previous method call."
+    )
     yield expectation_suite
     context.suites.delete(name=expectation_suite_name)
     with pytest.raises(get_missing_expectation_suite_error_type):
