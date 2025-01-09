@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from pydantic.v1 import AnyUrl, BaseSettings, ValidationError
 
@@ -10,6 +12,9 @@ class GxAgentEnvVars(BaseSettings):
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
     enable_progress_bars: bool = True
+
+    amqp_host_override: Optional[str] = None  # noqa: UP007  # pipe not working with 3.9
+    amqp_port_override: Optional[int] = None  # noqa: UP007  # pipe not working with 3.9
 
     def __init__(self, **overrides: str | AnyUrl) -> None:
         """

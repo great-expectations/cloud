@@ -11,7 +11,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Final, Literal
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from uuid import UUID
 
 import orjson
@@ -268,6 +268,10 @@ class GXAgent:
         """Helper method to get the auth key. Overridden in GX-Runner."""
         return self._config.gx_cloud_access_token
 
+    def _set_sentry_tags(self, correlation_id: str | None) -> None:
+        """Used by GX-Runner to set tags for Sentry logging. No-op in the Agent."""
+        pass
+
     def _handle_event(self, event_context: EventContext) -> ActionResult:
         """Pass events to EventHandler.
 
@@ -306,6 +310,9 @@ class GXAgent:
                 else None,
             },
         )
+
+        self._set_sentry_tags(event_context.correlation_id)
+
         handler = EventHandler(context=data_context)
         # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
         result = handler.handle_event(
@@ -463,6 +470,19 @@ class GXAgent:
         json_response = response.json()
         queue = json_response["queue"]
         connection_string = json_response["connection_string"]
+
+        # if overrides are set, we update the connection string. This is useful for local development to set the host
+        # to localhost, for example.
+        parsed = urlparse(connection_string)
+        if env_vars.amqp_host_override:
+            netloc = (
+                f"{parsed.username}:{parsed.password}@{env_vars.amqp_host_override}:{parsed.port}"
+            )
+            parsed = parsed._replace(netloc=netloc)  # documented in urllib docs
+        if env_vars.amqp_port_override:
+            netloc = f"{parsed.username}:{parsed.password}@{parsed.hostname}:{env_vars.amqp_port_override}"
+            parsed = parsed._replace(netloc=netloc)  # documented in urllib docs
+        connection_string = parsed.geturl()
 
         try:
             # pydantic will coerce the url to the correct type
