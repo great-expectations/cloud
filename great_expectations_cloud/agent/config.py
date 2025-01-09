@@ -11,6 +11,9 @@ class GxAgentEnvVars(BaseSettings):
     gx_cloud_access_token: str
     enable_progress_bars: bool = True
 
+    amqp_host_override: str | None = None
+    amqp_port_override: int | None = None
+
     def __init__(self, **overrides: str | AnyUrl) -> None:
         """
         Custom __init__ to prevent type error when relying on environment variables.
