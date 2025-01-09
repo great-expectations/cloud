@@ -37,6 +37,8 @@ jobs:
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
+        with:
+          version: 1.8.5
 
       - name: Install dependencies
         run: poetry install --sync
@@ -69,6 +71,8 @@ jobs:
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
+        with:
+          version: 1.8.5
 
       - name: Install dependencies
         run: poetry install --sync
@@ -148,6 +152,8 @@ jobs:
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
+        with:
+          version: 1.8.5
 
       - name: Install dependencies
         run: poetry install --sync
@@ -218,6 +224,8 @@ jobs:
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
+        with:
+          version: 1.8.5
 
       - name: Install dependencies
         run: poetry install --sync --only dev
@@ -271,6 +279,8 @@ jobs:
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
+        with:
+          version: 1.8.5
 
       - name: Get version from pyproject.toml for PR
         id: pr_version
@@ -320,6 +330,8 @@ jobs:
       - name: Install Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
+        with:
+          version: 1.8.5
 
       - name: Install dependencies
         run: poetry install --sync # Needed for calling invoke
