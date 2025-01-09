@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from uuid import UUID
+
 import pytest
 
 from great_expectations_cloud.agent.actions import ListTableNamesAction
