@@ -49,6 +49,8 @@ def test_running_draft_datasource_config_action(
         "agent_job_created_resources",
         "agent_job_source_resources",
         "agent_jobs",
+        "alert_emails",
+        "asset_alert_emails",
         "asset_refs",
         "expectations",
         "expectation_changes",

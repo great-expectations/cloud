@@ -44,6 +44,8 @@ def test_running_list_table_names_action(
         "alembic_version",
         "organization_api_tokens",
         "asset_refs",
+        "alert_emails",
+        "asset_alert_emails",
         "checkpoints",
         "data_context_variables",
         "datasources",
