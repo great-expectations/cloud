@@ -246,12 +246,12 @@ def test_bump_version(
         current_date=current_date,
     )
     assert bumped_version == expected_version, f"Expected {expected_version}, got {bumped_version}"
-    assert (
-        str(bumped_version) == str(expected_version)
-    ), f"Version string representation should match expected {expected_version!s} got {bumped_version!s}"
-    assert (
-        bumped_version > latest_version
-    ), "bumped version should be greater than the initial version"
+    assert str(bumped_version) == str(expected_version), (
+        f"Version string representation should match expected {expected_version!s} got {bumped_version!s}"
+    )
+    assert bumped_version > latest_version, (
+        "bumped version should be greater than the initial version"
+    )
 
 
 @pytest.fixture
@@ -302,9 +302,9 @@ def test_lockfile_poetry_version(lock_file_poetry_version: Version, latest_poetr
     """
     print(f"{lock_file_poetry_version=}")
     print(f"{latest_poetry_version=}")
-    assert lock_file_poetry_version >= Version(
-        "1.7.1"
-    ), "poetry.lock was generated using an older version of poetry"
+    assert lock_file_poetry_version >= Version("1.7.1"), (
+        "poetry.lock was generated using an older version of poetry"
+    )
 
 
 class TestCoverageSettings:

@@ -255,9 +255,9 @@ def bump_version(
     # check that the number of components is correct
     expected_components: int = 3 if new_version.is_prerelease else 2
     components = str(new_version).split(".")
-    assert (
-        len(components) == expected_components
-    ), f"expected {expected_components} components; got {components}"
+    assert len(components) == expected_components, (
+        f"expected {expected_components} components; got {components}"
+    )
     return new_version
 
 
