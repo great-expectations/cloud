@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional
+
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from pydantic.v1 import AnyUrl, BaseSettings, ValidationError
 
