@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20250110.0.dev1"
+version = "20250110.0.dev2"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -22,7 +22,7 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = ">=3.11,<3.12"
 great-expectations = "^1.3.0"
 pydantic = ">=2.8.1,<3"
 pika = "^1.3.1"
@@ -80,7 +80,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 plugins = ["pydantic.mypy"]
 files = ["great_expectations_cloud/", "tests/", "tasks.py"]
 strict = true
@@ -183,9 +183,6 @@ runtime-evaluated-base-classes = [
     "great_expectations.datasource.fluent.sql_datasource.SQLDatasource",
 ]
 runtime-evaluated-decorators = ["pydantic.dataclasses.dataclass"]
-
-[tool.ruff.lint.isort]
-required-imports = ["from __future__ import annotations"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
