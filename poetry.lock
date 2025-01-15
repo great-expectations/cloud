@@ -2199,13 +2199,13 @@ secure-local-storage = ["keyring (>=23.1.0,<26.0.0)"]
 
 [[package]]
 name = "snowflake-sqlalchemy"
-version = "1.7.2"
+version = "1.7.3"
 description = "Snowflake SQLAlchemy Dialect"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "snowflake_sqlalchemy-1.7.2-py3-none-any.whl", hash = "sha256:db4e5350e469adbbda034d6bd1c948c5a3e88994405483ee9a76caf18cbe9958"},
-    {file = "snowflake_sqlalchemy-1.7.2.tar.gz", hash = "sha256:083f9113ce5b7e9fb21ca6d748aee210117f6f2bd767f08415471796fc42ad37"},
+    {file = "snowflake_sqlalchemy-1.7.3-py3-none-any.whl", hash = "sha256:917c90ae4b7591e7154e16d817707942e87e52b615cb833a0c629b7f83c13b6a"},
+    {file = "snowflake_sqlalchemy-1.7.3.tar.gz", hash = "sha256:2ed993b1d000421c636938f8a8252516cbee4cf9fae12ea34fd70523168d8d98"},
 ]
 
 [package.dependencies]
