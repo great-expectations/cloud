@@ -7,7 +7,9 @@ import traceback
 import warnings
 from collections import defaultdict
 from concurrent.futures import Future
+from concurrent.futures import TimeoutError as CFTimeoutError
 from concurrent.futures.thread import ThreadPoolExecutor
+from datetime import timedelta
 from functools import partial
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Final, Literal
@@ -79,6 +81,7 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 # TODO Set in log dict
 LOGGER.setLevel(logging.DEBUG)
 HandlerMap = dict[str, OnMessageCallback]
+THREAD_TIMEOUT = timedelta(hours=2).total_seconds()
 
 
 class GXAgentConfig(AgentBaseExtraForbid):
@@ -237,12 +240,22 @@ class GXAgent:
             # this event has been redelivered too many times - remove it from circulation
             event_context.processed_with_failures()
             return
-        elif self._can_accept_new_task() is not True:
-            # request that this message is redelivered later
-            loop = asyncio.get_event_loop()
-            # store a reference the task to ensure it isn't garbage collected
-            self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
-            return
+
+        # Wait for an instantaneous task to complete on the thread pool. Once it completes, we know the executor has
+        # available threads.
+        try:
+            LOGGER.debug("Waiting for executor to have available threads...")
+            self._executor.submit(lambda: None).result(THREAD_TIMEOUT)
+            LOGGER.debug("Executor has available threads! Starting task.")
+        except CFTimeoutError:
+            LOGGER.exception(
+                "Some thread has exceeded timeout threshold... killing agent. Note: all tasks in all workers "
+                "will be put back in RabbitMQ without incrementing redeliveries.",
+                extra={
+                    "timeout_threshold": THREAD_TIMEOUT,
+                },
+            )
+            raise
 
         self._current_task = self._executor.submit(
             self._handle_event,
@@ -420,10 +433,6 @@ class GXAgent:
     def _get_processed_by(self) -> Literal["agent", "runner"]:
         """Return the name of the service that processed the event."""
         return "runner" if self._config.queue == "gx-runner" else "agent"
-
-    def _can_accept_new_task(self) -> bool:
-        """Are we currently processing a task or are we free to take a new one?"""
-        return self._current_task is None or self._current_task.done()
 
     def _reject_correlation_id(self, id: str) -> bool:
         """Has this correlation ID been seen too many times?"""
