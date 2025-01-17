@@ -183,6 +183,8 @@ class AsyncRabbitMQClient:
         """Consume from a channel with the on_message callback."""
         LOGGER.debug("Issuing consumer-related RPC commands")
         channel.add_on_cancel_callback(self._on_consumer_canceled)
+        # set RabbitMQ prefetch count to equal the max_threads value in the GX Agent's ThreadPoolExecutor
+        channel.basic_qos(prefetch_count=1)
         self._consumer_tag = channel.basic_consume(queue=queue, on_message_callback=on_message)
 
     def _on_consumer_canceled(self, method_frame: Basic.Cancel) -> None:
@@ -222,8 +224,6 @@ class AsyncRabbitMQClient:
         LOGGER.debug("Connection to RabbitMQ has been opened")
         on_channel_open = partial(self._on_channel_open, queue=queue, on_message=on_message)
         connection.channel(on_open_callback=on_channel_open)
-        # set RabbitMQ prefetch count to equal the max_threads value in the GX Agent's ThreadPoolExecutor
-        connection.channel.basic_qos(prefetch_count=1)
 
     def _on_connection_open_error(
         self, _unused_connection: AsyncioConnection, reason: pika.Exception
