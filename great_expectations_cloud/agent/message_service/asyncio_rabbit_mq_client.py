@@ -222,6 +222,7 @@ class AsyncRabbitMQClient:
         LOGGER.debug("Connection to RabbitMQ has been opened")
         on_channel_open = partial(self._on_channel_open, queue=queue, on_message=on_message)
         connection.channel(on_open_callback=on_channel_open)
+        connection.channel.basic_qos(prefetch_count=1)
 
     def _on_connection_open_error(
         self, _unused_connection: AsyncioConnection, reason: pika.Exception
