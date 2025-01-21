@@ -109,7 +109,6 @@ Running the GX Agent:
 invoke docker --run
 ```
 
-
 or
 
 ```
