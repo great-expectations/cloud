@@ -9,7 +9,7 @@
 
 ## Quick Start
 
-To use the GX Agent, you will need to have a Great Expectations Cloud account. You can sign up for free at [https://app.greatexpectations.io](https://app.greatexpectations.io).
+To use the GX Agent, you'll need to have a Great Expectations Cloud account. You can sign up for free at [https://app.greatexpectations.io](https://app.greatexpectations.io).
 
 Deployment instructions for the GX Agent can be found in the [GX Cloud documentation](https://docs.greatexpectations.io/docs/cloud/deploy/deploy_gx_agent).
 
