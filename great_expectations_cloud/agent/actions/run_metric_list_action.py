@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
 from great_expectations.experimental.metric_repository.batch_inspector import (
@@ -27,6 +27,13 @@ from great_expectations_cloud.agent.models import (
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
     from great_expectations.experimental.metric_repository.metrics import MetricRun
+    
+import logging
+
+LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
+
+from great_expectations_cloud.agent.actions.utils import verify_data_asset
 
 
 class MetricListAction(AgentAction[RunMetricsListEvent]):
@@ -53,6 +60,7 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
     def run(self, event: RunMetricsListEvent, id: str) -> ActionResult:
         datasource = self._context.data_sources.get(event.datasource_name)
         data_asset = datasource.get_asset(event.data_asset_name)
+        verify_data_asset(LOGGER.info, datasource, data_asset)
         data_asset.test_connection()  # raises `TestConnectionError` on failure
 
         batch_request = data_asset.build_batch_request()

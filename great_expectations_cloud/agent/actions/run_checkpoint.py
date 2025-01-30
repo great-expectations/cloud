@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Final, Any
 
 from typing_extensions import override
 
@@ -18,6 +18,13 @@ from great_expectations_cloud.agent.models import (
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
+    
+import logging
+
+LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
+
+from great_expectations_cloud.agent.actions.utils import verify_data_asset
 
 
 class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
@@ -52,6 +59,7 @@ def run_checkpoint(
             data_asset_name
         ) in data_asset_names:  # only test connection for assets that are validated in checkpoint
             asset = datasource.get_asset(data_asset_name)
+            verify_data_asset(LOGGER.info, datasource, asset)
             asset.test_connection()  # raises `TestConnectionError` on failure
 
     # run checkpoint
