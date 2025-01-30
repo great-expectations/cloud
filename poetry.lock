@@ -425,13 +425,13 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "databricks-sql-connector"
-version = "4.0.0b4"
+version = "4.0.0"
 description = "Databricks SQL Connector for Python"
 optional = false
 python-versions = "<4.0.0,>=3.8.0"
 files = [
-    {file = "databricks_sql_connector-4.0.0b4-py3-none-any.whl", hash = "sha256:e5f8e9bf3e73405190879b3c9d4962b2a19aaeeb5892ac3130189091e53d7104"},
-    {file = "databricks_sql_connector-4.0.0b4.tar.gz", hash = "sha256:465e50aed29d7947fcd664f09d8b056157bbe7988e1518cbec08a53921c48774"},
+    {file = "databricks_sql_connector-4.0.0-py3-none-any.whl", hash = "sha256:798ebc740e992eaf435754510d1035872d3ebbc8c5cb597aa939217220463236"},
+    {file = "databricks_sql_connector-4.0.0.tar.gz", hash = "sha256:3634fe3d19ee4641cdf76a77854573d9fe234ccdebd20230aaf94053397bc693"},
 ]
 
 [package.dependencies]
@@ -445,21 +445,21 @@ thrift = ">=0.16.0,<0.21.0"
 urllib3 = ">=1.26"
 
 [package.extras]
-pyarrow = ["pyarrow (>=14.0.1,<17)"]
+pyarrow = ["pyarrow (>=14.0.1)"]
 
 [[package]]
 name = "databricks-sqlalchemy"
-version = "2.0.3"
+version = "2.0.4"
 description = "Databricks SQLAlchemy plugin for Python"
 optional = false
 python-versions = "<4.0.0,>=3.8.0"
 files = [
-    {file = "databricks_sqlalchemy-2.0.3-py3-none-any.whl", hash = "sha256:a5a8544dc185afa150822dada3fa581e7e6286eac5aa873071d5c1eadb3193dd"},
-    {file = "databricks_sqlalchemy-2.0.3.tar.gz", hash = "sha256:02d1e43147480ad779cf0b8b472355639112627ec7447b24cad20101e9faffc5"},
+    {file = "databricks_sqlalchemy-2.0.4-py3-none-any.whl", hash = "sha256:b429b151a4a5f0aeacfe32996595fbc7d775b4796a0de01429e59a2c7d47970b"},
+    {file = "databricks_sqlalchemy-2.0.4.tar.gz", hash = "sha256:3c457a4ca1c4a54782301f718340336de5f467b68b380b756dc655f007c4425d"},
 ]
 
 [package.dependencies]
-databricks_sql_connector = "4.0.0.b4"
+databricks_sql_connector = ">=4.0.0"
 pyarrow = ">=14.0.1,<17"
 sqlalchemy = ">=2.0.21"
 
