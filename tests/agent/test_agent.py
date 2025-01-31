@@ -12,7 +12,11 @@ import pytest
 import requests
 import responses
 from great_expectations.exceptions import exceptions as gx_exception
-from pika.exceptions import AuthenticationError, ProbableAuthenticationError
+from pika.exceptions import (
+    AuthenticationError,
+    ConnectionClosedByBroker,
+    ProbableAuthenticationError,
+)
 from pydantic.v1 import (
     ValidationError,
 )
@@ -288,6 +292,18 @@ def test_gx_agent_run_handles_client_probable_authentication_error_on_init(
         client.side_effect = ProbableAuthenticationError
         agent = GXAgent()
         agent.run()
+
+
+def test_gx_agent_run_handles_amqp_error_on_init(
+    get_context,
+    mock_client_run,
+    gx_agent_config,
+):
+    with pytest.raises((ConnectionClosedByBroker, RetryError)):
+        mock_client_run.side_effect = ConnectionClosedByBroker(403, "whoopsie")
+        agent = GXAgent()
+        agent.run()
+    assert mock_client_run.call_count == 3
 
 
 def test_gx_agent_run_handles_subscriber_error_on_close(
