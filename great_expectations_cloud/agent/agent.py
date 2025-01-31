@@ -170,11 +170,13 @@ class GXAgent:
         self._current_task: Future[Any] | None = None
         self._redeliver_msg_task: asyncio.Task[Any] | None = None
         self._correlation_ids: defaultdict[str, int] = defaultdict(lambda: 0)
+        self._listen_tries = 0
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
 
         LOGGER.debug("Opening connection to GX Cloud.")
+        self._listen_tries = 0
         self._listen()
         LOGGER.debug("The connection to GX Cloud has been closed.")
 
@@ -193,8 +195,11 @@ class GXAgent:
     def _listen(self) -> None:
         """Manage connection lifecycle."""
         subscriber = None
-        # force refresh so we have fresh credentials
-        config = self._get_config(force_refresh=True)
+        # force refresh if we're retrying
+        force_creds_refresh = self._listen_tries > 0
+        self._listen_tries += 1
+
+        config = self._get_config(force_refresh=force_creds_refresh)
 
         try:
             client = AsyncRabbitMQClient(url=str(config.connection_string))

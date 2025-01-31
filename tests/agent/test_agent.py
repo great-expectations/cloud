@@ -161,6 +161,19 @@ def mock_client_run(mocker: MockerFixture):
 
 
 @pytest.fixture
+def mock_create_config(gx_agent_config: GXAgentConfig, mocker: MockerFixture):
+    """Patch for agent._get_config.
+
+    Is mocking a private method of a unit under test a great idea?
+    Not usually, but I think it is the clearest way to give us the assurance we want in some cases.
+    """
+    mock_connection_string = "amqp://user:password@mq:123"
+    output = mocker.patch.object(GXAgent, "_create_config")
+    output.return_value = gx_agent_config.copy(update={"connection_string": mock_connection_string})
+    return output
+
+
+@pytest.fixture
 def subscriber(mocker):
     """Patch for agent.Subscriber"""
     subscriber = mocker.patch("great_expectations_cloud.agent.agent.Subscriber")
@@ -306,6 +319,7 @@ def test_gx_agent_run_handles_client_probable_authentication_error_on_init(
 def test_gx_agent_run_handles_amqp_error_on_init(
     get_context,
     mock_client_run,
+    mock_create_config,
     gx_agent_config,
 ):
     with pytest.raises((ConnectionClosedByBroker, RetryError)):
@@ -313,6 +327,7 @@ def test_gx_agent_run_handles_amqp_error_on_init(
         agent = GXAgent()
         agent.run()
     assert mock_client_run.call_count == 3
+    assert mock_create_config.call_count == 3
 
 
 def test_gx_agent_run_handles_subscriber_error_on_close(
