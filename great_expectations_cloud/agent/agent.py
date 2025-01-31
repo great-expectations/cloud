@@ -19,6 +19,7 @@ import requests
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
+from great_expectations.exceptions import exceptions as gx_exception
 from great_expectations.data_context.types.base import ProgressBarsConfig
 from pika.adapters.utils.connection_workflow import (
     AMQPConnectorException,
@@ -140,7 +141,7 @@ class GXAgent:
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
     def __init__(self: Self):
-        self._config: GXAgentConfig | None = None
+        self._config = self._create_config()
 
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
@@ -469,7 +470,7 @@ class GXAgent:
         return should_reject
 
     def _get_config(self, force_refresh: bool = False) -> GXAgentConfig:
-        if force_refresh or not self._config:
+        if force_refresh:
             self._config = self._create_config()
         return self._config
 
