@@ -24,6 +24,7 @@ from pika.adapters.utils.connection_workflow import (
     AMQPConnectorException,
 )
 from pika.exceptions import (
+    AMQPConnectionError,
     AMQPError,
     AuthenticationError,
     ChannelError,
@@ -31,7 +32,13 @@ from pika.exceptions import (
 )
 from pydantic import v1 as pydantic_v1
 from pydantic.v1 import AmqpDsn, AnyUrl
-from tenacity import after_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import (
+    after_log,
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_random_exponential,
+)
 
 from great_expectations_cloud.agent.config import (
     GxAgentEnvVars,
@@ -133,6 +140,8 @@ class GXAgent:
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
     def __init__(self: Self):
+        self._config: GXAgentConfig | None = None
+
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
         LOGGER.info(
@@ -142,7 +151,6 @@ class GXAgent:
                 "great_expectations_version": great_expectations_version,
             },
         )
-        self._config = self._get_config()
         LOGGER.debug("Loading a DataContext - this might take a moment.")
 
         with warnings.catch_warnings():
@@ -178,20 +186,23 @@ class GXAgent:
         retry=retry_if_exception_type(
             (AuthenticationError, ProbableAuthenticationError, AMQPError, ChannelError)
         ),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
+        wait=wait_random_exponential(multiplier=1, min=1, max=10),
         stop=stop_after_attempt(3),
         after=after_log(LOGGER, logging.DEBUG),
     )
     def _listen(self) -> None:
         """Manage connection lifecycle."""
         subscriber = None
+        # force refresh so we have fresh credentials
+        config = self._get_config(force_refresh=True)
+
         try:
-            client = AsyncRabbitMQClient(url=str(self._config.connection_string))
+            client = AsyncRabbitMQClient(url=str(config.connection_string))
             subscriber = Subscriber(client=client)
             LOGGER.info("The GX Agent is ready.")
             # Open a connection until encountering a shutdown event
             subscriber.consume(
-                queue=self._config.queue,
+                queue=config.queue,
                 on_message=self._handle_event_as_thread_enter,
             )
         except KeyboardInterrupt:
@@ -205,11 +216,12 @@ class GXAgent:
             AuthenticationError,
             ProbableAuthenticationError,
             AMQPConnectorException,
+            AMQPConnectionError,
         ):
-            # Retry with new credentials
-            self._config = self._get_config()
             # Raise to use the retry decorator to handle the retry logic
+            LOGGER.exception("Failed authentication to MQ.")
             raise
+
         finally:
             if subscriber is not None:
                 subscriber.close()
@@ -273,11 +285,11 @@ class GXAgent:
 
     def get_organization_id(self, event_context: EventContext) -> UUID:
         """Helper method to get the organization ID. Overridden in GX-Runner."""
-        return UUID(self._config.gx_cloud_organization_id)
+        return UUID(self._get_config().gx_cloud_organization_id)
 
     def get_auth_key(self) -> str:
         """Helper method to get the auth key. Overridden in GX-Runner."""
-        return self._config.gx_cloud_access_token
+        return self._get_config().gx_cloud_access_token
 
     def _set_sentry_tags(self, correlation_id: str | None) -> None:
         """Used by GX-Runner to set tags for Sentry logging. No-op in the Agent."""
@@ -301,7 +313,7 @@ class GXAgent:
         )
 
         org_id = self.get_organization_id(event_context)
-        base_url = self._config.gx_cloud_base_url
+        base_url = self._get_config().gx_cloud_base_url
         auth_key = self.get_auth_key()
 
         if isinstance(event_context.event, ScheduledEventBase):
@@ -430,7 +442,7 @@ class GXAgent:
 
     def _get_processed_by(self) -> Literal["agent", "runner"]:
         """Return the name of the service that processed the event."""
-        return "runner" if self._config.queue == "gx-runner" else "agent"
+        return "runner" if self._get_config().queue == "gx-runner" else "agent"
 
     def _can_accept_new_task(self) -> bool:
         """Are we currently processing a task or are we free to take a new one?"""
@@ -451,8 +463,13 @@ class GXAgent:
             self._correlation_ids.clear()
         return should_reject
 
+    def _get_config(self, force_refresh: bool = False) -> GXAgentConfig:
+        if force_refresh or not self._config:
+            self._config = self._create_config()
+        return self._config
+
     @classmethod
-    def _get_config(cls) -> GXAgentConfig:
+    def _create_config(cls) -> GXAgentConfig:
         """Construct GXAgentConfig."""
 
         # ensure we have all required env variables, and provide a useful error if not
@@ -511,7 +528,7 @@ class GXAgent:
             ) from validation_err
 
     def _configure_progress_bars(self, data_context: CloudDataContext) -> None:
-        progress_bars_enabled = self._config.enable_progress_bars
+        progress_bars_enabled = self._get_config().enable_progress_bars
 
         try:
             data_context.variables.progress_bars = ProgressBarsConfig(
@@ -544,7 +561,7 @@ class GXAgent:
             },
         )
         agent_sessions_url = urljoin(
-            self._config.gx_cloud_base_url,
+            self._get_config().gx_cloud_base_url,
             f"/api/v1/organizations/{org_id}/agent-jobs/{correlation_id}",
         )
         with create_session(access_token=self.get_auth_key()) as session:
@@ -590,7 +607,7 @@ class GXAgent:
         )
 
         agent_sessions_url = urljoin(
-            self._config.gx_cloud_base_url,
+            self._get_config().gx_cloud_base_url,
             f"/api/v1/organizations/{org_id}/agent-jobs",
         )
         data = CreateScheduledJobAndSetJobStarted(
