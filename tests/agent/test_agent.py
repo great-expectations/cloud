@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Callable, Literal
 from unittest.mock import call
 
 import pytest
-from pytest_mock import MockerFixture
 import requests
 import responses
 from great_expectations.exceptions import exceptions as gx_exception
@@ -50,6 +49,8 @@ from great_expectations_cloud.agent.models import (
 from tests.agent.conftest import FakeSubscriber
 
 if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
     from tests.agent.conftest import DataContextConfigTD
 
 
