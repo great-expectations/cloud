@@ -19,7 +19,6 @@ import requests
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
-from great_expectations.exceptions import exceptions as gx_exception
 from great_expectations.data_context.types.base import ProgressBarsConfig
 from pika.adapters.utils.connection_workflow import (
     AMQPConnectorException,
