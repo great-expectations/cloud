@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Callable, Literal
 from unittest.mock import call
 
 import pytest
+from pytest_mock import MockerFixture
 import requests
 import responses
 from great_expectations.exceptions import exceptions as gx_exception
@@ -30,6 +31,7 @@ from great_expectations_cloud.agent.agent import (
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.exceptions import GXAgentConfigError
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
+    AsyncRabbitMQClient,
     ClientError,
 )
 from great_expectations_cloud.agent.message_service.subscriber import (
@@ -146,9 +148,15 @@ def get_context(mocker):
 
 @pytest.fixture
 def client(mocker):
-    """Patch for agent.RabbitMQClient"""
+    """Patch for agent.AsyncRabbitMQClient"""
     client = mocker.patch("great_expectations_cloud.agent.agent.AsyncRabbitMQClient")
     return client
+
+
+@pytest.fixture
+def mock_client_run(mocker: MockerFixture):
+    """Patch for agent.AsyncRabbitMQClient"""
+    return mocker.patch.object(AsyncRabbitMQClient, "run")
 
 
 @pytest.fixture
