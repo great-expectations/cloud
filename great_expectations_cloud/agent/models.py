@@ -109,7 +109,6 @@ class GenerateDataQualityCheckExpectationsEvent(EventBase):
     )
     datasource_name: str
     data_assets: Sequence[str]
-    create_expectations: bool = False
 
 
 class RunRdAgentEvent(EventBase):

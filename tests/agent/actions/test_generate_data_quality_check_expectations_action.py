@@ -173,7 +173,6 @@ def test_generate_schema_change_expectations_action_success(
             organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=data_asset_names,
-            create_expectations=True,
         ),
         id="test-id",
     )
@@ -263,7 +262,6 @@ def test_succeeding_and_failing_assets_together(
                 organization_id=uuid.uuid4(),
                 datasource_name="test-datasource",
                 data_assets=succeeding_data_asset_names + failing_data_asset_names,
-                create_expectations=True,
             ),
             id="test-id",
         )
