@@ -12,7 +12,11 @@ import pytest
 import requests
 import responses
 from great_expectations.exceptions import exceptions as gx_exception
-from pika.exceptions import AuthenticationError, ProbableAuthenticationError
+from pika.exceptions import (
+    AuthenticationError,
+    ConnectionClosedByBroker,
+    ProbableAuthenticationError,
+)
 from pydantic.v1 import (
     ValidationError,
 )
@@ -26,6 +30,7 @@ from great_expectations_cloud.agent.agent import (
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
 from great_expectations_cloud.agent.exceptions import GXAgentConfigError
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
+    AsyncRabbitMQClient,
     ClientError,
 )
 from great_expectations_cloud.agent.message_service.subscriber import (
@@ -44,6 +49,8 @@ from great_expectations_cloud.agent.models import (
 from tests.agent.conftest import FakeSubscriber
 
 if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
     from tests.agent.conftest import DataContextConfigTD
 
 
@@ -142,9 +149,28 @@ def get_context(mocker):
 
 @pytest.fixture
 def client(mocker):
-    """Patch for agent.RabbitMQClient"""
+    """Patch for agent.AsyncRabbitMQClient"""
     client = mocker.patch("great_expectations_cloud.agent.agent.AsyncRabbitMQClient")
     return client
+
+
+@pytest.fixture
+def mock_client_run(mocker: MockerFixture):
+    """Patch for agent.AsyncRabbitMQClient"""
+    return mocker.patch.object(AsyncRabbitMQClient, "run")
+
+
+@pytest.fixture
+def mock_create_config(gx_agent_config: GXAgentConfig, mocker: MockerFixture):
+    """Patch for agent._get_config.
+
+    Is mocking a private method of a unit under test a great idea?
+    Not usually, but I think it is the clearest way to give us the assurance we want in some cases.
+    """
+    mock_connection_string = "amqp://user:password@mq:123"
+    output = mocker.patch.object(GXAgent, "_create_config")
+    output.return_value = gx_agent_config.copy(update={"connection_string": mock_connection_string})
+    return output
 
 
 @pytest.fixture
@@ -288,6 +314,20 @@ def test_gx_agent_run_handles_client_probable_authentication_error_on_init(
         client.side_effect = ProbableAuthenticationError
         agent = GXAgent()
         agent.run()
+
+
+def test_gx_agent_run_handles_amqp_error_on_init(
+    get_context,
+    mock_client_run,
+    mock_create_config,
+    gx_agent_config,
+):
+    with pytest.raises((ConnectionClosedByBroker, RetryError)):
+        mock_client_run.side_effect = ConnectionClosedByBroker(403, "whoopsie")
+        agent = GXAgent()
+        agent.run()
+    assert mock_client_run.call_count == 3
+    assert mock_create_config.call_count == 3
 
 
 def test_gx_agent_run_handles_subscriber_error_on_close(
