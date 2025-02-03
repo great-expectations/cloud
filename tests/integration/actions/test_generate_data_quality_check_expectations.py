@@ -112,6 +112,7 @@ def test_running_schema_change_expectation_action(
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
+        selected_data_quality_issues=None,
     )
 
     action = GenerateDataQualityCheckExpectationsAction(

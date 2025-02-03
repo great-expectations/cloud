@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from typing import Annotated, Any, Literal, Optional, Union
 from uuid import UUID
 
+from great_expectations.expectations.metadata_types import DataQualityIssues
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
 from pydantic.v1 import BaseModel, Extra, Field
 
@@ -109,6 +110,7 @@ class GenerateDataQualityCheckExpectationsEvent(EventBase):
     )
     datasource_name: str
     data_assets: Sequence[str]
+    selected_data_quality_issues: Sequence[DataQualityIssues] | None = None
 
 
 class RunRdAgentEvent(EventBase):
