@@ -84,26 +84,26 @@ class GenerateDataQualityCheckExpectationsAction(
                 created_resources.append(
                     CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
                 )
-
-                if DataQualityIssues.VOLUME in event.selected_data_quality_issues:
-                    volume_change_expectation_id = self._add_volume_change_expectation(
-                        asset_id=data_asset.id
-                    )
-                    created_resources.append(
-                        CreatedResource(
-                            resource_id=str(volume_change_expectation_id), type="Expectation"
+                if event.selected_data_quality_issues:
+                    if DataQualityIssues.VOLUME in event.selected_data_quality_issues:
+                        volume_change_expectation_id = self._add_volume_change_expectation(
+                            asset_id=data_asset.id
                         )
-                    )
-
-                if DataQualityIssues.SCHEMA in event.selected_data_quality_issues:
-                    schema_change_expectation_id = self._add_schema_change_expectation(
-                        metric_run=metric_run, asset_id=data_asset.id
-                    )
-                    created_resources.append(
-                        CreatedResource(
-                            resource_id=str(schema_change_expectation_id), type="Expectation"
+                        created_resources.append(
+                            CreatedResource(
+                                resource_id=str(volume_change_expectation_id), type="Expectation"
+                            )
                         )
-                    )
+
+                    if DataQualityIssues.SCHEMA in event.selected_data_quality_issues:
+                        schema_change_expectation_id = self._add_schema_change_expectation(
+                            metric_run=metric_run, asset_id=data_asset.id
+                        )
+                        created_resources.append(
+                            CreatedResource(
+                                resource_id=str(schema_change_expectation_id), type="Expectation"
+                            )
+                        )
 
             except Exception:
                 assets_with_errors.append(asset_name)
