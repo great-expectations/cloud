@@ -156,6 +156,7 @@ class GenerateDataQualityCheckExpectationsAction(
                     parameter_name="min_value",
                     range=1,
                     offset=Offset(positive=0.0, negative=0.0),
+                    strict=True,
                 )
             ],
             strict_min=True,
