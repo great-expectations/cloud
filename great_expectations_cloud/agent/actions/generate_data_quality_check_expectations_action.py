@@ -160,6 +160,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 )
             ],
             strict_min=True,
+            min_value={"$PARAMETER": "min_value_min"},
             max_value=None,
         )
         expectation_id = self._create_expectation_for_asset(
