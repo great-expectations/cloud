@@ -153,13 +153,14 @@ class GenerateDataQualityCheckExpectationsAction(
             windows=[
                 Window(
                     constraint_fn="mean",
-                    parameter_name="min_value",
+                    parameter_name="min_value_min",
                     range=1,
                     offset=Offset(positive=0.0, negative=0.0),
                     strict=True,
                 )
             ],
             strict_min=True,
+            min_value={"$PARAMETER": "min_value_min"},
             max_value=None,
         )
         expectation_id = self._create_expectation_for_asset(
