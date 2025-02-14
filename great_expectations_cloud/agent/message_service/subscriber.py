@@ -104,8 +104,6 @@ class Subscriber:
             except GXAgentUnrecoverableConnectionError:
                 self.client.stop()
                 raise
-            if self.client.should_reconnect:
-                self.client.reset()
             else:
                 break  # exit
 
