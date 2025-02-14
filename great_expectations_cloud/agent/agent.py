@@ -156,7 +156,9 @@ class GXAgent:
         with warnings.catch_warnings():
             # suppress warnings about GX version
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
-            self._context: CloudDataContext = get_context(cloud_mode=True, user_agent_str="gx-agent")
+            self._context: CloudDataContext = get_context(
+                cloud_mode=True, user_agent_str="gx-agent"
+            )
             self._configure_progress_bars(data_context=self._context)
         LOGGER.debug("DataContext is ready.")
 
