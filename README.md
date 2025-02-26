@@ -19,12 +19,12 @@ The following instructions are for those who are contributing to the GX Agent, t
 
 See also [CONTRIBUTING.md](https://github.com/great-expectations/cloud/blob/main/CONTRIBUTING.md)
 
-1. [Install `poetry`](https://python-poetry.org/docs/#installation)
-   - [`pipx install poetry`](https://python-poetry.org/docs/#installing-with-pipx)
+1. [Install or upgrade `poetry` to the latest version](https://python-poetry.org/docs/#installing-with-pipx)
+   - `pipx install poetry` or `pipx upgrade poetry`
 2. Set up virtual environment and install dependencies
-   - `poetry install --sync`
+   - `poetry sync`
 3. Activate your virtual environment
-   - `poetry shell`
+   - `eval $(poetry env activate)`
 4. Set up precommit hooks
    - `pre-commit install`
 
@@ -78,6 +78,11 @@ invoke deps
 ```
 
 #### Updating `poetry.lock` dependencies
+
+Use the latest version of poetry
+```console
+pipx upgrade poetry
+```
 
 The dependencies installed in our CI and the Docker build step are determined by the [poetry.lock file](https://python-poetry.org/docs/basic-usage/#installing-with-poetrylock).
 
