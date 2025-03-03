@@ -156,7 +156,10 @@ class GXAgent:
         with warnings.catch_warnings():
             # suppress warnings about GX version
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
-            self._context: CloudDataContext = get_context(cloud_mode=True)
+            self._context: CloudDataContext = get_context(
+                cloud_mode=True,
+                user_agent_str=self.user_agent_str,
+            )
             self._configure_progress_bars(data_context=self._context)
         LOGGER.debug("DataContext is ready.")
 
@@ -667,6 +670,12 @@ class GXAgent:
             if isinstance(backend, GXCloudStoreBackend):
                 backend._session.headers.update(headers)
 
+    @property
+    def user_agent_str(self) -> str:
+        user_agent_header_prefix = self.get_user_agent_header()
+        agent_version = self._get_version()
+        return f"{user_agent_header_prefix}/{agent_version}"
+
     def _set_http_session_headers(
         self, data_context: CloudDataContext, correlation_id: str | None = None
     ) -> None:
@@ -682,9 +691,7 @@ class GXAgent:
         from great_expectations.core import http
 
         header_name = self.get_header_name()
-        user_agent_header_prefix = self.get_user_agent_header()
-        agent_version = self._get_version()
-        user_agent_header_value = f"{user_agent_header_prefix}/{agent_version}"
+        user_agent_header_value = self.user_agent_str
 
         LOGGER.debug(
             "Setting session headers for GX Cloud",
