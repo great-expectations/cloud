@@ -154,7 +154,7 @@ lint.ignore = [
     "E501", # line-too-long
     # https://beta.ruff.rs/docs/rules/#flake8-type-checking-tch
     # minimal cost for standard lib imports; keep this disabled
-    "TCH003", # typing-only-standard-library-import
+    "TC003", # typing-only-standard-library-import
     # gives false positives if we use try imports and type-checking import
     "TID252", # Relative imports from parent modules are banned
     # https://beta.ruff.rs/docs/rules/#flake8-use-pathlib-pth

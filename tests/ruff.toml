@@ -7,7 +7,7 @@ lint.extend-ignore = [
     # https://github.com/charliermarsh/ruff#flake8-type-checking-tch
     # This is likely to be a high-touch rule. Doing this in `tests` doesn't help circular imports.
     # Let's differ this for tests until there are auto-fixes
-    "TCH001",
+    "TC001",
     # https://beta.ruff.rs/docs/rules/#flake8-bugbear-b
     "B011", # assert-false - common pattern in pytest
     # https://beta.ruff.rs/docs/rules/#flake8-datetimez-dtz
