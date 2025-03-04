@@ -6,7 +6,7 @@ import string
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Callable, Literal
-from unittest.mock import call
+from unittest.mock import ANY, call
 
 import pytest
 import requests
@@ -244,7 +244,7 @@ def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
 
 def test_gx_agent_initializes_cloud_context(get_context, gx_agent_config):
     GXAgent()
-    get_context.assert_called_with(cloud_mode=True)
+    get_context.assert_called_with(cloud_mode=True, user_agent_str=ANY)
 
 
 def test_gx_agent_run_starts_subscriber(get_context, subscriber, client, gx_agent_config):
