@@ -13,7 +13,6 @@ from great_expectations.datasource.fluent import Datasource
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 from great_expectations.exceptions import GXCloudError
 
-from great_expectations_cloud.agent.actions import RunWindowCheckpointAction
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
 from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
     RunScheduledCheckpointAction,
