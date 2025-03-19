@@ -139,7 +139,12 @@ class GenerateDataQualityCheckExpectationsAction(
         metric_run = self._batch_inspector.compute_metric_list_run(
             data_asset_id=data_asset.id,
             batch_request=batch_request,
-            metric_list=[MetricTypes.TABLE_COLUMNS, MetricTypes.TABLE_COLUMN_TYPES],
+            metric_list=[
+                MetricTypes.TABLE_COLUMNS,
+                MetricTypes.TABLE_COLUMN_TYPES,
+                MetricTypes.TABLE_ROW_COUNT,
+                MetricTypes.COLUMN_NULL_COUNT,
+            ],
         )
         metric_run_id = self._metric_repository.add_metric_run(metric_run)
         # Note: This exception is raised after the metric run is added to the repository so that
