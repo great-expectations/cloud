@@ -167,3 +167,5 @@ logs/
 # VSCode
 .vscode
 .DS_Store
+
+mise.toml
