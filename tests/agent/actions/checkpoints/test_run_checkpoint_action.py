@@ -23,7 +23,6 @@ from great_expectations_cloud.agent.models import (
     CreatedResource,
     RunCheckpointEvent,
     RunScheduledCheckpointEvent,
-    RunWindowCheckpointEvent,
 )
 
 if TYPE_CHECKING:
@@ -79,15 +78,6 @@ run_scheduled_checkpoint_action_class_and_event = (
     ),
     "great_expectations_cloud.agent.actions.run_scheduled_checkpoint.run_checkpoint",
 )
-run_window_checkpoint_action_class_and_event = (
-    RunWindowCheckpointAction,
-    RunWindowCheckpointEvent(
-        type="run_window_checkpoint.received",
-        datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
-        checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
-        organization_id=UUID(fixture_id),
-    ),
-)
 
 
 @pytest.mark.parametrize(
@@ -106,7 +96,6 @@ run_window_checkpoint_action_class_and_event = (
     [
         run_checkpoint_action_class_and_event,
         run_scheduled_checkpoint_action_class_and_event,
-        # run_window_checkpoint_action_class_and_event,
     ],
 )
 @responses.activate
@@ -176,7 +165,6 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
     [
         run_checkpoint_action_class_and_event,
         run_scheduled_checkpoint_action_class_and_event,
-        # run_window_checkpoint_action_class_and_event,
     ],
 )
 @responses.activate
