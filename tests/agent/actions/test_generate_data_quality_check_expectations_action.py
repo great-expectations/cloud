@@ -16,6 +16,7 @@ from great_expectations.experimental.metric_repository.metric_repository import 
 )
 from great_expectations.experimental.metric_repository.metrics import (
     MetricRun,
+    MetricTypes,
     TableMetric,
 )
 
@@ -275,6 +276,61 @@ def test_succeeding_and_failing_assets_together(
     assert error_message_footer in str(e.value)
     for asset_name in failing_data_asset_names:
         assert asset_name in str(e.value)
+
+
+def test_missing_table_columns_metric_raises_runtime_error(
+    mock_context: CloudDataContext,
+    mocker: MockerFixture,
+):
+    # Setup
+    mock_metric_repository = mocker.Mock(spec=MetricRepository)
+    mock_batch_inspector = mocker.Mock(spec=BatchInspector)
+
+    # Create a mock data asset
+    mock_data_asset = mocker.Mock()
+    mock_data_asset.id = uuid.uuid4()
+    mock_data_asset.test_connection.return_value = None
+
+    # Mock the context to return our mock data asset
+    mock_context.data_sources.get.return_value.get_asset.return_value = mock_data_asset
+
+    # Create a metric run without TABLE_COLUMNS metric
+    mock_metric_run = mocker.Mock(spec=MetricRun)
+    mock_metric_run.metrics = [
+        # No TABLE_COLUMNS metric in this list
+        TableMetric(
+            batch_id="batch_id",
+            metric_name=MetricTypes.TABLE_ROW_COUNT,
+            value=100,
+            exception=None,
+        )
+    ]
+
+    # Configure the batch inspector to return our mock metric run
+    mock_batch_inspector.compute_metric_list_run.return_value = mock_metric_run
+    mock_metric_repository.add_metric_run.return_value = uuid.uuid4()
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=mock_context,
+        metric_repository=mock_metric_repository,
+        batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.uuid4(),
+    )
+
+    # Create the event
+    event = GenerateDataQualityCheckExpectationsEvent(
+        type="generate_data_quality_check_expectations_request.received",
+        organization_id=uuid.uuid4(),
+        datasource_name="test-datasource",
+        data_assets=["test-asset"],
+        selected_data_quality_issues=[DataQualityIssues.SCHEMA],
+    )
+
+    # Act & Assert
+    with pytest.raises(PartialGenerateDataQualityCheckExpectationError):
+        action.run(event=event, id="test-id")
 
 
 if __name__ == "__main__":

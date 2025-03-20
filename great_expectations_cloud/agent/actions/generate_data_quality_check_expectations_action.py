@@ -105,7 +105,8 @@ class GenerateDataQualityCheckExpectationsAction(
                             )
                         )
 
-            except Exception:
+            except Exception as e:
+                LOGGER.exception("Failed to generate expectations for %s: %s", asset_name, str(e))  # noqa: TRY401
                 assets_with_errors.append(asset_name)
 
         if assets_with_errors:
@@ -139,7 +140,12 @@ class GenerateDataQualityCheckExpectationsAction(
         metric_run = self._batch_inspector.compute_metric_list_run(
             data_asset_id=data_asset.id,
             batch_request=batch_request,
-            metric_list=[MetricTypes.TABLE_COLUMNS, MetricTypes.TABLE_COLUMN_TYPES],
+            metric_list=[
+                MetricTypes.TABLE_COLUMNS,
+                MetricTypes.TABLE_COLUMN_TYPES,
+                MetricTypes.COLUMN_NULL_COUNT,
+                MetricTypes.TABLE_ROW_COUNT,
+            ],
         )
         metric_run_id = self._metric_repository.add_metric_run(metric_run)
         # Note: This exception is raised after the metric run is added to the repository so that
@@ -169,8 +175,20 @@ class GenerateDataQualityCheckExpectationsAction(
         return expectation_id
 
     def _add_schema_change_expectation(self, metric_run: MetricRun, asset_id: UUID) -> UUID:
+        # Find the TABLE_COLUMNS metric by type instead of assuming it's at position 0
+        table_columns_metric = next(
+            (
+                metric
+                for metric in metric_run.metrics
+                if metric.metric_name == MetricTypes.TABLE_COLUMNS
+            ),
+            None,
+        )
+        if not table_columns_metric:
+            raise RuntimeError("missing TABLE_COLUMNS metric")  # noqa: TRY003
+
         expectation = gx_expectations.ExpectTableColumnsToMatchSet(
-            column_set=metric_run.metrics[0].value
+            column_set=table_columns_metric.value
         )
         expectation_id = self._create_expectation_for_asset(
             expectation=expectation, asset_id=asset_id
