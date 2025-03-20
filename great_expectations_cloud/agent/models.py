@@ -70,15 +70,6 @@ class RunScheduledCheckpointEvent(ScheduledEventBase):
     checkpoint_name: Optional[str] = None
 
 
-class RunWindowCheckpointEvent(EventBase):
-    type: Literal["run_window_checkpoint.received"] = "run_window_checkpoint.received"
-    datasource_names_to_asset_names: dict[str, set[str]]
-    checkpoint_id: uuid.UUID
-    splitter_options: Optional[dict[str, Any]] = None
-    # TODO: Remove optional once fully migrated to greatexpectations v1
-    checkpoint_name: Optional[str] = None
-
-
 class RunColumnDescriptiveMetricsEvent(EventBase):
     type: Literal["column_descriptive_metrics_request.received"] = (
         "column_descriptive_metrics_request.received"
@@ -131,7 +122,6 @@ Event = Annotated[
         RunMissingnessDataAssistantEvent,
         RunCheckpointEvent,
         RunScheduledCheckpointEvent,
-        RunWindowCheckpointEvent,
         RunColumnDescriptiveMetricsEvent,
         RunMetricsListEvent,
         DraftDatasourceConfigEvent,
