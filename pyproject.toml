@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20250320.1.dev0"
+version = "20250320.1.dev1"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
