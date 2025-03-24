@@ -34,7 +34,7 @@ from great_expectations_cloud.agent.models import (
 )
 from great_expectations_cloud.agent.utils import (
     TriangularInterpolationOptions,
-    faker_string_alpha,
+    param_safe_unique_id,
     triangular_interpolation,
 )
 
@@ -148,7 +148,7 @@ class GenerateDataQualityCheckExpectationsAction(
 
         except Exception as e:
             # TODO - see if this can be made more specific
-            raise RuntimeError(f"Failed to retrieve asset: {e}") from e  # noqa: TRY003 # want to keep this informative for now
+            raise RuntimeError(f"Failed to retrieve asset: {e}") from e  # noqa: TRY003 keep this informative for now
 
         return data_asset
 
@@ -172,7 +172,7 @@ class GenerateDataQualityCheckExpectationsAction(
         return metric_run, metric_run_id
 
     def _add_volume_change_expectation(self, asset_id: UUID) -> UUID:
-        unique_id = faker_string_alpha(16)
+        unique_id = param_safe_unique_id(16)
         expectation = gx_expectations.ExpectTableRowCountToBeBetween(
             windows=[
                 Window(
@@ -215,7 +215,7 @@ class GenerateDataQualityCheckExpectationsAction(
 
     def _add_completeness_change_expectations(
         self, metric_run: MetricRun, asset_id: UUID
-    ) -> [UUID]:
+    ) -> list[UUID]:
         table_row_count = next(
             metric
             for metric in metric_run.metrics
@@ -248,7 +248,7 @@ class GenerateDataQualityCheckExpectationsAction(
                     column=column_name, mostly=1
                 )
             else:
-                unique_id = faker_string_alpha(16)
+                unique_id = param_safe_unique_id(16)
                 options = TriangularInterpolationOptions(
                     input_range=(0.0, float(row_count)), output_range=(0, 1), round_precision=3
                 )
@@ -262,7 +262,7 @@ class GenerateDataQualityCheckExpectationsAction(
                             offset=Offset(
                                 positive=interpolated_offset, negative=interpolated_offset
                             ),
-                            strict=True,
+                            strict=False,
                         ),
                         Window(
                             constraint_fn="mean",
@@ -271,7 +271,7 @@ class GenerateDataQualityCheckExpectationsAction(
                             offset=Offset(
                                 positive=interpolated_offset, negative=interpolated_offset
                             ),
-                            strict=True,
+                            strict=False,
                         ),
                     ],
                     column=column_name,

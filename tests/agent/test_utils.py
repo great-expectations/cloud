@@ -2,6 +2,7 @@ import pytest
 
 from great_expectations_cloud.agent.utils import (
     TriangularInterpolationOptions,
+    param_safe_unique_id,
     triangular_interpolation,
 )
 
@@ -64,3 +65,7 @@ def test_triangular_interpolation_custom_parameters():
     assert triangular_interpolation(value=0, options=options_shifted) == 15.0
     assert triangular_interpolation(value=-1, options=options_shifted) == 5.0
     assert triangular_interpolation(value=1, options=options_shifted) == 5.0
+
+
+def test_get_param_safe_unique_id():
+    assert len(param_safe_unique_id(16)) == 16

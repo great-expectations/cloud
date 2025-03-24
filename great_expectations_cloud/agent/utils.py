@@ -63,7 +63,7 @@ def triangular_interpolation(
     return result
 
 
-def faker_string_alpha(length: int) -> str:
+def param_safe_unique_id(length: int) -> str:
     """
     Generate a random string of alphabetic characters.
 
