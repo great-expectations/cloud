@@ -32,6 +32,11 @@ from great_expectations_cloud.agent.models import (
     CreatedResource,
     GenerateDataQualityCheckExpectationsEvent,
 )
+from great_expectations_cloud.agent.utils import (
+    TriangularInterpolationOptions,
+    faker_string_alpha,
+    triangular_interpolation,
+)
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -105,6 +110,18 @@ class GenerateDataQualityCheckExpectationsAction(
                             )
                         )
 
+                    if DataQualityIssues.COMPLETENESS in event.selected_data_quality_issues:
+                        completeness_change_expectation_ids = (
+                            self._add_completeness_change_expectations(
+                                metric_run=metric_run, asset_id=data_asset.id
+                            )
+                        )
+
+                        for exp_id in completeness_change_expectation_ids:
+                            created_resources.append(
+                                CreatedResource(resource_id=str(exp_id), type="Expectation")
+                            )
+
             except Exception as e:
                 LOGGER.exception("Failed to generate expectations for %s: %s", asset_name, str(e))  # noqa: TRY401
                 assets_with_errors.append(asset_name)
@@ -155,18 +172,19 @@ class GenerateDataQualityCheckExpectationsAction(
         return metric_run, metric_run_id
 
     def _add_volume_change_expectation(self, asset_id: UUID) -> UUID:
+        unique_id = faker_string_alpha(16)
         expectation = gx_expectations.ExpectTableRowCountToBeBetween(
             windows=[
                 Window(
                     constraint_fn="mean",
-                    parameter_name="min_value_min",
+                    parameter_name=f"{unique_id}_min_value_min",
                     range=1,
                     offset=Offset(positive=0.0, negative=0.0),
                     strict=True,
                 )
             ],
             strict_min=True,
-            min_value={"$PARAMETER": "min_value_min"},
+            min_value={"$PARAMETER": f"{unique_id}_min_value_min"},
             max_value=None,
         )
         expectation_id = self._create_expectation_for_asset(
@@ -194,6 +212,78 @@ class GenerateDataQualityCheckExpectationsAction(
             expectation=expectation, asset_id=asset_id
         )
         return expectation_id
+
+    def _add_completeness_change_expectations(
+        self, metric_run: MetricRun, asset_id: UUID
+    ) -> [UUID]:
+        table_row_count = next(
+            metric
+            for metric in metric_run.metrics
+            if metric.metric_name == MetricTypes.TABLE_ROW_COUNT
+        )
+        expectation_ids = []
+
+        if not table_row_count:
+            raise RuntimeError("missing TABLE_ROW_COUNT metric")  # noqa: TRY003
+
+        column_null_values_metric = [
+            metric
+            for metric in metric_run.metrics
+            if metric.metric_name == MetricTypes.COLUMN_NULL_COUNT
+        ]
+
+        if not column_null_values_metric or len(column_null_values_metric) == 0:
+            raise RuntimeError("missing COLUMN_NULL_COUNT metrics")  # noqa: TRY003
+
+        for column in column_null_values_metric:
+            column_name = column.column
+            null_count = column.value
+            row_count = table_row_count.value
+            if null_count == 0:
+                expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
+                    column=column_name, mostly=1
+                )
+            elif null_count == row_count:
+                expectation = gx_expectations.ExpectColumnValuesToBeNull(
+                    column=column_name, mostly=1
+                )
+            else:
+                unique_id = faker_string_alpha(16)
+                options = TriangularInterpolationOptions(
+                    input_range=(0.0, float(row_count)), output_range=(0, 1), round_precision=3
+                )
+                interpolated_offset = triangular_interpolation(null_count, options)
+                expectation = gx_expectations.ExpectColumnValuesToBeNull(
+                    windows=[
+                        Window(
+                            constraint_fn="mean",
+                            parameter_name=f"{unique_id}_null_value_min",
+                            range=1,
+                            offset=Offset(
+                                positive=interpolated_offset, negative=interpolated_offset
+                            ),
+                            strict=True,
+                        ),
+                        Window(
+                            constraint_fn="mean",
+                            parameter_name=f"{unique_id}_null_value_max",
+                            range=1,
+                            offset=Offset(
+                                positive=interpolated_offset, negative=interpolated_offset
+                            ),
+                            strict=True,
+                        ),
+                    ],
+                    column=column_name,
+                    mostly={"$PARAMETER": f"{unique_id}_null_value_min"},
+                )
+
+            expectation_id = self._create_expectation_for_asset(
+                expectation=expectation, asset_id=asset_id
+            )
+            expectation_ids.append(expectation_id)
+
+        return expectation_ids
 
     def _create_expectation_for_asset(
         self, expectation: gx_expectations.Expectation, asset_id: UUID

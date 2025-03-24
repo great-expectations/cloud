@@ -206,3 +206,45 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
     assert action_result.created_resources[0].type == "MetricRun"
     assert action_result.created_resources[1].type == "Expectation"
     assert action_result.created_resources[2].type == "Expectation"
+
+
+def test_generate_data_quality_check_expectations_action_completeness_selected_data_quality_issues(
+    context: CloudDataContext,
+    user_api_token_headers_org_admin_sc_org,
+    org_id_env_var_local: str,
+    cloud_base_url: str,
+    token_env_var_local: str,
+    seed_and_cleanup_test_data,
+):
+    """Test that COMPLETENESS data quality issue generates appropriate expectations."""
+    generate_schema_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
+        type="generate_data_quality_check_expectations_request.received",
+        datasource_name="local_mercury_db",
+        data_assets=["local-mercury-db-checkpoints-table"],
+        organization_id=uuid.UUID(org_id_env_var_local),
+        selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
+    )
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=context,
+        base_url=cloud_base_url,
+        organization_id=uuid.UUID(org_id_env_var_local),
+        auth_key=token_env_var_local,
+    )
+    event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
+
+    action_result = action.run(event=generate_schema_change_expectations_event, id=event_id)
+
+    # Assert
+    assert action_result.type == generate_schema_change_expectations_event.type
+    assert action_result.id == event_id
+
+    # We expect at least 2 resources:
+    # 1. One MetricRun
+    # 2. At least one Expectation (one per column with null values)
+    assert len(action_result.created_resources) >= 2
+    assert action_result.created_resources[0].type == "MetricRun"
+
+    # All subsequent resources should be Expectations
+    for resource in action_result.created_resources[1:]:
+        assert resource.type == "Expectation"
