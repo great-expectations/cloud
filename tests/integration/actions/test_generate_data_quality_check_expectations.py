@@ -206,3 +206,74 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
     assert action_result.created_resources[0].type == "MetricRun"
     assert action_result.created_resources[1].type == "Expectation"
     assert action_result.created_resources[2].type == "Expectation"
+
+
+def test_generate_data_quality_check_expectations_action_completeness_selected_data_quality_issues(
+    context: CloudDataContext,
+    user_api_token_headers_org_admin_sc_org,
+    org_id_env_var_local: str,
+    cloud_base_url: str,
+    token_env_var_local: str,
+    seed_and_cleanup_test_data,
+    monkeypatch,
+):
+    """Test that COMPLETENESS data quality issue generates appropriate expectations."""
+    # List to capture expectation configs
+    generated_expectations = []
+
+    # Store original method
+    original_create_expectation = (
+        GenerateDataQualityCheckExpectationsAction._create_expectation_for_asset
+    )
+
+    def mock_create_expectation(self, expectation, asset_id):
+        # Capture the expectation config
+        generated_expectations.append(expectation)
+        # Call original method
+        return original_create_expectation(self, expectation, asset_id)
+
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_create_expectation_for_asset",
+        mock_create_expectation,
+    )
+
+    generate_completeness_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
+        type="generate_data_quality_check_expectations_request.received",
+        datasource_name="local_mercury_db",
+        data_assets=["local-mercury-db-checkpoints-table"],
+        organization_id=uuid.UUID(org_id_env_var_local),
+        selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
+    )
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=context,
+        base_url=cloud_base_url,
+        organization_id=uuid.UUID(org_id_env_var_local),
+        auth_key=token_env_var_local,
+    )
+    event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
+
+    action_result = action.run(event=generate_completeness_change_expectations_event, id=event_id)
+
+    # Assert basic properties
+    assert action_result.type == generate_completeness_change_expectations_event.type
+    assert action_result.id == event_id
+    assert len(action_result.created_resources) >= 2
+    assert action_result.created_resources[0].type == "MetricRun"
+
+    # Assert expectation properties
+    assert len(generated_expectations) > 0  # At least one expectation was created
+    for exp_config in generated_expectations:
+        # Verify each expectation is one of the expected types
+        assert exp_config.expectation_type in [
+            "expect_column_values_to_be_null",
+            "expect_column_values_to_not_be_null",
+        ]
+        # Verify each has required properties
+        assert exp_config.column is not None
+        if exp_config.windows is not None:
+            assert exp_config.windows[0].constraint_fn == "mean"
+            assert exp_config.windows[0].range == 5
+            assert exp_config.windows[0].offset.positive == exp_config.windows[0].offset.negative
+            assert exp_config.windows[0].parameter_name == exp_config.mostly["$PARAMETER"]

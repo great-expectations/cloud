@@ -61,3 +61,24 @@ def triangular_interpolation(
     result = round(result, round_precision)
 
     return result
+
+
+def param_safe_unique_id(length: int) -> str:
+    """
+    Generate a random string of alphabetic characters.
+
+    Args:
+        length (int): The length of the string to generate
+
+    Returns:
+        str: A random string of alphabetic characters
+    """
+    import random
+
+    result = ""
+    characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    counter = 0
+    while counter < length:
+        result += characters[random.randint(0, len(characters) - 1)]  # noqa: S311 # doesn't need to be cryptographically secure
+        counter += 1
+    return result
