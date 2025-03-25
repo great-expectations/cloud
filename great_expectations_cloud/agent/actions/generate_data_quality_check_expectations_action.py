@@ -148,7 +148,7 @@ class GenerateDataQualityCheckExpectationsAction(
 
         except Exception as e:
             # TODO - see if this can be made more specific
-            raise RuntimeError(f"Failed to retrieve asset: {e}") from e  # noqa: TRY003 keep this informative for now
+            raise RuntimeError(f"Failed to retrieve asset: {e}") from e  # noqa: TRY003 # want to keep this informative for now
 
         return data_asset
 
@@ -239,13 +239,9 @@ class GenerateDataQualityCheckExpectationsAction(
             column_name = column.column
             null_count = column.value
             row_count = table_row_count.value
-            if null_count == 0:
+            if null_count in (0, row_count):
                 expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
-                    column=column_name, mostly=1
-                )
-            elif null_count == row_count:
-                expectation = gx_expectations.ExpectColumnValuesToBeNull(
-                    column=column_name, mostly=1
+                    column=column_name, mostly=1 if null_count == 0 else 0
                 )
             else:
                 unique_id = param_safe_unique_id(16)
@@ -258,16 +254,7 @@ class GenerateDataQualityCheckExpectationsAction(
                         Window(
                             constraint_fn="mean",
                             parameter_name=f"{unique_id}_null_value_min",
-                            range=1,
-                            offset=Offset(
-                                positive=interpolated_offset, negative=interpolated_offset
-                            ),
-                            strict=False,
-                        ),
-                        Window(
-                            constraint_fn="mean",
-                            parameter_name=f"{unique_id}_null_value_max",
-                            range=1,
+                            range=5,
                             offset=Offset(
                                 positive=interpolated_offset, negative=interpolated_offset
                             ),
