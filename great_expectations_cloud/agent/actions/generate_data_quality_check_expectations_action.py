@@ -226,47 +226,55 @@ class GenerateDataQualityCheckExpectationsAction(
         if not table_row_count:
             raise RuntimeError("missing TABLE_ROW_COUNT metric")  # noqa: TRY003
 
-        column_null_values_metrics = [
+        column_null_values_metric = [
             metric
             for metric in metric_run.metrics
             if metric.metric_name == MetricTypes.COLUMN_NULL_COUNT
         ]
 
-        if not column_null_values_metrics or len(column_null_values_metrics) == 0:
+        if not column_null_values_metric or len(column_null_values_metric) == 0:
             raise RuntimeError("missing COLUMN_NULL_COUNT metrics")  # noqa: TRY003
 
-        for null_metric in column_null_values_metrics:
-            column = null_metric.column
-            null_count = null_metric.value
+        for column in column_null_values_metric:
+            column_name = column.column
+            null_count = column.value
             row_count = table_row_count.value
-            options = TriangularInterpolationOptions(
-                input_range=(0.0, float(row_count)), output_range=(0, 1), round_precision=3
-            )
-            mostly = triangular_interpolation(null_count, options)
-            if mostly in (0, 1):
+            if null_count == 0:
                 expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
-                    column=column, mostly=mostly
+                    column=column_name, mostly=1
+                )
+            elif null_count == row_count:
+                expectation = gx_expectations.ExpectColumnValuesToBeNull(
+                    column=column_name, mostly=1
                 )
             else:
                 unique_id = param_safe_unique_id(16)
+                options = TriangularInterpolationOptions(
+                    input_range=(0.0, float(row_count)), output_range=(0, 0.1), round_precision=5
+                )
+                interpolated_offset = triangular_interpolation(null_count, options)
                 expectation = gx_expectations.ExpectColumnValuesToBeNull(
                     windows=[
                         Window(
                             constraint_fn="mean",
                             parameter_name=f"{unique_id}_null_value_min",
                             range=5,
-                            offset=Offset(positive=mostly, negative=mostly),
+                            offset=Offset(
+                                positive=interpolated_offset, negative=interpolated_offset
+                            ),
                             strict=False,
                         ),
                         Window(
                             constraint_fn="mean",
                             parameter_name=f"{unique_id}_null_value_max",
                             range=5,
-                            offset=Offset(positive=mostly, negative=mostly),
+                            offset=Offset(
+                                positive=interpolated_offset, negative=interpolated_offset
+                            ),
                             strict=False,
                         ),
                     ],
-                    column=column,
+                    column=column_name,
                     mostly={"$PARAMETER": f"{unique_id}_null_value_min"},
                 )
 
