@@ -239,9 +239,13 @@ class GenerateDataQualityCheckExpectationsAction(
             column_name = column.column
             null_count = column.value
             row_count = table_row_count.value
-            if null_count in (0, row_count):
+            if null_count == 0:
                 expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
-                    column=column_name, mostly=1 if null_count == 0 else 0
+                    column=column_name, mostly=1
+                )
+            elif null_count == row_count:
+                expectation = gx_expectations.ExpectColumnValuesToBeNull(
+                    column=column_name, mostly=1
                 )
             else:
                 unique_id = param_safe_unique_id(16)
