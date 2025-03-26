@@ -226,42 +226,47 @@ class GenerateDataQualityCheckExpectationsAction(
         if not table_row_count:
             raise RuntimeError("missing TABLE_ROW_COUNT metric")  # noqa: TRY003
 
-        column_null_values_metric = [
+        column_null_values_metrics = [
             metric
             for metric in metric_run.metrics
             if metric.metric_name == MetricTypes.COLUMN_NULL_COUNT
         ]
 
-        if not column_null_values_metric or len(column_null_values_metric) == 0:
+        if not column_null_values_metrics or len(column_null_values_metrics) == 0:
             raise RuntimeError("missing COLUMN_NULL_COUNT metrics")  # noqa: TRY003
 
-        for column in column_null_values_metric:
-            column_name = column.column
-            null_count = column.value
+        for null_metric in column_null_values_metrics:
+            column = null_metric.column
+            null_count = null_metric.value
             row_count = table_row_count.value
-            if null_count in (0, row_count):
+            options = TriangularInterpolationOptions(
+                input_range=(0.0, float(row_count)), output_range=(0, 1), round_precision=3
+            )
+            mostly = triangular_interpolation(null_count, options)
+            if mostly in (0, 1):
                 expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
-                    column=column_name, mostly=1 if null_count == 0 else 0
+                    column=column, mostly=mostly
                 )
             else:
                 unique_id = param_safe_unique_id(16)
-                options = TriangularInterpolationOptions(
-                    input_range=(0.0, float(row_count)), output_range=(0, 1), round_precision=3
-                )
-                interpolated_offset = triangular_interpolation(null_count, options)
                 expectation = gx_expectations.ExpectColumnValuesToBeNull(
                     windows=[
                         Window(
                             constraint_fn="mean",
                             parameter_name=f"{unique_id}_null_value_min",
                             range=5,
-                            offset=Offset(
-                                positive=interpolated_offset, negative=interpolated_offset
-                            ),
+                            offset=Offset(positive=mostly, negative=mostly),
+                            strict=False,
+                        ),
+                        Window(
+                            constraint_fn="mean",
+                            parameter_name=f"{unique_id}_null_value_max",
+                            range=5,
+                            offset=Offset(positive=mostly, negative=mostly),
                             strict=False,
                         ),
                     ],
-                    column=column_name,
+                    column=column,
                     mostly={"$PARAMETER": f"{unique_id}_null_value_min"},
                 )
 
