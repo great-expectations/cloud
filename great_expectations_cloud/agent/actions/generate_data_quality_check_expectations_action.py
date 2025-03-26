@@ -250,7 +250,7 @@ class GenerateDataQualityCheckExpectationsAction(
             else:
                 unique_id = param_safe_unique_id(16)
                 options = TriangularInterpolationOptions(
-                    input_range=(0.0, float(row_count)), output_range=(0, 0.1), round_precision=3
+                    input_range=(0.0, float(row_count)), output_range=(0, 0.1), round_precision=5
                 )
                 interpolated_offset = triangular_interpolation(null_count, options)
                 expectation = gx_expectations.ExpectColumnValuesToBeNull(
