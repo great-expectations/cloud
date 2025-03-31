@@ -243,45 +243,73 @@ class GenerateDataQualityCheckExpectationsAction(
                 expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
                     column=column_name, mostly=1
                 )
+                expectation_id = self._create_expectation_for_asset(
+                    expectation=expectation, asset_id=asset_id
+                )
+                expectation_ids.append(expectation_id)
             elif null_count == row_count:
                 expectation = gx_expectations.ExpectColumnValuesToBeNull(
                     column=column_name, mostly=1
                 )
+                expectation_id = self._create_expectation_for_asset(
+                    expectation=expectation, asset_id=asset_id
+                )
+                expectation_ids.append(expectation_id)
             else:
-                unique_id = param_safe_unique_id(16)
+                # Create two separate expectations when null count is neither 0 nor 100%
+                unique_id_null = param_safe_unique_id(16)
+                unique_id_not_null = param_safe_unique_id(16)
+
                 options = TriangularInterpolationOptions(
                     input_range=(0.0, float(row_count)), output_range=(0, 0.1), round_precision=5
                 )
-                interpolated_offset = triangular_interpolation(null_count, options)
-                expectation = gx_expectations.ExpectColumnValuesToBeNull(
+                interpolated_offset = max(
+                    0.0001, round(triangular_interpolation(null_count, options), 5)
+                )
+
+                # For the null expectation (sets lower bound on nulls)
+                null_expectation = gx_expectations.ExpectColumnValuesToBeNull(
                     windows=[
                         Window(
                             constraint_fn="mean",
-                            parameter_name=f"{unique_id}_null_value_min",
+                            parameter_name=f"{unique_id_null}_null_value_min",
                             range=5,
                             offset=Offset(
                                 positive=interpolated_offset, negative=interpolated_offset
                             ),
                             strict=False,
-                        ),
-                        Window(
-                            constraint_fn="mean",
-                            parameter_name=f"{unique_id}_null_value_max",
-                            range=5,
-                            offset=Offset(
-                                positive=interpolated_offset, negative=interpolated_offset
-                            ),
-                            strict=False,
-                        ),
+                        )
                     ],
                     column=column_name,
-                    mostly={"$PARAMETER": f"{unique_id}_null_value_min"},
+                    mostly={"$PARAMETER": f"{unique_id_null}_null_value_min"},
                 )
 
-            expectation_id = self._create_expectation_for_asset(
-                expectation=expectation, asset_id=asset_id
-            )
-            expectation_ids.append(expectation_id)
+                # For the not-null expectation (sets upper bound on nulls by requiring not-nulls)
+                not_null_expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
+                    windows=[
+                        Window(
+                            constraint_fn="mean",
+                            parameter_name=f"{unique_id_not_null}_not_null_value_min",
+                            range=5,
+                            offset=Offset(
+                                positive=interpolated_offset, negative=interpolated_offset
+                            ),
+                            strict=False,
+                        )
+                    ],
+                    column=column_name,
+                    mostly={"$PARAMETER": f"{unique_id_not_null}_not_null_value_min"},
+                )
+
+                null_expectation_id = self._create_expectation_for_asset(
+                    expectation=null_expectation, asset_id=asset_id
+                )
+                expectation_ids.append(null_expectation_id)
+
+                not_null_expectation_id = self._create_expectation_for_asset(
+                    expectation=not_null_expectation, asset_id=asset_id
+                )
+                expectation_ids.append(not_null_expectation_id)
 
         return expectation_ids
 
