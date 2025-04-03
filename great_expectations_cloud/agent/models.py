@@ -119,6 +119,7 @@ class RunRdAgentEvent(EventBase):
     data_asset_name: str
     batch_definition_name: str
     batch_parameters: Optional[dict[str, Any]] = None
+    use_core_metrics: bool = False
 
 
 class UnknownEvent(AgentBaseExtraForbid):
