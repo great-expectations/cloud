@@ -2415,6 +2415,7 @@ description = "Amazon Redshift Dialect for sqlalchemy"
 optional = false
 python-versions = ">=3.4"
 groups = ["main"]
+markers = "extra == \"redshift\""
 files = []
 develop = false
 
@@ -2623,9 +2624,10 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [extras]
 databricks = ["databricks-sqlalchemy"]
 postgres = ["psycopg2-binary", "sqlalchemy"]
+redshift = ["sqlalchemy-redshift"]
 snowflake = ["snowflake-connector-python", "snowflake-sqlalchemy"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "4e767a8812f4b80e0853584025050ed22720de3b2ea6d14273a4141a0bde2276"
+content-hash = "5535596525c76078af8ad3184ed901d68e03e0bb854f076ff39f48067e83d187"

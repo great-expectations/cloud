@@ -45,6 +45,7 @@ sqlalchemy-redshift = { git = "https://github.com/great-expectations/sqlalchemy-
 snowflake = ["snowflake-sqlalchemy", "snowflake-connector-python"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
 databricks = ["databricks-sqlalchemy"]
+redshift = ["sqlalchemy-redshift"]
 
 [tool.poetry.group.sql.dependencies]
 great-expectations = { version = ">=1.0.0" }
