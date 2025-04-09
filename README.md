@@ -54,6 +54,11 @@ optional arguments:
 `GX_CLOUD_ACCESS_TOKEN`
 `GX_CLOUD_ORGANIZATION_ID`
 
+If you want to override where the GX Agent looks for the RabbitMQ queue you can also set 
+`AMQP_HOST_OVERRIDE` and `AMQP_PORT_OVERRIDE`. For example, if you are running a local dockerized RabbitMQ
+service exposed on localhost port 5672, you can set `AMQP_HOST_OVERRIDE=127.0.0.1` and 
+`AMQP_PORT_OVERRIDE=5672`.
+
 ### Start the GX Agent
 
 If you intend to run the GX Agent against local services (Cloud backend or datasources) run the Agent outside of the container.
