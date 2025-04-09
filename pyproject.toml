@@ -37,6 +37,7 @@ snowflake-sqlalchemy = { version = ">=1.6", optional = true }
 snowflake-connector-python = { version = ">=3.3.1", optional = true }
 psycopg2-binary = { version = "*", optional = true }
 databricks-sqlalchemy = { version = ">=1.0.0", optional = true }
+sqlalchemy-redshift = { git = "https://github.com/great-expectations/sqlalchemy-redshift.git" }
 
 [tool.poetry.extras]
 # https://python-poetry.org/docs/pyproject#extras
