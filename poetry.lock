@@ -553,14 +553,14 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "1.3.13"
+version = "1.3.14"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = "<3.13,>=3.9"
 groups = ["main", "sql"]
 files = [
-    {file = "great_expectations-1.3.13-py3-none-any.whl", hash = "sha256:78ee2b2e81661f42ce7d56dc25bcbed4b50f8e85eadad1eb04f3c3f713deeca3"},
-    {file = "great_expectations-1.3.13.tar.gz", hash = "sha256:d027599c59bdd70cedd9fed33f7b13e85defbe4a8003c50c43d7f9e0cb93b169"},
+    {file = "great_expectations-1.3.14-py3-none-any.whl", hash = "sha256:c59ce34bce9bc32ea3d1142d3f1e2ce1bce43bfd8215fef12e1f9a7b846f8fbb"},
+    {file = "great_expectations-1.3.14.tar.gz", hash = "sha256:6a86b824dd29fb5ccf34fd6d8f123402ca5d88129706a5ad3d0a47296697de52"},
 ]
 
 [package.dependencies]
@@ -590,13 +590,13 @@ athena = ["pyathena[sqlalchemy] (>=2.0.0,<3)", "sqlalchemy (>=1.4.0)"]
 aws-secrets = ["boto3 (>=1.17.106)"]
 azure = ["azure-identity (>=1.10.0)", "azure-keyvault-secrets (>=4.0.0)", "azure-storage-blob (>=12.5.0)"]
 azure-secrets = ["azure-identity (>=1.10.0)", "azure-keyvault-secrets (>=4.0.0)", "azure-storage-blob (>=12.5.0)"]
-bigquery = ["gcsfs (>=0.5.1)", "google-cloud-bigquery (>=3.3.6)", "google-cloud-bigquery-storage (>=2.20.0)", "google-cloud-secret-manager (>=1.0.0)", "google-cloud-storage (>=1.28.0) ; python_version < \"3.11\"", "google-cloud-storage (>=2.10.0) ; python_version >= \"3.11\"", "pandas-gbq (>=0.26.1)", "sqlalchemy (<2.0.0)", "sqlalchemy-bigquery (>=1.3.0)"]
+bigquery = ["gcsfs (>=0.5.1)", "google-cloud-bigquery (>=3.3.6)", "google-cloud-bigquery-storage (>=2.20.0)", "google-cloud-secret-manager (>=1.0.0)", "google-cloud-storage (>=1.28.0) ; python_version < \"3.11\"", "google-cloud-storage (>=2.10.0) ; python_version >= \"3.11\"", "pandas-gbq (>=0.26.1)", "sqlalchemy (>=1.4.0)", "sqlalchemy-bigquery (>=1.3.0)"]
 clickhouse = ["clickhouse-sqlalchemy (>=0.2.2) ; python_version < \"3.12\"", "clickhouse-sqlalchemy (>=0.3.0) ; python_version >= \"3.12\"", "sqlalchemy (<2.0.0)"]
 cloud = ["orjson (>=3.9.7)"]
 databricks = ["databricks-sqlalchemy (>=1.0.0)", "sqlalchemy (>=1.4.0)"]
 dremio = ["pyodbc (>=4.0.30)", "sqlalchemy (>=1.4.0)", "sqlalchemy-dremio (==1.2.1)"]
 excel = ["openpyxl (>=3.0.7)", "xlrd (>=1.1.0,<2.0.0)"]
-gcp = ["gcsfs (>=0.5.1)", "google-cloud-bigquery (>=3.3.6)", "google-cloud-bigquery-storage (>=2.20.0)", "google-cloud-secret-manager (>=1.0.0)", "google-cloud-storage (>=1.28.0) ; python_version < \"3.11\"", "google-cloud-storage (>=2.10.0) ; python_version >= \"3.11\"", "pandas-gbq (>=0.26.1)", "sqlalchemy (<2.0.0)", "sqlalchemy-bigquery (>=1.3.0)"]
+gcp = ["gcsfs (>=0.5.1)", "google-cloud-bigquery (>=3.3.6)", "google-cloud-bigquery-storage (>=2.20.0)", "google-cloud-secret-manager (>=1.0.0)", "google-cloud-storage (>=1.28.0) ; python_version < \"3.11\"", "google-cloud-storage (>=2.10.0) ; python_version >= \"3.11\"", "pandas-gbq (>=0.26.1)", "sqlalchemy (>=1.4.0)", "sqlalchemy-bigquery (>=1.3.0)"]
 hive = ["PyHive (>=0.6.5)", "sqlalchemy (>=1.4.0)", "thrift (>=0.16.0)", "thrift-sasl (>=0.4.3)"]
 mssql = ["pyodbc (>=4.0.30)", "sqlalchemy (>=1.4.0)"]
 mysql = ["PyMySQL (>=1.1.1)", "sqlalchemy (>=1.4.0)"]
