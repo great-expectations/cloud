@@ -2409,6 +2409,27 @@ pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3_binary"]
 
 [[package]]
+name = "sqlalchemy-redshift"
+version = "0.8.15.dev0"
+description = "Amazon Redshift Dialect for sqlalchemy"
+optional = false
+python-versions = ">=3.4"
+groups = ["main"]
+markers = "extra == \"redshift\""
+files = []
+develop = false
+
+[package.dependencies]
+packaging = "*"
+SQLAlchemy = ">2.0.7"
+
+[package.source]
+type = "git"
+url = "https://github.com/great-expectations/sqlalchemy-redshift.git"
+reference = "HEAD"
+resolved_reference = "11fb7893c052487ed848d3e02169b0367281d707"
+
+[[package]]
 name = "tenacity"
 version = "9.1.2"
 description = "Retry code until it succeeds"
@@ -2603,9 +2624,10 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [extras]
 databricks = ["databricks-sqlalchemy"]
 postgres = ["psycopg2-binary", "sqlalchemy"]
+redshift = ["sqlalchemy-redshift"]
 snowflake = ["snowflake-connector-python", "snowflake-sqlalchemy"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "dbfe7088727e424485014be3e6f735641728bae534a32ebbb0729d28c0920552"
+content-hash = "5535596525c76078af8ad3184ed901d68e03e0bb854f076ff39f48067e83d187"
