@@ -115,7 +115,7 @@ def expectation_suite(
     context: CloudDataContext,
     data_asset: DataFrameAsset,
     get_missing_expectation_suite_error_type: type[Exception],
-) -> Iterator[gx.ExpectationSuite]:
+):
     expectation_suite_name = f"{data_asset.datasource.name} | {data_asset.name}"
     expectation_suite = gx.ExpectationSuite(name=expectation_suite_name)
     context.suites.add(expectation_suite)

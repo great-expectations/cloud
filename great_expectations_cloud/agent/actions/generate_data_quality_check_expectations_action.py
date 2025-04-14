@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import urljoin
 from uuid import UUID
 
@@ -22,7 +22,11 @@ from great_expectations.experimental.metric_repository.metric_list_metric_retrie
 from great_expectations.experimental.metric_repository.metric_repository import (
     MetricRepository,
 )
-from great_expectations.experimental.metric_repository.metrics import MetricRun, MetricTypes
+from great_expectations.experimental.metric_repository.metrics import (
+    ColumnMetric,
+    MetricRun,
+    MetricTypes,
+)
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
@@ -92,7 +96,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 if event.selected_data_quality_issues:
                     if DataQualityIssues.VOLUME in event.selected_data_quality_issues:
                         volume_change_expectation_id = self._add_volume_change_expectation(
-                            asset_id=data_asset.id
+                            asset_id=data_asset.id  # type: ignore[arg-type] # FIXME
                         )
                         created_resources.append(
                             CreatedResource(
@@ -102,7 +106,8 @@ class GenerateDataQualityCheckExpectationsAction(
 
                     if DataQualityIssues.SCHEMA in event.selected_data_quality_issues:
                         schema_change_expectation_id = self._add_schema_change_expectation(
-                            metric_run=metric_run, asset_id=data_asset.id
+                            metric_run=metric_run,
+                            asset_id=data_asset.id,  # type: ignore[arg-type] # FIXME
                         )
                         created_resources.append(
                             CreatedResource(
@@ -113,7 +118,8 @@ class GenerateDataQualityCheckExpectationsAction(
                     if DataQualityIssues.COMPLETENESS in event.selected_data_quality_issues:
                         completeness_change_expectation_ids = (
                             self._add_completeness_change_expectations(
-                                metric_run=metric_run, asset_id=data_asset.id
+                                metric_run=metric_run,
+                                asset_id=data_asset.id,  # type: ignore[arg-type] # FIXME
                             )
                         )
 
@@ -140,7 +146,7 @@ class GenerateDataQualityCheckExpectationsAction(
 
     def _retrieve_asset_from_asset_name(
         self, event: GenerateDataQualityCheckExpectationsEvent, asset_name: str
-    ) -> DataAsset:
+    ) -> DataAsset:  # type: ignore[type-arg] # FIXME
         try:
             datasource = self._context.data_sources.get(event.datasource_name)
             data_asset = datasource.get_asset(asset_name)
@@ -150,12 +156,12 @@ class GenerateDataQualityCheckExpectationsAction(
             # TODO - see if this can be made more specific
             raise RuntimeError(f"Failed to retrieve asset: {e}") from e  # noqa: TRY003 # want to keep this informative for now
 
-        return data_asset
+        return data_asset  # type: ignore[no-any-return] # FIXME
 
-    def _get_metrics(self, data_asset: DataAsset) -> tuple[MetricRun, UUID]:
+    def _get_metrics(self, data_asset: DataAsset) -> tuple[MetricRun, UUID]:  # type: ignore[type-arg] # FIXME
         batch_request = data_asset.build_batch_request()
         metric_run = self._batch_inspector.compute_metric_list_run(
-            data_asset_id=data_asset.id,
+            data_asset_id=data_asset.id,  # type: ignore[arg-type] # FIXME
             batch_request=batch_request,
             metric_list=[
                 MetricTypes.TABLE_COLUMNS,
@@ -226,8 +232,8 @@ class GenerateDataQualityCheckExpectationsAction(
         if not table_row_count:
             raise RuntimeError("missing TABLE_ROW_COUNT metric")  # noqa: TRY003
 
-        column_null_values_metric = [
-            metric
+        column_null_values_metric: list[ColumnMetric[Any]] = [
+            metric  # type: ignore[misc] # FIXME
             for metric in metric_run.metrics
             if metric.metric_name == MetricTypes.COLUMN_NULL_COUNT
         ]
@@ -239,6 +245,7 @@ class GenerateDataQualityCheckExpectationsAction(
             column_name = column.column
             null_count = column.value
             row_count = table_row_count.value
+            expectation: gx_expectations.Expectation
             if null_count == 0:
                 expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
                     column=column_name, mostly=1

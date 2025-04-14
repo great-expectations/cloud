@@ -92,7 +92,7 @@ def graphql_test_client(
 @pytest.fixture
 def local_mercury_db_datasource(
     context: CloudDataContext,
-) -> PostgresDatasource:
+):
     datasource_name = "local_mercury_db"
     datasource = context.data_sources.get(name=datasource_name)
     yield datasource
@@ -101,7 +101,7 @@ def local_mercury_db_datasource(
 @pytest.fixture
 def local_mercury_db_organizations_table_asset(
     local_mercury_db_datasource: PostgresDatasource,
-) -> TableAsset:
+):
     data_asset_name = "local-mercury-db-organizations-table"
     data_asset = local_mercury_db_datasource.get_asset(name=data_asset_name)
     yield data_asset

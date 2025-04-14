@@ -94,7 +94,7 @@ def test_run_metrics_list_computes_metric_run_missing_batch_inspector(
     )
 
     # Asserting against mocked class proved challenging
-    action._batch_inspector.compute_metric_list_run.assert_called_once()
+    action._batch_inspector.compute_metric_list_run.assert_called_once()  # type: ignore[attr-defined] # FIXME
 
 
 def test_run_metrics_list_creates_metric_run(mock_context, mocker: MockerFixture):

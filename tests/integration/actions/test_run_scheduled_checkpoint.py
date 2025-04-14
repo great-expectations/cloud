@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Iterator
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -31,12 +31,12 @@ pytestmark = pytest.mark.integration
 def scheduled_checkpoint(
     context: CloudDataContext,
     data_asset: DataFrameAsset,
-    batch_request: BatchRequest,
+    batch_request: BatchRequest[Any],
     expectation_suite: ExpectationSuite,
     get_missing_checkpoint_error_type: type[Exception],
 ) -> Iterator[Checkpoint]:
     checkpoint_name = f"{data_asset.datasource.name} | {data_asset.name}"
-    checkpoint = context.checkpoints.add(
+    checkpoint: Checkpoint = context.checkpoints.add(  # type: ignore[call-arg] # FIXME
         name=checkpoint_name,
         validations=[
             {
@@ -49,7 +49,7 @@ def scheduled_checkpoint(
             },
         ],
     )
-    checkpoint = context.add_or_update_checkpoint(
+    checkpoint = context.add_or_update_checkpoint(  # type: ignore[attr-defined] # FIXME
         name=checkpoint_name,
         validations=[
             {
@@ -59,18 +59,18 @@ def scheduled_checkpoint(
         ],
     )
     # checkpoint = context.get(name=checkpoint_name)
-    assert len(checkpoint.validations) == 1, (
+    assert len(checkpoint.validations) == 1, (  # type: ignore[attr-defined] # FIXME
         "Checkpoint was not updated in the previous method call."
     )
     yield checkpoint
     # PP-691: this is a bug
     # you should only have to pass name
-    context.delete_checkpoint(
+    context.delete_checkpoint(  # type: ignore[attr-defined] # FIXME
         # name=checkpoint_name,
-        id=checkpoint.ge_cloud_id,
+        id=checkpoint.ge_cloud_id,  # type: ignore[attr-defined] # FIXME
     )
     with pytest.raises(get_missing_checkpoint_error_type):
-        context.get_checkpoint(name=checkpoint_name)
+        context.get_checkpoint(name=checkpoint_name)  # type: ignore[attr-defined] # FIXME
 
 
 @pytest.fixture

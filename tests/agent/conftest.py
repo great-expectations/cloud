@@ -49,7 +49,7 @@ def mock_gx_version_check(
 
 
 @pytest.fixture
-def mock_context(mocker: MockerFixture) -> CloudDataContext:
+def mock_context(mocker: MockerFixture):
     """Returns a `MagicMock` of a `CloudDataContext` for testing purposes."""
     return mocker.MagicMock(autospec=CloudDataContext)
 

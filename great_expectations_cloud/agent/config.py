@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Optional
 
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
-from pydantic.v1 import AnyUrl, BaseSettings, ValidationError
+from pydantic.v1 import AnyUrl, BaseSettings, Field, ValidationError
 
 
 class GxAgentEnvVars(BaseSettings):
     # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
+    gx_cloud_base_url: AnyUrl = Field(default=CLOUD_DEFAULT_BASE_URL)
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
     enable_progress_bars: bool = True

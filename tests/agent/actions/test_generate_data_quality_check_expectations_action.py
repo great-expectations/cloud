@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import great_expectations.expectations as gx_expectations
 import pytest
@@ -27,7 +27,6 @@ from great_expectations_cloud.agent.actions.generate_data_quality_check_expectat
 from great_expectations_cloud.agent.models import GenerateDataQualityCheckExpectationsEvent
 
 if TYPE_CHECKING:
-    from great_expectations.data_context.data_context.cloud_data_context import CloudDataContext
     from great_expectations.datasource.fluent import DataAsset
     from pytest_mock import MockerFixture
 
@@ -37,7 +36,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def mock_metrics_list() -> list[TableMetric]:
+def mock_metrics_list() -> list[TableMetric[Any]]:
     return [
         TableMetric(
             batch_id="batch_id",
@@ -62,7 +61,7 @@ TABLE_ASSET_ID = uuid.uuid4()
 
 # https://docs.pytest.org/en/7.1.x/how-to/monkeypatch.html
 @pytest.fixture
-def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric]):
+def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric[Any]]):
     def mock_data_asset(self, event: GenerateDataQualityCheckExpectationsEvent, asset_name: str):
         return TableAsset(
             id=TABLE_ASSET_ID,
@@ -71,7 +70,7 @@ def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric]):
             schema_name="test_schema",
         )
 
-    def mock_metrics(self, data_asset: DataAsset):
+    def mock_metrics(self, data_asset: DataAsset[Any, Any]):
         return MetricRun(metrics=mock_metrics_list), uuid.uuid4()
 
     monkeypatch.setattr(
@@ -83,7 +82,7 @@ def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric]):
 
 
 @pytest.fixture
-def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[TableMetric]):
+def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[TableMetric[Any]]):
     failing_asset_id = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
     def mock_data_asset(self, event: GenerateDataQualityCheckExpectationsEvent, asset_name: str):
@@ -103,7 +102,7 @@ def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[Ta
                 schema_name="test_schema",
             )
 
-    def mock_metrics(self, data_asset: DataAsset):
+    def mock_metrics(self, data_asset: DataAsset[Any, Any]):
         if "metric-fail" in data_asset.name:
             raise RuntimeError("One or more metrics failed to compute.")  # noqa: TRY003 # following pattern in code
         else:
@@ -143,7 +142,7 @@ def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[Ta
 )
 def test_generate_schema_change_expectations_action_success(
     mock_response_success,
-    mock_context: CloudDataContext,
+    mock_context,
     mocker: MockerFixture,
     data_asset_names,
     expected_created_resources,
@@ -238,7 +237,7 @@ def test_generate_schema_change_expectations_action_success(
 )
 def test_succeeding_and_failing_assets_together(
     mock_multi_asset_success_and_failure,
-    mock_context: CloudDataContext,
+    mock_context,
     mocker: MockerFixture,
     succeeding_data_asset_names: list[str],
     failing_data_asset_names: list[str],
@@ -279,7 +278,7 @@ def test_succeeding_and_failing_assets_together(
 
 
 def test_missing_table_columns_metric_raises_runtime_error(
-    mock_context: CloudDataContext,
+    mock_context,
     mocker: MockerFixture,
 ):
     # Setup
