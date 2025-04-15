@@ -1,0 +1,36 @@
+name: Common setup-python
+description: "Install Python, Poetry, and dependencies"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version-file: ".python-version"
+        cache-dependency-path: poetry.lock
+
+    - name: Get Poetry Version
+      id: get-poetry-version
+      shell: bash
+      run: |
+        OUTPUT=$(head -n1 poetry.lock | cut -f9 -d' ')
+        echo "value=$OUTPUT" >> $GITHUB_OUTPUT
+
+    - name: Load cached Poetry installation
+      id: cached-poetry
+      uses: actions/cache@v4
+      with:
+        path: ~/.local # the path depends on the OS
+        key: ${{ steps.get-poetry-version.outputs.value }}
+
+    - name: Install Poetry
+      if: steps.cached-poetry.outputs.cache-hit != 'true'
+      uses: snok/install-poetry@v1
+      with:
+        version: ${{ steps.get-poetry-version.outputs.value }}
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        poetry sync

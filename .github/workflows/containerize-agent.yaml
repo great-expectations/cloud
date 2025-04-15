@@ -12,34 +12,10 @@ jobs:
       id-token: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Read python version from .python-version
-        id: read-python-version
-        run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ steps.read-python-version.outputs.PYTHON_VERSION }}
-          cache-dependency-path: poetry.lock
-
-      - name: Load cached Poetry installation
-        id: cached-poetry
-        uses: actions/cache@v4
-        with:
-          path: ~/.local # the path depends on the OS
-          key: poetry-2 # increment to reset cache
-
-      - name: Install Poetry
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        uses: snok/install-poetry@v1
-        with:
-          version: 2.0.0
-
-      - name: Install dependencies
-        run: poetry install --with dev,sql --sync
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python
+      - name: Install dev dependencies
+        run: poetry sync --with dev
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
