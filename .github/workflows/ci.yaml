@@ -183,6 +183,8 @@ jobs:
             echo "IS_VERSION_BUMPED=true" >> $GITHUB_OUTPUT
           fi
 
+      - uses: actions/checkout@v4
+
   bump-pre-release-version:
     permissions:
       contents: write # Allow us to write to the repository
