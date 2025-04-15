@@ -75,7 +75,7 @@ Common developer tasks are available via `invoke` (defined in `tasks.py`).
 
 #### Synchronize Dependencies
 
-To ensure you are using the latest version of the core and development dependencies run `poetry install --sync`.
+To ensure you are using the latest version of the core and development dependencies run `poetry sync`.
 Also available as an invoke task.
 
 ```console
