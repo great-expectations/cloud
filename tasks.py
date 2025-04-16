@@ -140,7 +140,7 @@ def type_check(ctx: Context, install_types: bool = False, check: bool = False) -
 def deps(ctx: Context) -> None:
     """Sync dependencies with poetry lock file"""
     # using --with dev incase poetry changes the default behavior
-    cmds = ["poetry", "install", "--sync", "--with", "dev"]
+    cmds = ["poetry", "sync", "--with", "dev"]
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
