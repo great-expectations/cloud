@@ -30,7 +30,7 @@ setuptools = "78.1.0"
 # needed for metrics serialization
 orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue is resolved
 # relying on packaging in agent code so declaring it explicitly here
-packaging = ">=21.3,<25.0"
+packaging = ">=21.3,<26.0"
 tenacity = ">=8.2.3,<10.0.0"
 sqlalchemy = ">=2.0"
 
