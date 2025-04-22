@@ -2281,24 +2281,6 @@ botocore = ">=1.37.4,<2.0a.0"
 crt = ["botocore[crt] (>=1.37.4,<2.0a.0)"]
 
 [[package]]
-name = "s3transfer"
-version = "0.11.5"
-description = "An Amazon S3 Transfer Manager"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "s3transfer-0.11.5-py3-none-any.whl", hash = "sha256:757af0f2ac150d3c75bc4177a32355c3862a98d20447b69a0161812992fe0bd4"},
-    {file = "s3transfer-0.11.5.tar.gz", hash = "sha256:8c8aad92784779ab8688a61aefff3e28e9ebdce43142808eaa3f0b0f402f68b7"},
-]
-
-[package.dependencies]
-botocore = ">=1.37.4,<2.0a.0"
-
-[package.extras]
-crt = ["botocore[crt] (>=1.37.4,<2.0a.0)"]
-
-[[package]]
 name = "scipy"
 version = "1.15.2"
 description = "Fundamental algorithms for scientific computing in Python"
@@ -2778,4 +2760,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "eccf0bb210506b86aa90ef3281db73442d231eed2ed729f62e43275fb18e5903"
+content-hash = "af6995daf9b0624a3c22465ce0e728d9e9d45c127b2f8f2aff9e0f998f2c9690"
