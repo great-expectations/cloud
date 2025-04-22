@@ -46,7 +46,7 @@ pytest-cov = ">=5"
 pytest-icdiff = "*"
 pytest-mock = "*"
 responses = ">=0.23.1,<0.26.0"
-ruff = "0.11.5"
+ruff = "0.11.6"
 tenacity = ">=8.2.3,<10.0.0"
 tomlkit = ">=0.12.1,<0.14.0"
 types-requests = "^2.31"
@@ -232,6 +232,9 @@ filterwarnings = [
     "module: The GenericFunction 'flatten' is already registered and is going to be overridden:sqlalchemy.exc.SAWarning",
     #  RuntimeWarning: coroutine 'FastStream.run' was never awaited. We are already handling FastStream.run() as part of asyncio
     "ignore: coroutine 'FastStream.run' was never awaited",
+    # Marshmallow errors come from GX and we don't plan to update it there.
+    "ignore::marshmallow.warnings.ChangedInMarshmallow4Warning",
+    "ignore::marshmallow.warnings.RemovedInMarshmallow4Warning",
 ]
 
 [tool.coverage.report]
