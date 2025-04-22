@@ -232,8 +232,9 @@ filterwarnings = [
     "module: The GenericFunction 'flatten' is already registered and is going to be overridden:sqlalchemy.exc.SAWarning",
     #  RuntimeWarning: coroutine 'FastStream.run' was never awaited. We are already handling FastStream.run() as part of asyncio
     "ignore: coroutine 'FastStream.run' was never awaited",
-    # Marshmallow number is instantiated in gx. We should fix there and then update this.
+    # Marshmallow errors come from GX and we don't plan to update it there.
     "ignore::marshmallow.warnings.ChangedInMarshmallow4Warning",
+    "ignore::marshmallow.warnings.RemovedInMarshmallow4Warning",
 ]
 
 [tool.coverage.report]
