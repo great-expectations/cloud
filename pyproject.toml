@@ -233,7 +233,7 @@ filterwarnings = [
     #  RuntimeWarning: coroutine 'FastStream.run' was never awaited. We are already handling FastStream.run() as part of asyncio
     "ignore: coroutine 'FastStream.run' was never awaited",
     # Marshmallow number is instantiated in gx. We should fix there and then update this.
-    "ignore:marshmallow.warnings.ChangedInMarshmallow4Warning",
+    "ignore::marshmallow.warnings.ChangedInMarshmallow4Warning",
 ]
 
 [tool.coverage.report]
