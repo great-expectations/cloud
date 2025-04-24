@@ -63,8 +63,11 @@ def run_checkpoint(
     validation_results = checkpoint_run_result.run_results
     created_resources = []
     for key in validation_results.keys():
+        suite_validation_result = validation_results[key]
+        if suite_validation_result.id is None:
+            raise RuntimeError(f"SuiteValidationResult.id is None for key: {key}")  # noqa: TRY003
         created_resource = CreatedResource(
-            resource_id=validation_results[key].id or "",  # id can be None
+            resource_id=suite_validation_result.id,
             type="SuiteValidationResult",
         )
         created_resources.append(created_resource)
