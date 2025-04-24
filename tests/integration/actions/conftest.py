@@ -94,17 +94,6 @@ def data_asset(
         datasource.get_asset(name=asset_name)
 
 
-@pytest.fixture(scope="module")
-def batch_request(
-    data_asset: DataFrameAsset,
-    pandas_test_df: pd.DataFrame,
-    in_memory_batch_request_missing_dataframe_error_type: type[Exception],
-):
-    with pytest.raises(in_memory_batch_request_missing_dataframe_error_type):
-        data_asset.build_batch_request()
-    return data_asset.build_batch_request(options={"dataframe": pandas_test_df})
-
-
 @pytest.fixture
 def datasource_names_to_asset_names(datasource, data_asset):
     return {datasource.name: {data_asset.name}}

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import urljoin
 from uuid import UUID
 
@@ -22,7 +22,11 @@ from great_expectations.experimental.metric_repository.metric_list_metric_retrie
 from great_expectations.experimental.metric_repository.metric_repository import (
     MetricRepository,
 )
-from great_expectations.experimental.metric_repository.metrics import MetricRun, MetricTypes
+from great_expectations.experimental.metric_repository.metrics import (
+    ColumnMetric,
+    MetricRun,
+    MetricTypes,
+)
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
@@ -140,7 +144,7 @@ class GenerateDataQualityCheckExpectationsAction(
 
     def _retrieve_asset_from_asset_name(
         self, event: GenerateDataQualityCheckExpectationsEvent, asset_name: str
-    ) -> DataAsset:
+    ) -> DataAsset[Any, Any]:
         try:
             datasource = self._context.data_sources.get(event.datasource_name)
             data_asset = datasource.get_asset(asset_name)
@@ -150,10 +154,12 @@ class GenerateDataQualityCheckExpectationsAction(
             # TODO - see if this can be made more specific
             raise RuntimeError(f"Failed to retrieve asset: {e}") from e  # noqa: TRY003 # want to keep this informative for now
 
-        return data_asset
+        return data_asset  # type: ignore[no-any-return]  # unable to narrow types strictly based on names
 
-    def _get_metrics(self, data_asset: DataAsset) -> tuple[MetricRun, UUID]:
+    def _get_metrics(self, data_asset: DataAsset[Any, Any]) -> tuple[MetricRun, UUID]:
         batch_request = data_asset.build_batch_request()
+        if data_asset.id is None:
+            raise RuntimeError("DataAsset.id is None")  # noqa: TRY003
         metric_run = self._batch_inspector.compute_metric_list_run(
             data_asset_id=data_asset.id,
             batch_request=batch_request,
@@ -171,7 +177,7 @@ class GenerateDataQualityCheckExpectationsAction(
 
         return metric_run, metric_run_id
 
-    def _add_volume_change_expectation(self, asset_id: UUID) -> UUID:
+    def _add_volume_change_expectation(self, asset_id: UUID | None) -> UUID:
         unique_id = param_safe_unique_id(16)
         expectation = gx_expectations.ExpectTableRowCountToBeBetween(
             windows=[
@@ -192,7 +198,7 @@ class GenerateDataQualityCheckExpectationsAction(
         )
         return expectation_id
 
-    def _add_schema_change_expectation(self, metric_run: MetricRun, asset_id: UUID) -> UUID:
+    def _add_schema_change_expectation(self, metric_run: MetricRun, asset_id: UUID | None) -> UUID:
         # Find the TABLE_COLUMNS metric by type instead of assuming it's at position 0
         table_columns_metric = next(
             (
@@ -214,7 +220,7 @@ class GenerateDataQualityCheckExpectationsAction(
         return expectation_id
 
     def _add_completeness_change_expectations(
-        self, metric_run: MetricRun, asset_id: UUID
+        self, metric_run: MetricRun, asset_id: UUID | None
     ) -> list[UUID]:
         table_row_count = next(
             metric
@@ -226,10 +232,11 @@ class GenerateDataQualityCheckExpectationsAction(
         if not table_row_count:
             raise RuntimeError("missing TABLE_ROW_COUNT metric")  # noqa: TRY003
 
-        column_null_values_metric = [
+        column_null_values_metric: list[ColumnMetric[int]] = [
             metric
             for metric in metric_run.metrics
-            if metric.metric_name == MetricTypes.COLUMN_NULL_COUNT
+            if isinstance(metric, ColumnMetric)
+            and metric.metric_name == MetricTypes.COLUMN_NULL_COUNT
         ]
 
         if not column_null_values_metric or len(column_null_values_metric) == 0:
@@ -239,6 +246,7 @@ class GenerateDataQualityCheckExpectationsAction(
             column_name = column.column
             null_count = column.value
             row_count = table_row_count.value
+            expectation: gx_expectations.Expectation
             if null_count == 0:
                 expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
                     column=column_name, mostly=1
@@ -314,7 +322,7 @@ class GenerateDataQualityCheckExpectationsAction(
         return expectation_ids
 
     def _create_expectation_for_asset(
-        self, expectation: gx_expectations.Expectation, asset_id: UUID
+        self, expectation: gx_expectations.Expectation, asset_id: UUID | None
     ) -> UUID:
         url = urljoin(
             base=self._base_url,

@@ -5,16 +5,15 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
 import pytest
+from great_expectations import Checkpoint, ValidationDefinition
 
 from great_expectations_cloud.agent.models import (
     RunCheckpointEvent,
 )
 
 if TYPE_CHECKING:
-    from great_expectations.checkpoint import Checkpoint
     from great_expectations.core import ExpectationSuite
     from great_expectations.data_context import CloudDataContext
-    from great_expectations.datasource.fluent import BatchRequest
     from great_expectations.datasource.fluent.pandas_datasource import DataFrameAsset
 
 
@@ -29,46 +28,39 @@ pytestmark = pytest.mark.integration
 def checkpoint(
     context: CloudDataContext,
     data_asset: DataFrameAsset,
-    batch_request: BatchRequest,
     expectation_suite: ExpectationSuite,
     get_missing_checkpoint_error_type: type[Exception],
 ) -> Iterator[Checkpoint]:
+    batch_definition = data_asset.add_batch_definition_whole_dataframe(name="WHOLE_DF")
+    validation_defintition = context.validation_definitions.add(
+        ValidationDefinition(
+            name=f"{data_asset.datasource.name} | {data_asset.name}",
+            data=batch_definition,
+            suite=expectation_suite,
+        )
+    )
+
     checkpoint_name = f"{data_asset.datasource.name} | {data_asset.name}"
-    _ = context.add_checkpoint(
-        name=checkpoint_name,
-        validations=[
-            {
-                "expectation_suite_name": expectation_suite.expectation_suite_name,
-                "batch_request": batch_request,
-            },
-            {
-                "expectation_suite_name": expectation_suite.expectation_suite_name,
-                "batch_request": batch_request,
-            },
-        ],
+    _ = context.checkpoints.add(
+        Checkpoint(
+            name=checkpoint_name,
+            validation_definitions=[validation_defintition, validation_defintition],
+        )
     )
-    _ = context.add_or_update_checkpoint(
-        name=checkpoint_name,
-        validations=[
-            {
-                "expectation_suite_name": expectation_suite.expectation_suite_name,
-                "batch_request": batch_request,
-            }
-        ],
+    _ = context.checkpoints.add_or_update(
+        Checkpoint(
+            name=checkpoint_name,
+            validation_definitions=[validation_defintition],
+        )
     )
-    checkpoint = context.get_checkpoint(name=checkpoint_name)
-    assert len(checkpoint.validations) == 1, (
+    checkpoint = context.checkpoints.get(name=checkpoint_name)
+    assert len(checkpoint.validation_definitions) == 1, (
         "Checkpoint was not updated in the previous method call."
     )
     yield checkpoint
-    # PP-691: this is a bug
-    # you should only have to pass name
-    context.delete_checkpoint(
-        # name=checkpoint_name,
-        id=checkpoint.ge_cloud_id,
-    )
+    context.checkpoints.delete(name=checkpoint_name)
     with pytest.raises(get_missing_checkpoint_error_type):
-        context.get_checkpoint(name=checkpoint_name)
+        context.checkpoints.get(name=checkpoint_name)
 
 
 @pytest.fixture

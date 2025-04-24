@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 import sqlalchemy as sa
 from great_expectations import ExpectationSuite, ValidationDefinition
+from great_expectations.datasource.fluent import PostgresDatasource
 from great_expectations.expectations.metadata_types import DataQualityIssues
 
 from great_expectations_cloud.agent.actions.generate_data_quality_check_expectations_action import (
@@ -36,6 +37,7 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
     # Seed data
     data_source_name = "local_mercury_db"
     data_source = context.data_sources.get(data_source_name)
+    assert isinstance(data_source, PostgresDatasource)
 
     table_data_asset = data_source.add_table_asset(
         table_name="checkpoints", name="local-mercury-db-checkpoints-table"
