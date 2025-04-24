@@ -4,7 +4,7 @@ import logging
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import urljoin
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import great_expectations.expectations as gx_expectations
 from great_expectations.core.http import create_session
@@ -159,7 +159,7 @@ class GenerateDataQualityCheckExpectationsAction(
     def _get_metrics(self, data_asset: DataAsset[Any, Any]) -> tuple[MetricRun, UUID]:
         batch_request = data_asset.build_batch_request()
         metric_run = self._batch_inspector.compute_metric_list_run(
-            data_asset_id=data_asset.id,
+            data_asset_id=data_asset.id or uuid4(),  # id can be None
             batch_request=batch_request,
             metric_list=[
                 MetricTypes.TABLE_COLUMNS,
