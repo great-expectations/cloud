@@ -295,9 +295,6 @@ def test_missing_table_columns_metric_raises_runtime_error(
     mock_data_asset.id = uuid.uuid4()
     mock_data_asset.test_connection.return_value = None
 
-    # Mock the context to return our mock data asset
-    mock_context.data_sources.get.return_value.get_asset.return_value = mock_data_asset
-
     # Create a metric run without TABLE_COLUMNS metric
     mock_metric_run = mocker.Mock(spec=MetricRun)
     mock_metric_run.metrics = [
