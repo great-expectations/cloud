@@ -64,7 +64,7 @@ def run_checkpoint(
     created_resources = []
     for key in validation_results.keys():
         created_resource = CreatedResource(
-            resource_id=validation_results[key].id or "",
+            resource_id=validation_results[key].id or "",  # id can be None
             type="SuiteValidationResult",
         )
         created_resources.append(created_resource)
