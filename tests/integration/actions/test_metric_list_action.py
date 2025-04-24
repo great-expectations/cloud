@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import uuid
 from collections.abc import Generator
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import pytest
 import requests
@@ -102,7 +102,7 @@ def local_mercury_db_datasource(
 
 @pytest.fixture
 def local_mercury_db_organizations_table_asset(
-    local_mercury_db_datasource: Any,
+    local_mercury_db_datasource: PostgresDatasource,
 ) -> Generator[TableAsset, None, None]:
     data_asset_name = "local-mercury-db-organizations-table"
     data_asset = local_mercury_db_datasource.get_asset(name=data_asset_name)
