@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import great_expectations.expectations as gx_expectations
 import pytest
@@ -37,7 +37,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def mock_metrics_list() -> list[TableMetric]:
+def mock_metrics_list() -> list[TableMetric[list[str | dict[str, str]]]]:
     return [
         TableMetric(
             batch_id="batch_id",
@@ -62,7 +62,9 @@ TABLE_ASSET_ID = uuid.uuid4()
 
 # https://docs.pytest.org/en/7.1.x/how-to/monkeypatch.html
 @pytest.fixture
-def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric]):
+def mock_response_success(
+    monkeypatch, mock_metrics_list: list[TableMetric[list[str | dict[str, str]]]]
+):
     def mock_data_asset(self, event: GenerateDataQualityCheckExpectationsEvent, asset_name: str):
         return TableAsset(
             id=TABLE_ASSET_ID,
@@ -71,7 +73,7 @@ def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric]):
             schema_name="test_schema",
         )
 
-    def mock_metrics(self, data_asset: DataAsset):
+    def mock_metrics(self, data_asset: DataAsset[Any, Any]):
         return MetricRun(metrics=mock_metrics_list), uuid.uuid4()
 
     monkeypatch.setattr(
@@ -83,7 +85,9 @@ def mock_response_success(monkeypatch, mock_metrics_list: list[TableMetric]):
 
 
 @pytest.fixture
-def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[TableMetric]):
+def mock_multi_asset_success_and_failure(
+    monkeypatch, mock_metrics_list: list[TableMetric[list[str | dict[str, str]]]]
+):
     failing_asset_id = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
     def mock_data_asset(self, event: GenerateDataQualityCheckExpectationsEvent, asset_name: str):
@@ -103,7 +107,7 @@ def mock_multi_asset_success_and_failure(monkeypatch, mock_metrics_list: list[Ta
                 schema_name="test_schema",
             )
 
-    def mock_metrics(self, data_asset: DataAsset):
+    def mock_metrics(self, data_asset: DataAsset[Any, Any]):
         if "metric-fail" in data_asset.name:
             raise RuntimeError("One or more metrics failed to compute.")  # noqa: TRY003 # following pattern in code
         else:
