@@ -668,8 +668,7 @@ class GXAgent:
         for store in stores:
             backend = store._store_backend
             if isinstance(backend, GXCloudStoreBackend):
-                str_headers = {str(key): value for key, value in headers.items()}
-                backend._session.headers.update(str_headers)
+                backend._session.headers.update({str(key): value for key, value in headers.items()})
 
     @property
     def user_agent_str(self) -> str:
