@@ -97,8 +97,7 @@ class GXAgentConfig(AgentBaseExtraForbid):
 
     queue: str
     connection_string: AmqpDsn
-    # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = AnyUrl(url=CLOUD_DEFAULT_BASE_URL)
+    gx_cloud_base_url: AnyUrl = AnyUrl(url=CLOUD_DEFAULT_BASE_URL, scheme="https")
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
     enable_progress_bars: bool = True
