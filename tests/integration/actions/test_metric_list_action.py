@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import json
 import uuid
-from typing import TYPE_CHECKING
+from collections.abc import Generator
+from typing import TYPE_CHECKING, Any
 
 import pytest
 import requests
+from great_expectations.datasource.fluent import PostgresDatasource
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
 
 from great_expectations_cloud.agent.actions import MetricListAction
@@ -15,7 +17,6 @@ from great_expectations_cloud.agent.models import (
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
-    from great_expectations.datasource.fluent import PostgresDatasource
     from great_expectations.datasource.fluent.sql_datasource import TableAsset
 
 pytestmark = pytest.mark.integration
@@ -92,16 +93,17 @@ def graphql_test_client(
 @pytest.fixture
 def local_mercury_db_datasource(
     context: CloudDataContext,
-) -> PostgresDatasource:
+) -> Generator[PostgresDatasource, None, None]:
     datasource_name = "local_mercury_db"
     datasource = context.data_sources.get(name=datasource_name)
+    assert isinstance(datasource, PostgresDatasource)
     yield datasource
 
 
 @pytest.fixture
 def local_mercury_db_organizations_table_asset(
-    local_mercury_db_datasource: PostgresDatasource,
-) -> TableAsset:
+    local_mercury_db_datasource: Any,
+) -> Generator[TableAsset, None, None]:
     data_asset_name = "local-mercury-db-organizations-table"
     data_asset = local_mercury_db_datasource.get_asset(name=data_asset_name)
     yield data_asset

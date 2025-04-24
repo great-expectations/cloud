@@ -231,6 +231,7 @@ def test_gx_agent_configures_progress_bars_on_init(
 ):
     monkeypatch.setenv("ENABLE_PROGRESS_BARS", str(enable_progress_bars))
     agent = GXAgent()
+    assert agent._context.variables.progress_bars is not None
     assert agent._context.variables.progress_bars.globally == enable_progress_bars
     assert agent._context.variables.progress_bars.metric_calculations == enable_progress_bars
 

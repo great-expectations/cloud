@@ -98,7 +98,7 @@ class GXAgentConfig(AgentBaseExtraForbid):
     queue: str
     connection_string: AmqpDsn
     # pydantic will coerce this string to AnyUrl type
-    gx_cloud_base_url: AnyUrl = CLOUD_DEFAULT_BASE_URL
+    gx_cloud_base_url: AnyUrl = AnyUrl(url=CLOUD_DEFAULT_BASE_URL)
     gx_cloud_organization_id: str
     gx_cloud_access_token: str
     enable_progress_bars: bool = True
@@ -668,7 +668,8 @@ class GXAgent:
         for store in stores:
             backend = store._store_backend
             if isinstance(backend, GXCloudStoreBackend):
-                backend._session.headers.update(headers)
+                str_headers = {str(key): value for key, value in headers.items()}
+                backend._session.headers.update(str_headers)
 
     @property
     def user_agent_str(self) -> str:
