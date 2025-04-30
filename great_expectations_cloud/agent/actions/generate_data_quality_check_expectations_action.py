@@ -247,7 +247,9 @@ class GenerateDataQualityCheckExpectationsAction(
             null_count = column.value
             row_count = table_row_count.value
             expectation: gx_expectations.Expectation
-            if null_count == 0:
+            if null_count == 0 or None:
+                # None handles the edge case of an empty table, we are making the assumption that future
+                # data should have non-null values
                 expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
                     column=column_name, mostly=1
                 )
@@ -271,10 +273,6 @@ class GenerateDataQualityCheckExpectationsAction(
                 options = TriangularInterpolationOptions(
                     input_range=(0.0, float(row_count)), output_range=(0, 0.1), round_precision=5
                 )
-                if null_count is None:
-                    # TODO: this is a temporary fix to handle the case of an empty column, we should
-                    #  figure out why the COLUMN_NULL_COUNT metric is being returned as None instead of 0
-                    null_count = 0
                 interpolated_offset = max(
                     0.0001, round(triangular_interpolation(null_count, options), 5)
                 )
