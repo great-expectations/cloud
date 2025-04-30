@@ -247,7 +247,9 @@ class GenerateDataQualityCheckExpectationsAction(
             null_count = column.value
             row_count = table_row_count.value
             expectation: gx_expectations.Expectation
-            if null_count == 0:
+            if null_count == 0 or None:
+                # None handles the edge case of an empty table, we are making the assumption that future
+                # data should have non-null values
                 expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
                     column=column_name, mostly=1
                 )
