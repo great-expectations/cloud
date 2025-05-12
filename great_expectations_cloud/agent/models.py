@@ -120,7 +120,6 @@ class RunRdAgentEvent(EventBase):
     batch_definition_name: str
     batch_parameters: Optional[dict[str, Any]] = None
     use_core_metrics: bool = False
-    expectation_draft_configs: bool = False
 
 
 class UnknownEvent(AgentBaseExtraForbid):
