@@ -596,14 +596,14 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "1.4.3"
+version = "1.4.4"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = "<3.13,>=3.9"
 groups = ["main"]
 files = [
-    {file = "great_expectations-1.4.3-py3-none-any.whl", hash = "sha256:8b8b8d6724347249780178f814f83c9eaff9bc11c2e4ea839566bc21e3ee5890"},
-    {file = "great_expectations-1.4.3.tar.gz", hash = "sha256:ef6af5095a829df5384755392a7460a91d1e2ccdb0a19cab9e3a22f13ead9c19"},
+    {file = "great_expectations-1.4.4-py3-none-any.whl", hash = "sha256:9114cf8e8711b71f3d1840e1eb559c6df2ee42229ea3603fccdfdec08d1294d3"},
+    {file = "great_expectations-1.4.4.tar.gz", hash = "sha256:72613ffc3eb8d598e2255bdb360ae6cbbcf3b24ee94a0a7d6df5e0b993a78d7f"},
 ]
 
 [package.dependencies]
@@ -2764,4 +2764,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "7f19ebbe4d06dde1df46f285f46993859f39750a827d22971ac9e6065dc31bca"
+content-hash = "e6708e69bad9cbdec59af2331aa9bd490f7abeb706b102e89ccf4970e0466520"
