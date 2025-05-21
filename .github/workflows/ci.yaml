@@ -202,6 +202,9 @@ jobs:
       contents: write # Allow us to write to the repository
     needs: check-version-is-bumped
     runs-on: ubuntu-latest
+    # The github action containerize-agent will push to dockerhub on each commit to main. That
+    # means we almost always want to bump the version on a PR since, if the current version is
+    # a release version, we will overwrite that release version with this new one.
     if: ${{ needs.check-version-is-bumped.outputs.is_version_bumped == 'false' && !contains(github.event.pull_request.labels.*.name, 'no version bump') && github.event_name != 'schedule' }}
     steps:
       - uses: actions/checkout@v4
@@ -213,7 +216,6 @@ jobs:
         run: gh pr checkout ${{ github.event.pull_request.number }}
 
       - name: Bump pre-release version
-        # BDIRKS Maybe the error is in this script
         run: poetry run invoke pre-release
 
       - name: Push changes to PR
