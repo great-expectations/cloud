@@ -92,7 +92,7 @@ def test_running_list_table_names_action(
     _add_or_update_asset_names_list.assert_called_once()
     call_args = _add_or_update_asset_names_list.call_args
     assert call_args.kwargs["datasource_id"] == datasource_id_for_connect_successfully
-    assert set(call_args.kwargs["table_names"]) == set(expected_table_names)
+    assert set(call_args.kwargs["asset_names"]) == set(expected_table_names)
 
 
 def test_running_list_table_names_action_fails_for_unreachable_datasource(
