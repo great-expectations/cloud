@@ -52,6 +52,7 @@ def test_running_list_table_names_action(
         "expectation_suites",
         "organizations",
         "organizations_auth0_orgs",
+        "pg_stat_statements",
         "sso_organization_email_domains",
         "api_tokens",
         "users",
