@@ -60,6 +60,7 @@ def test_running_draft_datasource_config_action(
         "user_api_tokens",
         "user_asset_alerts",
         "organization_api_tokens",
+        "pg_stat_statements",
         "suite_validation_results",
         "metrics",
         "batch_definitions",
