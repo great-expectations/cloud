@@ -77,7 +77,7 @@ def test_running_list_table_names_action(
     ]
 
     # add spy to the action method
-    _add_or_update_table_names_list = mocker.spy(action, "_add_or_update_table_names_list")
+    _add_or_update_asset_names_list = mocker.spy(action, "_add_or_update_asset_names_list")
 
     # Act
     result = action.run(event=list_table_names_event, id=event_id)
@@ -89,8 +89,8 @@ def test_running_list_table_names_action(
     assert result.type == list_table_names_event.type
     assert result.created_resources == []
 
-    _add_or_update_table_names_list.assert_called_once()
-    call_args = _add_or_update_table_names_list.call_args
+    _add_or_update_asset_names_list.assert_called_once()
+    call_args = _add_or_update_asset_names_list.call_args
     assert call_args.kwargs["datasource_id"] == datasource_id_for_connect_successfully
     assert set(call_args.kwargs["table_names"]) == set(expected_table_names)
 

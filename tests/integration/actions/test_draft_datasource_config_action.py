@@ -84,7 +84,7 @@ def test_running_draft_datasource_config_action(
         "great_expectations_cloud.agent.actions.draft_datasource_config_action.get_asset_names",
         wraps=get_asset_names,
     )
-    _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
+    _update_asset_names_list_spy = mocker.spy(action, "_update_asset_names_list")
 
     # Act
     result = action.run(event=draft_datasource_config_event, id=event_id)
@@ -98,10 +98,10 @@ def test_running_draft_datasource_config_action(
 
     # Ensure table name introspection was successful and that the table names were updated on the draft config
     # assert _update_table_names_list was called with the correct arguments
-    assert _update_table_names_list_spy.call_args.kwargs.get("config_id") == UUID(
+    assert _update_asset_names_list_spy.call_args.kwargs.get("config_id") == UUID(
         draft_datasource_id_for_connect_successfully
     )
-    assert sorted(_update_table_names_list_spy.call_args.kwargs.get("table_names")) == sorted(
+    assert sorted(_update_asset_names_list_spy.call_args.kwargs.get("table_names")) == sorted(
         expected_table_names
     )
 
