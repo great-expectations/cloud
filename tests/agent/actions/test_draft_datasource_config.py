@@ -167,7 +167,11 @@ def test_test_draft_datasource_config_success_sql_ds(
     responses.put(
         url=expected_url_put,
         status=204,
-        match=[responses.matchers.json_params_matcher({"data": {"table_names": table_names + view_names}})],
+        match=[
+            responses.matchers.json_params_matcher(
+                {"data": {"table_names": table_names + view_names}}
+            )
+        ],
     )
 
     action_result = action.run(event=event, id=str(correlation_id))
@@ -178,7 +182,9 @@ def test_test_draft_datasource_config_success_sql_ds(
 
     # assert that the action properly calls helper methods to get table names and update the draft config
     _get_asset_names_spy.assert_called_with(datasource_cls(**datasource_config))
-    _update_asset_names_list_spy.assert_called_with(config_id=config_id, asset_names=table_names + view_names)
+    _update_asset_names_list_spy.assert_called_with(
+        config_id=config_id, asset_names=table_names + view_names
+    )
 
 
 @responses.activate
@@ -242,7 +248,11 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
     responses.put(
         url=expected_url_put,
         status=404,
-        match=[responses.matchers.json_params_matcher({"data": {"table_names": table_names + view_names}})],
+        match=[
+            responses.matchers.json_params_matcher(
+                {"data": {"table_names": table_names + view_names}}
+            )
+        ],
     )
 
     with pytest.raises(RuntimeError, match="Unable to update table_names for Draft Config with ID"):
