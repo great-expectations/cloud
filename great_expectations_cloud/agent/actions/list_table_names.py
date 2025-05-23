@@ -14,16 +14,16 @@ from great_expectations_cloud.agent.actions.agent_action import (
 from great_expectations_cloud.agent.actions.utils import get_asset_names
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
-    ListTableNamesEvent,
+    ListAssetNamesEvent,
 )
 
 
-class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
+class ListTableNamesAction(AgentAction[ListAssetNamesEvent]):
     # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
     #  This action is registered for v0, see register_event_action()
 
     @override
-    def run(self, event: ListTableNamesEvent, id: str) -> ActionResult:
+    def run(self, event: ListAssetNamesEvent, id: str) -> ActionResult:
         datasource_name: str = event.datasource_name
         datasource = self._context.data_sources.get(name=datasource_name)
         if not isinstance(datasource, SQLDatasource):
@@ -63,4 +63,4 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
             )
 
 
-register_event_action("1", ListTableNamesEvent, ListTableNamesAction)
+register_event_action("1", ListAssetNamesEvent, ListTableNamesAction)

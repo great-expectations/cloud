@@ -6,7 +6,7 @@ from uuid import UUID
 import pytest
 
 from great_expectations_cloud.agent.actions import ListTableNamesAction
-from great_expectations_cloud.agent.models import ListTableNamesEvent
+from great_expectations_cloud.agent.models import ListAssetNamesEvent
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -30,7 +30,7 @@ def test_running_list_table_names_action(
         auth_key=token_env_var,
     )
 
-    list_table_names_event = ListTableNamesEvent(
+    list_table_names_event = ListAssetNamesEvent(
         type="list_table_names_request.received",
         datasource_name="local_mercury_db",
         organization_id=UUID(org_id_env_var),
@@ -105,7 +105,7 @@ def test_running_list_table_names_action_fails_for_unreachable_datasource(
         organization_id=UUID(org_id_env_var),
         auth_key=token_env_var,
     )
-    list_table_names_event = ListTableNamesEvent(
+    list_table_names_event = ListAssetNamesEvent(
         type="list_table_names_request.received",
         organization_id=UUID(org_id_env_var),
         datasource_name="local_mercury_db_bad_password",

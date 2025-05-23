@@ -16,7 +16,7 @@ from sqlalchemy.engine import Inspector
 from great_expectations_cloud.agent.actions import (
     ListTableNamesAction,
 )
-from great_expectations_cloud.agent.models import ListTableNamesEvent
+from great_expectations_cloud.agent.models import ListAssetNamesEvent
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -55,7 +55,7 @@ def set_required_env_vars(monkeypatch, dummy_org_id, dummy_base_url, dummy_acces
 
 @pytest.fixture
 def event():
-    return ListTableNamesEvent(
+    return ListAssetNamesEvent(
         type="list_table_names_request.received",
         datasource_name="test-datasource",
         organization_id=uuid.uuid4(),
