@@ -16,6 +16,7 @@ from sqlalchemy.engine import Inspector
 from great_expectations_cloud.agent.actions import (
     ListAssetNamesAction,
 )
+from great_expectations_cloud.agent.actions.utils import get_asset_names
 from great_expectations_cloud.agent.models import ListAssetNamesEvent
 
 if TYPE_CHECKING:
@@ -93,7 +94,11 @@ def test_run_list_table_names_action_returns_action_result(
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
-    mock_inspect = mocker.patch("great_expectations_cloud.agent.actions.utils.inspect")
+    _get_asset_names_spy = mocker.patch(
+        "great_expectations_cloud.agent.actions.list_table_names.get_asset_names",
+        wraps=get_asset_names,
+    )
+
     datasource = mocker.Mock(spec=SQLDatasource)
     datasource_id = str(uuid.uuid4())
     datasource.id = datasource_id
@@ -104,14 +109,12 @@ def test_run_list_table_names_action_returns_action_result(
         status=200,
     )
 
-    table_names = ["table_1", "table_2", "table_3"]
-    inspector = mocker.Mock(spec=Inspector)
-    inspector.get_asset_names.return_value = table_names
-
-    mock_inspect.return_value = inspector
+    asset_names = ["table_1", "table_2", "table_3", "view_1", "view_2", "view_3"]
+    _get_asset_names_spy.return_value = asset_names
 
     action_result = action.run(event=event, id=id)
 
+    _get_asset_names_spy.assert_called_with(datasource)
     assert action_result.type == event.type
     assert action_result.id == id
     assert action_result.created_resources == []
