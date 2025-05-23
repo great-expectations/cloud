@@ -11,7 +11,6 @@ from great_expectations.datasource.fluent import (
     SQLDatasource,
 )
 from great_expectations.exceptions import StoreBackendError
-from sqlalchemy.engine import Inspector
 
 from great_expectations_cloud.agent.actions import (
     ListAssetNamesAction,
