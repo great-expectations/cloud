@@ -5,7 +5,7 @@ from uuid import UUID
 
 import pytest
 
-from great_expectations_cloud.agent.actions import ListTableNamesAction
+from great_expectations_cloud.agent.actions import ListAssetNamesAction
 from great_expectations_cloud.agent.models import ListAssetNamesEvent
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ def test_running_list_table_names_action(
     mocker: MockerFixture,
 ):
     # Arrange
-    action = ListTableNamesAction(
+    action = ListAssetNamesAction(
         context=context,
         base_url=cloud_base_url,
         organization_id=UUID(org_id_env_var),
@@ -99,7 +99,7 @@ def test_running_list_table_names_action_fails_for_unreachable_datasource(
     context: CloudDataContext, cloud_base_url: str, org_id_env_var: str, token_env_var: str
 ):
     # Arrange
-    action = ListTableNamesAction(
+    action = ListAssetNamesAction(
         context=context,
         base_url=cloud_base_url,
         organization_id=UUID(org_id_env_var),

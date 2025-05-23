@@ -18,7 +18,7 @@ from great_expectations_cloud.agent.models import (
 )
 
 
-class ListTableNamesAction(AgentAction[ListAssetNamesEvent]):
+class ListAssetNamesAction(AgentAction[ListAssetNamesEvent]):
     # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
     #  This action is registered for v0, see register_event_action()
 
@@ -63,4 +63,4 @@ class ListTableNamesAction(AgentAction[ListAssetNamesEvent]):
             )
 
 
-register_event_action("1", ListAssetNamesEvent, ListTableNamesAction)
+register_event_action("1", ListAssetNamesEvent, ListAssetNamesAction)

@@ -14,7 +14,7 @@ from great_expectations.experimental.metric_repository.metrics import (
 from great_expectations_cloud.agent.actions import (
     AgentAction,
     DraftDatasourceConfigAction,
-    ListTableNamesAction,
+    ListAssetNamesAction,
     MetricListAction,
     RunCheckpointAction,
 )
@@ -97,7 +97,7 @@ class TestEventHandler:
                     datasource_name="test-datasource",
                     organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
                 ),
-                ListTableNamesAction,
+                ListAssetNamesAction,
             ),
             (
                 "RunMetricsListEvent",
@@ -163,7 +163,7 @@ class TestEventHandler:
                     datasource_name="test-datasource",
                     organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
                 ),
-                ListTableNamesAction,
+                ListAssetNamesAction,
             ),
             (
                 "RunMetricsListEvent",

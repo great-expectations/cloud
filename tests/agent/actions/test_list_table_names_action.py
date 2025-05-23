@@ -14,7 +14,7 @@ from great_expectations.exceptions import StoreBackendError
 from sqlalchemy.engine import Inspector
 
 from great_expectations_cloud.agent.actions import (
-    ListTableNamesAction,
+    ListAssetNamesAction,
 )
 from great_expectations_cloud.agent.models import ListAssetNamesEvent
 
@@ -65,7 +65,7 @@ def event():
 def test_list_table_names_event_raises_for_non_sql_datasource(
     mock_context, event, mocker: MockerFixture
 ):
-    action = ListTableNamesAction(
+    action = ListAssetNamesAction(
         context=mock_context,
         base_url="https://api.greatexpectations.io/",
         organization_id=uuid.uuid4(),
@@ -85,7 +85,7 @@ def test_list_table_names_event_raises_for_non_sql_datasource(
 def test_run_list_table_names_action_returns_action_result(
     mock_context, event, dummy_base_url, dummy_org_id, set_required_env_vars, mocker: MockerFixture
 ):
-    action = ListTableNamesAction(
+    action = ListAssetNamesAction(
         context=mock_context,
         base_url=dummy_base_url,
         organization_id=uuid.UUID(dummy_org_id),
