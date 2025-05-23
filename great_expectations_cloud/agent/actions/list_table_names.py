@@ -31,10 +31,10 @@ class ListAssetNamesAction(AgentAction[ListAssetNamesEvent]):
                 f"This operation requires a SQL Data Source but got {type(datasource).__name__}."
             )
 
-        table_names = get_asset_names(datasource)
+        asset_names = get_asset_names(datasource)
 
-        self._add_or_update_table_names_list(
-            datasource_id=str(datasource.id), table_names=table_names
+        self._add_or_update_asset_names_list(
+            datasource_id=str(datasource.id), asset_names=asset_names
         )
 
         return ActionResult(
@@ -43,7 +43,7 @@ class ListAssetNamesAction(AgentAction[ListAssetNamesEvent]):
             created_resources=[],
         )
 
-    def _add_or_update_table_names_list(self, datasource_id: str, table_names: list[str]) -> None:
+    def _add_or_update_asset_names_list(self, datasource_id: str, asset_names: list[str]) -> None:
         with create_session(access_token=self._auth_key) as session:
             url = urljoin(
                 base=self._base_url,
@@ -51,7 +51,7 @@ class ListAssetNamesAction(AgentAction[ListAssetNamesEvent]):
             )
             response = session.put(
                 url=url,
-                json={"data": {"table_names": table_names}},
+                json={"data": {"table_names": asset_names}},
             )
         if response.status_code != 200:  # noqa: PLR2004
             raise GXCloudError(
