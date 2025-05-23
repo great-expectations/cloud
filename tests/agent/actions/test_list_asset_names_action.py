@@ -94,7 +94,7 @@ def test_run_list_table_names_action_returns_action_result(
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
     _get_asset_names_spy = mocker.patch(
-        "great_expectations_cloud.agent.actions.list_table_names.get_asset_names",
+        "great_expectations_cloud.agent.actions.list_asset_names.get_asset_names",
         wraps=get_asset_names,
     )
 
