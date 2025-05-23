@@ -11,19 +11,19 @@ from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
-from great_expectations_cloud.agent.actions.utils import get_table_names
+from great_expectations_cloud.agent.actions.utils import get_asset_names
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
-    ListTableNamesEvent,
+    ListAssetNamesEvent,
 )
 
 
-class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
+class ListAssetNamesAction(AgentAction[ListAssetNamesEvent]):
     # TODO: New actions need to be created that are compatible with GX v1 and registered for v1.
     #  This action is registered for v0, see register_event_action()
 
     @override
-    def run(self, event: ListTableNamesEvent, id: str) -> ActionResult:
+    def run(self, event: ListAssetNamesEvent, id: str) -> ActionResult:
         datasource_name: str = event.datasource_name
         datasource = self._context.data_sources.get(name=datasource_name)
         if not isinstance(datasource, SQLDatasource):
@@ -31,10 +31,10 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
                 f"This operation requires a SQL Data Source but got {type(datasource).__name__}."
             )
 
-        table_names = get_table_names(datasource)
+        asset_names = get_asset_names(datasource)
 
-        self._add_or_update_table_names_list(
-            datasource_id=str(datasource.id), table_names=table_names
+        self._add_or_update_asset_names_list(
+            datasource_id=str(datasource.id), asset_names=asset_names
         )
 
         return ActionResult(
@@ -43,7 +43,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
             created_resources=[],
         )
 
-    def _add_or_update_table_names_list(self, datasource_id: str, table_names: list[str]) -> None:
+    def _add_or_update_asset_names_list(self, datasource_id: str, asset_names: list[str]) -> None:
         with create_session(access_token=self._auth_key) as session:
             url = urljoin(
                 base=self._base_url,
@@ -51,7 +51,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
             )
             response = session.put(
                 url=url,
-                json={"data": {"table_names": table_names}},
+                json={"data": {"table_names": asset_names}},
             )
         if response.status_code != 200:  # noqa: PLR2004
             raise GXCloudError(
@@ -63,4 +63,4 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
             )
 
 
-register_event_action("1", ListTableNamesEvent, ListTableNamesAction)
+register_event_action("1", ListAssetNamesEvent, ListAssetNamesAction)

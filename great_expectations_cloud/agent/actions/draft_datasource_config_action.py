@@ -10,7 +10,7 @@ from great_expectations.datasource.fluent.interfaces import TestConnectionError
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
-from great_expectations_cloud.agent.actions.utils import get_table_names
+from great_expectations_cloud.agent.actions.utils import get_asset_names
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.exceptions import ErrorCode, raise_with_error_code
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
@@ -57,8 +57,8 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
         datasource.test_connection(test_assets=True)  # raises `TestConnectionError` on failure
 
         if isinstance(datasource, SQLDatasource):
-            table_names = get_table_names(datasource)
-            self._update_table_names_list(config_id=event.config_id, table_names=table_names)
+            asset_names = get_asset_names(datasource)
+            self._update_asset_names_list(config_id=event.config_id, asset_names=asset_names)
 
         return ActionResult(
             id=id,
@@ -66,7 +66,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             created_resources=[],
         )
 
-    def _update_table_names_list(self, config_id: UUID, table_names: list[str]) -> None:
+    def _update_asset_names_list(self, config_id: UUID, asset_names: list[str]) -> None:
         with create_session(access_token=self._auth_key) as session:
             url = urljoin(
                 base=self._base_url,
@@ -74,7 +74,7 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             )
             response = session.put(
                 url=url,
-                json={"data": {"table_names": table_names}},
+                json={"data": {"table_names": asset_names}},
             )
         if not response.ok:
             raise RuntimeError(  # noqa: TRY003 # one off error

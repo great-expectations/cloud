@@ -94,7 +94,7 @@ class RunMetricsListEvent(EventBase):
     metric_names: Sequence[MetricTypes]
 
 
-class ListTableNamesEvent(EventBase):
+class ListAssetNamesEvent(EventBase):
     type: Literal["list_table_names_request.received"] = "list_table_names_request.received"
     datasource_name: str
 
@@ -136,7 +136,7 @@ Event = Annotated[
         RunColumnDescriptiveMetricsEvent,
         RunMetricsListEvent,
         DraftDatasourceConfigEvent,
-        ListTableNamesEvent,
+        ListAssetNamesEvent,
         GenerateDataQualityCheckExpectationsEvent,
         RunRdAgentEvent,
         UnknownEvent,
