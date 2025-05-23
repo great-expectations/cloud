@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from sqlalchemy.engine import Inspector
 
 
-def get_table_names(datasource: SQLDatasource) -> list[str]:
+def get_asset_names(datasource: SQLDatasource) -> list[str]:
     inspector: Inspector = inspect(datasource.get_engine())
     if isinstance(datasource, SnowflakeDatasource) and datasource.schema_:
         # Snowflake-SQLAlchemy uses the default_schema if no schema is provided to get_table_names

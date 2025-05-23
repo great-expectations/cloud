@@ -11,7 +11,7 @@ from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
-from great_expectations_cloud.agent.actions.utils import get_table_names
+from great_expectations_cloud.agent.actions.utils import get_asset_names
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     ListTableNamesEvent,
@@ -31,7 +31,7 @@ class ListTableNamesAction(AgentAction[ListTableNamesEvent]):
                 f"This operation requires a SQL Data Source but got {type(datasource).__name__}."
             )
 
-        table_names = get_table_names(datasource)
+        table_names = get_asset_names(datasource)
 
         self._add_or_update_table_names_list(
             datasource_id=str(datasource.id), table_names=table_names

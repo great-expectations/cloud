@@ -6,7 +6,7 @@ from uuid import UUID
 import pytest
 
 from great_expectations_cloud.agent.actions import DraftDatasourceConfigAction
-from great_expectations_cloud.agent.actions.utils import get_table_names
+from great_expectations_cloud.agent.actions.utils import get_asset_names
 from great_expectations_cloud.agent.exceptions import GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
@@ -81,8 +81,8 @@ def test_running_draft_datasource_config_action(
     ]
     # add spies to the action methods
     mocker.patch(
-        "great_expectations_cloud.agent.actions.draft_datasource_config_action.get_table_names",
-        wraps=get_table_names,
+        "great_expectations_cloud.agent.actions.draft_datasource_config_action.get_asset_names",
+        wraps=get_asset_names,
     )
     _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
 
