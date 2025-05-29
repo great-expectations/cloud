@@ -600,14 +600,14 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "1.4.5"
+version = "1.4.6"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = "<3.13,>=3.9"
 groups = ["main"]
 files = [
-    {file = "great_expectations-1.4.5-py3-none-any.whl", hash = "sha256:493163c681fb11a9fdffca48dd08a36e825aa848bd241f89d4cb491a13c481c1"},
-    {file = "great_expectations-1.4.5.tar.gz", hash = "sha256:1278fb27ffd579f0ed79950e2a04531ff855e2a1ab996eefd2a2c9118320b6d6"},
+    {file = "great_expectations-1.4.6-py3-none-any.whl", hash = "sha256:05f767b86546b2507534a66beaa14567412eb954778d52f30f26b4e031331887"},
+    {file = "great_expectations-1.4.6.tar.gz", hash = "sha256:22f91d3f677fb6fc8c1719f9784442d2f8971fdc2e295a5c961d824b81992005"},
 ]
 
 [package.dependencies]
@@ -662,7 +662,7 @@ postgresql = ["psycopg2-binary (>=2.7.6)", "sqlalchemy (>=1.4.0)"]
 redshift = ["psycopg2-binary (>=2.7.6)", "sqlalchemy (<2.0.0)", "sqlalchemy-redshift (>=0.8.8)"]
 s3 = ["boto3 (>=1.17.106)"]
 snowflake = ["pandas (<2.2.0) ; python_version >= \"3.9\"", "snowflake-connector-python (>2.9.0) ; python_version >= \"3.11\"", "snowflake-connector-python (>=2.5.0) ; python_version < \"3.11\"", "snowflake-sqlalchemy (>=1.2.3,!=1.7.0)", "sqlalchemy (>=1.4.0)"]
-spark = ["pyspark (>=2.3.2)"]
+spark = ["pyspark (>=2.3.2,<4.0)"]
 spark-connect = ["googleapis-common-protos (>=1.56.4)", "grpcio (>=1.48.1)", "grpcio-status (>=1.48.1)"]
 teradata = ["sqlalchemy (<2.0.0)", "teradatasqlalchemy (==17.0.0.5)"]
 test = ["adr-tools-python (==1.0.3)", "boto3 (>=1.17.106)", "coverage[toml] (>=7.5.1)", "docstring-parser (==0.16)", "feather-format (>=0.4.1)", "flaky (>=3.7.0)", "flask (>=1.0.0)", "freezegun (>=0.3.15)", "invoke (>=2.0.0)", "moto[s3,sns] (>=4.2.13,<5.0)", "mypy (==1.15.0)", "pact-python (>=2.0.1)", "pre-commit (>=2.21.0)", "pyarrow", "pyfakefs (>=4.5.1)", "pytest (>=8.2.1)", "pytest-benchmark (>=3.4.1)", "pytest-cov (>=5.0.0)", "pytest-icdiff (>=0.9.0)", "pytest-mock (>=3.14.0)", "pytest-order (>=1.2.1)", "pytest-random-order (>=1.1.1)", "pytest-timeout (>=2.3.1)", "pytest-xdist (>=3.6.1)", "requirements-parser (>=0.9.0)", "responses (>=0.23.1,!=0.25.5)", "ruff (==0.11.8)", "setuptools (>=70.0.0)", "sqlalchemy (>=1.4.0)", "tomli (>=2.0.1)"]
@@ -2767,4 +2767,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "860258dd042876cdefdb7f03d7112ac72600bdae6016bb862770aac1a209472f"
+content-hash = "7764bad04fd473721ac718f5fc49a1da0f56e82f349b94d03542de9955345e4a"
