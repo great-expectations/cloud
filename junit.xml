@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="3" failures="0" skipped="0" tests="3" time="5.683" timestamp="2025-06-04T15:27:28.966156-07:00" hostname="hutchinson-MacBook-Pro"><testcase classname="" name="tests.agent" time="0.000"><error message="collection failure">../../.pyenv/versions/3.11.9/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+&lt;frozen importlib._bootstrap&gt;:1204: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1176: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1147: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:690: in _load_unlocked
+    ???
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:185: in exec_module
+    exec(co, module.__dict__)
+tests/agent/conftest.py:11: in &lt;module&gt;
+    from great_expectations import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/__init__.py:11: in &lt;module&gt;
+    from . import data_context  # isort:skip
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/data_context/__init__.py:1: in &lt;module&gt;
+    from great_expectations.data_context.data_context import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/data_context/data_context/__init__.py:1: in &lt;module&gt;
+    from great_expectations.data_context.data_context.abstract_data_context import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/data_context/data_context/abstract_data_context.py:43: in &lt;module&gt;
+    from great_expectations.core import ExpectationSuite
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/core/__init__.py:21: in &lt;module&gt;
+    from .validation_definition import ValidationDefinition
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/core/validation_definition.py:44: in &lt;module&gt;
+    from great_expectations.validator.v1_validator import Validator
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/validator/v1_validator.py:18: in &lt;module&gt;
+    from great_expectations.validator.validator import Validator as OldValidator
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/validator/validator.py:47: in &lt;module&gt;
+    from great_expectations.execution_engine.pandas_batch_data import PandasBatchData
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/execution_engine/__init__.py:1: in &lt;module&gt;
+    from .execution_engine import ExecutionEngine
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/execution_engine/execution_engine.py:24: in &lt;module&gt;
+    from great_expectations.expectations.registry import get_metric_provider
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/expectations/__init__.py:3: in &lt;module&gt;
+    from .core import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/expectations/core/__init__.py:50: in &lt;module&gt;
+    from .expect_column_values_to_be_in_type_list import ExpectColumnValuesToBeInTypeList
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/expectations/core/expect_column_values_to_be_in_type_list.py:18: in &lt;module&gt;
+    from great_expectations.expectations.core.expect_column_values_to_be_of_type import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/expectations/core/expect_column_values_to_be_of_type.py:11: in &lt;module&gt;
+    from great_expectations.compatibility import aws, pydantic, pyspark, trino
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/compatibility/aws.py:36: in &lt;module&gt;
+    import sqlalchemy_redshift
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/sqlalchemy_redshift/__init__.py:1: in &lt;module&gt;
+    from pkg_resources import DistributionNotFound, get_distribution, parse_version
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/pkg_resources/__init__.py:98: in &lt;module&gt;
+    warnings.warn(
+E   DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html</error></testcase><testcase classname="" name="tests.integration" time="0.000"><error message="collection failure">../../.pyenv/versions/3.11.9/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+&lt;frozen importlib._bootstrap&gt;:1204: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1176: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1147: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:690: in _load_unlocked
+    ???
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:185: in exec_module
+    exec(co, module.__dict__)
+tests/integration/conftest.py:7: in &lt;module&gt;
+    import great_expectations as gx
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/__init__.py:11: in &lt;module&gt;
+    from . import data_context  # isort:skip
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/data_context/__init__.py:1: in &lt;module&gt;
+    from great_expectations.data_context.data_context import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/data_context/data_context/__init__.py:1: in &lt;module&gt;
+    from great_expectations.data_context.data_context.abstract_data_context import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/data_context/data_context/abstract_data_context.py:43: in &lt;module&gt;
+    from great_expectations.core import ExpectationSuite
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/core/__init__.py:21: in &lt;module&gt;
+    from .validation_definition import ValidationDefinition
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/core/validation_definition.py:44: in &lt;module&gt;
+    from great_expectations.validator.v1_validator import Validator
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/validator/v1_validator.py:18: in &lt;module&gt;
+    from great_expectations.validator.validator import Validator as OldValidator
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/validator/validator.py:47: in &lt;module&gt;
+    from great_expectations.execution_engine.pandas_batch_data import PandasBatchData
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/execution_engine/__init__.py:1: in &lt;module&gt;
+    from .execution_engine import ExecutionEngine
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/execution_engine/execution_engine.py:25: in &lt;module&gt;
+    from great_expectations.expectations.row_conditions import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/expectations/__init__.py:3: in &lt;module&gt;
+    from .core import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/expectations/core/__init__.py:50: in &lt;module&gt;
+    from .expect_column_values_to_be_in_type_list import ExpectColumnValuesToBeInTypeList
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/expectations/core/expect_column_values_to_be_in_type_list.py:18: in &lt;module&gt;
+    from great_expectations.expectations.core.expect_column_values_to_be_of_type import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/expectations/core/expect_column_values_to_be_of_type.py:11: in &lt;module&gt;
+    from great_expectations.compatibility import aws, pydantic, pyspark, trino
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/compatibility/aws.py:36: in &lt;module&gt;
+    import sqlalchemy_redshift
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/sqlalchemy_redshift/__init__.py:1: in &lt;module&gt;
+    from pkg_resources import DistributionNotFound, get_distribution, parse_version
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/pkg_resources/__init__.py:98: in &lt;module&gt;
+    warnings.warn(
+E   DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html</error></testcase><testcase classname="" name="tests.test_logging_cfg" time="0.000"><error message="collection failure">tests/test_logging_cfg.py:14: in &lt;module&gt;
+    from great_expectations_cloud.logging.logging_cfg import (
+great_expectations_cloud/__init__.py:3: in &lt;module&gt;
+    from great_expectations_cloud.agent.agent import GXAgent
+great_expectations_cloud/agent/__init__.py:3: in &lt;module&gt;
+    import great_expectations_cloud.agent.actions  # import actions to register them
+great_expectations_cloud/agent/actions/__init__.py:10: in &lt;module&gt;
+    from great_expectations_cloud.agent.actions.draft_datasource_config_action import (
+great_expectations_cloud/agent/actions/draft_datasource_config_action.py:7: in &lt;module&gt;
+    from great_expectations.core.http import create_session
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/__init__.py:11: in &lt;module&gt;
+    from . import data_context  # isort:skip
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/data_context/__init__.py:1: in &lt;module&gt;
+    from great_expectations.data_context.data_context import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/data_context/data_context/__init__.py:1: in &lt;module&gt;
+    from great_expectations.data_context.data_context.abstract_data_context import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/data_context/data_context/abstract_data_context.py:43: in &lt;module&gt;
+    from great_expectations.core import ExpectationSuite
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/core/__init__.py:21: in &lt;module&gt;
+    from .validation_definition import ValidationDefinition
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/core/validation_definition.py:44: in &lt;module&gt;
+    from great_expectations.validator.v1_validator import Validator
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/validator/v1_validator.py:18: in &lt;module&gt;
+    from great_expectations.validator.validator import Validator as OldValidator
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/validator/validator.py:47: in &lt;module&gt;
+    from great_expectations.execution_engine.pandas_batch_data import PandasBatchData
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/execution_engine/__init__.py:1: in &lt;module&gt;
+    from .execution_engine import ExecutionEngine
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/execution_engine/execution_engine.py:25: in &lt;module&gt;
+    from great_expectations.expectations.row_conditions import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/expectations/__init__.py:3: in &lt;module&gt;
+    from .core import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/expectations/core/__init__.py:50: in &lt;module&gt;
+    from .expect_column_values_to_be_in_type_list import ExpectColumnValuesToBeInTypeList
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/expectations/core/expect_column_values_to_be_in_type_list.py:18: in &lt;module&gt;
+    from great_expectations.expectations.core.expect_column_values_to_be_of_type import (
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/expectations/core/expect_column_values_to_be_of_type.py:11: in &lt;module&gt;
+    from great_expectations.compatibility import aws, pydantic, pyspark, trino
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/great_expectations/compatibility/aws.py:36: in &lt;module&gt;
+    import sqlalchemy_redshift
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/sqlalchemy_redshift/__init__.py:1: in &lt;module&gt;
+    from pkg_resources import DistributionNotFound, get_distribution, parse_version
+../../Library/Caches/pypoetry/virtualenvs/great-expectations-cloud-nXW7V_tf-py3.11/lib/python3.11/site-packages/pkg_resources/__init__.py:98: in &lt;module&gt;
+    warnings.warn(
+E   DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html</error></testcase></testsuite></testsuites>
