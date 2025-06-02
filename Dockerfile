@@ -23,14 +23,14 @@ ENV POETRY_CACHE_DIR=/tmp/pypoetry
 #   gcc: required to build psutil for arm64
 RUN apt-get update && apt-get install --no-install-recommends python3-dev=3.11.2-1+b1 gcc=4:12.2.0-3 -y && rm -rf /var/lib/apt/lists/*
 
-RUN pip --no-cache-dir install poetry==1.8.3
+RUN pip --no-cache-dir install setuptools==78.1.0 poetry==2.1.2
 
 COPY pyproject.toml poetry.lock ./
 
 # Recommended approach for caching build layers with poetry
 #   --no-root: skips project source, --no-directory: skips local dependencies
 #   https://python-poetry.org/docs/faq
-RUN poetry install --with sql --without dev --no-root --no-directory
+RUN poetry install --without dev --no-root --no-directory
 
 COPY README.md README.md
 COPY great_expectations_cloud great_expectations_cloud

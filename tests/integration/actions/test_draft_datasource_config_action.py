@@ -6,7 +6,7 @@ from uuid import UUID
 import pytest
 
 from great_expectations_cloud.agent.actions import DraftDatasourceConfigAction
-from great_expectations_cloud.agent.actions.utils import get_table_names
+from great_expectations_cloud.agent.actions.utils import get_asset_names
 from great_expectations_cloud.agent.exceptions import GXCoreError
 from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
 
@@ -56,9 +56,11 @@ def test_running_draft_datasource_config_action(
         "expectation_changes",
         "checkpoint_job_schedules",
         "draft_configs",
+        "expectation_draft_configs",
         "user_api_tokens",
         "user_asset_alerts",
         "organization_api_tokens",
+        "pg_stat_statements",
         "suite_validation_results",
         "metrics",
         "batch_definitions",
@@ -69,6 +71,7 @@ def test_running_draft_datasource_config_action(
         "checkpoints",
         "organizations",
         "organizations_auth0_orgs",
+        "sso_organization_email_domains",
         "metric_runs",
         "users",
         "auth0_users",
@@ -79,10 +82,10 @@ def test_running_draft_datasource_config_action(
     ]
     # add spies to the action methods
     mocker.patch(
-        "great_expectations_cloud.agent.actions.draft_datasource_config_action.get_table_names",
-        wraps=get_table_names,
+        "great_expectations_cloud.agent.actions.draft_datasource_config_action.get_asset_names",
+        wraps=get_asset_names,
     )
-    _update_table_names_list_spy = mocker.spy(action, "_update_table_names_list")
+    _update_asset_names_list_spy = mocker.spy(action, "_update_asset_names_list")
 
     # Act
     result = action.run(event=draft_datasource_config_event, id=event_id)
@@ -95,11 +98,11 @@ def test_running_draft_datasource_config_action(
     assert result.created_resources == []
 
     # Ensure table name introspection was successful and that the table names were updated on the draft config
-    # assert _update_table_names_list was called with the correct arguments
-    assert _update_table_names_list_spy.call_args.kwargs.get("config_id") == UUID(
+    # assert _update_asset_names_list was called with the correct arguments
+    assert _update_asset_names_list_spy.call_args.kwargs.get("config_id") == UUID(
         draft_datasource_id_for_connect_successfully
     )
-    assert sorted(_update_table_names_list_spy.call_args.kwargs.get("table_names")) == sorted(
+    assert sorted(_update_asset_names_list_spy.call_args.kwargs.get("asset_names")) == sorted(
         expected_table_names
     )
 

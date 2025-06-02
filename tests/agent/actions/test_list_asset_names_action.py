@@ -11,12 +11,12 @@ from great_expectations.datasource.fluent import (
     SQLDatasource,
 )
 from great_expectations.exceptions import StoreBackendError
-from sqlalchemy.engine import Inspector
 
 from great_expectations_cloud.agent.actions import (
-    ListTableNamesAction,
+    ListAssetNamesAction,
 )
-from great_expectations_cloud.agent.models import ListTableNamesEvent
+from great_expectations_cloud.agent.actions.utils import get_asset_names
+from great_expectations_cloud.agent.models import ListAssetNamesEvent
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -55,7 +55,7 @@ def set_required_env_vars(monkeypatch, dummy_org_id, dummy_base_url, dummy_acces
 
 @pytest.fixture
 def event():
-    return ListTableNamesEvent(
+    return ListAssetNamesEvent(
         type="list_table_names_request.received",
         datasource_name="test-datasource",
         organization_id=uuid.uuid4(),
@@ -65,7 +65,7 @@ def event():
 def test_list_table_names_event_raises_for_non_sql_datasource(
     mock_context, event, mocker: MockerFixture
 ):
-    action = ListTableNamesAction(
+    action = ListAssetNamesAction(
         context=mock_context,
         base_url="https://api.greatexpectations.io/",
         organization_id=uuid.uuid4(),
@@ -85,7 +85,7 @@ def test_list_table_names_event_raises_for_non_sql_datasource(
 def test_run_list_table_names_action_returns_action_result(
     mock_context, event, dummy_base_url, dummy_org_id, set_required_env_vars, mocker: MockerFixture
 ):
-    action = ListTableNamesAction(
+    action = ListAssetNamesAction(
         context=mock_context,
         base_url=dummy_base_url,
         organization_id=uuid.UUID(dummy_org_id),
@@ -93,7 +93,11 @@ def test_run_list_table_names_action_returns_action_result(
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
-    mock_inspect = mocker.patch("great_expectations_cloud.agent.actions.utils.inspect")
+    _get_asset_names_spy = mocker.patch(
+        "great_expectations_cloud.agent.actions.list_asset_names.get_asset_names",
+        wraps=get_asset_names,
+    )
+
     datasource = mocker.Mock(spec=SQLDatasource)
     datasource_id = str(uuid.uuid4())
     datasource.id = datasource_id
@@ -104,14 +108,12 @@ def test_run_list_table_names_action_returns_action_result(
         status=200,
     )
 
-    table_names = ["table_1", "table_2", "table_3"]
-    inspector = mocker.Mock(spec=Inspector)
-    inspector.get_table_names.return_value = table_names
-
-    mock_inspect.return_value = inspector
+    asset_names = ["table_1", "table_2", "table_3", "view_1", "view_2", "view_3"]
+    _get_asset_names_spy.return_value = asset_names
 
     action_result = action.run(event=event, id=id)
 
+    _get_asset_names_spy.assert_called_with(datasource)
     assert action_result.type == event.type
     assert action_result.id == id
     assert action_result.created_resources == []

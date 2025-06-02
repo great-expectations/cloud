@@ -14,69 +14,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Read python version from .python-version
-        id: python-version
-        run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ steps.python-version.outputs.PYTHON_VERSION }}
-          cache-dependency-path: poetry.lock
-
-      - name: Load cached Poetry installation
-        id: cached-poetry
-        uses: actions/cache@v4
-        with:
-          path: ~/.local # the path depends on the OS
-          key: poetry-${{ steps.python-version.outputs.PYTHON_VERSION }}-2 # increment to reset cache
-
-      - name: Install Poetry
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        uses: snok/install-poetry@v1
-        with:
-          version: 2.0.0
-
-      - name: Install dependencies
-        run: poetry install --sync
-
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python
       - run: poetry run invoke ${{ matrix.task }} --check
 
   unit-tests:
-    strategy:
-      matrix:
-        python-version: ["3.11"]
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache-dependency-path: poetry.lock
-
-      - name: Load cached Poetry installation
-        id: cached-poetry
-        uses: actions/cache@v4
-        with:
-          path: ~/.local # the path depends on the OS
-          key: poetry-${{ matrix.python-version  }}-2 # increment to reset cache
-
-      - name: Install Poetry
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        uses: snok/install-poetry@v1
-        with:
-          version: 2.0.0
-
-      - name: Install dependencies
-        run: poetry install --sync
-
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python
       - name: Run unit tests
         run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml --junitxml=junit.xml -ra
         env:
@@ -99,7 +46,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: great-expectations/cloud
-          flags: ${{ matrix.python-version }}
+          flags: "3.11"
 
       # upload test results to codecov
       - name: Upload test results to Codecov
@@ -107,12 +54,9 @@ jobs:
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: ${{ matrix.python-version }}
+          flags: "3.11"
 
   integration-tests:
-    strategy:
-      matrix:
-        python-version: ["3.11"]
     permissions:
       id-token: write
       contents: read
@@ -133,31 +77,8 @@ jobs:
       ENVIRONMENT: local
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache-dependency-path: poetry.lock
-
-      - name: Load cached Poetry installation
-        id: cached-poetry
-        uses: actions/cache@v4
-        with:
-          path: ~/.local # the path depends on the OS
-          key: poetry-${{ matrix.python-version  }}-2 # increment to reset cache
-
-      - name: Install Poetry
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        uses: snok/install-poetry@v1
-        with:
-          version: 2.0.0
-
-      - name: Install dependencies
-        run: poetry install --sync
-
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python
       - name: Configure ECR AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -205,31 +126,10 @@ jobs:
   test-docker-build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache-dependency-path: poetry.lock
-
-      - name: Load cached Poetry installation
-        id: cached-poetry
-        uses: actions/cache@v4
-        with:
-          path: ~/.local # the path depends on the OS
-          key: poetry-3.11 # increment to reset cache
-
-      - name: Install Poetry
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        uses: snok/install-poetry@v1
-        with:
-          version: 2.0.0
-
-      - name: Install dependencies
-        run: poetry install --sync --only dev
-
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python
+      - name: Install only dev dependencies
+        run: poetry sync --only dev
       - run: poetry run invoke docker --no-pty
 
   check-if-agent-changed:
@@ -258,33 +158,18 @@ jobs:
       is_version_bumped: ${{ steps.is_version_bumped.outputs.IS_VERSION_BUMPED }}
 
     steps:
-      - name: Checkout
+      - name: Initial PR checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        # Read the python version from pyproject.toml
-
-        with:
-          python-version:
-          cache-dependency-path: poetry.lock
-
-      - name: Load cached Poetry installation
-        id: cached-poetry
-        uses: actions/cache@v4
-        with:
-          path: ~/.local # the path depends on the OS
-          key: poetry-3.8-2 # increment to reset cache
-
-      - name: Install Poetry
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        uses: snok/install-poetry@v1
-        with:
-          version: 2.0.0
+      - name: Setup Python
+        uses: ./.github/actions/setup-python
 
       - name: Get version from pyproject.toml for PR
         id: pr_version
-        run: echo "VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(poetry version -s)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "PR version is $VERSION"
 
       - name: Checkout `main` branch
         uses: actions/checkout@v4
@@ -293,48 +178,37 @@ jobs:
 
       - name: Get version from pyproject.toml for main
         id: main_version
-        run: echo "VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(poetry version -s)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Main version is $VERSION"
 
       - name: Get is_version_bumped
         id: is_version_bumped
         run: |
           if [ "${{ steps.pr_version.outputs.VERSION }}" == "${{ steps.main_version.outputs.VERSION }}" ]; then
-            echo "IS_VERSION_BUMPED=false" >> $GITHUB_OUTPUT
+            BUMPED=false
           else
-            echo "IS_VERSION_BUMPED=true" >> $GITHUB_OUTPUT
+            BUMPED=true
           fi
+          echo "IS_VERSION_BUMPED=$BUMPED" >> $GITHUB_OUTPUT
+          echo "IS_VERSION_BUMPED is $BUMPED"
+
+      - name: Recheckout PR branch
+        uses: actions/checkout@v4
 
   bump-pre-release-version:
     permissions:
       contents: write # Allow us to write to the repository
     needs: check-version-is-bumped
     runs-on: ubuntu-latest
-    if: ${{ needs.check-version-is-bumped.outputs.is_version_bumped == 'false' && !contains(github.event.pull_request.labels.*.name, 'no version bump') && !contains(github.event.pull_request.labels.*.name, 'dependencies') && github.event_name != 'schedule' }}
+    # The github action containerize-agent will push to dockerhub on each commit to main. That
+    # means we almost always want to bump the version on a PR since, if the current version is
+    # a release version, we will overwrite that release version with this new one.
+    if: ${{ needs.check-version-is-bumped.outputs.is_version_bumped == 'false' && !contains(github.event.pull_request.labels.*.name, 'no version bump') && github.event_name != 'schedule' }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache-dependency-path: poetry.lock
-
-      - name: Load cached Poetry installation
-        id: cached-poetry
-        uses: actions/cache@v4
-        with:
-          path: ~/.local # the path depends on the OS
-          key: poetry-3.11 # increment to reset cache
-
-      - name: Install Poetry
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        uses: snok/install-poetry@v1
-        with:
-          version: 2.0.0
-
-      - name: Install dependencies
-        run: poetry install --sync # Needed for calling invoke
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python
 
       - name: Checkout PR
         env:

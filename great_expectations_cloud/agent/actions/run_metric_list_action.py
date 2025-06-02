@@ -68,7 +68,7 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
         metric_run = self._batch_inspector.compute_metric_list_run(
             data_asset_id=data_asset.id,
             batch_request=batch_request,
-            metric_list=event.metric_names,
+            metric_list=list(event.metric_names),
         )
 
         metric_run_id = self._metric_repository.add_metric_run(metric_run)

@@ -19,12 +19,12 @@ The following instructions are for those who are contributing to the GX Agent, t
 
 See also [CONTRIBUTING.md](https://github.com/great-expectations/cloud/blob/main/CONTRIBUTING.md)
 
-1. [Install `poetry`](https://python-poetry.org/docs/#installation)
-   - [`pipx install poetry`](https://python-poetry.org/docs/#installing-with-pipx)
+1. [Install or upgrade `poetry` to the latest version](https://python-poetry.org/docs/#installing-with-pipx)
+   - `pipx install poetry` or `pipx upgrade poetry`
 2. Set up virtual environment and install dependencies
-   - `poetry install --sync`
+   - `poetry sync`
 3. Activate your virtual environment
-   - `poetry shell`
+   - `eval $(poetry env activate)`
 4. Set up precommit hooks
    - `pre-commit install`
 
@@ -54,6 +54,11 @@ optional arguments:
 `GX_CLOUD_ACCESS_TOKEN`
 `GX_CLOUD_ORGANIZATION_ID`
 
+If you want to override where the GX Agent looks for the RabbitMQ queue you can also set
+`AMQP_HOST_OVERRIDE` and `AMQP_PORT_OVERRIDE`. For example, if you are running a local dockerized RabbitMQ
+service exposed on localhost port 5672, you can set `AMQP_HOST_OVERRIDE=127.0.0.1` and
+`AMQP_PORT_OVERRIDE=5672`.
+
 ### Start the GX Agent
 
 If you intend to run the GX Agent against local services (Cloud backend or datasources) run the Agent outside of the container.
@@ -70,7 +75,7 @@ Common developer tasks are available via `invoke` (defined in `tasks.py`).
 
 #### Synchronize Dependencies
 
-To ensure you are using the latest version of the core and development dependencies run `poetry install --sync`.
+To ensure you are using the latest version of the core and development dependencies run `poetry sync`.
 Also available as an invoke task.
 
 ```console
@@ -78,6 +83,11 @@ invoke deps
 ```
 
 #### Updating `poetry.lock` dependencies
+
+Use the latest version of poetry
+```console
+pipx upgrade poetry
+```
 
 The dependencies installed in our CI and the Docker build step are determined by the [poetry.lock file](https://python-poetry.org/docs/basic-usage/#installing-with-poetrylock).
 

@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from typing import Annotated, Any, Literal, Optional, Union
 from uuid import UUID
 
+from great_expectations.expectations.metadata_types import DataQualityIssues
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
 from pydantic.v1 import BaseModel, Extra, Field
 
@@ -93,7 +94,7 @@ class RunMetricsListEvent(EventBase):
     metric_names: Sequence[MetricTypes]
 
 
-class ListTableNamesEvent(EventBase):
+class ListAssetNamesEvent(EventBase):
     type: Literal["list_table_names_request.received"] = "list_table_names_request.received"
     datasource_name: str
 
@@ -109,7 +110,7 @@ class GenerateDataQualityCheckExpectationsEvent(EventBase):
     )
     datasource_name: str
     data_assets: Sequence[str]
-    create_expectations: bool = False
+    selected_data_quality_issues: Sequence[DataQualityIssues] | None = None
 
 
 class RunRdAgentEvent(EventBase):
@@ -118,6 +119,7 @@ class RunRdAgentEvent(EventBase):
     data_asset_name: str
     batch_definition_name: str
     batch_parameters: Optional[dict[str, Any]] = None
+    use_core_metrics: bool = False
 
 
 class UnknownEvent(AgentBaseExtraForbid):
@@ -134,7 +136,7 @@ Event = Annotated[
         RunColumnDescriptiveMetricsEvent,
         RunMetricsListEvent,
         DraftDatasourceConfigEvent,
-        ListTableNamesEvent,
+        ListAssetNamesEvent,
         GenerateDataQualityCheckExpectationsEvent,
         RunRdAgentEvent,
         UnknownEvent,
