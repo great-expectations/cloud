@@ -191,10 +191,10 @@ class GenerateDataQualityCheckExpectationsAction(
 
         return metric_run, metric_run_id
 
-    def _get_current_anomaly_detection_coverage(self, data_asset_id) -> dict:
+    def _get_current_anomaly_detection_coverage(self, asset_id: UUID) -> dict[str, Any]:
         url = urljoin(
             base=self._base_url,
-            url=f"/api/v1/organizations/{self._organization_id}/expectations/anomaly-detection/{data_asset_id}",
+            url=f"/api/v1/organizations/{self._organization_id}/expectations/anomaly-detection/{asset_id}",
         )
         with create_session(access_token=self._auth_key) as session:
             response = session.get(url=url)
@@ -202,12 +202,12 @@ class GenerateDataQualityCheckExpectationsAction(
         if not response.ok:
             raise GXCloudError(
                 message=f"GenerateDataQualityCheckExpectationsAction encountered an error while connecting to GX Cloud. "
-                f"Unable to retrieve Anomaly Detection Expectations for Asset with ID={data_asset_id}.",
+                f"Unable to retrieve Anomaly Detection Expectations for Asset with ID={asset_id}.",
                 response=response,
             )
         data = response.json()
         try:
-            return data["data"]
+            return data["data"]  # type: ignore[no-any-return]
 
         except KeyError as e:
             raise GXCloudError(
