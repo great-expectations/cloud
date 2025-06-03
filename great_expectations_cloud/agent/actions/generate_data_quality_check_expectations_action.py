@@ -191,7 +191,7 @@ class GenerateDataQualityCheckExpectationsAction(
 
         return metric_run, metric_run_id
 
-    def _get_current_anomaly_detection_coverage(self, asset_id: UUID) -> dict[str, Any]:
+    def _get_current_anomaly_detection_coverage(self, asset_id: UUID | None) -> dict[str, Any]:
         url = urljoin(
             base=self._base_url,
             url=f"/api/v1/organizations/{self._organization_id}/expectations/anomaly-detection/{asset_id}",
