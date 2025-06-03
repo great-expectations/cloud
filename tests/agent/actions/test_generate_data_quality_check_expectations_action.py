@@ -77,12 +77,20 @@ def mock_response_success(
     def mock_metrics(self, data_asset: DataAsset[Any, Any]):
         return MetricRun(metrics=mock_metrics_list), uuid.uuid4()
 
+    def mock_no_anomaly_detection_coverage(self, data_asset: DataAsset[Any, Any]):
+        return {}
+
     monkeypatch.setattr(
         GenerateDataQualityCheckExpectationsAction,
         "_retrieve_asset_from_asset_name",
         mock_data_asset,
     )
     monkeypatch.setattr(GenerateDataQualityCheckExpectationsAction, "_get_metrics", mock_metrics)
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_get_current_anomaly_detection_coverage",
+        mock_no_anomaly_detection_coverage,
+    )
 
 
 @pytest.fixture
@@ -114,6 +122,9 @@ def mock_multi_asset_success_and_failure(
         else:
             return MetricRun(metrics=mock_metrics_list)
 
+    def mock_no_anomaly_detection_coverage(self, data_asset: DataAsset[Any, Any]):
+        return {}
+
     def mock_schema_change_expectation(self, metric_run: MetricRun, asset_id: uuid.UUID):
         # The data asset name is contained in the expectation_suite_name
         # Here we are simulating a failure to add an expectation to the suite, for suite names that contain "schema-fail"
@@ -129,6 +140,11 @@ def mock_multi_asset_success_and_failure(
         mock_data_asset,
     )
     monkeypatch.setattr(GenerateDataQualityCheckExpectationsAction, "_get_metrics", mock_metrics)
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_get_current_anomaly_detection_coverage",
+        mock_no_anomaly_detection_coverage,
+    )
     monkeypatch.setattr(
         GenerateDataQualityCheckExpectationsAction,
         "_add_schema_change_expectation",
