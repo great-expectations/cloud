@@ -111,6 +111,7 @@ class GenerateDataQualityCheckExpectationsEvent(EventBase):
     datasource_name: str
     data_assets: Sequence[str]
     selected_data_quality_issues: Sequence[DataQualityIssues] | None = None
+    use_forecast: bool = False  # feature flag
 
 
 class RunRdAgentEvent(EventBase):
