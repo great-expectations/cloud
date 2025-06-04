@@ -46,6 +46,7 @@ from great_expectations_cloud.agent.utils import (
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent import DataAsset
+    from great_expectations.expectations import Expectation
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
@@ -191,13 +192,15 @@ class GenerateDataQualityCheckExpectationsAction(
 
         return metric_run, metric_run_id
 
-    def _get_current_anomaly_detection_coverage(self, asset_id: UUID | None) -> dict[str, Any]:
+    def _get_current_anomaly_detection_coverage(
+        self, asset_id: UUID | None
+    ) -> dict[DataQualityIssues, list[Expectation]]:
         url = urljoin(
             base=self._base_url,
-            url=f"/api/v1/organizations/{self._organization_id}/expectations/anomaly-detection/{asset_id}",
+            url=f"/api/v1/organizations/{self._organization_id}/expectations/d929e4ed-7103-4266-a7c9-0b7b3cd8051f",
         )
         with create_session(access_token=self._auth_key) as session:
-            response = session.get(url=url)
+            response = session.get(url=url, params={"anomaly_detection": True})
 
         if not response.ok:
             raise GXCloudError(
