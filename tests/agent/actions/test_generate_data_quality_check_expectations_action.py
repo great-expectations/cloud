@@ -394,6 +394,7 @@ def test_generate_volume_change_forecast_expectations_action_success(
     assert len(return_value.created_resources) == expected_created_resources
     assert return_value.type == "generate_data_quality_check_expectations_request.received"
     assert isinstance(expectation, gx_expectations.ExpectTableRowCountToBeBetween)
+    assert isinstance(expectation.windows, list)
     assert len(expectation.windows) == 1
     assert expectation.windows[0].constraint_fn == "forecast"
     assert isinstance(expectation.windows[0].parameter_name, str)
