@@ -201,7 +201,8 @@ class GenerateDataQualityCheckExpectationsAction(
         )
         with create_session(access_token=self._auth_key) as session:
             response = session.get(
-                url=url, params={"anomaly_detection": True, "data_asset_id": data_asset_id}
+                url=url,
+                params={"anomaly_detection": str(True), "data_asset_id": str(data_asset_id)},
             )
 
         if not response.ok:
