@@ -63,7 +63,7 @@ TABLE_ASSET_ID = uuid.uuid4()
 
 # https://docs.pytest.org/en/7.1.x/how-to/monkeypatch.html
 @pytest.fixture
-def mock_response_success(
+def mock_response_success_no_pre_existing_anomaly_detection_coverage(
     monkeypatch, mock_metrics_list: list[TableMetric[list[str | dict[str, str]]]]
 ):
     def mock_data_asset(self, event: GenerateDataQualityCheckExpectationsEvent, asset_name: str):
@@ -90,6 +90,37 @@ def mock_response_success(
         GenerateDataQualityCheckExpectationsAction,
         "_get_current_anomaly_detection_coverage",
         mock_no_anomaly_detection_coverage,
+    )
+
+
+@pytest.fixture
+def mock_response_success_pre_existing_volume_anomaly_detection_coverage(
+    monkeypatch, mock_metrics_list: list[TableMetric[list[str | dict[str, str]]]]
+):
+    def mock_data_asset(self, event: GenerateDataQualityCheckExpectationsEvent, asset_name: str):
+        return TableAsset(
+            id=TABLE_ASSET_ID,
+            name="test-data-asset",
+            table_name="test_table",
+            schema_name="test_schema",
+        )
+
+    def mock_metrics(self, data_asset: DataAsset[Any, Any]):
+        return MetricRun(metrics=mock_metrics_list), uuid.uuid4()
+
+    def mock_pre_existing_volume_anomaly_detection_coverage(self, data_asset: DataAsset[Any, Any]):
+        return {DataQualityIssues.VOLUME: ["only need key to exist"]}
+
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_retrieve_asset_from_asset_name",
+        mock_data_asset,
+    )
+    monkeypatch.setattr(GenerateDataQualityCheckExpectationsAction, "_get_metrics", mock_metrics)
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_get_current_anomaly_detection_coverage",
+        mock_pre_existing_volume_anomaly_detection_coverage,
     )
 
 
@@ -163,7 +194,7 @@ def mock_multi_asset_success_and_failure(
     ],
 )
 def test_generate_schema_change_expectations_action_success(
-    mock_response_success,
+    mock_response_success_no_pre_existing_anomaly_detection_coverage,
     mock_context: CloudDataContext,
     mocker: MockerFixture,
     data_asset_names,
@@ -211,6 +242,55 @@ def test_generate_schema_change_expectations_action_success(
         ),
         asset_id=TABLE_ASSET_ID,
     )
+
+
+def test_anomaly_detection_expectation_not_created_if_asset_already_has_coverage(
+    mock_response_success_pre_existing_volume_anomaly_detection_coverage,
+    mock_context: CloudDataContext,
+    mocker: MockerFixture,
+):
+    """
+    If the asset already has volume change anomaly detection coverage, but both volume and schema data quality
+    issues have been selected, we should skip creating volume expectations, and only create one for schema.
+    """
+    mock_metric_repository = mocker.Mock(spec=MetricRepository)
+    mock_batch_inspector = mocker.Mock(spec=BatchInspector)
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=mock_context,
+        metric_repository=mock_metric_repository,
+        batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.uuid4(),
+    )
+
+    # run the action
+    mocker.patch(
+        f"{GenerateDataQualityCheckExpectationsAction.__module__}.{GenerateDataQualityCheckExpectationsAction.__name__}._create_expectation_for_asset",
+        return_value=uuid.uuid4(),
+    )
+    mock_create_expectation_for_asset = mocker.spy(
+        GenerateDataQualityCheckExpectationsAction, "_create_expectation_for_asset"
+    )
+    return_value = action.run(
+        event=GenerateDataQualityCheckExpectationsEvent(
+            type="generate_data_quality_check_expectations_request.received",
+            organization_id=uuid.uuid4(),
+            datasource_name="test-datasource",
+            data_assets=["data_asset_name"],
+            selected_data_quality_issues=[DataQualityIssues.SCHEMA, DataQualityIssues.VOLUME],
+        ),
+        id="test-id",
+    )
+    mock_create_expectation_for_asset.assert_called_once()
+    mock_create_expectation_for_asset.assert_called_with(
+        expectation=gx_expectations.ExpectTableColumnsToMatchSet(
+            column_set=["col1", "col2"],
+        ),
+        asset_id=TABLE_ASSET_ID,
+    )
+    assert return_value.type == "generate_data_quality_check_expectations_request.received"
 
 
 @pytest.mark.parametrize(
