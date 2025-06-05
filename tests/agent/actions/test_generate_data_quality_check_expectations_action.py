@@ -8,6 +8,7 @@ import great_expectations.expectations as gx_expectations
 import pytest
 from great_expectations.datasource.fluent.sql_datasource import TableAsset
 from great_expectations.expectations.metadata_types import DataQualityIssues
+from great_expectations.expectations.window import Offset
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
 )
@@ -332,6 +333,80 @@ def test_missing_table_columns_metric_raises_runtime_error(
     # Act & Assert
     with pytest.raises(PartialGenerateDataQualityCheckExpectationError):
         action.run(event=event, id="test-id")
+
+
+@pytest.mark.parametrize(
+    "data_asset_names, expected_created_resources",
+    [
+        (["test-data-asset1"], 2),
+        (
+            ["test-data-asset1", "test-data-asset2"],
+            4,
+        ),
+    ],
+)
+def test_generate_volume_change_forecast_expectations_action_success(
+    mock_response_success,
+    mock_context: CloudDataContext,
+    mocker: MockerFixture,
+    data_asset_names,
+    expected_created_resources,
+):
+    # setup
+    mock_metric_repository = mocker.Mock(spec=MetricRepository)
+    mock_batch_inspector = mocker.Mock(spec=BatchInspector)
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=mock_context,
+        metric_repository=mock_metric_repository,
+        batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.uuid4(),
+    )
+
+    # run the action
+    mocker.patch(
+        f"{GenerateDataQualityCheckExpectationsAction.__module__}.{GenerateDataQualityCheckExpectationsAction.__name__}._create_expectation_for_asset",
+        return_value=uuid.uuid4(),
+    )
+    mock_create_expectation_for_asset = mocker.spy(
+        GenerateDataQualityCheckExpectationsAction, "_create_expectation_for_asset"
+    )
+    return_value = action.run(
+        event=GenerateDataQualityCheckExpectationsEvent(
+            type="generate_data_quality_check_expectations_request.received",
+            organization_id=uuid.uuid4(),
+            datasource_name="test-datasource",
+            data_assets=data_asset_names,
+            selected_data_quality_issues=[
+                DataQualityIssues.VOLUME
+            ],  # <--- Only supports volume for now
+            use_forecast=True,  # <--- feature flag
+        ),
+        id="test-id",
+    )
+
+    # assert
+    call = mock_create_expectation_for_asset.call_args
+    expectation = call.kwargs["expectation"]
+    mock_create_expectation_for_asset.assert_called()
+    assert len(return_value.created_resources) == expected_created_resources
+    assert return_value.type == "generate_data_quality_check_expectations_request.received"
+    assert isinstance(expectation, gx_expectations.ExpectTableRowCountToBeBetween)
+    assert isinstance(expectation.windows, list)
+    assert len(expectation.windows) == 1
+    assert expectation.windows[0].constraint_fn == "forecast"
+    assert isinstance(expectation.windows[0].parameter_name, str)
+    assert expectation.windows[0].range == 1
+    assert expectation.windows[0].offset == Offset(positive=0.0, negative=0.0)
+    assert expectation.windows[0].strict is True
+    assert expectation.strict_min is True
+    assert expectation.max_value is None
+    assert isinstance(expectation.min_value, dict)
+    assert "$PARAMETER" in expectation.min_value
+    assert isinstance(expectation.min_value["$PARAMETER"], str)
+    assert call.kwargs["asset_id"] == TABLE_ASSET_ID
 
 
 if __name__ == "__main__":

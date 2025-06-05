@@ -85,6 +85,7 @@ class GenerateDataQualityCheckExpectationsAction(
     def run(self, event: GenerateDataQualityCheckExpectationsEvent, id: str) -> ActionResult:
         created_resources: list[CreatedResource] = []
         assets_with_errors: list[str] = []
+        selected_dqi = event.selected_data_quality_issues or []
         for asset_name in event.data_assets:
             try:
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
@@ -93,38 +94,39 @@ class GenerateDataQualityCheckExpectationsAction(
                 created_resources.append(
                     CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
                 )
-                if event.selected_data_quality_issues:
-                    if DataQualityIssues.VOLUME in event.selected_data_quality_issues:
-                        volume_change_expectation_id = self._add_volume_change_expectation(
-                            asset_id=data_asset.id
+                if DataQualityIssues.VOLUME in selected_dqi:
+                    constraint_fn = "forecast" if event.use_forecast else "mean"
+                    volume_change_expectation_id = self._add_volume_change_expectation(
+                        asset_id=data_asset.id,
+                        constraint_fn=constraint_fn,
+                    )
+                    created_resources.append(
+                        CreatedResource(
+                            resource_id=str(volume_change_expectation_id), type="Expectation"
                         )
-                        created_resources.append(
-                            CreatedResource(
-                                resource_id=str(volume_change_expectation_id), type="Expectation"
-                            )
-                        )
+                    )
 
-                    if DataQualityIssues.SCHEMA in event.selected_data_quality_issues:
-                        schema_change_expectation_id = self._add_schema_change_expectation(
+                if DataQualityIssues.SCHEMA in selected_dqi:
+                    schema_change_expectation_id = self._add_schema_change_expectation(
+                        metric_run=metric_run, asset_id=data_asset.id
+                    )
+                    created_resources.append(
+                        CreatedResource(
+                            resource_id=str(schema_change_expectation_id), type="Expectation"
+                        )
+                    )
+
+                if DataQualityIssues.COMPLETENESS in selected_dqi:
+                    completeness_change_expectation_ids = (
+                        self._add_completeness_change_expectations(
                             metric_run=metric_run, asset_id=data_asset.id
                         )
+                    )
+
+                    for exp_id in completeness_change_expectation_ids:
                         created_resources.append(
-                            CreatedResource(
-                                resource_id=str(schema_change_expectation_id), type="Expectation"
-                            )
+                            CreatedResource(resource_id=str(exp_id), type="Expectation")
                         )
-
-                    if DataQualityIssues.COMPLETENESS in event.selected_data_quality_issues:
-                        completeness_change_expectation_ids = (
-                            self._add_completeness_change_expectations(
-                                metric_run=metric_run, asset_id=data_asset.id
-                            )
-                        )
-
-                        for exp_id in completeness_change_expectation_ids:
-                            created_resources.append(
-                                CreatedResource(resource_id=str(exp_id), type="Expectation")
-                            )
 
             except Exception as e:
                 LOGGER.exception("Failed to generate expectations for %s: %s", asset_name, str(e))  # noqa: TRY401
@@ -177,20 +179,21 @@ class GenerateDataQualityCheckExpectationsAction(
 
         return metric_run, metric_run_id
 
-    def _add_volume_change_expectation(self, asset_id: UUID | None) -> UUID:
+    def _add_volume_change_expectation(self, asset_id: UUID | None, constraint_fn: str) -> UUID:
         unique_id = param_safe_unique_id(16)
+        parameter_name = f"{unique_id}_min_value_min"
         expectation = gx_expectations.ExpectTableRowCountToBeBetween(
             windows=[
                 Window(
-                    constraint_fn="mean",
-                    parameter_name=f"{unique_id}_min_value_min",
+                    constraint_fn=constraint_fn,
+                    parameter_name=parameter_name,
                     range=1,
                     offset=Offset(positive=0.0, negative=0.0),
                     strict=True,
                 )
             ],
             strict_min=True,
-            min_value={"$PARAMETER": f"{unique_id}_min_value_min"},
+            min_value={"$PARAMETER": parameter_name},
             max_value=None,
         )
         expectation_id = self._create_expectation_for_asset(
