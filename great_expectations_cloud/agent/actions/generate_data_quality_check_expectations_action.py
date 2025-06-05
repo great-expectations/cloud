@@ -118,8 +118,8 @@ class GenerateDataQualityCheckExpectationsAction(
                         )
 
                     if (
-                            DataQualityIssues.SCHEMA in selected_dqi
-                            and DataQualityIssues.SCHEMA not in pre_existing_anomaly_detection_coverage
+                        DataQualityIssues.SCHEMA in selected_dqi
+                        and DataQualityIssues.SCHEMA not in pre_existing_anomaly_detection_coverage
                     ):
                         schema_change_expectation_id = self._add_schema_change_expectation(
                             metric_run=metric_run, asset_id=data_asset.id
@@ -220,7 +220,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 response=response,
             ) from e
 
-    def _add_volume_change_expectation(self, asset_id: UUID | None) -> UUID:
+    def _add_volume_change_expectation(self, asset_id: UUID | None, constraint_fn: str) -> UUID:
         unique_id = param_safe_unique_id(16)
         parameter_name = f"{unique_id}_min_value_min"
         expectation = gx_expectations.ExpectTableRowCountToBeBetween(
