@@ -442,7 +442,7 @@ def test_missing_table_columns_metric_raises_runtime_error(
     ],
 )
 def test_generate_volume_change_forecast_expectations_action_success(
-    mock_response_success,
+    mock_response_success_no_pre_existing_anomaly_detection_coverage,
     mock_context: CloudDataContext,
     mocker: MockerFixture,
     data_asset_names,
