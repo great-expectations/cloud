@@ -143,7 +143,14 @@ def test_generate_data_quality_check_expectations_action_schema_change_selected_
     cloud_base_url: str,
     token_env_var_local: str,
     seed_and_cleanup_test_data,
+    monkeypatch,
 ):
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_get_current_anomaly_detection_coverage",
+        {},
+    )
+
     generate_schema_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
         type="generate_data_quality_check_expectations_request.received",
         datasource_name="local_mercury_db",
