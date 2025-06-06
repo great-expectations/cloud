@@ -38,7 +38,7 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
     data_source_name = "local_mercury_db"
     data_source = context.data_sources.get(data_source_name)
     assert isinstance(data_source, PostgresDatasource)
-
+    breakpoint()
     table_data_asset = data_source.add_table_asset(
         table_name="checkpoints", name="local-mercury-db-checkpoints-table"
     )
@@ -308,3 +308,49 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
             assert exp_config.windows[0].range == 5
             assert exp_config.windows[0].offset.positive == exp_config.windows[0].offset.negative
             assert exp_config.windows[0].parameter_name == exp_config.mostly["$PARAMETER"]
+
+
+def test_generate_data_quality_check_expectations_action_multiple_selected_data_quality_issues_pre_existing_volume_anomaly_detection_coverage(
+    context: CloudDataContext,
+    user_api_token_headers_org_admin_sc_org,
+    org_id_env_var_local: str,
+    cloud_base_url: str,
+    token_env_var_local: str,
+    seed_and_cleanup_test_data,
+    monkeypatch,
+):
+    """Test that only a schema anomaly detection expectation is generated if a volume anomaly detection expectation already
+    exists, but both schema and volume data quality issues are selected."""
+
+    def mock_pre_existing_volume_anomaly_detection_coverage(self, data_asset_id: uuid.UUID | None):
+        return {DataQualityIssues.VOLUME: ["only need key to exist"]}
+
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_get_current_anomaly_detection_coverage",
+        mock_pre_existing_volume_anomaly_detection_coverage,
+    )
+
+    generate_anomaly_detection_expectations_event = GenerateDataQualityCheckExpectationsEvent(
+        type="generate_data_quality_check_expectations_request.received",
+        datasource_name="local_mercury_db",
+        data_assets=["local-mercury-db-checkpoints-table"],
+        organization_id=uuid.UUID(org_id_env_var_local),
+        selected_data_quality_issues=[DataQualityIssues.SCHEMA, DataQualityIssues.VOLUME],
+    )
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=context,
+        base_url=cloud_base_url,
+        organization_id=uuid.UUID(org_id_env_var_local),
+        auth_key=token_env_var_local,
+    )
+    event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
+
+    action_result = action.run(event=generate_anomaly_detection_expectations_event, id=event_id)
+
+    # Assert
+    assert action_result.type == generate_anomaly_detection_expectations_event.type
+    assert action_result.id == event_id
+    assert len(action_result.created_resources) >= 2
+    assert action_result.created_resources[0].type == "MetricRun"
