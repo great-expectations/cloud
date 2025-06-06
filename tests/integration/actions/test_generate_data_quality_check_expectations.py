@@ -136,7 +136,7 @@ def test_generate_data_quality_check_expectations_action_no_selected_data_qualit
     assert action_result.created_resources[0].type == "MetricRun"
 
 
-def test_generate_data_quality_check_expectations_action_schema_change_selected_data_quality_issues(
+def test_generate_data_quality_check_expectations_action_schema_change_selected_data_quality_issues_no_pre_existing_anomaly_detection_coverage(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
@@ -181,14 +181,24 @@ def test_generate_data_quality_check_expectations_action_schema_change_selected_
     assert action_result.created_resources[1].type == "Expectation"
 
 
-def test_generate_data_quality_check_expectations_action_multiple_selected_data_quality_issues(
+def test_generate_data_quality_check_expectations_action_multiple_selected_data_quality_issues_no_pre_existing_anomaly_detection_coverage(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
     cloud_base_url: str,
     token_env_var_local: str,
     seed_and_cleanup_test_data,
+    monkeypatch,
 ):
+    def mock_no_anomaly_detection_coverage(self, data_asset_id: uuid.UUID | None):
+        return {}
+
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_get_current_anomaly_detection_coverage",
+        mock_no_anomaly_detection_coverage,
+    )
+
     generate_schema_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
         type="generate_data_quality_check_expectations_request.received",
         datasource_name="local_mercury_db",
@@ -220,7 +230,7 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
     assert action_result.created_resources[2].type == "Expectation"
 
 
-def test_generate_data_quality_check_expectations_action_completeness_selected_data_quality_issues(
+def test_generate_data_quality_check_expectations_action_completeness_selected_data_quality_issues_no_pre_existing_anomaly_detection_coverage(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
@@ -244,10 +254,19 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
         # Call original method
         return original_create_expectation(self, expectation, asset_id)
 
+    def mock_no_anomaly_detection_coverage(self, data_asset_id: uuid.UUID | None):
+        return {}
+
     monkeypatch.setattr(
         GenerateDataQualityCheckExpectationsAction,
         "_create_expectation_for_asset",
         mock_create_expectation,
+    )
+
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_get_current_anomaly_detection_coverage",
+        mock_no_anomaly_detection_coverage,
     )
 
     generate_completeness_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
