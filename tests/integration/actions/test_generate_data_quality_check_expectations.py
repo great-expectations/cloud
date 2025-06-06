@@ -38,7 +38,6 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
     data_source_name = "local_mercury_db"
     data_source = context.data_sources.get(data_source_name)
     assert isinstance(data_source, PostgresDatasource)
-    breakpoint()
     table_data_asset = data_source.add_table_asset(
         table_name="checkpoints", name="local-mercury-db-checkpoints-table"
     )
