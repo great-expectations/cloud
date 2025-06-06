@@ -145,10 +145,13 @@ def test_generate_data_quality_check_expectations_action_schema_change_selected_
     seed_and_cleanup_test_data,
     monkeypatch,
 ):
+    def mock_no_anomaly_detection_coverage(self, data_asset_id: uuid.UUID | None):
+        return {}
+
     monkeypatch.setattr(
         GenerateDataQualityCheckExpectationsAction,
         "_get_current_anomaly_detection_coverage",
-        {},
+        mock_no_anomaly_detection_coverage,
     )
 
     generate_schema_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
