@@ -9,7 +9,10 @@ from uuid import UUID
 import great_expectations.expectations as gx_expectations
 from great_expectations.core.http import create_session
 from great_expectations.exceptions import GXCloudError
-from great_expectations.expectations.metadata_types import DataQualityIssues
+from great_expectations.expectations.metadata_types import (
+    DataQualityIssues,
+    ExpectationConstraintFunction,
+)
 from great_expectations.expectations.window import Offset, Window
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
@@ -87,7 +90,7 @@ class GenerateDataQualityCheckExpectationsAction(
     def run(self, event: GenerateDataQualityCheckExpectationsEvent, id: str) -> ActionResult:
         created_resources: list[CreatedResource] = []
         assets_with_errors: list[str] = []
-        selected_dqi = event.selected_data_quality_issues or []
+        selected_dqis = event.selected_data_quality_issues or []
         for asset_name in event.data_assets:
             try:
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
@@ -97,16 +100,21 @@ class GenerateDataQualityCheckExpectationsAction(
                     CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
                 )
 
-                if selected_dqi:
+                if selected_dqis:
                     pre_existing_anomaly_detection_coverage = (
                         self._get_current_anomaly_detection_coverage(data_asset.id)
                     )
 
-                    if (
-                        DataQualityIssues.VOLUME in selected_dqi
-                        and DataQualityIssues.VOLUME not in pre_existing_anomaly_detection_coverage
+                    if self._should_add_anomaly_detection_coverage_for_issue(
+                        DataQualityIssues.VOLUME,
+                        selected_dqis,
+                        pre_existing_anomaly_detection_coverage,
                     ):
-                        constraint_fn = "forecast" if event.use_forecast else "mean"
+                        constraint_fn = (
+                            ExpectationConstraintFunction.FORECAST
+                            if event.use_forecast
+                            else ExpectationConstraintFunction.MEAN
+                        )
                         volume_change_expectation_id = self._add_volume_change_expectation(
                             asset_id=data_asset.id,
                             constraint_fn=constraint_fn,
@@ -117,9 +125,10 @@ class GenerateDataQualityCheckExpectationsAction(
                             )
                         )
 
-                    if (
-                        DataQualityIssues.SCHEMA in selected_dqi
-                        and DataQualityIssues.SCHEMA not in pre_existing_anomaly_detection_coverage
+                    if self._should_add_anomaly_detection_coverage_for_issue(
+                        DataQualityIssues.SCHEMA,
+                        selected_dqis,
+                        pre_existing_anomaly_detection_coverage,
                     ):
                         schema_change_expectation_id = self._add_schema_change_expectation(
                             metric_run=metric_run, asset_id=data_asset.id
@@ -130,7 +139,7 @@ class GenerateDataQualityCheckExpectationsAction(
                             )
                         )
 
-                    if DataQualityIssues.COMPLETENESS in selected_dqi:
+                    if DataQualityIssues.COMPLETENESS in selected_dqis:
                         completeness_change_expectation_ids = (
                             self._add_completeness_change_expectations(
                                 metric_run=metric_run, asset_id=data_asset.id
@@ -220,6 +229,14 @@ class GenerateDataQualityCheckExpectationsAction(
                 message="Malformed response received from GX Cloud",
                 response=response,
             ) from e
+
+    def _should_add_anomaly_detection_coverage_for_issue(
+        self,
+        issue: DataQualityIssues,
+        selected_dqis: list[DataQualityIssues],
+        pre_existing_anomaly_detection_coverage: dict[DataQualityIssues, list[Expectation]],
+    ):
+        return issue in selected_dqis and issue not in pre_existing_anomaly_detection_coverage
 
     def _add_volume_change_expectation(self, asset_id: UUID | None, constraint_fn: str) -> UUID:
         unique_id = param_safe_unique_id(16)
