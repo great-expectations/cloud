@@ -17,15 +17,15 @@ runs:
         OUTPUT=$(head -n1 poetry.lock | cut -f9 -d' ')
         echo "value=$OUTPUT" >> $GITHUB_OUTPUT
 
-    - name: Load cached Poetry installation
-      id: cached-poetry
-      uses: actions/cache@v4
-      with:
-        path: ~/.local # the path depends on the OS
-        key: ${{ steps.get-poetry-version.outputs.value }}
+    # - name: Load cached Poetry installation
+    #   id: cached-poetry
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: ~/.local # the path depends on the OS
+    #     key: ${{ steps.get-poetry-version.outputs.value }}
 
     - name: Install Poetry
-      if: steps.cached-poetry.outputs.cache-hit != 'true'
+      # if: steps.cached-poetry.outputs.cache-hit != 'true'
       uses: snok/install-poetry@v1
       with:
         version: ${{ steps.get-poetry-version.outputs.value }}
