@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from enum import Enum
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Final
@@ -49,7 +50,6 @@ from great_expectations_cloud.agent.utils import (
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent import DataAsset
-    from great_expectations.expectations import Expectation
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
@@ -97,7 +97,7 @@ class GenerateDataQualityCheckExpectationsAction(
     def run(self, event: GenerateDataQualityCheckExpectationsEvent, id: str) -> ActionResult:
         created_resources: list[CreatedResource] = []
         assets_with_errors: list[str] = []
-        selected_dqis = event.selected_data_quality_issues or []
+        selected_dqis: Sequence[DataQualityIssues] = event.selected_data_quality_issues or []
         for asset_name in event.data_assets:
             try:
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
@@ -210,7 +210,7 @@ class GenerateDataQualityCheckExpectationsAction(
 
     def _get_current_anomaly_detection_coverage(
         self, data_asset_id: UUID | None
-    ) -> dict[DataQualityIssues, list[dict]]:
+    ) -> dict[DataQualityIssues, list[dict[Any, Any]]]:
         """
         This function returns a dict mapping Data Quality Issues to a list of ExpectationConfiguration dicts.
         """
@@ -243,9 +243,9 @@ class GenerateDataQualityCheckExpectationsAction(
     def _should_add_anomaly_detection_coverage_for_issue(
         self,
         issue: DataQualityIssues,
-        selected_dqis: list[DataQualityIssues],
-        pre_existing_anomaly_detection_coverage: dict[DataQualityIssues, list[Expectation]],
-    ):
+        selected_dqis: Sequence[DataQualityIssues],
+        pre_existing_anomaly_detection_coverage: dict[DataQualityIssues, list[dict[Any, Any]]],
+    ) -> bool:
         return issue in selected_dqis and issue not in pre_existing_anomaly_detection_coverage
 
     def _add_volume_change_expectation(self, asset_id: UUID | None, constraint_fn: str) -> UUID:
