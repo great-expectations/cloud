@@ -210,7 +210,10 @@ class GenerateDataQualityCheckExpectationsAction(
 
     def _get_current_anomaly_detection_coverage(
         self, data_asset_id: UUID | None
-    ) -> dict[DataQualityIssues, list[Expectation]]:
+    ) -> dict[DataQualityIssues, list[dict]]:
+        """
+        This function returns a dict mapping Data Quality Issues to a list of ExpectationConfiguration dicts.
+        """
         url = urljoin(
             base=self._base_url,
             url=f"/api/v1/organizations/{self._organization_id}/expectations/",
