@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from enum import Enum
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import urljoin
@@ -11,7 +12,6 @@ from great_expectations.core.http import create_session
 from great_expectations.exceptions import GXCloudError
 from great_expectations.expectations.metadata_types import (
     DataQualityIssues,
-    ExpectationConstraintFunction,
 )
 from great_expectations.expectations.window import Offset, Window
 from great_expectations.experimental.metric_repository.batch_inspector import (
@@ -53,6 +53,13 @@ if TYPE_CHECKING:
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
+
+
+class ExpectationConstraintFunction(str, Enum):
+    """Expectation constraint functions."""
+
+    FORECAST = "forecast"
+    MEAN = "mean"
 
 
 class PartialGenerateDataQualityCheckExpectationError(GXAgentError):
