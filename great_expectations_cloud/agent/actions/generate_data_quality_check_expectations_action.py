@@ -350,7 +350,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 null_expectation = gx_expectations.ExpectColumnValuesToBeNull(
                     windows=[
                         Window(
-                            constraint_fn="mean",
+                            constraint_fn=ExpectationConstraintFunction.MEAN,
                             parameter_name=f"{unique_id_null}_null_value_min",
                             range=5,
                             offset=Offset(
@@ -367,7 +367,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 not_null_expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
                     windows=[
                         Window(
-                            constraint_fn="mean",
+                            constraint_fn=ExpectationConstraintFunction.MEAN,
                             parameter_name=f"{unique_id_not_null}_not_null_value_min",
                             range=5,
                             offset=Offset(
