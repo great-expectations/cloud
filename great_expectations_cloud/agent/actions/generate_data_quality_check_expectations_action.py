@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
+from enum import Enum
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import urljoin
@@ -8,7 +10,10 @@ from uuid import UUID
 
 import great_expectations.expectations as gx_expectations
 from great_expectations.core.http import create_session
-from great_expectations.expectations.metadata_types import DataQualityIssues
+from great_expectations.exceptions import GXCloudError
+from great_expectations.expectations.metadata_types import (
+    DataQualityIssues,
+)
 from great_expectations.expectations.window import Offset, Window
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
@@ -50,6 +55,13 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
 
+class ExpectationConstraintFunction(str, Enum):
+    """Expectation constraint functions."""
+
+    FORECAST = "forecast"
+    MEAN = "mean"
+
+
 class PartialGenerateDataQualityCheckExpectationError(GXAgentError):
     def __init__(self, assets_with_errors: list[str], assets_attempted: int):
         message_header = f"Unable to autogenerate expectations for {len(assets_with_errors)} of {assets_attempted} Data Assets."
@@ -85,7 +97,7 @@ class GenerateDataQualityCheckExpectationsAction(
     def run(self, event: GenerateDataQualityCheckExpectationsEvent, id: str) -> ActionResult:
         created_resources: list[CreatedResource] = []
         assets_with_errors: list[str] = []
-        selected_dqi = event.selected_data_quality_issues or []
+        selected_dqis: Sequence[DataQualityIssues] = event.selected_data_quality_issues or []
         for asset_name in event.data_assets:
             try:
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
@@ -94,39 +106,56 @@ class GenerateDataQualityCheckExpectationsAction(
                 created_resources.append(
                     CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
                 )
-                if DataQualityIssues.VOLUME in selected_dqi:
-                    constraint_fn = "forecast" if event.use_forecast else "mean"
-                    volume_change_expectation_id = self._add_volume_change_expectation(
-                        asset_id=data_asset.id,
-                        constraint_fn=constraint_fn,
-                    )
-                    created_resources.append(
-                        CreatedResource(
-                            resource_id=str(volume_change_expectation_id), type="Expectation"
-                        )
+
+                if selected_dqis:
+                    pre_existing_anomaly_detection_coverage = (
+                        self._get_current_anomaly_detection_coverage(data_asset.id)
                     )
 
-                if DataQualityIssues.SCHEMA in selected_dqi:
-                    schema_change_expectation_id = self._add_schema_change_expectation(
-                        metric_run=metric_run, asset_id=data_asset.id
-                    )
-                    created_resources.append(
-                        CreatedResource(
-                            resource_id=str(schema_change_expectation_id), type="Expectation"
+                    if self._should_add_anomaly_detection_coverage_for_issue(
+                        DataQualityIssues.VOLUME,
+                        selected_dqis,
+                        pre_existing_anomaly_detection_coverage,
+                    ):
+                        constraint_fn = (
+                            ExpectationConstraintFunction.FORECAST
+                            if event.use_forecast
+                            else ExpectationConstraintFunction.MEAN
                         )
-                    )
+                        volume_change_expectation_id = self._add_volume_change_expectation(
+                            asset_id=data_asset.id,
+                            constraint_fn=constraint_fn,
+                        )
+                        created_resources.append(
+                            CreatedResource(
+                                resource_id=str(volume_change_expectation_id), type="Expectation"
+                            )
+                        )
 
-                if DataQualityIssues.COMPLETENESS in selected_dqi:
-                    completeness_change_expectation_ids = (
-                        self._add_completeness_change_expectations(
+                    if self._should_add_anomaly_detection_coverage_for_issue(
+                        DataQualityIssues.SCHEMA,
+                        selected_dqis,
+                        pre_existing_anomaly_detection_coverage,
+                    ):
+                        schema_change_expectation_id = self._add_schema_change_expectation(
                             metric_run=metric_run, asset_id=data_asset.id
                         )
-                    )
-
-                    for exp_id in completeness_change_expectation_ids:
                         created_resources.append(
-                            CreatedResource(resource_id=str(exp_id), type="Expectation")
+                            CreatedResource(
+                                resource_id=str(schema_change_expectation_id), type="Expectation"
+                            )
                         )
+
+                    if DataQualityIssues.COMPLETENESS in selected_dqis:
+                        completeness_change_expectation_ids = (
+                            self._add_completeness_change_expectations(
+                                metric_run=metric_run, asset_id=data_asset.id
+                            )
+                        )
+                        for exp_id in completeness_change_expectation_ids:
+                            created_resources.append(
+                                CreatedResource(resource_id=str(exp_id), type="Expectation")
+                            )
 
             except Exception as e:
                 LOGGER.exception("Failed to generate expectations for %s: %s", asset_name, str(e))  # noqa: TRY401
@@ -178,6 +207,46 @@ class GenerateDataQualityCheckExpectationsAction(
         self._raise_on_any_metric_exception(metric_run)
 
         return metric_run, metric_run_id
+
+    def _get_current_anomaly_detection_coverage(
+        self, data_asset_id: UUID | None
+    ) -> dict[DataQualityIssues, list[dict[Any, Any]]]:
+        """
+        This function returns a dict mapping Data Quality Issues to a list of ExpectationConfiguration dicts.
+        """
+        url = urljoin(
+            base=self._base_url,
+            url=f"/api/v1/organizations/{self._organization_id}/expectations/",
+        )
+        with create_session(access_token=self._auth_key) as session:
+            response = session.get(
+                url=url,
+                params={"anomaly_detection": str(True), "data_asset_id": str(data_asset_id)},
+            )
+
+        if not response.ok:
+            raise GXCloudError(
+                message=f"GenerateDataQualityCheckExpectationsAction encountered an error while connecting to GX Cloud. "
+                f"Unable to retrieve Anomaly Detection Expectations for Asset with ID={data_asset_id}.",
+                response=response,
+            )
+        data = response.json()
+        try:
+            return data["data"]  # type: ignore[no-any-return]
+
+        except KeyError as e:
+            raise GXCloudError(
+                message="Malformed response received from GX Cloud",
+                response=response,
+            ) from e
+
+    def _should_add_anomaly_detection_coverage_for_issue(
+        self,
+        issue: DataQualityIssues,
+        selected_dqis: Sequence[DataQualityIssues],
+        pre_existing_anomaly_detection_coverage: dict[DataQualityIssues, list[dict[Any, Any]]],
+    ) -> bool:
+        return issue in selected_dqis and issue not in pre_existing_anomaly_detection_coverage
 
     def _add_volume_change_expectation(self, asset_id: UUID | None, constraint_fn: str) -> UUID:
         unique_id = param_safe_unique_id(16)
@@ -284,7 +353,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 null_expectation = gx_expectations.ExpectColumnValuesToBeNull(
                     windows=[
                         Window(
-                            constraint_fn="mean",
+                            constraint_fn=ExpectationConstraintFunction.MEAN,
                             parameter_name=f"{unique_id_null}_null_value_min",
                             range=5,
                             offset=Offset(
@@ -301,7 +370,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 not_null_expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
                     windows=[
                         Window(
-                            constraint_fn="mean",
+                            constraint_fn=ExpectationConstraintFunction.MEAN,
                             parameter_name=f"{unique_id_not_null}_not_null_value_min",
                             range=5,
                             offset=Offset(
