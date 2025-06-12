@@ -184,6 +184,34 @@ def mock_multi_asset_success_and_failure(
     )
 
 
+@pytest.fixture
+def completeness_metrics():
+    def _completeness_metrics(null_count=30, row_count=100):
+        return [
+            TableMetric(
+                batch_id="batch_id",
+                metric_name=MetricTypes.TABLE_COLUMNS,
+                value=["col1", "col2"],
+                exception=None,
+            ),
+            TableMetric(
+                batch_id="batch_id",
+                metric_name=MetricTypes.TABLE_ROW_COUNT,
+                value=row_count,
+                exception=None,
+            ),
+            ColumnMetric(
+                batch_id="batch_id",
+                metric_name=MetricTypes.COLUMN_NULL_COUNT,
+                value=null_count,
+                exception=None,
+                column="col1",
+            ),
+        ]
+
+    return _completeness_metrics
+
+
 @pytest.mark.parametrize(
     "data_asset_names, expected_created_resources",
     [
@@ -509,34 +537,14 @@ def test_generate_volume_change_forecast_expectations_action_success(
 def test_generate_completeness_expectations_with_non_null_proportion_enabled(
     mock_context: CloudDataContext,
     mocker: MockerFixture,
+    completeness_metrics,
 ):
     """Test that when expect_non_null_proportion_enabled is True, a single ExpectColumnProportionOfNonNullValuesToBeBetween expectation is created."""
     # Setup
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
     mock_batch_inspector = mocker.Mock(spec=BatchInspector)
 
-    # Mock metric run with null counts for testing
-    completeness_metrics = [
-        TableMetric(
-            batch_id="batch_id",
-            metric_name=MetricTypes.TABLE_COLUMNS,
-            value=["col1", "col2"],
-            exception=None,
-        ),
-        TableMetric(
-            batch_id="batch_id",
-            metric_name=MetricTypes.TABLE_ROW_COUNT,
-            value=100,
-            exception=None,
-        ),
-        ColumnMetric(
-            batch_id="batch_id",
-            metric_name=MetricTypes.COLUMN_NULL_COUNT,
-            value=30,  # 30 nulls out of 100 rows = 70% non-null
-            exception=None,
-            column="col1",
-        ),
-    ]
+    metrics = completeness_metrics()
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=mock_context,
@@ -557,7 +565,7 @@ def test_generate_completeness_expectations_with_non_null_proportion_enabled(
         )
 
     def mock_get_metrics(data_asset):
-        return MetricRun(metrics=completeness_metrics), uuid.uuid4()
+        return MetricRun(metrics=metrics), uuid.uuid4()
 
     def mock_get_coverage(data_asset_id):
         return {}
@@ -611,36 +619,14 @@ def test_generate_completeness_expectations_with_non_null_proportion_enabled(
 def test_generate_completeness_expectations_with_non_null_proportion_disabled(
     mock_context: CloudDataContext,
     mocker: MockerFixture,
+    completeness_metrics,
 ):
     """Test that when expect_non_null_proportion_enabled is False, the current two-expectation approach is used."""
     # Setup
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
     mock_batch_inspector = mocker.Mock(spec=BatchInspector)
 
-    # Mock metric run with null counts for testing
-    from great_expectations.experimental.metric_repository.metrics import ColumnMetric
-
-    completeness_metrics = [
-        TableMetric(
-            batch_id="batch_id",
-            metric_name=MetricTypes.TABLE_COLUMNS,
-            value=["col1", "col2"],
-            exception=None,
-        ),
-        TableMetric(
-            batch_id="batch_id",
-            metric_name=MetricTypes.TABLE_ROW_COUNT,
-            value=100,
-            exception=None,
-        ),
-        ColumnMetric(
-            batch_id="batch_id",
-            metric_name=MetricTypes.COLUMN_NULL_COUNT,
-            value=30,  # 30 nulls out of 100 rows
-            exception=None,
-            column="col1",
-        ),
-    ]
+    metrics = completeness_metrics()
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=mock_context,
@@ -661,7 +647,7 @@ def test_generate_completeness_expectations_with_non_null_proportion_disabled(
         )
 
     def mock_get_metrics(data_asset):
-        return MetricRun(metrics=completeness_metrics), uuid.uuid4()
+        return MetricRun(metrics=metrics), uuid.uuid4()
 
     def mock_get_coverage(data_asset_id):
         return {}
@@ -727,35 +713,14 @@ def test_completeness_expectations_count_based_on_flag_and_data(
     row_count: int,
     expect_non_null_proportion_enabled: bool,
     expected_expectation_count: int,
+    completeness_metrics,
 ):
     """Test that the correct number of expectations are created based on the flag and data characteristics."""
     # Setup
     mock_metric_repository = mocker.Mock(spec=MetricRepository)
     mock_batch_inspector = mocker.Mock(spec=BatchInspector)
 
-    from great_expectations.experimental.metric_repository.metrics import ColumnMetric
-
-    completeness_metrics = [
-        TableMetric(
-            batch_id="batch_id",
-            metric_name=MetricTypes.TABLE_COLUMNS,
-            value=["col1"],
-            exception=None,
-        ),
-        TableMetric(
-            batch_id="batch_id",
-            metric_name=MetricTypes.TABLE_ROW_COUNT,
-            value=row_count,
-            exception=None,
-        ),
-        ColumnMetric(
-            batch_id="batch_id",
-            metric_name=MetricTypes.COLUMN_NULL_COUNT,
-            value=null_count,
-            exception=None,
-            column="col1",
-        ),
-    ]
+    metrics = completeness_metrics(null_count=null_count, row_count=row_count)
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=mock_context,
@@ -776,7 +741,7 @@ def test_completeness_expectations_count_based_on_flag_and_data(
         )
 
     def mock_get_metrics(data_asset):
-        return MetricRun(metrics=completeness_metrics), uuid.uuid4()
+        return MetricRun(metrics=metrics), uuid.uuid4()
 
     def mock_get_coverage(data_asset_id):
         return {}
