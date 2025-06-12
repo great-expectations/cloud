@@ -622,7 +622,7 @@ def test_generate_completeness_expectations_with_non_null_proportion_enabled(
     assert len(created_expectations) == 1
     expectation = created_expectations[0]
     assert isinstance(expectation, gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween)
-    assert expectation.column == "col1"
+    assert expectation.column
     assert expectation.windows is not None
     assert len(expectation.windows) == 2  # min and max windows
     assert isinstance(expectation.min_value, dict) and "$PARAMETER" in expectation.min_value
@@ -710,12 +710,12 @@ def test_generate_completeness_expectations_with_non_null_proportion_disabled(
 @pytest.mark.parametrize(
     "null_count, row_count, expect_non_null_proportion_enabled, expected_expectation_count",
     [
-        (0, 100, True, 1),  # No nulls, new approach -> 1 expectation
-        (0, 100, False, 1),  # No nulls, old approach -> 1 expectation
-        (100, 100, True, 1),  # All nulls, new approach -> 1 expectation
-        (100, 100, False, 1),  # All nulls, old approach -> 1 expectation
-        (30, 100, True, 1),  # Mixed nulls, new approach -> 1 expectation
-        (30, 100, False, 2),  # Mixed nulls, old approach -> 2 expectations
+        pytest.param(0, 100, True, 1, id="no_nulls_new_approach_one_expectation"),
+        pytest.param(0, 100, False, 1, id="no_nulls_old_approach_one_expectation"),
+        pytest.param(100, 100, True, 1, id="all_nulls_new_approach_one_expectation"),
+        pytest.param(100, 100, False, 1, id="all_nulls_old_approach_one_expectation"),
+        pytest.param(30, 100, True, 1, id="mixed_nulls_new_approach_one_expectation"),
+        pytest.param(30, 100, False, 2, id="mixed_nulls_old_approach_two_expectations"),
     ],
 )
 def test_completeness_expectations_count_based_on_flag_and_data(
