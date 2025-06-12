@@ -326,8 +326,8 @@ class GenerateDataQualityCheckExpectationsAction(
             if expect_non_null_proportion_enabled:
                 # Single-expectation approach using ExpectColumnProportionOfNonNullValuesToBeBetween
                 unique_id = param_safe_unique_id(16)
-                min_param_name = f"{unique_id}_min_proportion"
-                max_param_name = f"{unique_id}_max_proportion"
+                min_param_name = f"{unique_id}_proportion_min"
+                max_param_name = f"{unique_id}_proportion_max"
 
                 # Calculate non-null proportion
                 non_null_count = row_count - null_count if row_count > 0 else 0
