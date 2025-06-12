@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 import great_expectations.expectations as gx_expectations
 import pytest
@@ -17,6 +17,7 @@ from great_expectations.experimental.metric_repository.metric_repository import 
 )
 from great_expectations.experimental.metric_repository.metrics import (
     ColumnMetric,
+    Metric,
     MetricRun,
     MetricTypes,
     TableMetric,
@@ -185,8 +186,21 @@ def mock_multi_asset_success_and_failure(
 
 
 @pytest.fixture
-def completeness_metrics():
-    def _completeness_metrics(null_count=30, row_count=100):
+def mock_metric_repository(mocker):
+    return mocker.Mock(spec=MetricRepository)
+
+
+@pytest.fixture
+def mock_batch_inspector(mocker):
+    return mocker.Mock(spec=BatchInspector)
+
+
+MockCompletenessMetrics = Callable[[int, int], list[Metric[Any]]]
+
+
+@pytest.fixture
+def mock_completeness_metrics() -> MockCompletenessMetrics:
+    def _completeness_metrics(null_count: int, row_count: int) -> list[Metric[Any]]:
         return [
             TableMetric(
                 batch_id="batch_id",
@@ -537,14 +551,13 @@ def test_generate_volume_change_forecast_expectations_action_success(
 def test_generate_completeness_expectations_with_non_null_proportion_enabled(
     mock_context: CloudDataContext,
     mocker: MockerFixture,
-    completeness_metrics,
+    mock_metric_repository,
+    mock_batch_inspector,
+    mock_completeness_metrics: MockCompletenessMetrics,
 ):
     """Test that when expect_non_null_proportion_enabled is True, a single ExpectColumnProportionOfNonNullValuesToBeBetween expectation is created."""
     # Setup
-    mock_metric_repository = mocker.Mock(spec=MetricRepository)
-    mock_batch_inspector = mocker.Mock(spec=BatchInspector)
-
-    metrics = completeness_metrics()
+    metrics = mock_completeness_metrics(30, 100)
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=mock_context,
@@ -619,14 +632,13 @@ def test_generate_completeness_expectations_with_non_null_proportion_enabled(
 def test_generate_completeness_expectations_with_non_null_proportion_disabled(
     mock_context: CloudDataContext,
     mocker: MockerFixture,
-    completeness_metrics,
+    mock_metric_repository,
+    mock_batch_inspector,
+    mock_completeness_metrics: MockCompletenessMetrics,
 ):
     """Test that when expect_non_null_proportion_enabled is False, the current two-expectation approach is used."""
     # Setup
-    mock_metric_repository = mocker.Mock(spec=MetricRepository)
-    mock_batch_inspector = mocker.Mock(spec=BatchInspector)
-
-    metrics = completeness_metrics()
+    metrics = mock_completeness_metrics(30, 100)
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=mock_context,
@@ -713,14 +725,12 @@ def test_completeness_expectations_count_based_on_flag_and_data(
     row_count: int,
     expect_non_null_proportion_enabled: bool,
     expected_expectation_count: int,
-    completeness_metrics,
+    mock_metric_repository,
+    mock_batch_inspector,
+    mock_completeness_metrics: MockCompletenessMetrics,
 ):
-    """Test that the correct number of expectations are created based on the flag and data characteristics."""
     # Setup
-    mock_metric_repository = mocker.Mock(spec=MetricRepository)
-    mock_batch_inspector = mocker.Mock(spec=BatchInspector)
-
-    metrics = completeness_metrics(null_count=null_count, row_count=row_count)
+    metrics = mock_completeness_metrics(null_count, row_count)
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=mock_context,
