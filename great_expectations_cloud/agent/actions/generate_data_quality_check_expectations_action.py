@@ -334,11 +334,8 @@ class GenerateDataQualityCheckExpectationsAction(
                 non_null_proportion = non_null_count / row_count if row_count > 0 else 0
 
                 # Use triangular interpolation to compute min/max values
-                options = TriangularInterpolationOptions(
-                    input_range=(0.0, 1.0), output_range=(0, 0.1), round_precision=5
-                )
-                interpolated_offset = max(
-                    0.0001, round(triangular_interpolation(non_null_proportion, options), 5)
+                interpolated_offset = self._compute_triangular_interpolation_offset(
+                    value=non_null_proportion, input_range=(0.0, 1.0)
                 )
 
                 expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
@@ -395,13 +392,8 @@ class GenerateDataQualityCheckExpectationsAction(
                 unique_id_null = param_safe_unique_id(16)
                 unique_id_not_null = param_safe_unique_id(16)
 
-                options = TriangularInterpolationOptions(
-                    input_range=(0.0, float(row_count)),
-                    output_range=(0, 0.1),
-                    round_precision=5,
-                )
-                interpolated_offset = max(
-                    0.0001, round(triangular_interpolation(null_count, options), 5)
+                interpolated_offset = self._compute_triangular_interpolation_offset(
+                    value=null_count, input_range=(0.0, float(row_count))
                 )
 
                 # For the null expectation (sets lower bound on nulls)
@@ -449,6 +441,26 @@ class GenerateDataQualityCheckExpectationsAction(
                 expectation_ids.append(not_null_expectation_id)
 
         return expectation_ids
+
+    def _compute_triangular_interpolation_offset(
+        self, value: float, input_range: tuple[float, float]
+    ) -> float:
+        """
+        Compute triangular interpolation offset for expectation windows.
+
+        Args:
+            value: The input value to interpolate
+            input_range: The input range as (min, max) tuple
+
+        Returns:
+            The computed interpolation offset
+        """
+        options = TriangularInterpolationOptions(
+            input_range=input_range,
+            output_range=(0, 0.1),
+            round_precision=5,
+        )
+        return max(0.0001, round(triangular_interpolation(value, options), 5))
 
     def _create_expectation_for_asset(
         self, expectation: gx_expectations.Expectation, asset_id: UUID | None
