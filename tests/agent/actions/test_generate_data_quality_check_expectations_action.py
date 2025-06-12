@@ -551,8 +551,8 @@ def test_generate_volume_change_forecast_expectations_action_success(
 def test_generate_completeness_expectations_with_non_null_proportion_enabled(
     mock_context: CloudDataContext,
     mocker: MockerFixture,
-    mock_metric_repository,
-    mock_batch_inspector,
+    mock_metric_repository: MetricRepository,
+    mock_batch_inspector: BatchInspector,
     mock_completeness_metrics: MockCompletenessMetrics,
 ):
     """Test that when expect_non_null_proportion_enabled is True, a single ExpectColumnProportionOfNonNullValuesToBeBetween expectation is created."""
@@ -632,8 +632,8 @@ def test_generate_completeness_expectations_with_non_null_proportion_enabled(
 def test_generate_completeness_expectations_with_non_null_proportion_disabled(
     mock_context: CloudDataContext,
     mocker: MockerFixture,
-    mock_metric_repository,
-    mock_batch_inspector,
+    mock_metric_repository: MetricRepository,
+    mock_batch_inspector: BatchInspector,
     mock_completeness_metrics: MockCompletenessMetrics,
 ):
     """Test that when expect_non_null_proportion_enabled is False, the current two-expectation approach is used."""
@@ -725,8 +725,8 @@ def test_completeness_expectations_count_based_on_flag_and_data(
     row_count: int,
     expect_non_null_proportion_enabled: bool,
     expected_expectation_count: int,
-    mock_metric_repository,
-    mock_batch_inspector,
+    mock_metric_repository: MetricRepository,
+    mock_batch_inspector: BatchInspector,
     mock_completeness_metrics: MockCompletenessMetrics,
 ):
     # Setup
