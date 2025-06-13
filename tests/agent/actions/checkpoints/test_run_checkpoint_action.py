@@ -7,10 +7,11 @@ from uuid import UUID
 
 import pytest
 import responses
+from great_expectations import Checkpoint, ValidationDefinition
 from great_expectations.core import ExpectationSuiteValidationResult
 from great_expectations.data_context.types.resource_identifiers import ValidationResultIdentifier
 from great_expectations.datasource.fluent import Datasource
-from great_expectations.datasource.fluent.interfaces import TestConnectionError
+from great_expectations.datasource.fluent.interfaces import DataAsset, TestConnectionError
 from great_expectations.exceptions import GXCloudError
 
 from great_expectations_cloud.agent.actions import RunWindowCheckpointAction
@@ -185,8 +186,17 @@ def test_run_checkpoint_action_raises_on_test_connection_failure(
 ):
     env_vars = GxAgentEnvVars()
     mock_datasource = mocker.Mock(spec=Datasource)
-    mock_context.data_sources.get.return_value = mock_datasource
+    mock_checkpoint = mocker.Mock(spec=Checkpoint)
+    mock_validation_definition = mocker.Mock(spec=ValidationDefinition)
+    mock_context.checkpoints.get.return_value = mock_checkpoint
+    mock_checkpoint.validation_definitions = [mock_validation_definition]
     mock_datasource.test_connection.side_effect = TestConnectionError()
+    mock_datasource.name = "test-datasource"
+    mock_datasource.type = "sql"
+    mock_asset = mocker.Mock(spec=DataAsset)
+    mock_asset.name = "test-asset"
+    type(mock_validation_definition).data_source = mocker.PropertyMock(return_value=mock_datasource)
+    type(mock_validation_definition).asset = mocker.PropertyMock(return_value=mock_asset)
     org_id = uuid.uuid4()
     action = action_class(
         context=mock_context,
