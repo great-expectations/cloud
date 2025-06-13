@@ -19,7 +19,7 @@ from great_expectations_cloud.agent.models import (
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
-    from great_expectations.datasource.fluent import DataAsset, Datasource
+    from great_expectations.datasource.fluent.interfaces import DataAsset, Datasource
 
 
 class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
@@ -35,8 +35,8 @@ class MissingCheckpointNameError(ValueError):
 # using a dataclass because we don't want the pydantic behavior of copying objects
 @dataclass
 class DataSourceAssets:
-    data_source: Datasource
-    assets_by_name: dict[str, DataAsset]
+    data_source: Datasource[Any, Any]
+    assets_by_name: dict[str, DataAsset[Any, Any]]
 
 
 def run_checkpoint(
