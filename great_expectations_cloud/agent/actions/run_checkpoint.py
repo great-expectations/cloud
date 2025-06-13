@@ -60,7 +60,9 @@ def run_checkpoint(
         ds = vd.data_source
         ds_name = ds.name
         if ds_name not in data_sources_assets_by_data_source_name:
-            data_sources_assets_by_data_source_name[ds_name] = DataSourceAssets(data_source=ds, assets_by_name={})
+            data_sources_assets_by_data_source_name[ds_name] = DataSourceAssets(
+                data_source=ds, assets_by_name={}
+            )
         data_sources_assets_by_data_source_name[ds_name].assets_by_name[vd.asset.name] = vd.asset
 
     for _, data_sources_assets in data_sources_assets_by_data_source_name.items():
