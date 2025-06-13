@@ -323,26 +323,7 @@ class GenerateDataQualityCheckExpectationsAction(
             row_count = table_row_count.value
             expectation: gx_expectations.Expectation
 
-            # Current two-expectation approach
-            if null_count == 0 or None:
-                # None handles the edge case of an empty table, we are making the assumption that future
-                # data should have non-null values
-                expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
-                    column=column_name, mostly=1
-                )
-                expectation_id = self._create_expectation_for_asset(
-                    expectation=expectation, asset_id=asset_id
-                )
-                expectation_ids.append(expectation_id)
-            elif null_count == row_count:
-                expectation = gx_expectations.ExpectColumnValuesToBeNull(
-                    column=column_name, mostly=1
-                )
-                expectation_id = self._create_expectation_for_asset(
-                    expectation=expectation, asset_id=asset_id
-                )
-                expectation_ids.append(expectation_id)
-            elif expect_non_null_proportion_enabled:
+            if expect_non_null_proportion_enabled:
                 # Single-expectation approach using ExpectColumnProportionOfNonNullValuesToBeBetween
                 unique_id = param_safe_unique_id(16)
                 min_param_name = f"{unique_id}_proportion_min"
@@ -387,9 +368,27 @@ class GenerateDataQualityCheckExpectationsAction(
                     expectation=expectation, asset_id=asset_id
                 )
                 expectation_ids.append(expectation_id)
+            # Current two-expectation approach
+            elif null_count == 0 or None:
+                # None handles the edge case of an empty table, we are making the assumption that future
+                # data should have non-null values
+                expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
+                    column=column_name, mostly=1
+                )
+                expectation_id = self._create_expectation_for_asset(
+                    expectation=expectation, asset_id=asset_id
+                )
+                expectation_ids.append(expectation_id)
+            elif null_count == row_count:
+                expectation = gx_expectations.ExpectColumnValuesToBeNull(
+                    column=column_name, mostly=1
+                )
+                expectation_id = self._create_expectation_for_asset(
+                    expectation=expectation, asset_id=asset_id
+                )
+                expectation_ids.append(expectation_id)
             else:
                 # Create two separate expectations when null count is neither 0 nor 100%
-                # and expect_non_null_proportion_enabled is False
                 unique_id_null = param_safe_unique_id(16)
                 unique_id_not_null = param_safe_unique_id(16)
 
