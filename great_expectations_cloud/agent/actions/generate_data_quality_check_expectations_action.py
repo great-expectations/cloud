@@ -251,6 +251,7 @@ class GenerateDataQualityCheckExpectationsAction(
         max_value = {"$PARAMETER": upper_bound_param_name}
         windows = []
         strict_min = False
+        strict_max = False
 
         if use_forecast:
             windows += [
@@ -285,6 +286,7 @@ class GenerateDataQualityCheckExpectationsAction(
         expectation = gx_expectations.ExpectTableRowCountToBeBetween(
             windows=windows,
             strict_min=strict_min,
+            strict_max=strict_max,
             min_value=min_value,
             max_value=max_value,
         )
