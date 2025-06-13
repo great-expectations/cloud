@@ -112,7 +112,7 @@ class GenerateDataQualityCheckExpectationsAction(
                         self._get_current_anomaly_detection_coverage(data_asset.id)
                     )
 
-                    if self._should_add_volume_change_coverage(
+                    if self._should_add_volume_change_detection_coverage(
                         selected_data_quality_issues=selected_dqis,
                         pre_existing_anomaly_detection_coverage=pre_existing_anomaly_detection_coverage,
                     ):
@@ -131,7 +131,7 @@ class GenerateDataQualityCheckExpectationsAction(
                             )
                         )
 
-                    if self._should_add_schema_change_coverage(
+                    if self._should_add_schema_change_detection_coverage(
                         selected_data_quality_issues=selected_dqis,
                         pre_existing_anomaly_detection_coverage=pre_existing_anomaly_detection_coverage,
                     ):
@@ -244,7 +244,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 response=response,
             ) from e
 
-    def _should_add_volume_change_coverage(
+    def _should_add_volume_change_detection_coverage(
         self,
         selected_data_quality_issues: list[DataQualityIssues],
         pre_existing_anomaly_detection_coverage: list[
@@ -253,10 +253,10 @@ class GenerateDataQualityCheckExpectationsAction(
     ) -> bool:
         return (
             DataQualityIssues.VOLUME in selected_data_quality_issues
-            and len(pre_existing_anomaly_detection_coverage.get(DataQualityIssues.VOLUME, [])) > 0
+            and len(pre_existing_anomaly_detection_coverage.get(DataQualityIssues.VOLUME, [])) == 0
         )
 
-    def _should_add_schema_change_coverage(
+    def _should_add_schema_change_detection_coverage(
         self,
         selected_data_quality_issues: list[DataQualityIssues],
         pre_existing_anomaly_detection_coverage: list[
@@ -265,7 +265,7 @@ class GenerateDataQualityCheckExpectationsAction(
     ) -> bool:
         return (
             DataQualityIssues.SCHEMA in selected_data_quality_issues
-            and len(pre_existing_anomaly_detection_coverage.get(DataQualityIssues.SCHEMA, [])) > 0
+            and len(pre_existing_anomaly_detection_coverage.get(DataQualityIssues.SCHEMA, [])) == 0
         )
 
     def _add_volume_change_expectation(self, asset_id: UUID | None, constraint_fn: str) -> UUID:
