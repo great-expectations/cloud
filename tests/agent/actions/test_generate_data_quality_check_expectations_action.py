@@ -534,17 +534,25 @@ def test_generate_volume_change_forecast_expectations_action_success(
     assert return_value.type == "generate_data_quality_check_expectations_request.received"
     assert isinstance(expectation, gx_expectations.ExpectTableRowCountToBeBetween)
     assert isinstance(expectation.windows, list)
-    assert len(expectation.windows) == 1
+    assert len(expectation.windows) == 2
     assert expectation.windows[0].constraint_fn == "forecast"
     assert isinstance(expectation.windows[0].parameter_name, str)
     assert expectation.windows[0].range == 1
     assert expectation.windows[0].offset == Offset(positive=0.0, negative=0.0)
     assert expectation.windows[0].strict is True
-    assert expectation.strict_min is True
-    assert expectation.max_value is None
+    assert expectation.windows[1].constraint_fn == "forecast"
+    assert isinstance(expectation.windows[1].parameter_name, str)
+    assert expectation.windows[1].range == 1
+    assert expectation.windows[1].offset == Offset(positive=0.0, negative=0.0)
+    assert expectation.windows[1].strict is True
+    assert expectation.strict_min is False
+    assert expectation.strict_max is False
     assert isinstance(expectation.min_value, dict)
+    assert isinstance(expectation.max_value, dict)
     assert "$PARAMETER" in expectation.min_value
+    assert "$PARAMETER" in expectation.max_value
     assert isinstance(expectation.min_value["$PARAMETER"], str)
+    assert isinstance(expectation.max_value["$PARAMETER"], str)
     assert call.kwargs["asset_id"] == TABLE_ASSET_ID
 
 

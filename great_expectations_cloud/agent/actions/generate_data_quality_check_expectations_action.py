@@ -48,6 +48,9 @@ from great_expectations_cloud.agent.utils import (
 )
 
 if TYPE_CHECKING:
+    from great_expectations.core.suite_parameters import (
+        SuiteParameterDict,
+    )
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent import DataAsset
 
@@ -117,14 +120,9 @@ class GenerateDataQualityCheckExpectationsAction(
                         selected_dqis,
                         pre_existing_anomaly_detection_coverage,
                     ):
-                        constraint_fn = (
-                            ExpectationConstraintFunction.FORECAST
-                            if event.use_forecast
-                            else ExpectationConstraintFunction.MEAN
-                        )
                         volume_change_expectation_id = self._add_volume_change_expectation(
                             asset_id=data_asset.id,
-                            constraint_fn=constraint_fn,
+                            use_forecast=event.use_forecast,
                         )
                         created_resources.append(
                             CreatedResource(
@@ -248,22 +246,52 @@ class GenerateDataQualityCheckExpectationsAction(
     ) -> bool:
         return issue in selected_dqis and issue not in pre_existing_anomaly_detection_coverage
 
-    def _add_volume_change_expectation(self, asset_id: UUID | None, constraint_fn: str) -> UUID:
+    def _add_volume_change_expectation(self, asset_id: UUID | None, use_forecast: bool) -> UUID:
         unique_id = param_safe_unique_id(16)
-        parameter_name = f"{unique_id}_min_value_min"
-        expectation = gx_expectations.ExpectTableRowCountToBeBetween(
-            windows=[
+        lower_bound_param_name = f"{unique_id}_min_value_min"
+        upper_bound_param_name = f"{unique_id}_max_value_max"
+        min_value: SuiteParameterDict[str, str] | None = {"$PARAMETER": lower_bound_param_name}
+        max_value: SuiteParameterDict[str, str] | None = {"$PARAMETER": upper_bound_param_name}
+        windows = []
+        strict_min = False
+        strict_max = False
+
+        if use_forecast:
+            windows += [
                 Window(
-                    constraint_fn=constraint_fn,
-                    parameter_name=parameter_name,
+                    constraint_fn=ExpectationConstraintFunction.FORECAST,
+                    parameter_name=lower_bound_param_name,
+                    range=1,
+                    offset=Offset(positive=0.0, negative=0.0),
+                    strict=True,
+                ),
+                Window(
+                    constraint_fn=ExpectationConstraintFunction.FORECAST,
+                    parameter_name=upper_bound_param_name,
+                    range=1,
+                    offset=Offset(positive=0.0, negative=0.0),
+                    strict=True,
+                ),
+            ]
+        else:
+            windows += [
+                Window(
+                    constraint_fn=ExpectationConstraintFunction.MEAN,
+                    parameter_name=lower_bound_param_name,
                     range=1,
                     offset=Offset(positive=0.0, negative=0.0),
                     strict=True,
                 )
-            ],
-            strict_min=True,
-            min_value={"$PARAMETER": parameter_name},
-            max_value=None,
+            ]
+            max_value = None
+            strict_min = True
+
+        expectation = gx_expectations.ExpectTableRowCountToBeBetween(
+            windows=windows,
+            strict_min=strict_min,
+            strict_max=strict_max,
+            min_value=min_value,
+            max_value=max_value,
         )
         expectation_id = self._create_expectation_for_asset(
             expectation=expectation, asset_id=asset_id
