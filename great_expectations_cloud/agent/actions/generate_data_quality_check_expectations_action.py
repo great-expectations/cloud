@@ -48,6 +48,9 @@ from great_expectations_cloud.agent.utils import (
 )
 
 if TYPE_CHECKING:
+    from great_expectations.core.suite_parameters import (
+        SuiteParameterDict,
+    )
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent import DataAsset
 
@@ -247,8 +250,8 @@ class GenerateDataQualityCheckExpectationsAction(
         unique_id = param_safe_unique_id(16)
         lower_bound_param_name = f"{unique_id}_min_value_min"
         upper_bound_param_name = f"{unique_id}_max_value_max"
-        min_value = {"$PARAMETER": lower_bound_param_name}
-        max_value = {"$PARAMETER": upper_bound_param_name}
+        min_value: SuiteParameterDict[str, str] | None = {"$PARAMETER": lower_bound_param_name}
+        max_value: SuiteParameterDict[str, str] | None = {"$PARAMETER": upper_bound_param_name}
         windows = []
         strict_min = False
         strict_max = False
