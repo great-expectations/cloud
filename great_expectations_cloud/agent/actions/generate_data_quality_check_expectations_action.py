@@ -379,6 +379,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 column_name = column.column
                 null_count = column.value
                 row_count = table_row_count.value
+                expectation: gx_expectations.Expectation
 
                 unique_id = param_safe_unique_id(16)
                 min_param_name = f"{unique_id}_proportion_min"
