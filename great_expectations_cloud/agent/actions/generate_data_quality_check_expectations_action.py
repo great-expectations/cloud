@@ -244,9 +244,9 @@ class GenerateDataQualityCheckExpectationsAction(
 
     def _should_add_volume_change_detection_coverage(
         self,
-        selected_data_quality_issues: list[DataQualityIssues],
-        pre_existing_anomaly_detection_coverage: list[
-            dict[Any, Any]
+        selected_data_quality_issues: Sequence[DataQualityIssues],
+        pre_existing_anomaly_detection_coverage: dict[
+            DataQualityIssues, list[dict[Any, Any]]
         ],  # list of ExpectationConfiguration dicts
     ) -> bool:
         return (
@@ -256,9 +256,9 @@ class GenerateDataQualityCheckExpectationsAction(
 
     def _should_add_schema_change_detection_coverage(
         self,
-        selected_data_quality_issues: list[DataQualityIssues],
-        pre_existing_anomaly_detection_coverage: list[
-            dict[Any, Any]
+        selected_data_quality_issues: Sequence[DataQualityIssues],
+        pre_existing_anomaly_detection_coverage: dict[
+            DataQualityIssues, list[dict[Any, Any]]
         ],  # list of ExpectationConfiguration dicts
     ) -> bool:
         return (
@@ -379,7 +379,6 @@ class GenerateDataQualityCheckExpectationsAction(
                 column_name = column.column
                 null_count = column.value
                 row_count = table_row_count.value
-                expectation: gx_expectations.Expectation
 
                 unique_id = param_safe_unique_id(16)
                 min_param_name = f"{unique_id}_proportion_min"
@@ -430,7 +429,6 @@ class GenerateDataQualityCheckExpectationsAction(
                 column_name = column.column
                 null_count = column.value
                 row_count = table_row_count.value
-                expectation: gx_expectations.Expectation
 
                 if null_count == 0 or None:
                     # None handles the edge case of an empty table, we are making the assumption that future
@@ -476,32 +474,32 @@ class GenerateDataQualityCheckExpectationsAction(
                         mostly={"$PARAMETER": f"{unique_id_null}_null_value_min"},
                     )
 
-                # For the not-null expectation (sets upper bound on nulls by requiring not-nulls)
-                not_null_expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
-                    windows=[
-                        Window(
-                            constraint_fn=ExpectationConstraintFunction.MEAN,
-                            parameter_name=f"{unique_id_not_null}_not_null_value_min",
-                            range=5,
-                            offset=Offset(
-                                positive=interpolated_offset, negative=interpolated_offset
-                            ),
-                            strict=False,
-                        )
-                    ],
-                    column=column_name,
-                    mostly={"$PARAMETER": f"{unique_id_not_null}_not_null_value_min"},
-                )
+                    # For the not-null expectation (sets upper bound on nulls by requiring not-nulls)
+                    not_null_expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
+                        windows=[
+                            Window(
+                                constraint_fn=ExpectationConstraintFunction.MEAN,
+                                parameter_name=f"{unique_id_not_null}_not_null_value_min",
+                                range=5,
+                                offset=Offset(
+                                    positive=interpolated_offset, negative=interpolated_offset
+                                ),
+                                strict=False,
+                            )
+                        ],
+                        column=column_name,
+                        mostly={"$PARAMETER": f"{unique_id_not_null}_not_null_value_min"},
+                    )
 
-                null_expectation_id = self._create_expectation_for_asset(
-                    expectation=null_expectation, asset_id=asset_id
-                )
-                expectation_ids.append(null_expectation_id)
+                    null_expectation_id = self._create_expectation_for_asset(
+                        expectation=null_expectation, asset_id=asset_id
+                    )
+                    expectation_ids.append(null_expectation_id)
 
-                not_null_expectation_id = self._create_expectation_for_asset(
-                    expectation=not_null_expectation, asset_id=asset_id
-                )
-                expectation_ids.append(not_null_expectation_id)
+                    not_null_expectation_id = self._create_expectation_for_asset(
+                        expectation=not_null_expectation, asset_id=asset_id
+                    )
+                    expectation_ids.append(not_null_expectation_id)
 
         return expectation_ids
 
@@ -511,16 +509,20 @@ class GenerateDataQualityCheckExpectationsAction(
         pre_existing_completeness_change_expectations: list[
             dict[Any, Any]
         ],  # list of ExpectationConfiguration dicts
-    ) -> set(ColumnMetric[int]):
+    ) -> list[ColumnMetric[int]]:
         try:
             columns_with_completeness_coverage = {
-                expectation.get("kwargs").get("column")
+                expectation.get("kwargs").get("column")  # type: ignore[union-attr]
                 for expectation in pre_existing_completeness_change_expectations
             }
         except TypeError as e:
             raise InvalidExpectationConfigurationError(str(e)) from e
-        all_columns = {column.column for column in column_null_values_metric}
-        return all_columns.difference(columns_with_completeness_coverage)
+        columns_without_completeness_coverage = [
+            column
+            for column in column_null_values_metric
+            if column.column not in columns_with_completeness_coverage
+        ]
+        return columns_without_completeness_coverage
 
     def _compute_triangular_interpolation_offset(
         self, value: float, input_range: tuple[float, float]
