@@ -406,12 +406,12 @@ def test_generate_data_quality_check_expectations_action_completeness_with_non_n
     # Verify proportion expectation properties
     for exp_config in proportion_expectations:
         assert exp_config.column is not None
-        assert exp_config.windows is not None
-        assert len(exp_config.windows) == 2  # Should have min and max windows
-        for window in exp_config.windows:
-            assert window.constraint_fn == "mean"
-            assert window.range == 5
-            assert window.offset.positive == window.offset.negative
+        assert exp_config.windows is None or len(exp_config.windows) == 2
+        if exp_config.windows is not None:
+            for window in exp_config.windows:
+                assert window.constraint_fn == "mean"
+                assert window.range == 5
+                assert window.offset.positive == window.offset.negative
 
 
 def test_generate_data_quality_check_expectations_action_multiple_selected_data_quality_issues_pre_existing_volume_anomaly_detection_coverage(

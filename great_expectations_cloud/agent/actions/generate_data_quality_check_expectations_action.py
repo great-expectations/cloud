@@ -361,36 +361,47 @@ class GenerateDataQualityCheckExpectationsAction(
                 non_null_count = row_count - null_count if row_count > 0 else 0
                 non_null_proportion = non_null_count / row_count if row_count > 0 else 0
 
-                # Use triangular interpolation to compute min/max values
-                interpolated_offset = self._compute_triangular_interpolation_offset(
-                    value=non_null_proportion, input_range=(0.0, 1.0)
-                )
+                if non_null_proportion == 0:
+                    expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                        column=column_name,
+                        max_value=0,
+                    )
+                elif non_null_proportion == 1:
+                    expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                        column=column_name,
+                        min_value=1,
+                    )
+                else:
+                    # Use triangular interpolation to compute min/max values
+                    interpolated_offset = self._compute_triangular_interpolation_offset(
+                        value=non_null_proportion, input_range=(0.0, 1.0)
+                    )
 
-                expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
-                    windows=[
-                        Window(
-                            constraint_fn=ExpectationConstraintFunction.MEAN,
-                            parameter_name=min_param_name,
-                            range=5,
-                            offset=Offset(
-                                positive=interpolated_offset, negative=interpolated_offset
+                    expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                        windows=[
+                            Window(
+                                constraint_fn=ExpectationConstraintFunction.MEAN,
+                                parameter_name=min_param_name,
+                                range=5,
+                                offset=Offset(
+                                    positive=interpolated_offset, negative=interpolated_offset
+                                ),
+                                strict=False,
                             ),
-                            strict=False,
-                        ),
-                        Window(
-                            constraint_fn=ExpectationConstraintFunction.MEAN,
-                            parameter_name=max_param_name,
-                            range=5,
-                            offset=Offset(
-                                positive=interpolated_offset, negative=interpolated_offset
+                            Window(
+                                constraint_fn=ExpectationConstraintFunction.MEAN,
+                                parameter_name=max_param_name,
+                                range=5,
+                                offset=Offset(
+                                    positive=interpolated_offset, negative=interpolated_offset
+                                ),
+                                strict=False,
                             ),
-                            strict=False,
-                        ),
-                    ],
-                    column=column_name,
-                    min_value={"$PARAMETER": min_param_name},
-                    max_value={"$PARAMETER": max_param_name},
-                )
+                        ],
+                        column=column_name,
+                        min_value={"$PARAMETER": min_param_name},
+                        max_value={"$PARAMETER": max_param_name},
+                    )
 
                 expectation_id = self._create_expectation_for_asset(
                     expectation=expectation, asset_id=asset_id
