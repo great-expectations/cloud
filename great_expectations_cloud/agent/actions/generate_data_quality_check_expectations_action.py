@@ -513,10 +513,10 @@ class GenerateDataQualityCheckExpectationsAction(
     ) -> list[ColumnMetric[int]]:
         try:
             columns_with_completeness_coverage = {
-                expectation.get("kwargs").get("column")  # type: ignore[union-attr]
+                expectation.get("config").get("kwargs").get("column")  # type: ignore[union-attr]
                 for expectation in pre_existing_completeness_change_expectations
             }
-        except TypeError as e:
+        except AttributeError as e:
             raise InvalidExpectationConfigurationError(str(e)) from e
         columns_without_completeness_coverage = [
             column
