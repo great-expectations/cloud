@@ -59,16 +59,17 @@ def run_checkpoint(
     for vd in checkpoint.validation_definitions:
         ds = vd.data_source
         ds_name = ds.name
+        # create assets by name dict
         if ds_name not in data_sources_assets_by_data_source_name:
             data_sources_assets_by_data_source_name[ds_name] = DataSourceAssets(
                 data_source=ds, assets_by_name={}
             )
         data_sources_assets_by_data_source_name[ds_name].assets_by_name[vd.asset.name] = vd.asset
 
-    for _, data_sources_assets in data_sources_assets_by_data_source_name.items():
+    for data_sources_assets in data_sources_assets_by_data_source_name.values():
         data_source = data_sources_assets.data_source
         data_source.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
-        for _, data_asset in data_sources_assets.assets_by_name.items():
+        for data_asset in data_sources_assets.assets_by_name.values():
             data_asset.test_connection()  # raises `TestConnectionError` on failure
 
     checkpoint_run_result = checkpoint.run(
