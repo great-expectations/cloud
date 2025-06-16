@@ -39,7 +39,7 @@ sqlalchemy = ">=2.0"
 coverage = { extras = ["toml"], version = "^7.5.1" }
 freezegun = "^1.4.0"
 invoke = "^2.2.0"
-mypy = "1.16.0"
+mypy = "1.16.1"
 pre-commit = ">=3.3.3,<5.0.0"
 pyfakefs = "^5.4.1"
 pytest = ">=7.4,<9.0"
