@@ -747,6 +747,8 @@ def test_generate_completeness_expectations_with_non_null_proportion_enabled(
     expectation = created_expectations[0]
     assert isinstance(expectation, gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween)
     assert expectation.column
+
+    # For mixed nulls (30/100), we expect 2 windows with min and max values
     assert expectation.windows is not None
     assert len(expectation.windows) == 2  # min and max windows
     assert isinstance(expectation.min_value, dict) and "$PARAMETER" in expectation.min_value
@@ -912,6 +914,107 @@ def test_completeness_expectations_count_based_on_flag_and_data(
 
     # Assert expectation count
     assert len(created_expectations) == expected_expectation_count
+
+
+def test_generate_completeness_expectations_edge_cases_with_proportion_enabled(
+    mock_context: CloudDataContext,
+    mocker: MockerFixture,
+    mock_metric_repository: MetricRepository,
+    mock_batch_inspector: BatchInspector,
+    mock_completeness_metrics: MockCompletenessMetrics,
+):
+    """Test edge cases where non_null_proportion is exactly 0 or 1 with expect_non_null_proportion_enabled=True."""
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=mock_context,
+        metric_repository=mock_metric_repository,
+        batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.uuid4(),
+    )
+
+    def mock_retrieve_asset(event, asset_name):
+        return TableAsset(
+            id=TABLE_ASSET_ID,
+            name="test-data-asset",
+            table_name="test_table",
+            schema_name="test_schema",
+        )
+
+    def mock_get_coverage(data_asset_id):
+        return {}
+
+    mocker.patch.object(action, "_retrieve_asset_from_asset_name", side_effect=mock_retrieve_asset)
+    mocker.patch.object(
+        action, "_get_current_anomaly_detection_coverage", side_effect=mock_get_coverage
+    )
+
+    # All nulls (non_null_proportion = 0)
+    created_expectations = []
+
+    def mock_create_expectation(expectation, asset_id):
+        created_expectations.append(expectation)
+        return uuid.uuid4()
+
+    def mock_get_metrics_all_nulls(data_asset):
+        metrics = mock_completeness_metrics(100, 100)  # 100 nulls out of 100 rows
+        return MetricRun(metrics=metrics), uuid.uuid4()
+
+    mocker.patch.object(action, "_get_metrics", side_effect=mock_get_metrics_all_nulls)
+    mocker.patch.object(
+        action, "_create_expectation_for_asset", side_effect=mock_create_expectation
+    )
+
+    action.run(
+        event=GenerateDataQualityCheckExpectationsEvent(
+            type="generate_data_quality_check_expectations_request.received",
+            organization_id=uuid.uuid4(),
+            datasource_name="test-datasource",
+            data_assets=["test-data-asset1"],
+            selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
+            expect_non_null_proportion_enabled=True,
+        ),
+        id="test-id",
+    )
+
+    # Verify expectation for all nulls case
+    assert len(created_expectations) == 1
+    expectation = created_expectations[0]
+    assert isinstance(expectation, gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween)
+    assert expectation.column
+    assert expectation.max_value == 0
+    assert expectation.min_value is None
+    assert expectation.windows is None
+
+    # No nulls (non_null_proportion = 1)
+    created_expectations.clear()
+
+    def mock_get_metrics_no_nulls(data_asset):
+        metrics = mock_completeness_metrics(0, 100)  # 0 nulls out of 100 rows
+        return MetricRun(metrics=metrics), uuid.uuid4()
+
+    mocker.patch.object(action, "_get_metrics", side_effect=mock_get_metrics_no_nulls)
+
+    action.run(
+        event=GenerateDataQualityCheckExpectationsEvent(
+            type="generate_data_quality_check_expectations_request.received",
+            organization_id=uuid.uuid4(),
+            datasource_name="test-datasource",
+            data_assets=["test-data-asset1"],
+            selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
+            expect_non_null_proportion_enabled=True,
+        ),
+        id="test-id",
+    )
+
+    # Verify expectation for no nulls case
+    assert len(created_expectations) == 1
+    expectation = created_expectations[0]
+    assert isinstance(expectation, gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween)
+    assert expectation.column
+    assert expectation.min_value == 1
+    assert expectation.max_value is None
+    assert expectation.windows is None
 
 
 if __name__ == "__main__":
