@@ -145,10 +145,11 @@ class GenerateDataQualityCheckExpectationsAction(
                         )
 
                     if DataQualityIssues.COMPLETENESS in selected_dqis:
-                        completeness_change_expectation_ids = self._add_completeness_change_expectations(
-                            metric_run=metric_run,
-                            asset_id=data_asset.id,
-                            expect_non_null_proportion_enabled=event.expect_non_null_proportion_enabled,
+                        completeness_change_expectation_ids = (
+                            self._add_completeness_change_expectations(
+                                metric_run=metric_run,
+                                asset_id=data_asset.id,
+                            )
                         )
                         for exp_id in completeness_change_expectation_ids:
                             created_resources.append(
@@ -323,7 +324,6 @@ class GenerateDataQualityCheckExpectationsAction(
         self,
         metric_run: MetricRun,
         asset_id: UUID | None,
-        expect_non_null_proportion_enabled: bool = False,
     ) -> list[UUID]:
         table_row_count = next(
             metric
@@ -351,133 +351,61 @@ class GenerateDataQualityCheckExpectationsAction(
             row_count = table_row_count.value
             expectation: gx_expectations.Expectation
 
-            if expect_non_null_proportion_enabled:
-                # Single-expectation approach using ExpectColumnProportionOfNonNullValuesToBeBetween
-                unique_id = param_safe_unique_id(16)
-                min_param_name = f"{unique_id}_proportion_min"
-                max_param_name = f"{unique_id}_proportion_max"
+            # Single-expectation approach using ExpectColumnProportionOfNonNullValuesToBeBetween
+            unique_id = param_safe_unique_id(16)
+            min_param_name = f"{unique_id}_proportion_min"
+            max_param_name = f"{unique_id}_proportion_max"
 
-                # Calculate non-null proportion
-                non_null_count = row_count - null_count if row_count > 0 else 0
-                non_null_proportion = non_null_count / row_count if row_count > 0 else 0
+            # Calculate non-null proportion
+            non_null_count = row_count - null_count if row_count > 0 else 0
+            non_null_proportion = non_null_count / row_count if row_count > 0 else 0
 
-                if non_null_proportion == 0:
-                    expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
-                        column=column_name,
-                        max_value=0,
-                    )
-                elif non_null_proportion == 1:
-                    expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
-                        column=column_name,
-                        min_value=1,
-                    )
-                else:
-                    # Use triangular interpolation to compute min/max values
-                    interpolated_offset = self._compute_triangular_interpolation_offset(
-                        value=non_null_proportion, input_range=(0.0, 1.0)
-                    )
-
-                    expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
-                        windows=[
-                            Window(
-                                constraint_fn=ExpectationConstraintFunction.MEAN,
-                                parameter_name=min_param_name,
-                                range=5,
-                                offset=Offset(
-                                    positive=interpolated_offset, negative=interpolated_offset
-                                ),
-                                strict=False,
-                            ),
-                            Window(
-                                constraint_fn=ExpectationConstraintFunction.MEAN,
-                                parameter_name=max_param_name,
-                                range=5,
-                                offset=Offset(
-                                    positive=interpolated_offset, negative=interpolated_offset
-                                ),
-                                strict=False,
-                            ),
-                        ],
-                        column=column_name,
-                        min_value={"$PARAMETER": min_param_name},
-                        max_value={"$PARAMETER": max_param_name},
-                    )
-
-                expectation_id = self._create_expectation_for_asset(
-                    expectation=expectation, asset_id=asset_id
+            if non_null_proportion == 0:
+                expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                    column=column_name,
+                    max_value=0,
                 )
-                expectation_ids.append(expectation_id)
-            # Current two-expectation approach
-            elif null_count == 0 or None:
-                # None handles the edge case of an empty table, we are making the assumption that future
-                # data should have non-null values
-                expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
-                    column=column_name, mostly=1
+            elif non_null_proportion == 1:
+                expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                    column=column_name,
+                    min_value=1,
                 )
-                expectation_id = self._create_expectation_for_asset(
-                    expectation=expectation, asset_id=asset_id
-                )
-                expectation_ids.append(expectation_id)
-            elif null_count == row_count:
-                expectation = gx_expectations.ExpectColumnValuesToBeNull(
-                    column=column_name, mostly=1
-                )
-                expectation_id = self._create_expectation_for_asset(
-                    expectation=expectation, asset_id=asset_id
-                )
-                expectation_ids.append(expectation_id)
             else:
-                # Create two separate expectations when null count is neither 0 nor 100%
-                unique_id_null = param_safe_unique_id(16)
-                unique_id_not_null = param_safe_unique_id(16)
-
+                # Use triangular interpolation to compute min/max values
                 interpolated_offset = self._compute_triangular_interpolation_offset(
-                    value=null_count, input_range=(0.0, float(row_count))
+                    value=non_null_proportion, input_range=(0.0, 1.0)
                 )
 
-                # For the null expectation (sets lower bound on nulls)
-                null_expectation = gx_expectations.ExpectColumnValuesToBeNull(
+                expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
                     windows=[
                         Window(
                             constraint_fn=ExpectationConstraintFunction.MEAN,
-                            parameter_name=f"{unique_id_null}_null_value_min",
+                            parameter_name=min_param_name,
                             range=5,
                             offset=Offset(
                                 positive=interpolated_offset, negative=interpolated_offset
                             ),
                             strict=False,
-                        )
-                    ],
-                    column=column_name,
-                    mostly={"$PARAMETER": f"{unique_id_null}_null_value_min"},
-                )
-
-                # For the not-null expectation (sets upper bound on nulls by requiring not-nulls)
-                not_null_expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
-                    windows=[
+                        ),
                         Window(
                             constraint_fn=ExpectationConstraintFunction.MEAN,
-                            parameter_name=f"{unique_id_not_null}_not_null_value_min",
+                            parameter_name=max_param_name,
                             range=5,
                             offset=Offset(
                                 positive=interpolated_offset, negative=interpolated_offset
                             ),
                             strict=False,
-                        )
+                        ),
                     ],
                     column=column_name,
-                    mostly={"$PARAMETER": f"{unique_id_not_null}_not_null_value_min"},
+                    min_value={"$PARAMETER": min_param_name},
+                    max_value={"$PARAMETER": max_param_name},
                 )
 
-                null_expectation_id = self._create_expectation_for_asset(
-                    expectation=null_expectation, asset_id=asset_id
-                )
-                expectation_ids.append(null_expectation_id)
-
-                not_null_expectation_id = self._create_expectation_for_asset(
-                    expectation=not_null_expectation, asset_id=asset_id
-                )
-                expectation_ids.append(not_null_expectation_id)
+            expectation_id = self._create_expectation_for_asset(
+                expectation=expectation, asset_id=asset_id
+            )
+            expectation_ids.append(expectation_id)
 
         return expectation_ids
 
