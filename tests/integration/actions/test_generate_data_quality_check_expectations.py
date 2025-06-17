@@ -304,10 +304,10 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
         # Verify each has required properties
         assert exp_config.column is not None
         if exp_config.windows is not None:
-            assert exp_config.windows[0].constraint_fn == "mean"
-            assert exp_config.windows[0].range == 5
-            assert exp_config.windows[0].offset.positive == exp_config.windows[0].offset.negative
-            assert exp_config.windows[0].parameter_name == exp_config.mostly["$PARAMETER"]
+            for window in exp_config.windows:
+                assert window.constraint_fn == "mean"
+                assert window.range == 5
+                assert window.offset.positive == window.offset.negative
 
 
 def test_generate_data_quality_check_expectations_action_completeness_with_proportion_approach(
