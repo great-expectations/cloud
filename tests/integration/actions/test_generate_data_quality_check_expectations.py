@@ -297,10 +297,10 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
     assert len(generated_expectations) > 0  # At least one expectation was created
     for exp_config in generated_expectations:
         # Verify each expectation is one of the expected types
-        assert exp_config.expectation_type in [
-            "expect_column_values_to_be_null",
-            "expect_column_values_to_not_be_null",
-        ]
+        assert (
+            exp_config.expectation_type
+            == "expect_column_proportion_of_non_null_values_to_be_between"
+        )
         # Verify each has required properties
         assert exp_config.column is not None
         if exp_config.windows is not None:
