@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
+from enum import Enum
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import urljoin
@@ -8,7 +10,10 @@ from uuid import UUID
 
 import great_expectations.expectations as gx_expectations
 from great_expectations.core.http import create_session
-from great_expectations.expectations.metadata_types import DataQualityIssues
+from great_expectations.exceptions import GXCloudError
+from great_expectations.expectations.metadata_types import (
+    DataQualityIssues,
+)
 from great_expectations.expectations.window import Offset, Window
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
@@ -43,6 +48,9 @@ from great_expectations_cloud.agent.utils import (
 )
 
 if TYPE_CHECKING:
+    from great_expectations.core.suite_parameters import (
+        SuiteParameterDict,
+    )
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent import DataAsset
 
@@ -50,6 +58,13 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
 from great_expectations_cloud.agent.actions.utils import verify_data_asset
+
+class ExpectationConstraintFunction(str, Enum):
+    """Expectation constraint functions."""
+
+    FORECAST = "forecast"
+    MEAN = "mean"
+
 
 class PartialGenerateDataQualityCheckExpectationError(GXAgentError):
     def __init__(self, assets_with_errors: list[str], assets_attempted: int):
@@ -86,6 +101,7 @@ class GenerateDataQualityCheckExpectationsAction(
     def run(self, event: GenerateDataQualityCheckExpectationsEvent, id: str) -> ActionResult:
         created_resources: list[CreatedResource] = []
         assets_with_errors: list[str] = []
+        selected_dqis: Sequence[DataQualityIssues] = event.selected_data_quality_issues or []
         for asset_name in event.data_assets:
             try:
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
@@ -94,10 +110,20 @@ class GenerateDataQualityCheckExpectationsAction(
                 created_resources.append(
                     CreatedResource(resource_id=str(metric_run_id), type="MetricRun")
                 )
-                if event.selected_data_quality_issues:
-                    if DataQualityIssues.VOLUME in event.selected_data_quality_issues:
+
+                if selected_dqis:
+                    pre_existing_anomaly_detection_coverage = (
+                        self._get_current_anomaly_detection_coverage(data_asset.id)
+                    )
+
+                    if self._should_add_anomaly_detection_coverage_for_issue(
+                        DataQualityIssues.VOLUME,
+                        selected_dqis,
+                        pre_existing_anomaly_detection_coverage,
+                    ):
                         volume_change_expectation_id = self._add_volume_change_expectation(
-                            asset_id=data_asset.id
+                            asset_id=data_asset.id,
+                            use_forecast=event.use_forecast,
                         )
                         created_resources.append(
                             CreatedResource(
@@ -105,7 +131,11 @@ class GenerateDataQualityCheckExpectationsAction(
                             )
                         )
 
-                    if DataQualityIssues.SCHEMA in event.selected_data_quality_issues:
+                    if self._should_add_anomaly_detection_coverage_for_issue(
+                        DataQualityIssues.SCHEMA,
+                        selected_dqis,
+                        pre_existing_anomaly_detection_coverage,
+                    ):
                         schema_change_expectation_id = self._add_schema_change_expectation(
                             metric_run=metric_run, asset_id=data_asset.id
                         )
@@ -115,13 +145,12 @@ class GenerateDataQualityCheckExpectationsAction(
                             )
                         )
 
-                    if DataQualityIssues.COMPLETENESS in event.selected_data_quality_issues:
-                        completeness_change_expectation_ids = (
-                            self._add_completeness_change_expectations(
-                                metric_run=metric_run, asset_id=data_asset.id
-                            )
+                    if DataQualityIssues.COMPLETENESS in selected_dqis:
+                        completeness_change_expectation_ids = self._add_completeness_change_expectations(
+                            metric_run=metric_run,
+                            asset_id=data_asset.id,
+                            expect_non_null_proportion_enabled=event.expect_non_null_proportion_enabled,
                         )
-
                         for exp_id in completeness_change_expectation_ids:
                             created_resources.append(
                                 CreatedResource(resource_id=str(exp_id), type="Expectation")
@@ -179,21 +208,92 @@ class GenerateDataQualityCheckExpectationsAction(
 
         return metric_run, metric_run_id
 
-    def _add_volume_change_expectation(self, asset_id: UUID | None) -> UUID:
+    def _get_current_anomaly_detection_coverage(
+        self, data_asset_id: UUID | None
+    ) -> dict[DataQualityIssues, list[dict[Any, Any]]]:
+        """
+        This function returns a dict mapping Data Quality Issues to a list of ExpectationConfiguration dicts.
+        """
+        url = urljoin(
+            base=self._base_url,
+            url=f"/api/v1/organizations/{self._organization_id}/expectations/",
+        )
+        with create_session(access_token=self._auth_key) as session:
+            response = session.get(
+                url=url,
+                params={"anomaly_detection": str(True), "data_asset_id": str(data_asset_id)},
+            )
+
+        if not response.ok:
+            raise GXCloudError(
+                message=f"GenerateDataQualityCheckExpectationsAction encountered an error while connecting to GX Cloud. "
+                f"Unable to retrieve Anomaly Detection Expectations for Asset with ID={data_asset_id}.",
+                response=response,
+            )
+        data = response.json()
+        try:
+            return data["data"]  # type: ignore[no-any-return]
+
+        except KeyError as e:
+            raise GXCloudError(
+                message="Malformed response received from GX Cloud",
+                response=response,
+            ) from e
+
+    def _should_add_anomaly_detection_coverage_for_issue(
+        self,
+        issue: DataQualityIssues,
+        selected_dqis: Sequence[DataQualityIssues],
+        pre_existing_anomaly_detection_coverage: dict[DataQualityIssues, list[dict[Any, Any]]],
+    ) -> bool:
+        return issue in selected_dqis and issue not in pre_existing_anomaly_detection_coverage
+
+    def _add_volume_change_expectation(self, asset_id: UUID | None, use_forecast: bool) -> UUID:
         unique_id = param_safe_unique_id(16)
-        expectation = gx_expectations.ExpectTableRowCountToBeBetween(
-            windows=[
+        lower_bound_param_name = f"{unique_id}_min_value_min"
+        upper_bound_param_name = f"{unique_id}_max_value_max"
+        min_value: SuiteParameterDict[str, str] | None = {"$PARAMETER": lower_bound_param_name}
+        max_value: SuiteParameterDict[str, str] | None = {"$PARAMETER": upper_bound_param_name}
+        windows = []
+        strict_min = False
+        strict_max = False
+
+        if use_forecast:
+            windows += [
                 Window(
-                    constraint_fn="mean",
-                    parameter_name=f"{unique_id}_min_value_min",
+                    constraint_fn=ExpectationConstraintFunction.FORECAST,
+                    parameter_name=lower_bound_param_name,
+                    range=1,
+                    offset=Offset(positive=0.0, negative=0.0),
+                    strict=True,
+                ),
+                Window(
+                    constraint_fn=ExpectationConstraintFunction.FORECAST,
+                    parameter_name=upper_bound_param_name,
+                    range=1,
+                    offset=Offset(positive=0.0, negative=0.0),
+                    strict=True,
+                ),
+            ]
+        else:
+            windows += [
+                Window(
+                    constraint_fn=ExpectationConstraintFunction.MEAN,
+                    parameter_name=lower_bound_param_name,
                     range=1,
                     offset=Offset(positive=0.0, negative=0.0),
                     strict=True,
                 )
-            ],
-            strict_min=True,
-            min_value={"$PARAMETER": f"{unique_id}_min_value_min"},
-            max_value=None,
+            ]
+            max_value = None
+            strict_min = True
+
+        expectation = gx_expectations.ExpectTableRowCountToBeBetween(
+            windows=windows,
+            strict_min=strict_min,
+            strict_max=strict_max,
+            min_value=min_value,
+            max_value=max_value,
         )
         expectation_id = self._create_expectation_for_asset(
             expectation=expectation, asset_id=asset_id
@@ -222,7 +322,10 @@ class GenerateDataQualityCheckExpectationsAction(
         return expectation_id
 
     def _add_completeness_change_expectations(
-        self, metric_run: MetricRun, asset_id: UUID | None
+        self,
+        metric_run: MetricRun,
+        asset_id: UUID | None,
+        expect_non_null_proportion_enabled: bool = False,
     ) -> list[UUID]:
         table_row_count = next(
             metric
@@ -249,7 +352,65 @@ class GenerateDataQualityCheckExpectationsAction(
             null_count = column.value
             row_count = table_row_count.value
             expectation: gx_expectations.Expectation
-            if null_count == 0 or None:
+
+            if expect_non_null_proportion_enabled:
+                # Single-expectation approach using ExpectColumnProportionOfNonNullValuesToBeBetween
+                unique_id = param_safe_unique_id(16)
+                min_param_name = f"{unique_id}_proportion_min"
+                max_param_name = f"{unique_id}_proportion_max"
+
+                # Calculate non-null proportion
+                non_null_count = row_count - null_count if row_count > 0 else 0
+                non_null_proportion = non_null_count / row_count if row_count > 0 else 0
+
+                if non_null_proportion == 0:
+                    expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                        column=column_name,
+                        max_value=0,
+                    )
+                elif non_null_proportion == 1:
+                    expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                        column=column_name,
+                        min_value=1,
+                    )
+                else:
+                    # Use triangular interpolation to compute min/max values
+                    interpolated_offset = self._compute_triangular_interpolation_offset(
+                        value=non_null_proportion, input_range=(0.0, 1.0)
+                    )
+
+                    expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                        windows=[
+                            Window(
+                                constraint_fn=ExpectationConstraintFunction.MEAN,
+                                parameter_name=min_param_name,
+                                range=5,
+                                offset=Offset(
+                                    positive=interpolated_offset, negative=interpolated_offset
+                                ),
+                                strict=False,
+                            ),
+                            Window(
+                                constraint_fn=ExpectationConstraintFunction.MEAN,
+                                parameter_name=max_param_name,
+                                range=5,
+                                offset=Offset(
+                                    positive=interpolated_offset, negative=interpolated_offset
+                                ),
+                                strict=False,
+                            ),
+                        ],
+                        column=column_name,
+                        min_value={"$PARAMETER": min_param_name},
+                        max_value={"$PARAMETER": max_param_name},
+                    )
+
+                expectation_id = self._create_expectation_for_asset(
+                    expectation=expectation, asset_id=asset_id
+                )
+                expectation_ids.append(expectation_id)
+            # Current two-expectation approach
+            elif null_count == 0 or None:
                 # None handles the edge case of an empty table, we are making the assumption that future
                 # data should have non-null values
                 expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
@@ -272,18 +433,15 @@ class GenerateDataQualityCheckExpectationsAction(
                 unique_id_null = param_safe_unique_id(16)
                 unique_id_not_null = param_safe_unique_id(16)
 
-                options = TriangularInterpolationOptions(
-                    input_range=(0.0, float(row_count)), output_range=(0, 0.1), round_precision=5
-                )
-                interpolated_offset = max(
-                    0.0001, round(triangular_interpolation(null_count, options), 5)
+                interpolated_offset = self._compute_triangular_interpolation_offset(
+                    value=null_count, input_range=(0.0, float(row_count))
                 )
 
                 # For the null expectation (sets lower bound on nulls)
                 null_expectation = gx_expectations.ExpectColumnValuesToBeNull(
                     windows=[
                         Window(
-                            constraint_fn="mean",
+                            constraint_fn=ExpectationConstraintFunction.MEAN,
                             parameter_name=f"{unique_id_null}_null_value_min",
                             range=5,
                             offset=Offset(
@@ -300,7 +458,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 not_null_expectation = gx_expectations.ExpectColumnValuesToNotBeNull(
                     windows=[
                         Window(
-                            constraint_fn="mean",
+                            constraint_fn=ExpectationConstraintFunction.MEAN,
                             parameter_name=f"{unique_id_not_null}_not_null_value_min",
                             range=5,
                             offset=Offset(
@@ -324,6 +482,26 @@ class GenerateDataQualityCheckExpectationsAction(
                 expectation_ids.append(not_null_expectation_id)
 
         return expectation_ids
+
+    def _compute_triangular_interpolation_offset(
+        self, value: float, input_range: tuple[float, float]
+    ) -> float:
+        """
+        Compute triangular interpolation offset for expectation windows.
+
+        Args:
+            value: The input value to interpolate
+            input_range: The input range as (min, max) tuple
+
+        Returns:
+            The computed interpolation offset
+        """
+        options = TriangularInterpolationOptions(
+            input_range=input_range,
+            output_range=(0, 0.1),
+            round_precision=5,
+        )
+        return max(0.0001, round(triangular_interpolation(value, options), 5))
 
     def _create_expectation_for_asset(
         self, expectation: gx_expectations.Expectation, asset_id: UUID | None

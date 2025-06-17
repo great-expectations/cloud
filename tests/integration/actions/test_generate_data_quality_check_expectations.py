@@ -136,14 +136,24 @@ def test_generate_data_quality_check_expectations_action_no_selected_data_qualit
     assert action_result.created_resources[0].type == "MetricRun"
 
 
-def test_generate_data_quality_check_expectations_action_schema_change_selected_data_quality_issues(
+def test_generate_data_quality_check_expectations_action_schema_change_selected_data_quality_issues_no_pre_existing_anomaly_detection_coverage(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
     cloud_base_url: str,
     token_env_var_local: str,
     seed_and_cleanup_test_data,
+    monkeypatch,
 ):
+    def mock_no_anomaly_detection_coverage(self, data_asset_id: uuid.UUID | None):
+        return {}
+
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_get_current_anomaly_detection_coverage",
+        mock_no_anomaly_detection_coverage,
+    )
+
     generate_schema_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
         type="generate_data_quality_check_expectations_request.received",
         datasource_name="local_mercury_db",
@@ -171,14 +181,24 @@ def test_generate_data_quality_check_expectations_action_schema_change_selected_
     assert action_result.created_resources[1].type == "Expectation"
 
 
-def test_generate_data_quality_check_expectations_action_multiple_selected_data_quality_issues(
+def test_generate_data_quality_check_expectations_action_multiple_selected_data_quality_issues_no_pre_existing_anomaly_detection_coverage(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
     cloud_base_url: str,
     token_env_var_local: str,
     seed_and_cleanup_test_data,
+    monkeypatch,
 ):
+    def mock_no_anomaly_detection_coverage(self, data_asset_id: uuid.UUID | None):
+        return {}
+
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_get_current_anomaly_detection_coverage",
+        mock_no_anomaly_detection_coverage,
+    )
+
     generate_schema_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
         type="generate_data_quality_check_expectations_request.received",
         datasource_name="local_mercury_db",
@@ -210,7 +230,7 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
     assert action_result.created_resources[2].type == "Expectation"
 
 
-def test_generate_data_quality_check_expectations_action_completeness_selected_data_quality_issues(
+def test_generate_data_quality_check_expectations_action_completeness_selected_data_quality_issues_no_pre_existing_anomaly_detection_coverage(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
@@ -233,6 +253,15 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
         generated_expectations.append(expectation)
         # Call original method
         return original_create_expectation(self, expectation, asset_id)
+
+    def mock_no_anomaly_detection_coverage(self, data_asset_id: uuid.UUID | None):
+        return {}
+
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_get_current_anomaly_detection_coverage",
+        mock_no_anomaly_detection_coverage,
+    )
 
     monkeypatch.setattr(
         GenerateDataQualityCheckExpectationsAction,
@@ -279,3 +308,153 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
             assert exp_config.windows[0].range == 5
             assert exp_config.windows[0].offset.positive == exp_config.windows[0].offset.negative
             assert exp_config.windows[0].parameter_name == exp_config.mostly["$PARAMETER"]
+
+
+def test_generate_data_quality_check_expectations_action_completeness_with_non_null_proportion_enabled(
+    context: CloudDataContext,
+    user_api_token_headers_org_admin_sc_org,
+    org_id_env_var_local: str,
+    cloud_base_url: str,
+    token_env_var_local: str,
+    seed_and_cleanup_test_data,
+    monkeypatch,
+):
+    """Test that COMPLETENESS data quality issue with expect_non_null_proportion_enabled=True generates a single ExpectColumnProportionOfNonNullValuesToBeBetween expectation."""
+    # List to capture expectation configs
+    generated_expectations = []
+
+    # Store original method
+    original_create_expectation = (
+        GenerateDataQualityCheckExpectationsAction._create_expectation_for_asset
+    )
+
+    def mock_create_expectation(self, expectation, asset_id):
+        # Capture the expectation config
+        generated_expectations.append(expectation)
+        # Call original method
+        return original_create_expectation(self, expectation, asset_id)
+
+    def mock_no_anomaly_detection_coverage(self, data_asset_id: uuid.UUID | None):
+        return {}
+
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_get_current_anomaly_detection_coverage",
+        mock_no_anomaly_detection_coverage,
+    )
+
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_create_expectation_for_asset",
+        mock_create_expectation,
+    )
+
+    generate_completeness_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
+        type="generate_data_quality_check_expectations_request.received",
+        datasource_name="local_mercury_db",
+        data_assets=["local-mercury-db-checkpoints-table"],
+        organization_id=uuid.UUID(org_id_env_var_local),
+        selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
+        expect_non_null_proportion_enabled=True,
+    )
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=context,
+        base_url=cloud_base_url,
+        organization_id=uuid.UUID(org_id_env_var_local),
+        auth_key=token_env_var_local,
+    )
+    event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
+
+    action_result = action.run(event=generate_completeness_change_expectations_event, id=event_id)
+
+    # Assert basic properties
+    assert action_result.type == generate_completeness_change_expectations_event.type
+    assert action_result.id == event_id
+    assert len(action_result.created_resources) >= 2
+    assert action_result.created_resources[0].type == "MetricRun"
+
+    # Assert expectation properties - should be a single proportion expectation
+    assert len(generated_expectations) > 0  # At least one expectation was created
+
+    # Count the different expectation types
+    proportion_expectations = [
+        exp
+        for exp in generated_expectations
+        if exp.expectation_type == "expect_column_proportion_of_non_null_values_to_be_between"
+    ]
+    null_expectations = [
+        exp
+        for exp in generated_expectations
+        if exp.expectation_type == "expect_column_values_to_be_null"
+    ]
+    not_null_expectations = [
+        exp
+        for exp in generated_expectations
+        if exp.expectation_type == "expect_column_values_to_not_be_null"
+    ]
+
+    # When expect_non_null_proportion_enabled is True, we should only have proportion expectations
+    assert len(proportion_expectations) > 0, "Should have at least one proportion expectation"
+    assert len(null_expectations) == 0, (
+        "Should not have any null expectations when using proportion approach"
+    )
+    assert len(not_null_expectations) == 0, (
+        "Should not have any not-null expectations when using proportion approach"
+    )
+
+    # Verify proportion expectation properties
+    for exp_config in proportion_expectations:
+        assert exp_config.column is not None
+        assert exp_config.windows is None or len(exp_config.windows) == 2
+        if exp_config.windows is not None:
+            for window in exp_config.windows:
+                assert window.constraint_fn == "mean"
+                assert window.range == 5
+                assert window.offset.positive == window.offset.negative
+
+
+def test_generate_data_quality_check_expectations_action_multiple_selected_data_quality_issues_pre_existing_volume_anomaly_detection_coverage(
+    context: CloudDataContext,
+    user_api_token_headers_org_admin_sc_org,
+    org_id_env_var_local: str,
+    cloud_base_url: str,
+    token_env_var_local: str,
+    seed_and_cleanup_test_data,
+    monkeypatch,
+):
+    """Test that only a schema anomaly detection expectation is generated if a volume anomaly detection expectation already
+    exists, but both schema and volume data quality issues are selected."""
+
+    def mock_pre_existing_volume_anomaly_detection_coverage(self, data_asset_id: uuid.UUID | None):
+        return {DataQualityIssues.VOLUME: ["only need key to exist"]}
+
+    monkeypatch.setattr(
+        GenerateDataQualityCheckExpectationsAction,
+        "_get_current_anomaly_detection_coverage",
+        mock_pre_existing_volume_anomaly_detection_coverage,
+    )
+
+    generate_anomaly_detection_expectations_event = GenerateDataQualityCheckExpectationsEvent(
+        type="generate_data_quality_check_expectations_request.received",
+        datasource_name="local_mercury_db",
+        data_assets=["local-mercury-db-checkpoints-table"],
+        organization_id=uuid.UUID(org_id_env_var_local),
+        selected_data_quality_issues=[DataQualityIssues.SCHEMA, DataQualityIssues.VOLUME],
+    )
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=context,
+        base_url=cloud_base_url,
+        organization_id=uuid.UUID(org_id_env_var_local),
+        auth_key=token_env_var_local,
+    )
+    event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
+
+    action_result = action.run(event=generate_anomaly_detection_expectations_event, id=event_id)
+
+    # Assert
+    assert action_result.type == generate_anomaly_detection_expectations_event.type
+    assert action_result.id == event_id
+    assert len(action_result.created_resources) >= 2
+    assert action_result.created_resources[0].type == "MetricRun"
