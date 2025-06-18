@@ -18,7 +18,7 @@ class ActionResult(BaseModel):
     id: str
     type: str
     created_resources: Sequence[CreatedResource]
-    job_duration: Optional[datetime.timedelta] = (
+    job_duration: Optional[datetime.timedelta] = (  # noqa: UP045
         None  # Python 3.8 doesn't support `X | Y` for type annotation
     )
 

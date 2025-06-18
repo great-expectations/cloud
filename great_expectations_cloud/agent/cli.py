@@ -91,12 +91,12 @@ def main() -> None:
     )
 
     if args.version:
-        from great_expectations_cloud.agent import get_version
+        from great_expectations_cloud.agent import get_version  # noqa: PLC0415
 
         print(f"GX Agent version: {get_version()}")
         return
 
-    from great_expectations_cloud.agent import run_agent
+    from great_expectations_cloud.agent import run_agent  # noqa: PLC0415
 
     run_agent()
 

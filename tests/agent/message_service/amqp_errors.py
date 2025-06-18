@@ -6,7 +6,7 @@ def get_amqp_errors() -> list[type[Exception]]:
     # to parametrize them in tests. However, we don't want to block
     # the test suite from running in case a user hasn't installed Pika.
     try:
-        from pika.exceptions import (
+        from pika.exceptions import (  # noqa: PLC0415
             AMQPChannelError,
             AMQPConnectionError,
             AMQPError,
