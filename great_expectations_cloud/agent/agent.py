@@ -658,7 +658,7 @@ class GXAgent:
         """
         Sets headers on all stores in the data context.
         """
-        from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend  # noqa: I001, PLC0415
+        from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend  # noqa: I001
 
         # OSS doesn't use the same session for all requests, so we need to set the header for each store
         stores = list(data_context.stores.values())
@@ -686,8 +686,8 @@ class GXAgent:
         Note: the Agent-Job-Id header value will be set for all GX Cloud request until this method is
         called again.
         """
-        from great_expectations import __version__  # noqa: PLC0415
-        from great_expectations.core import http  # noqa: PLC0415
+        from great_expectations import __version__
+        from great_expectations.core import http
 
         header_name = self.get_header_name()
         user_agent_header_value = self.user_agent_str

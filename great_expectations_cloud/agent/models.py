@@ -26,7 +26,7 @@ class AgentBaseExtraIgnore(BaseModel):
 
 class EventBase(AgentBaseExtraIgnore):
     type: str
-    organization_id: Optional[UUID] = None  # noqa: UP045
+    organization_id: Optional[UUID] = None
 
 
 class ScheduledEventBase(EventBase):
@@ -37,7 +37,7 @@ class RunDataAssistantEvent(EventBase):
     type: str
     datasource_name: str
     data_asset_name: str
-    expectation_suite_name: Optional[str] = None  # noqa: UP045
+    expectation_suite_name: Optional[str] = None
 
 
 class RunOnboardingDataAssistantEvent(RunDataAssistantEvent):
@@ -56,27 +56,27 @@ class RunCheckpointEvent(EventBase):
     type: Literal["run_checkpoint_request"] = "run_checkpoint_request"
     datasource_names_to_asset_names: dict[str, set[str]]
     checkpoint_id: uuid.UUID
-    splitter_options: Optional[dict[str, Any]] = None  # noqa: UP045
+    splitter_options: Optional[dict[str, Any]] = None
     # TODO: Remove optional once fully migrated to greatexpectations v1
-    checkpoint_name: Optional[str] = None  # noqa: UP045
+    checkpoint_name: Optional[str] = None
 
 
 class RunScheduledCheckpointEvent(ScheduledEventBase):
     type: Literal["run_scheduled_checkpoint.received"] = "run_scheduled_checkpoint.received"
     datasource_names_to_asset_names: dict[str, set[str]]
     checkpoint_id: uuid.UUID
-    splitter_options: Optional[dict[str, Any]] = None  # noqa: UP045
+    splitter_options: Optional[dict[str, Any]] = None
     # TODO: Remove optional once fully migrated to greatexpectations v1
-    checkpoint_name: Optional[str] = None  # noqa: UP045
+    checkpoint_name: Optional[str] = None
 
 
 class RunWindowCheckpointEvent(EventBase):
     type: Literal["run_window_checkpoint.received"] = "run_window_checkpoint.received"
     datasource_names_to_asset_names: dict[str, set[str]]
     checkpoint_id: uuid.UUID
-    splitter_options: Optional[dict[str, Any]] = None  # noqa: UP045
+    splitter_options: Optional[dict[str, Any]] = None
     # TODO: Remove optional once fully migrated to greatexpectations v1
-    checkpoint_name: Optional[str] = None  # noqa: UP045
+    checkpoint_name: Optional[str] = None
 
 
 class RunColumnDescriptiveMetricsEvent(EventBase):
@@ -120,7 +120,7 @@ class RunRdAgentEvent(EventBase):
     datasource_name: str
     data_asset_name: str
     batch_definition_name: str
-    batch_parameters: Optional[dict[str, Any]] = None  # noqa: UP045
+    batch_parameters: Optional[dict[str, Any]] = None
     use_core_metrics: bool = False
 
 
@@ -179,9 +179,9 @@ class CreateScheduledJobAndSetJobStarted(AgentBaseExtraForbid):
     schedule_id: UUID
     checkpoint_id: UUID
     datasource_names_to_asset_names: dict[str, set[str]]
-    splitter_options: Optional[dict[str, Any]] = None  # noqa: UP045
+    splitter_options: Optional[dict[str, Any]] = None
     # TODO: Remove optional once fully migrated to greatexpectations v1
-    checkpoint_name: Optional[str] = None  # noqa: UP045
+    checkpoint_name: Optional[str] = None
 
 
 class CreateScheduledJobAndSetJobStartedRequest(AgentBaseExtraForbid):

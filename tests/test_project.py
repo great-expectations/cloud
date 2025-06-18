@@ -47,7 +47,7 @@ def min_gx_version() -> Version:
 
 
 def test_great_expectations_is_installed(min_gx_version):
-    import great_expectations  # noqa: PLC0415
+    import great_expectations
 
     assert Version(great_expectations.__version__) >= min_gx_version
 
@@ -270,7 +270,7 @@ class PoetryVersionOutdated(UserWarning):
 
 @pytest.fixture
 def latest_poetry_version(lock_file_poetry_version: Version) -> Version:
-    import requests  # noqa: PLC0415
+    import requests
 
     response = requests.get(
         "https://api.github.com/repos/python-poetry/poetry/releases/latest", timeout=5
