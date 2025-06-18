@@ -10,7 +10,7 @@ from uuid import UUID
 
 import great_expectations.expectations as gx_expectations
 from great_expectations.core.http import create_session
-from great_expectations.exceptions import GXCloudError
+from great_expectations.exceptions import GXCloudError, InvalidExpectationConfigurationError
 from great_expectations.expectations.metadata_types import (
     DataQualityIssues,
 )
@@ -115,10 +115,9 @@ class GenerateDataQualityCheckExpectationsAction(
                         self._get_current_anomaly_detection_coverage(data_asset.id)
                     )
 
-                    if self._should_add_anomaly_detection_coverage_for_issue(
-                        DataQualityIssues.VOLUME,
-                        selected_dqis,
-                        pre_existing_anomaly_detection_coverage,
+                    if self._should_add_volume_change_detection_coverage(
+                        selected_data_quality_issues=selected_dqis,
+                        pre_existing_anomaly_detection_coverage=pre_existing_anomaly_detection_coverage,
                     ):
                         volume_change_expectation_id = self._add_volume_change_expectation(
                             asset_id=data_asset.id,
@@ -130,10 +129,9 @@ class GenerateDataQualityCheckExpectationsAction(
                             )
                         )
 
-                    if self._should_add_anomaly_detection_coverage_for_issue(
-                        DataQualityIssues.SCHEMA,
-                        selected_dqis,
-                        pre_existing_anomaly_detection_coverage,
+                    if self._should_add_schema_change_detection_coverage(
+                        selected_data_quality_issues=selected_dqis,
+                        pre_existing_anomaly_detection_coverage=pre_existing_anomaly_detection_coverage,
                     ):
                         schema_change_expectation_id = self._add_schema_change_expectation(
                             metric_run=metric_run, asset_id=data_asset.id
@@ -145,11 +143,15 @@ class GenerateDataQualityCheckExpectationsAction(
                         )
 
                     if DataQualityIssues.COMPLETENESS in selected_dqis:
-                        completeness_change_expectation_ids = (
-                            self._add_completeness_change_expectations(
-                                metric_run=metric_run,
-                                asset_id=data_asset.id,
+                        pre_existing_completeness_change_expectations = (
+                            pre_existing_anomaly_detection_coverage.get(
+                                DataQualityIssues.COMPLETENESS, []
                             )
+                        )
+                        completeness_change_expectation_ids = self._add_completeness_change_expectations(
+                            metric_run=metric_run,
+                            asset_id=data_asset.id,
+                            pre_existing_completeness_change_expectations=pre_existing_completeness_change_expectations,
                         )
                         for exp_id in completeness_change_expectation_ids:
                             created_resources.append(
@@ -239,13 +241,29 @@ class GenerateDataQualityCheckExpectationsAction(
                 response=response,
             ) from e
 
-    def _should_add_anomaly_detection_coverage_for_issue(
+    def _should_add_volume_change_detection_coverage(
         self,
-        issue: DataQualityIssues,
-        selected_dqis: Sequence[DataQualityIssues],
-        pre_existing_anomaly_detection_coverage: dict[DataQualityIssues, list[dict[Any, Any]]],
+        selected_data_quality_issues: Sequence[DataQualityIssues],
+        pre_existing_anomaly_detection_coverage: dict[
+            DataQualityIssues, list[dict[Any, Any]]
+        ],  # list of ExpectationConfiguration dicts
     ) -> bool:
-        return issue in selected_dqis and issue not in pre_existing_anomaly_detection_coverage
+        return (
+            DataQualityIssues.VOLUME in selected_data_quality_issues
+            and len(pre_existing_anomaly_detection_coverage.get(DataQualityIssues.VOLUME, [])) == 0
+        )
+
+    def _should_add_schema_change_detection_coverage(
+        self,
+        selected_data_quality_issues: Sequence[DataQualityIssues],
+        pre_existing_anomaly_detection_coverage: dict[
+            DataQualityIssues, list[dict[Any, Any]]
+        ],  # list of ExpectationConfiguration dicts
+    ) -> bool:
+        return (
+            DataQualityIssues.SCHEMA in selected_data_quality_issues
+            and len(pre_existing_anomaly_detection_coverage.get(DataQualityIssues.SCHEMA, [])) == 0
+        )
 
     def _add_volume_change_expectation(self, asset_id: UUID | None, use_forecast: bool) -> UUID:
         unique_id = param_safe_unique_id(16)
@@ -324,13 +342,15 @@ class GenerateDataQualityCheckExpectationsAction(
         self,
         metric_run: MetricRun,
         asset_id: UUID | None,
+        pre_existing_completeness_change_expectations: list[
+            dict[Any, Any]
+        ],  # list of ExpectationConfiguration dicts
     ) -> list[UUID]:
         table_row_count = next(
             metric
             for metric in metric_run.metrics
             if metric.metric_name == MetricTypes.TABLE_ROW_COUNT
         )
-        expectation_ids = []
 
         if not table_row_count:
             raise RuntimeError("missing TABLE_ROW_COUNT metric")  # noqa: TRY003
@@ -345,7 +365,14 @@ class GenerateDataQualityCheckExpectationsAction(
         if not column_null_values_metric or len(column_null_values_metric) == 0:
             raise RuntimeError("missing COLUMN_NULL_COUNT metrics")  # noqa: TRY003
 
-        for column in column_null_values_metric:
+        expectation_ids = []
+        # Single-expectation approach using ExpectColumnProportionOfNonNullValuesToBeBetween
+        # Expectations are only added to columns that do not have coverage
+        columns_missing_completeness_coverage = self._get_columns_missing_completeness_coverage(
+            column_null_values_metric=column_null_values_metric,
+            pre_existing_completeness_change_expectations=pre_existing_completeness_change_expectations,
+        )
+        for column in columns_missing_completeness_coverage:
             column_name = column.column
             null_count = column.value
             row_count = table_row_count.value
@@ -408,6 +435,27 @@ class GenerateDataQualityCheckExpectationsAction(
             expectation_ids.append(expectation_id)
 
         return expectation_ids
+
+    def _get_columns_missing_completeness_coverage(
+        self,
+        column_null_values_metric: list[ColumnMetric[int]],
+        pre_existing_completeness_change_expectations: list[
+            dict[Any, Any]
+        ],  # list of ExpectationConfiguration dicts
+    ) -> list[ColumnMetric[int]]:
+        try:
+            columns_with_completeness_coverage = {
+                expectation.get("config").get("kwargs").get("column")  # type: ignore[union-attr]
+                for expectation in pre_existing_completeness_change_expectations
+            }
+        except AttributeError as e:
+            raise InvalidExpectationConfigurationError(str(e)) from e
+        columns_without_completeness_coverage = [
+            column
+            for column in column_null_values_metric
+            if column.column not in columns_with_completeness_coverage
+        ]
+        return columns_without_completeness_coverage
 
     def _compute_triangular_interpolation_offset(
         self, value: float, input_range: tuple[float, float]
