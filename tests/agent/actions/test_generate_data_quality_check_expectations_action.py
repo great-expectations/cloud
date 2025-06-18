@@ -439,7 +439,6 @@ def test_generate_completeness_expectation_not_added_when_coverage_already_exist
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-            expect_non_null_proportion_enabled=True,
         ),
         id="test-id",
     )
