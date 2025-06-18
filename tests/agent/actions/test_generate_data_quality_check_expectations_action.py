@@ -439,7 +439,6 @@ def test_generate_completeness_expectation_not_added_when_coverage_already_exist
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-            expect_non_null_proportion_enabled=True,
         ),
         id="test-id",
     )
@@ -672,14 +671,14 @@ def test_generate_volume_change_forecast_expectations_action_success(
     assert call.kwargs["asset_id"] == TABLE_ASSET_ID
 
 
-def test_generate_completeness_expectations_with_non_null_proportion_enabled(
+def test_generate_completeness_expectations_with_proportion_approach(
     mock_context: CloudDataContext,
     mocker: MockerFixture,
     mock_metric_repository: MetricRepository,
     mock_batch_inspector: BatchInspector,
     mock_completeness_metrics: MockCompletenessMetrics,
 ):
-    """Test that when expect_non_null_proportion_enabled is True, a single ExpectColumnProportionOfNonNullValuesToBeBetween expectation is created."""
+    """Test that a single ExpectColumnProportionOfNonNullValuesToBeBetween expectation is created for completeness."""
     # Setup
     metrics = mock_completeness_metrics(30, 100)
 
@@ -724,7 +723,7 @@ def test_generate_completeness_expectations_with_non_null_proportion_enabled(
         action, "_create_expectation_for_asset", side_effect=mock_create_expectation
     )
 
-    # Run the action with expect_non_null_proportion_enabled=True
+    # Run the action
     return_value = action.run(
         event=GenerateDataQualityCheckExpectationsEvent(
             type="generate_data_quality_check_expectations_request.received",
@@ -732,7 +731,6 @@ def test_generate_completeness_expectations_with_non_null_proportion_enabled(
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-            expect_non_null_proportion_enabled=True,
         ),
         id="test-id",
     )
@@ -755,101 +753,19 @@ def test_generate_completeness_expectations_with_non_null_proportion_enabled(
     assert isinstance(expectation.max_value, dict) and "$PARAMETER" in expectation.max_value
 
 
-def test_generate_completeness_expectations_with_non_null_proportion_disabled(
-    mock_context: CloudDataContext,
-    mocker: MockerFixture,
-    mock_metric_repository: MetricRepository,
-    mock_batch_inspector: BatchInspector,
-    mock_completeness_metrics: MockCompletenessMetrics,
-):
-    """Test that when expect_non_null_proportion_enabled is False, the current two-expectation approach is used."""
-    # Setup
-    metrics = mock_completeness_metrics(30, 100)
-
-    action = GenerateDataQualityCheckExpectationsAction(
-        context=mock_context,
-        metric_repository=mock_metric_repository,
-        batch_inspector=mock_batch_inspector,
-        base_url="",
-        auth_key="",
-        organization_id=uuid.uuid4(),
-    )
-
-    # Mock the methods that would be called
-    def mock_retrieve_asset(event, asset_name):
-        return TableAsset(
-            id=TABLE_ASSET_ID,
-            name="test-data-asset",
-            table_name="test_table",
-            schema_name="test_schema",
-        )
-
-    def mock_get_metrics(data_asset):
-        return MetricRun(metrics=metrics), uuid.uuid4()
-
-    def mock_get_coverage(data_asset_id):
-        return {}
-
-    mocker.patch.object(action, "_retrieve_asset_from_asset_name", side_effect=mock_retrieve_asset)
-    mocker.patch.object(action, "_get_metrics", side_effect=mock_get_metrics)
-    mocker.patch.object(
-        action, "_get_current_anomaly_detection_coverage", side_effect=mock_get_coverage
-    )
-
-    # Mock the _create_expectation_for_asset method to capture created expectations
-    created_expectations = []
-
-    def mock_create_expectation(expectation, asset_id):
-        created_expectations.append(expectation)
-        return uuid.uuid4()
-
-    mocker.patch.object(
-        action, "_create_expectation_for_asset", side_effect=mock_create_expectation
-    )
-
-    # Run the action with expect_non_null_proportion_enabled=False (default)
-    return_value = action.run(
-        event=GenerateDataQualityCheckExpectationsEvent(
-            type="generate_data_quality_check_expectations_request.received",
-            organization_id=uuid.uuid4(),
-            datasource_name="test-datasource",
-            data_assets=["test-data-asset1"],
-            selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-            expect_non_null_proportion_enabled=False,
-        ),
-        id="test-id",
-    )
-
-    # Assert
-    assert len(return_value.created_resources) == 3  # MetricRun + 2 Expectations
-    assert return_value.created_resources[0].type == "MetricRun"
-    assert return_value.created_resources[1].type == "Expectation"
-    assert return_value.created_resources[2].type == "Expectation"
-
-    # Verify two expectations were created (null and not-null)
-    assert len(created_expectations) == 2
-    expectation_types = [type(exp).__name__ for exp in created_expectations]
-    assert "ExpectColumnValuesToBeNull" in expectation_types
-    assert "ExpectColumnValuesToNotBeNull" in expectation_types
-
-
 @pytest.mark.parametrize(
-    "null_count, row_count, expect_non_null_proportion_enabled, expected_expectation_count",
+    "null_count, row_count, expected_expectation_count",
     [
-        pytest.param(0, 100, True, 1, id="no_nulls_new_approach_one_expectation"),
-        pytest.param(0, 100, False, 1, id="no_nulls_old_approach_one_expectation"),
-        pytest.param(100, 100, True, 1, id="all_nulls_new_approach_one_expectation"),
-        pytest.param(100, 100, False, 1, id="all_nulls_old_approach_one_expectation"),
-        pytest.param(30, 100, True, 1, id="mixed_nulls_new_approach_one_expectation"),
-        pytest.param(30, 100, False, 2, id="mixed_nulls_old_approach_two_expectations"),
+        pytest.param(0, 100, 1, id="no_nulls_one_expectation"),
+        pytest.param(100, 100, 1, id="all_nulls_one_expectation"),
+        pytest.param(30, 100, 1, id="mixed_nulls_one_expectation"),
     ],
 )
-def test_completeness_expectations_count_based_on_flag_and_data(
+def test_completeness_expectations_count_based_on_data(
     mock_context: CloudDataContext,
     mocker: MockerFixture,
     null_count: int,
     row_count: int,
-    expect_non_null_proportion_enabled: bool,
     expected_expectation_count: int,
     mock_metric_repository: MetricRepository,
     mock_batch_inspector: BatchInspector,
@@ -907,7 +823,6 @@ def test_completeness_expectations_count_based_on_flag_and_data(
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-            expect_non_null_proportion_enabled=expect_non_null_proportion_enabled,
         ),
         id="test-id",
     )
@@ -916,14 +831,14 @@ def test_completeness_expectations_count_based_on_flag_and_data(
     assert len(created_expectations) == expected_expectation_count
 
 
-def test_generate_completeness_expectations_edge_cases_with_proportion_enabled(
+def test_generate_completeness_expectations_edge_cases(
     mock_context: CloudDataContext,
     mocker: MockerFixture,
     mock_metric_repository: MetricRepository,
     mock_batch_inspector: BatchInspector,
     mock_completeness_metrics: MockCompletenessMetrics,
 ):
-    """Test edge cases where non_null_proportion is exactly 0 or 1 with expect_non_null_proportion_enabled=True."""
+    """Test edge cases where non_null_proportion is exactly 0 or 1."""
     action = GenerateDataQualityCheckExpectationsAction(
         context=mock_context,
         metric_repository=mock_metric_repository,
@@ -972,7 +887,6 @@ def test_generate_completeness_expectations_edge_cases_with_proportion_enabled(
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-            expect_non_null_proportion_enabled=True,
         ),
         id="test-id",
     )
@@ -1002,7 +916,6 @@ def test_generate_completeness_expectations_edge_cases_with_proportion_enabled(
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-            expect_non_null_proportion_enabled=True,
         ),
         id="test-id",
     )
