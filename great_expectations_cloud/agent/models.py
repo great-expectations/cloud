@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Sequence
-from typing import Annotated, Any, Literal, Optional, Union
+from typing import TYPE_CHECKING, Annotated, Any, Literal, Optional, Union
 from uuid import UUID
 
 from great_expectations.expectations.metadata_types import DataQualityIssues
@@ -10,6 +10,18 @@ from great_expectations.experimental.metric_repository.metrics import MetricType
 from pydantic.v1 import BaseModel, Extra, Field
 
 from great_expectations_cloud.agent.exceptions import GXCoreError
+
+
+def all_subclasses(cls: type) -> list[type]:
+    """
+    Recursively gather every subclass of `cls` (including nested ones).
+    """
+    direct = cls.__subclasses__()
+    all_sub_cls: list[type] = []
+    for C in direct:
+        all_sub_cls.append(C)
+        all_sub_cls.extend(all_subclasses(C))
+    return all_sub_cls
 
 
 class AgentBaseExtraForbid(BaseModel):
@@ -127,8 +139,51 @@ class UnknownEvent(AgentBaseExtraForbid):
     type: Literal["unknown_event"] = "unknown_event"
 
 
-Event = Annotated[
-    Union[
+class MissingEventSubclasses(RuntimeError):
+    def __init__(self) -> None:
+        super().__init__("No valid Event subclasses found")
+
+
+#
+# Dynamically build Event union from all subclasses of AgentBaseExtraForbid and AgentBaseExtraIgnore
+#
+def _build_event_union() -> tuple[type, ...]:
+    """Build a discriminated Union of all Event subclasses dynamically."""
+    # Collect all subclasses from both base classes
+    forbid_subs = all_subclasses(AgentBaseExtraForbid)
+    ignore_subs = all_subclasses(AgentBaseExtraIgnore)
+
+    # Combine and filter to only include classes with a 'type' field and a discriminator value
+    all_event_classes = []
+    for cls in forbid_subs + ignore_subs:
+        # Check if the class has a 'type' field and it's properly defined with a Literal type
+        if hasattr(cls, "__fields__") and "type" in cls.__fields__:
+            type_field = cls.__fields__["type"]
+            # Check if it has a default value (discriminator value)
+            if hasattr(type_field, "default") and type_field.default is not None:
+                all_event_classes.append(cls)
+
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_classes = []
+    for cls in all_event_classes:
+        if cls not in seen:
+            seen.add(cls)
+            unique_classes.append(cls)
+
+    if not unique_classes:
+        raise MissingEventSubclasses()
+
+    # Convert to tuple for Union
+    return tuple(unique_classes)
+
+
+# Build the dynamic Event union
+_event_classes = _build_event_union()
+
+if TYPE_CHECKING:
+    # For static type checking, provide a concrete union of known event types
+    Event = Union[
         RunOnboardingDataAssistantEvent,
         RunMissingnessDataAssistantEvent,
         RunCheckpointEvent,
@@ -141,9 +196,10 @@ Event = Annotated[
         GenerateDataQualityCheckExpectationsEvent,
         RunRdAgentEvent,
         UnknownEvent,
-    ],
-    Field(discriminator="type"),
-]
+    ]
+else:
+    # At runtime, use the dynamic union
+    Event = Annotated[Union[_event_classes], Field(discriminator="type")]  # type: ignore[valid-type]
 
 
 class CreatedResource(AgentBaseExtraForbid):
