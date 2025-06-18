@@ -191,7 +191,7 @@ if TYPE_CHECKING:
     ]
 else:
     # At runtime, use the dynamic union
-    Event = Annotated[Union[_event_classes], Field(discriminator="type")]  # type: ignore[valid-type]
+    Event = Annotated[Union[_event_classes], Field(discriminator="type")]
 
 
 class CreatedResource(AgentBaseExtraForbid):
