@@ -163,19 +163,11 @@ def _build_event_union() -> tuple[type, ...]:
             if hasattr(type_field, "default") and type_field.default is not None:
                 all_event_classes.append(cls)
 
-    # Remove duplicates while preserving order
-    seen = set()
-    unique_classes = []
-    for cls in all_event_classes:
-        if cls not in seen:
-            seen.add(cls)
-            unique_classes.append(cls)
-
-    if not unique_classes:
+    if not all_event_classes:
         raise MissingEventSubclasses()
 
-    # Convert to tuple for Union
-    return tuple(unique_classes)
+    # Remove duplicates (preserves order for deterministic results)
+    return tuple(dict.fromkeys(all_event_classes))
 
 
 # Build the dynamic Event union
