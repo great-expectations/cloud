@@ -73,7 +73,7 @@ def param_safe_unique_id(length: int) -> str:
     Returns:
         str: A random string of alphabetic characters
     """
-    import random
+    import random  # noqa: PLC0415
 
     result = ""
     characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
