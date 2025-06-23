@@ -297,20 +297,20 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
     assert len(generated_expectations) > 0  # At least one expectation was created
     for exp_config in generated_expectations:
         # Verify each expectation is one of the expected types
-        assert exp_config.expectation_type in [
-            "expect_column_values_to_be_null",
-            "expect_column_values_to_not_be_null",
-        ]
+        assert (
+            exp_config.expectation_type
+            == "expect_column_proportion_of_non_null_values_to_be_between"
+        )
         # Verify each has required properties
         assert exp_config.column is not None
         if exp_config.windows is not None:
-            assert exp_config.windows[0].constraint_fn == "mean"
-            assert exp_config.windows[0].range == 5
-            assert exp_config.windows[0].offset.positive == exp_config.windows[0].offset.negative
-            assert exp_config.windows[0].parameter_name == exp_config.mostly["$PARAMETER"]
+            for window in exp_config.windows:
+                assert window.constraint_fn == "mean"
+                assert window.range == 5
+                assert window.offset.positive == window.offset.negative
 
 
-def test_generate_data_quality_check_expectations_action_completeness_with_non_null_proportion_enabled(
+def test_generate_data_quality_check_expectations_action_completeness_with_proportion_approach(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
@@ -319,7 +319,7 @@ def test_generate_data_quality_check_expectations_action_completeness_with_non_n
     seed_and_cleanup_test_data,
     monkeypatch,
 ):
-    """Test that COMPLETENESS data quality issue with expect_non_null_proportion_enabled=True generates a single ExpectColumnProportionOfNonNullValuesToBeBetween expectation."""
+    """Test that COMPLETENESS data quality issue generates a single ExpectColumnProportionOfNonNullValuesToBeBetween expectation."""
     # List to capture expectation configs
     generated_expectations = []
 
@@ -355,7 +355,6 @@ def test_generate_data_quality_check_expectations_action_completeness_with_non_n
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
         selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-        expect_non_null_proportion_enabled=True,
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
@@ -394,7 +393,7 @@ def test_generate_data_quality_check_expectations_action_completeness_with_non_n
         if exp.expectation_type == "expect_column_values_to_not_be_null"
     ]
 
-    # When expect_non_null_proportion_enabled is True, we should only have proportion expectations
+    # Should only have proportion expectations
     assert len(proportion_expectations) > 0, "Should have at least one proportion expectation"
     assert len(null_expectations) == 0, (
         "Should not have any null expectations when using proportion approach"

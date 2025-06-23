@@ -65,6 +65,7 @@ def test_running_list_table_names_action(
         "expectations",
         "expectation_changes",
         "expectation_draft_configs",
+        "expectation_prompts",
         "system_users",
         "batch_definitions",
         "checkpoint_job_schedules",

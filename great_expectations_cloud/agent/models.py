@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Sequence
-from typing import Annotated, Any, Literal, Optional, Union
+from typing import TYPE_CHECKING, Annotated, Any, Literal, Optional, Union
 from uuid import UUID
 
 from great_expectations.expectations.metadata_types import DataQualityIssues
@@ -10,6 +10,18 @@ from great_expectations.experimental.metric_repository.metrics import MetricType
 from pydantic.v1 import BaseModel, Extra, Field
 
 from great_expectations_cloud.agent.exceptions import GXCoreError
+
+
+def all_subclasses(cls: type) -> list[type]:
+    """
+    Recursively gather every subclass of `cls` (including nested ones).
+    """
+    direct = cls.__subclasses__()
+    all_sub_cls: list[type] = []
+    for C in direct:
+        all_sub_cls.append(C)
+        all_sub_cls.extend(all_subclasses(C))
+    return all_sub_cls
 
 
 class AgentBaseExtraForbid(BaseModel):
@@ -26,7 +38,7 @@ class AgentBaseExtraIgnore(BaseModel):
 
 class EventBase(AgentBaseExtraIgnore):
     type: str
-    organization_id: Optional[UUID] = None
+    organization_id: Optional[UUID] = None  # noqa: UP045
 
 
 class ScheduledEventBase(EventBase):
@@ -37,7 +49,7 @@ class RunDataAssistantEvent(EventBase):
     type: str
     datasource_name: str
     data_asset_name: str
-    expectation_suite_name: Optional[str] = None
+    expectation_suite_name: Optional[str] = None  # noqa: UP045
 
 
 class RunOnboardingDataAssistantEvent(RunDataAssistantEvent):
@@ -56,27 +68,27 @@ class RunCheckpointEvent(EventBase):
     type: Literal["run_checkpoint_request"] = "run_checkpoint_request"
     datasource_names_to_asset_names: dict[str, set[str]]
     checkpoint_id: uuid.UUID
-    splitter_options: Optional[dict[str, Any]] = None
+    splitter_options: Optional[dict[str, Any]] = None  # noqa: UP045
     # TODO: Remove optional once fully migrated to greatexpectations v1
-    checkpoint_name: Optional[str] = None
+    checkpoint_name: Optional[str] = None  # noqa: UP045
 
 
 class RunScheduledCheckpointEvent(ScheduledEventBase):
     type: Literal["run_scheduled_checkpoint.received"] = "run_scheduled_checkpoint.received"
     datasource_names_to_asset_names: dict[str, set[str]]
     checkpoint_id: uuid.UUID
-    splitter_options: Optional[dict[str, Any]] = None
+    splitter_options: Optional[dict[str, Any]] = None  # noqa: UP045
     # TODO: Remove optional once fully migrated to greatexpectations v1
-    checkpoint_name: Optional[str] = None
+    checkpoint_name: Optional[str] = None  # noqa: UP045
 
 
 class RunWindowCheckpointEvent(EventBase):
     type: Literal["run_window_checkpoint.received"] = "run_window_checkpoint.received"
     datasource_names_to_asset_names: dict[str, set[str]]
     checkpoint_id: uuid.UUID
-    splitter_options: Optional[dict[str, Any]] = None
+    splitter_options: Optional[dict[str, Any]] = None  # noqa: UP045
     # TODO: Remove optional once fully migrated to greatexpectations v1
-    checkpoint_name: Optional[str] = None
+    checkpoint_name: Optional[str] = None  # noqa: UP045
 
 
 class RunColumnDescriptiveMetricsEvent(EventBase):
@@ -112,7 +124,6 @@ class GenerateDataQualityCheckExpectationsEvent(EventBase):
     data_assets: Sequence[str]
     selected_data_quality_issues: Sequence[DataQualityIssues] | None = None
     use_forecast: bool = False  # feature flag
-    expect_non_null_proportion_enabled: bool = False  # feature flag
 
 
 class RunRdAgentEvent(EventBase):
@@ -120,7 +131,7 @@ class RunRdAgentEvent(EventBase):
     datasource_name: str
     data_asset_name: str
     batch_definition_name: str
-    batch_parameters: Optional[dict[str, Any]] = None
+    batch_parameters: Optional[dict[str, Any]] = None  # noqa: UP045
     use_core_metrics: bool = False
 
 
@@ -128,8 +139,43 @@ class UnknownEvent(AgentBaseExtraForbid):
     type: Literal["unknown_event"] = "unknown_event"
 
 
-Event = Annotated[
-    Union[
+class MissingEventSubclasses(RuntimeError):
+    def __init__(self) -> None:
+        super().__init__("No valid Event subclasses found")
+
+
+#
+# Dynamically build Event union from all subclasses of AgentBaseExtraForbid and AgentBaseExtraIgnore
+#
+def _build_event_union() -> tuple[type, ...]:
+    """Build a discriminated Union of all Event subclasses dynamically."""
+    # Collect all subclasses from both base classes
+    forbid_subs = all_subclasses(AgentBaseExtraForbid)
+    ignore_subs = all_subclasses(AgentBaseExtraIgnore)
+
+    # Combine and filter to only include classes with a 'type' field and a discriminator value
+    all_event_classes = []
+    for cls in forbid_subs + ignore_subs:
+        # Check if the class has a 'type' field and it's properly defined with a Literal type
+        if hasattr(cls, "__fields__") and "type" in cls.__fields__:
+            type_field = cls.__fields__["type"]
+            # Check if it has a default value (discriminator value)
+            if hasattr(type_field, "default") and type_field.default is not None:
+                all_event_classes.append(cls)
+
+    if not all_event_classes:
+        raise MissingEventSubclasses()
+
+    # Remove duplicates (preserves order for deterministic results)
+    return tuple(dict.fromkeys(all_event_classes))
+
+
+# Build the dynamic Event union
+_event_classes = _build_event_union()
+
+if TYPE_CHECKING:
+    # For static type checking, provide a concrete union of known event types
+    Event = Union[
         RunOnboardingDataAssistantEvent,
         RunMissingnessDataAssistantEvent,
         RunCheckpointEvent,
@@ -142,9 +188,10 @@ Event = Annotated[
         GenerateDataQualityCheckExpectationsEvent,
         RunRdAgentEvent,
         UnknownEvent,
-    ],
-    Field(discriminator="type"),
-]
+    ]
+else:
+    # At runtime, use the dynamic union
+    Event = Annotated[Union[_event_classes], Field(discriminator="type")]
 
 
 class CreatedResource(AgentBaseExtraForbid):
@@ -179,9 +226,9 @@ class CreateScheduledJobAndSetJobStarted(AgentBaseExtraForbid):
     schedule_id: UUID
     checkpoint_id: UUID
     datasource_names_to_asset_names: dict[str, set[str]]
-    splitter_options: Optional[dict[str, Any]] = None
+    splitter_options: Optional[dict[str, Any]] = None  # noqa: UP045
     # TODO: Remove optional once fully migrated to greatexpectations v1
-    checkpoint_name: Optional[str] = None
+    checkpoint_name: Optional[str] = None  # noqa: UP045
 
 
 class CreateScheduledJobAndSetJobStartedRequest(AgentBaseExtraForbid):
