@@ -56,45 +56,45 @@ def run_checkpoint(
     if not event.checkpoint_name:
         raise MissingCheckpointNameError
 
-    # Check if we have the old event structure (your code) or should use the new approach
-    if hasattr(event, 'datasource_names_to_asset_names') and event.datasource_names_to_asset_names:
-        # Use your original approach for backward compatibility
-        for datasource_name, data_asset_names in event.datasource_names_to_asset_names.items():
-            datasource = context.data_sources.get(name=datasource_name)
-            datasource.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
-            for data_asset_name in data_asset_names:
-                asset = datasource.get_asset(data_asset_name)
-                verify_data_asset(LOGGER.info, datasource, asset)
-                asset.test_connection()  # raises `TestConnectionError` on failure
-    else:
-        # Use the new approach from Great Expectations
-        checkpoint = context.checkpoints.get(name=event.checkpoint_name)
-        
-        # only GX-managed Checkpoints are currently validated here and they contain only one validation definition, but
-        # the Checkpoint does allow for multiple validation definitions so we'll be defensive and ensure we only test each
-        # source/asset once
-        data_sources_assets_by_data_source_name: dict[str, DataSourceAssets] = {}
-        for vd in checkpoint.validation_definitions:
-            ds = vd.data_source
-            ds_name = ds.name
-            # create assets by name dict
-            if ds_name not in data_sources_assets_by_data_source_name:
-                data_sources_assets_by_data_source_name[ds_name] = DataSourceAssets(
-                    data_source=ds, assets_by_name={}
-                )
-            data_sources_assets_by_data_source_name[ds_name].assets_by_name[vd.asset.name] = vd.asset
+    # # Check if we have the old event structure (your code) or should use the new approach
+    # if hasattr(event, 'datasource_names_to_asset_names') and event.datasource_names_to_asset_names:
+    #     # Use your original approach for backward compatibility
+    #     for datasource_name, data_asset_names in event.datasource_names_to_asset_names.items():
+    #         datasource = context.data_sources.get(name=datasource_name)
+    #         datasource.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
+    #         for data_asset_name in data_asset_names:
+    #             asset = datasource.get_asset(data_asset_name)
+    #             verify_data_asset(LOGGER.info, datasource, asset)
+    #             asset.test_connection()  # raises `TestConnectionError` on failure
+    # else:
+    # Use the new approach from Great Expectations
+    checkpoint = context.checkpoints.get(name=event.checkpoint_name)
+    
+    # only GX-managed Checkpoints are currently validated here and they contain only one validation definition, but
+    # the Checkpoint does allow for multiple validation definitions so we'll be defensive and ensure we only test each
+    # source/asset once
+    data_sources_assets_by_data_source_name: dict[str, DataSourceAssets] = {}
+    for vd in checkpoint.validation_definitions:
+        ds = vd.data_source
+        ds_name = ds.name
+        # create assets by name dict
+        if ds_name not in data_sources_assets_by_data_source_name:
+            data_sources_assets_by_data_source_name[ds_name] = DataSourceAssets(
+                data_source=ds, assets_by_name={}
+            )
+        data_sources_assets_by_data_source_name[ds_name].assets_by_name[vd.asset.name] = vd.asset
 
-        for data_sources_assets in data_sources_assets_by_data_source_name.values():
-            data_source = data_sources_assets.data_source
-            data_source.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
-            for data_asset in data_sources_assets.assets_by_name.values():
-                # Add your verification if you want
-                verify_data_asset(LOGGER.info, data_source, data_asset)
-                data_asset.test_connection()  # raises `TestConnectionError` on failure
+    for data_sources_assets in data_sources_assets_by_data_source_name.values():
+        data_source = data_sources_assets.data_source
+        data_source.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
+        for data_asset in data_sources_assets.assets_by_name.values():
+            # Add your verification if you want
+            verify_data_asset(LOGGER.info, data_source, data_asset)
+            data_asset.test_connection()  # raises `TestConnectionError` on failure
 
     # Get checkpoint if we haven't already
-    if 'checkpoint' not in locals():
-        checkpoint = context.checkpoints.get(name=event.checkpoint_name)
+    # if 'checkpoint' not in locals():
+    #     checkpoint = context.checkpoints.get(name=event.checkpoint_name)
 
     # run checkpoint
     checkpoint_run_result = checkpoint.run(
