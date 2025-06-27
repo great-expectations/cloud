@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
-from great_expectations_cloud.agent.actions.utils import verify_data_asset
+# from great_expectations_cloud.agent.actions.utils import verify_data_asset
 
 
 class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
@@ -89,7 +89,7 @@ def run_checkpoint(
         data_source.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
         for data_asset in data_sources_assets.assets_by_name.values():
             # Add your verification if you want
-            verify_data_asset(LOGGER.info, data_source, data_asset)
+            # verify_data_asset(LOGGER.info, data_source, data_asset)
             data_asset.test_connection()  # raises `TestConnectionError` on failure
 
     # Get checkpoint if we haven't already

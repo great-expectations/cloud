@@ -57,7 +57,7 @@ if TYPE_CHECKING:
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
-from great_expectations_cloud.agent.actions.utils import verify_data_asset
+# from great_expectations_cloud.agent.actions.utils import verify_data_asset
 
 class ExpectationConstraintFunction(str, Enum):
     """Expectation constraint functions."""
@@ -181,7 +181,7 @@ class GenerateDataQualityCheckExpectationsAction(
         try:
             datasource = self._context.data_sources.get(event.datasource_name)
             data_asset = datasource.get_asset(asset_name)
-            verify_data_asset(LOGGER.info, datasource, data_asset)
+            # verify_data_asset(LOGGER.info, datasource, data_asset)
             data_asset.test_connection()  # raises `TestConnectionError` on failure
 
         except Exception as e:
