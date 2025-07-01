@@ -3,12 +3,16 @@ from __future__ import annotations
 import datetime
 from abc import abstractmethod
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Generic, Optional, TypeVar
+from typing import TYPE_CHECKING, Generic, Optional, TypeVar, Union
 from uuid import UUID
 
 from pydantic.v1 import BaseModel
 
-from great_expectations_cloud.agent.models import CreatedResource, Event
+from great_expectations_cloud.agent.models import (
+    AgentBaseExtraForbid,
+    AgentBaseExtraIgnore,
+    CreatedResource,
+)
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -23,10 +27,10 @@ class ActionResult(BaseModel):
     )
 
 
-_EventT = TypeVar("_EventT", bound=Event)
+_EventTypeT = TypeVar("_EventTypeT", bound=Union[AgentBaseExtraForbid, AgentBaseExtraIgnore])
 
 
-class AgentAction(Generic[_EventT]):
+class AgentAction(Generic[_EventTypeT]):
     def __init__(
         self, context: CloudDataContext, base_url: str, organization_id: UUID, auth_key: str
     ):
@@ -36,4 +40,4 @@ class AgentAction(Generic[_EventT]):
         self._auth_key = auth_key
 
     @abstractmethod
-    def run(self, event: _EventT, id: str) -> ActionResult: ...
+    def run(self, event: _EventTypeT, id: str) -> ActionResult: ...

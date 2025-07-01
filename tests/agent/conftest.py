@@ -189,10 +189,10 @@ class DummyEvent(EventBase):
     organization_id: UUID | None = None
 
 
-class DummyAction(AgentAction[Any]):
+class DummyAction(AgentAction[DummyEvent]):
     # Dummy event is used for testing only
     @override
-    def run(self, event: Event, id: str) -> ActionResult:
+    def run(self, event: DummyEvent, id: str) -> ActionResult:
         return ActionResult(id=id, type="DummyAction", created_resources=[])
 
 
