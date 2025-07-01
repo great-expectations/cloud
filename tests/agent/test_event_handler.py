@@ -212,12 +212,13 @@ class TestEventHandler:
 
         handler = EventHandler(context=mock_context)
 
+        test_org_id = uuid4()
         with pytest.raises(NoVersionImplementationError):
             handler.get_event_action(
-                DummyEvent(),  # type: ignore[arg-type]  # Dummy event only used in testing
+                DummyEvent(organization_id=test_org_id),  # type: ignore[arg-type]  # Dummy event only used in testing
                 base_url="",
                 auth_key="",
-                organization_id=uuid4(),
+                organization_id=test_org_id,
             )
 
 
@@ -242,15 +243,15 @@ class TestEventHandlerRegistry:
 
     def test_event_handler_gets_correct_event_action(self, mocker: MockerFixture, mock_context):
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
-        DummyEvent.organization_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
+        test_org_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
         register_event_action("1", DummyEvent, DummyAction)
         handler = EventHandler(context=mock_context)
         assert isinstance(
             handler.get_event_action(
-                DummyEvent(),  # type: ignore[arg-type]  # Dummy event only used in testing
+                DummyEvent(organization_id=test_org_id),  # type: ignore[arg-type]  # Dummy event only used in testing
                 base_url="",
                 auth_key="",
-                organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
+                organization_id=test_org_id,
             ),
             DummyAction,
         )

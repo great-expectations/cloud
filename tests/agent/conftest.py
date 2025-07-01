@@ -6,6 +6,7 @@ import uuid
 from collections import deque
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypedDict
+from uuid import UUID
 
 import pytest
 from great_expectations import (
@@ -185,6 +186,7 @@ def data_context_config() -> DataContextConfigTD:
 
 class DummyEvent(EventBase):
     type: Literal["event_name.received"] = "event_name.received"
+    organization_id: UUID | None = None
 
 
 class DummyAction(AgentAction[Any]):
