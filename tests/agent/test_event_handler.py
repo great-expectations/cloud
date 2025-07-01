@@ -212,8 +212,14 @@ class TestEventHandler:
 
         handler = EventHandler(context=mock_context)
 
+        test_org_id = uuid4()
         with pytest.raises(NoVersionImplementationError):
-            handler.get_event_action(DummyEvent, base_url="", auth_key="", organization_id=uuid4())  # type: ignore[arg-type]  # Dummy event only used in testing
+            handler.get_event_action(
+                DummyEvent(organization_id=test_org_id),  # type: ignore[arg-type]  # Dummy event only used in testing, get_event_action is not used by external systems, so we can keep the type narrowed to known Events
+                base_url="",
+                auth_key="",
+                organization_id=test_org_id,
+            )
 
 
 class TestEventHandlerRegistry:
@@ -226,26 +232,26 @@ class TestEventHandlerRegistry:
     )
     def test_register_event_action(self, mocker: MockerFixture, version: str):
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
-        register_event_action(version, DummyEvent, DummyAction)  # type: ignore[arg-type]
+        register_event_action(version, DummyEvent, DummyAction)
         assert _EVENT_ACTION_MAP[version][DummyEvent.__name__] == DummyAction
 
     def test_register_event_action_already_registered(self, mocker: MockerFixture):
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
-        register_event_action("0", DummyEvent, DummyAction)  # type: ignore[arg-type]
+        register_event_action("0", DummyEvent, DummyAction)
         with pytest.raises(EventAlreadyRegisteredError):
-            register_event_action("0", DummyEvent, DummyAction)  # type: ignore[arg-type]
+            register_event_action("0", DummyEvent, DummyAction)
 
     def test_event_handler_gets_correct_event_action(self, mocker: MockerFixture, mock_context):
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
-        DummyEvent.organization_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
-        register_event_action("1", DummyEvent, DummyAction)  # type: ignore[arg-type]
+        test_org_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
+        register_event_action("1", DummyEvent, DummyAction)
         handler = EventHandler(context=mock_context)
         assert isinstance(
             handler.get_event_action(
-                DummyEvent,  # type: ignore[arg-type]  # Dummy event only used in testing
+                DummyEvent(organization_id=test_org_id),  # type: ignore[arg-type]  # Dummy event only used in testing, get_event_action is not used by external systems, so we can keep the type narrowed to known Events
                 base_url="",
                 auth_key="",
-                organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
+                organization_id=test_org_id,
             ),
             DummyAction,
         )

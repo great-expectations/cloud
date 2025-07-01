@@ -3,12 +3,16 @@ from __future__ import annotations
 import datetime
 from abc import abstractmethod
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Generic, Optional, TypeVar
+from typing import TYPE_CHECKING, Generic, Optional, TypeVar, Union
 from uuid import UUID
 
 from pydantic.v1 import BaseModel
 
-from great_expectations_cloud.agent.models import CreatedResource, Event
+from great_expectations_cloud.agent.models import (
+    AgentBaseExtraForbid,
+    AgentBaseExtraIgnore,
+    CreatedResource,
+)
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -23,7 +27,7 @@ class ActionResult(BaseModel):
     )
 
 
-_EventT = TypeVar("_EventT", bound=Event)
+_EventT = TypeVar("_EventT", bound=Union[AgentBaseExtraForbid, AgentBaseExtraIgnore])
 
 
 class AgentAction(Generic[_EventT]):

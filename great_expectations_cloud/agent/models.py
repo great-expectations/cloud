@@ -144,6 +144,10 @@ class MissingEventSubclasses(RuntimeError):
         super().__init__("No valid Event subclasses found")
 
 
+# Type alias for any event class that can be used in the dynamic system
+EventType = type[Union[AgentBaseExtraForbid, AgentBaseExtraIgnore]]
+
+
 #
 # Dynamically build Event union from all subclasses of AgentBaseExtraForbid and AgentBaseExtraIgnore
 #
