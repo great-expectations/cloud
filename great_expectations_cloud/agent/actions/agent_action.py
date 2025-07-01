@@ -27,10 +27,10 @@ class ActionResult(BaseModel):
     )
 
 
-_EventTypeT = TypeVar("_EventTypeT", bound=Union[AgentBaseExtraForbid, AgentBaseExtraIgnore])
+_EventT = TypeVar("_EventT", bound=Union[AgentBaseExtraForbid, AgentBaseExtraIgnore])
 
 
-class AgentAction(Generic[_EventTypeT]):
+class AgentAction(Generic[_EventT]):
     def __init__(
         self, context: CloudDataContext, base_url: str, organization_id: UUID, auth_key: str
     ):
@@ -40,4 +40,4 @@ class AgentAction(Generic[_EventTypeT]):
         self._auth_key = auth_key
 
     @abstractmethod
-    def run(self, event: _EventTypeT, id: str) -> ActionResult: ...
+    def run(self, event: _EventT, id: str) -> ActionResult: ...
