@@ -193,7 +193,7 @@ class DummyAction(AgentAction[Any]):
     # Dummy event is used for testing only
     @override
     def run(self, event: Event, id: str) -> ActionResult:
-        return ActionResult(id=id, type="DummyAction", created_resources=[], job_duration=None)
+        return ActionResult(id=id, type="DummyAction", created_resources=[])
 
 
 register_event_action("1", DummyEvent, DummyAction)
