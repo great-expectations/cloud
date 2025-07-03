@@ -101,6 +101,7 @@ class GenerateDataQualityCheckExpectationsAction(
         created_resources: list[CreatedResource] = []
         assets_with_errors: list[str] = []
         selected_dqis: Sequence[DataQualityIssues] = event.selected_data_quality_issues or []
+        created_via: str | None = event.created_via or None
         for asset_name in event.data_assets:
             try:
                 data_asset = self._retrieve_asset_from_asset_name(event, asset_name)
@@ -122,6 +123,7 @@ class GenerateDataQualityCheckExpectationsAction(
                         volume_change_expectation_id = self._add_volume_change_expectation(
                             asset_id=data_asset.id,
                             use_forecast=event.use_forecast,
+                            created_via=created_via,
                         )
                         created_resources.append(
                             CreatedResource(
@@ -134,7 +136,7 @@ class GenerateDataQualityCheckExpectationsAction(
                         pre_existing_anomaly_detection_coverage=pre_existing_anomaly_detection_coverage,
                     ):
                         schema_change_expectation_id = self._add_schema_change_expectation(
-                            metric_run=metric_run, asset_id=data_asset.id
+                            metric_run=metric_run, asset_id=data_asset.id, created_via=created_via
                         )
                         created_resources.append(
                             CreatedResource(
@@ -152,6 +154,7 @@ class GenerateDataQualityCheckExpectationsAction(
                             metric_run=metric_run,
                             asset_id=data_asset.id,
                             pre_existing_completeness_change_expectations=pre_existing_completeness_change_expectations,
+                            created_via=created_via,
                         )
                         for exp_id in completeness_change_expectation_ids:
                             created_resources.append(
@@ -265,7 +268,9 @@ class GenerateDataQualityCheckExpectationsAction(
             and len(pre_existing_anomaly_detection_coverage.get(DataQualityIssues.SCHEMA, [])) == 0
         )
 
-    def _add_volume_change_expectation(self, asset_id: UUID | None, use_forecast: bool) -> UUID:
+    def _add_volume_change_expectation(
+        self, asset_id: UUID | None, use_forecast: bool, created_via: str | None
+    ) -> UUID:
         unique_id = param_safe_unique_id(16)
         lower_bound_param_name = f"{unique_id}_min_value_min"
         upper_bound_param_name = f"{unique_id}_max_value_max"
@@ -313,11 +318,13 @@ class GenerateDataQualityCheckExpectationsAction(
             max_value=max_value,
         )
         expectation_id = self._create_expectation_for_asset(
-            expectation=expectation, asset_id=asset_id
+            expectation=expectation, asset_id=asset_id, created_via=created_via
         )
         return expectation_id
 
-    def _add_schema_change_expectation(self, metric_run: MetricRun, asset_id: UUID | None) -> UUID:
+    def _add_schema_change_expectation(
+        self, metric_run: MetricRun, asset_id: UUID | None, created_via: str | None
+    ) -> UUID:
         # Find the TABLE_COLUMNS metric by type instead of assuming it's at position 0
         table_columns_metric = next(
             (
@@ -334,7 +341,7 @@ class GenerateDataQualityCheckExpectationsAction(
             column_set=table_columns_metric.value
         )
         expectation_id = self._create_expectation_for_asset(
-            expectation=expectation, asset_id=asset_id
+            expectation=expectation, asset_id=asset_id, created_via=created_via
         )
         return expectation_id
 
@@ -345,6 +352,7 @@ class GenerateDataQualityCheckExpectationsAction(
         pre_existing_completeness_change_expectations: list[
             dict[Any, Any]
         ],  # list of ExpectationConfiguration dicts
+        created_via: str | None,
     ) -> list[UUID]:
         table_row_count = next(
             metric
@@ -430,7 +438,7 @@ class GenerateDataQualityCheckExpectationsAction(
                 )
 
             expectation_id = self._create_expectation_for_asset(
-                expectation=expectation, asset_id=asset_id
+                expectation=expectation, asset_id=asset_id, created_via=created_via
             )
             expectation_ids.append(expectation_id)
 
@@ -478,7 +486,10 @@ class GenerateDataQualityCheckExpectationsAction(
         return max(0.0001, round(triangular_interpolation(value, options), 5))
 
     def _create_expectation_for_asset(
-        self, expectation: gx_expectations.Expectation, asset_id: UUID | None
+        self,
+        expectation: gx_expectations.Expectation,
+        asset_id: UUID | None,
+        created_via: str | None,
     ) -> UUID:
         url = urljoin(
             base=self._base_url,
@@ -487,7 +498,8 @@ class GenerateDataQualityCheckExpectationsAction(
 
         expectation_payload = expectation.configuration.to_json_dict()
         expectation_payload["autogenerated"] = True
-        expectation_payload["created_via"] = "asset_creation"
+        if created_via is not None:
+            expectation_payload["created_via"] = created_via
 
         # Backend expects `expectation_type` instead of `type`:
         expectation_type = expectation_payload.pop("type")
