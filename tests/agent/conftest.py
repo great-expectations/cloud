@@ -6,6 +6,7 @@ import uuid
 from collections import deque
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypedDict
+from uuid import UUID
 
 import pytest
 from great_expectations import (
@@ -185,13 +186,14 @@ def data_context_config() -> DataContextConfigTD:
 
 class DummyEvent(EventBase):
     type: Literal["event_name.received"] = "event_name.received"
+    organization_id: UUID | None = None
 
 
-class DummyAction(AgentAction[Any]):
+class DummyAction(AgentAction[DummyEvent]):
     # Dummy event is used for testing only
     @override
-    def run(self, event: Event, id: str) -> ActionResult:
+    def run(self, event: DummyEvent, id: str) -> ActionResult:
         return ActionResult(id=id, type="DummyAction", created_resources=[])
 
 
-register_event_action("1", DummyEvent, DummyAction)  # type: ignore[arg-type]
+register_event_action("1", DummyEvent, DummyAction)
