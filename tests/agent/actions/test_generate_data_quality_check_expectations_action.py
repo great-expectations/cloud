@@ -201,7 +201,9 @@ def mock_multi_asset_success_and_failure(
     def mock_no_anomaly_detection_coverage(self, data_asset: DataAsset[Any, Any]):
         return {}
 
-    def mock_schema_change_expectation(self, metric_run: MetricRun, asset_id: uuid.UUID):
+    def mock_schema_change_expectation(
+        self, metric_run: MetricRun, asset_id: uuid.UUID, created_via: str
+    ):
         # The data asset name is contained in the expectation_suite_name
         # Here we are simulating a failure to add an expectation to the suite, for suite names that contain "schema-fail"
         if asset_id == failing_asset_id:
@@ -314,6 +316,7 @@ def test_generate_schema_change_expectations_action_success(
             datasource_name="test-datasource",
             data_assets=data_asset_names,
             selected_data_quality_issues=[DataQualityIssues.SCHEMA],
+            created_via="asset_creation",
         ),
         id="test-id",
     )
@@ -327,6 +330,7 @@ def test_generate_schema_change_expectations_action_success(
             column_set=["col1", "col2"],
         ),
         asset_id=TABLE_ASSET_ID,
+        created_via="asset_creation",
     )
 
 
@@ -366,6 +370,7 @@ def test_anomaly_detection_expectation_not_created_if_asset_already_has_coverage
             datasource_name="test-datasource",
             data_assets=["data_asset_name"],
             selected_data_quality_issues=[DataQualityIssues.SCHEMA, DataQualityIssues.VOLUME],
+            created_via="new_expectation",
         ),
         id="test-id",
     )
@@ -375,6 +380,7 @@ def test_anomaly_detection_expectation_not_created_if_asset_already_has_coverage
             column_set=["col1", "col2"],
         ),
         asset_id=TABLE_ASSET_ID,
+        created_via="new_expectation",
     )
     assert return_value.type == "generate_data_quality_check_expectations_request.received"
 
@@ -423,7 +429,7 @@ def test_generate_completeness_expectation_not_added_when_coverage_already_exist
     # Mock the _create_expectation_for_asset method to capture created expectations
     created_expectations = []
 
-    def mock_create_expectation(expectation, asset_id):
+    def mock_create_expectation(expectation, asset_id, created_via):
         created_expectations.append(expectation)
         return uuid.uuid4()
 
@@ -715,7 +721,7 @@ def test_generate_completeness_expectations_with_proportion_approach(
     # Mock the _create_expectation_for_asset method to capture created expectations
     created_expectations = []
 
-    def mock_create_expectation(expectation, asset_id):
+    def mock_create_expectation(expectation, asset_id, created_via):
         created_expectations.append(expectation)
         return uuid.uuid4()
 
@@ -807,7 +813,7 @@ def test_completeness_expectations_count_based_on_data(
     # Mock the _create_expectation_for_asset method to capture created expectations
     created_expectations = []
 
-    def mock_create_expectation(expectation, asset_id):
+    def mock_create_expectation(expectation, asset_id, created_via):
         created_expectations.append(expectation)
         return uuid.uuid4()
 
@@ -867,7 +873,7 @@ def test_generate_completeness_expectations_edge_cases(
     # All nulls (non_null_proportion = 0)
     created_expectations = []
 
-    def mock_create_expectation(expectation, asset_id):
+    def mock_create_expectation(expectation, asset_id, created_via):
         created_expectations.append(expectation)
         return uuid.uuid4()
 

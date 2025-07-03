@@ -248,11 +248,11 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
         GenerateDataQualityCheckExpectationsAction._create_expectation_for_asset
     )
 
-    def mock_create_expectation(self, expectation, asset_id):
+    def mock_create_expectation(self, expectation, asset_id, created_via):
         # Capture the expectation config
         generated_expectations.append(expectation)
         # Call original method
-        return original_create_expectation(self, expectation, asset_id)
+        return original_create_expectation(self, expectation, asset_id, created_via)
 
     def mock_no_anomaly_detection_coverage(self, data_asset_id: uuid.UUID | None):
         return {}
@@ -328,11 +328,11 @@ def test_generate_data_quality_check_expectations_action_completeness_with_propo
         GenerateDataQualityCheckExpectationsAction._create_expectation_for_asset
     )
 
-    def mock_create_expectation(self, expectation, asset_id):
+    def mock_create_expectation(self, expectation, asset_id, created_via):
         # Capture the expectation config
         generated_expectations.append(expectation)
         # Call original method
-        return original_create_expectation(self, expectation, asset_id)
+        return original_create_expectation(self, expectation, asset_id, created_via)
 
     def mock_no_anomaly_detection_coverage(self, data_asset_id: uuid.UUID | None):
         return {}

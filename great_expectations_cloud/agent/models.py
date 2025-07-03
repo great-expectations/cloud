@@ -124,6 +124,7 @@ class GenerateDataQualityCheckExpectationsEvent(EventBase):
     data_assets: Sequence[str]
     selected_data_quality_issues: Sequence[DataQualityIssues] | None = None
     use_forecast: bool = False  # feature flag
+    created_via: str | None = None
 
 
 class RunRdAgentEvent(EventBase):
