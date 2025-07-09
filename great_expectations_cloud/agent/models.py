@@ -199,6 +199,17 @@ else:
     Event = Annotated[Union[_event_classes], Field(discriminator="type")]
 
 
+def reload_event_union() -> None:
+    global Event
+    reloaded_event_classes = _build_event_union()
+    Event = Annotated[Union[reloaded_event_classes], Field(discriminator="type")]
+
+
+def get_event_union() -> Event:
+    global Event
+    return Event
+
+
 class CreatedResource(AgentBaseExtraForbid):
     resource_id: str
     type: str
