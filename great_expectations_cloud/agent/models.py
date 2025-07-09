@@ -231,6 +231,7 @@ def get_event_union() -> Any:
         so we use Any. At runtime, this represents a properly typed
         discriminated union of concrete event model classes.
     """
+    reload_event_union()
     return Event
 
 
