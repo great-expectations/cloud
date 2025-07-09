@@ -206,15 +206,30 @@ def reload_event_union() -> None:
     to make it available in the Event union."""
     global Event  # noqa: PLW0603
     reloaded_event_classes = _build_event_union()
-    Event = Annotated[Union[reloaded_event_classes], Field(discriminator="type")]
+    Event = Annotated[Union[reloaded_event_classes], Field(discriminator="type")]  # type: ignore[valid-type]
 
 
-def get_event_union() -> Event:
+def get_event_union() -> Any:
     """Canonical way to access the Event union for non-typing use cases.
 
     The Event union can be dynamically extended when the Agent codebase is extended.
     Those subclasses will be defined after the Event model is defined in this module.
     This function allows callers to access the full union that includes those subclasses.
+
+    Returns:
+        A dynamically constructed discriminated Union type suitable for pydantic parsing.
+
+    Type Bounds:
+        All members of the returned Union are subclasses of either:
+        - AgentBaseExtraForbid: Event classes with strict field validation
+        - AgentBaseExtraIgnore: Event classes that ignore extra fields
+
+        The actual return type is equivalent to:
+        Annotated[Union[<all_event_subclasses>], Field(discriminator="type")]
+
+        This cannot be statically typed due to the dynamic discovery of subclasses,
+        so we use Any. At runtime, this represents a properly typed
+        discriminated union of concrete event model classes.
     """
     return Event
 
