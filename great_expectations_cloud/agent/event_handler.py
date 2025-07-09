@@ -18,6 +18,7 @@ from great_expectations_cloud.agent.models import (
     Event,
     EventType,
     UnknownEvent,
+    get_event_union,
 )
 
 if TYPE_CHECKING:
@@ -103,8 +104,9 @@ class EventHandler:
 
     @classmethod
     def parse_event_from(cls, msg_body: bytes) -> Event:
+        event_union = get_event_union()
         try:
-            event: Event = pydantic_v1.parse_raw_as(Event, msg_body)  # type: ignore[arg-type] # FIXME
+            event: Event = pydantic_v1.parse_raw_as(event_union, msg_body)
         except (pydantic_v1.ValidationError, JSONDecodeError):
             # Log as bytes
             LOGGER.exception("Unable to parse event type", extra={"msg_body": f"{msg_body!r}"})
