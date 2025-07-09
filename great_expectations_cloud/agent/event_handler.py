@@ -17,7 +17,8 @@ from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     Event,
     EventType,
-    UnknownEvent, get_event_union,
+    UnknownEvent,
+    get_event_union,
 )
 
 if TYPE_CHECKING:

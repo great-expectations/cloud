@@ -200,13 +200,22 @@ else:
 
 
 def reload_event_union() -> None:
-    global Event
+    """Rebuild the Event union dynamically.
+
+    Call this method after subclassing one of the EventBase models in order
+    to make it available in the Event union."""
+    global Event  # noqa: PLW0603
     reloaded_event_classes = _build_event_union()
     Event = Annotated[Union[reloaded_event_classes], Field(discriminator="type")]
 
 
 def get_event_union() -> Event:
-    global Event
+    """Canonical way to access the Event union for non-typing use cases.
+
+    The Event union can be dynamically extended when the Agent codebase is extended.
+    Those subclasses will be defined after the Event model is defined in this module.
+    This function allows callers to access the full union that includes those subclasses.
+    """
     return Event
 
 
