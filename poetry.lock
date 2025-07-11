@@ -600,14 +600,14 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "1.5.4"
+version = "1.5.5"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = "<3.13,>=3.9"
 groups = ["main"]
 files = [
-    {file = "great_expectations-1.5.4-py3-none-any.whl", hash = "sha256:6a2653330b2c7602d2382a4a1586c24ac776115efebeb68d0199edd9e5db4028"},
-    {file = "great_expectations-1.5.4.tar.gz", hash = "sha256:bf4bfa0ba03f243fa5f432cfe034b1512fd1bc671ffa24be10f26a71ebea729c"},
+    {file = "great_expectations-1.5.5-py3-none-any.whl", hash = "sha256:1c44d6f1cd0712a47508e80a03c6a6bcc1879ded08fe55cb1d408780e116e296"},
+    {file = "great_expectations-1.5.5.tar.gz", hash = "sha256:6592688bea163ff2fc3d55a385515fad6cf39cbefe32be52f3767c6e0ffa5e61"},
 ]
 
 [package.dependencies]
@@ -665,7 +665,7 @@ snowflake = ["pandas (<2.2.0) ; python_version >= \"3.9\"", "snowflake-connector
 spark = ["pyspark (>=2.3.2,<4.0)"]
 spark-connect = ["googleapis-common-protos (>=1.56.4)", "grpcio (>=1.48.1)", "grpcio-status (>=1.48.1)"]
 teradata = ["sqlalchemy (<2.0.0)", "teradatasqlalchemy (==17.0.0.5)"]
-test = ["adr-tools-python (==1.0.3)", "boto3 (>=1.17.106)", "coverage[toml] (>=7.5.1)", "docstring-parser (==0.16)", "feather-format (>=0.4.1)", "flaky (>=3.7.0)", "flask (>=1.0.0)", "freezegun (>=0.3.15)", "invoke (>=2.0.0)", "moto[s3,sns] (>=4.2.13,<5.0)", "mypy (==1.15.0)", "pact-python (>=2.0.1)", "pre-commit (>=2.21.0)", "pyarrow", "pyfakefs (>=4.5.1)", "pytest (>=8.2.1)", "pytest-benchmark (>=3.4.1)", "pytest-cov (>=5.0.0)", "pytest-icdiff (>=0.9.0)", "pytest-mock (>=3.14.0)", "pytest-order (>=1.2.1)", "pytest-random-order (>=1.1.1)", "pytest-timeout (>=2.3.1)", "pytest-xdist (>=3.6.1)", "requirements-parser (>=0.9.0)", "responses (>=0.23.1,!=0.25.5)", "ruff (==0.12.0)", "setuptools (>=70.0.0)", "sqlalchemy (>=1.4.0)", "tomli (>=2.0.1)"]
+test = ["adr-tools-python (==1.0.3)", "boto3 (>=1.17.106)", "coverage[toml] (>=7.5.1)", "docstring-parser (==0.16)", "feather-format (>=0.4.1)", "flaky (>=3.7.0)", "flask (>=1.0.0)", "freezegun (>=0.3.15)", "invoke (>=2.0.0)", "moto[s3,sns] (>=4.2.13,<5.0)", "mypy (==1.15.0)", "pact-python (>=2.0.1)", "pre-commit (>=2.21.0)", "pyarrow", "pyfakefs (>=4.5.1)", "pytest (>=8.2.1)", "pytest-benchmark (>=3.4.1)", "pytest-cov (>=5.0.0)", "pytest-icdiff (>=0.9.0)", "pytest-mock (>=3.14.0)", "pytest-order (>=1.2.1)", "pytest-random-order (>=1.1.1)", "pytest-timeout (>=2.3.1)", "pytest-xdist (>=3.6.1)", "requirements-parser (>=0.9.0)", "responses (>=0.23.1,!=0.25.5)", "ruff (==0.12.2)", "setuptools (>=70.0.0)", "sqlalchemy (>=1.4.0)", "tomli (>=2.0.1)"]
 trino = ["sqlalchemy (>=1.4.0)", "trino (>=0.310.0,!=0.316.0)"]
 vertica = ["sqlalchemy (>=1.4.0)", "sqlalchemy-vertica-python (>=0.5.10)"]
 
@@ -2798,4 +2798,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "22d14c0c0a4b9f47b2890c144f13d8d21d4c84148f7784e1bb82e904469544a2"
+content-hash = "62097ed7c18a66dbb3e79cfebcb511d618c44eca61c4f6610524ec26fdcd6094"
