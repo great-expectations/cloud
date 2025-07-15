@@ -5,7 +5,7 @@ import random
 import string
 import uuid
 from time import sleep
-from typing import TYPE_CHECKING, Callable, Literal
+from typing import TYPE_CHECKING, Any, Callable, Literal
 from unittest.mock import ANY, call
 
 import pytest
@@ -474,7 +474,7 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     agent = GXAgent()
     agent.run()
 
-    data = {
+    data: dict[str, Any] = {
         "data": {
             "type": "run_scheduled_checkpoint.received",
             "correlation_id": str(correlation_id),
