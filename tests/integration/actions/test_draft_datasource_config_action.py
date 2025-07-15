@@ -103,9 +103,9 @@ def test_running_draft_datasource_config_action(
     assert _update_asset_names_list_spy.call_args.kwargs.get("config_id") == UUID(
         draft_datasource_id_for_connect_successfully
     )
-    assert sorted(_update_asset_names_list_spy.call_args.kwargs.get("asset_names")) == sorted(
-        expected_table_names
-    )
+    asset_names = _update_asset_names_list_spy.call_args.kwargs.get("asset_names")
+    assert asset_names is not None
+    assert sorted(asset_names) == sorted(expected_table_names)
 
 
 def test_running_draft_datasource_config_action_fails_for_unreachable_datasource(
