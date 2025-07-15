@@ -474,7 +474,7 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     agent = GXAgent()
     agent.run()
 
-    data = {
+    data: dict = {
         "data": {
             "type": "run_scheduled_checkpoint.received",
             "correlation_id": str(correlation_id),
