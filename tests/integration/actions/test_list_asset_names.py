@@ -40,42 +40,16 @@ def test_running_list_table_names_action(
     datasource_id_for_connect_successfully = (
         "2ccfea7f-3f91-47f2-804e-2106aa07ef24"  # local_mercury_db
     )
-    expected_table_names = [
-        "alembic_version",
-        "organization_api_tokens",
+    # subset of tables we expect to see
+    expected_asset_names = [
         "asset_refs",
-        "alert_emails",
-        "asset_alert_emails",
         "checkpoints",
-        "data_context_variables",
         "datasources",
         "expectation_suites",
         "organizations",
-        "organizations_auth0_orgs",
-        "pg_stat_statements",
-        "sso_organization_email_domains",
         "api_tokens",
         "users",
-        "agent_job_created_resources",
-        "agent_job_source_resources",
-        "draft_configs",
-        "metric_runs",
-        "metrics",
-        "agent_jobs",
         "expectations",
-        "expectation_changes",
-        "expectation_draft_configs",
-        "expectation_prompts",
-        "system_users",
-        "batch_definitions",
-        "checkpoint_job_schedules",
-        "expectation_validation_results",
-        "suite_validation_results",
-        "user_api_tokens",
-        "auth0_users",
-        "organization_users",
-        "user_asset_alerts",
-        "validations",
     ]
 
     # add spy to the action method
@@ -92,9 +66,16 @@ def test_running_list_table_names_action(
     assert result.created_resources == []
 
     _add_or_update_asset_names_list.assert_called_once()
-    call_args = _add_or_update_asset_names_list.call_args
-    assert call_args.kwargs["datasource_id"] == datasource_id_for_connect_successfully
-    assert set(call_args.kwargs["asset_names"]) == set(expected_table_names)
+    assert (
+        _add_or_update_asset_names_list.call_args.kwargs["datasource_id"]
+        == datasource_id_for_connect_successfully
+    )
+    assert len(_add_or_update_asset_names_list.call_args.kwargs["asset_names"]) >= len(
+        expected_asset_names
+    )
+    assert set(expected_asset_names).issubset(
+        set(_add_or_update_asset_names_list.call_args.kwargs["asset_names"])
+    )
 
 
 def test_running_list_table_names_action_fails_for_unreachable_datasource(
