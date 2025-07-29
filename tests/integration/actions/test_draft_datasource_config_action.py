@@ -78,7 +78,7 @@ def test_running_draft_datasource_config_action(
         draft_datasource_id_for_connect_successfully
     )
     assert set(expected_asset_names).issubset(
-        set(_update_asset_names_list_spy.call_args.kwargs.get("asset_names"))
+        set(_update_asset_names_list_spy.call_args.kwargs["asset_names"])
     )
 
 
