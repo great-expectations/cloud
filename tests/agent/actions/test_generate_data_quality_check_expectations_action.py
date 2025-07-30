@@ -759,6 +759,91 @@ def test_generate_completeness_expectations_with_proportion_approach(
     assert isinstance(expectation.max_value, dict) and "$PARAMETER" in expectation.max_value
 
 
+def test_generate_completeness_forecast_expectations_action_success(
+    mock_context: CloudDataContext,
+    mocker: MockerFixture,
+    mock_metric_repository: MetricRepository,
+    mock_batch_inspector: BatchInspector,
+    mock_completeness_metrics: MockCompletenessMetrics,
+):
+    """Test that a single ExpectColumnProportionOfNonNullValuesToBeBetween expectation is created for completeness with forecast."""
+    # Setup
+    metrics = mock_completeness_metrics(30, 100)
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=mock_context,
+        metric_repository=mock_metric_repository,
+        batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.uuid4(),
+    )
+
+    # Mock the methods that would be called
+    def mock_retrieve_asset(event, asset_name):
+        return TableAsset(
+            id=TABLE_ASSET_ID,
+            name="test-data-asset",
+            table_name="test_table",
+            schema_name="test_schema",
+        )
+
+    def mock_get_metrics(data_asset):
+        return MetricRun(metrics=metrics), uuid.uuid4()
+
+    def mock_get_coverage(data_asset_id):
+        return {}
+
+    mocker.patch.object(action, "_retrieve_asset_from_asset_name", side_effect=mock_retrieve_asset)
+    mocker.patch.object(action, "_get_metrics", side_effect=mock_get_metrics)
+    mocker.patch.object(
+        action, "_get_current_anomaly_detection_coverage", side_effect=mock_get_coverage
+    )
+
+    # Mock the _create_expectation_for_asset method to capture created expectations
+    created_expectations = []
+
+    def mock_create_expectation(expectation, asset_id, created_via):
+        created_expectations.append(expectation)
+        return uuid.uuid4()
+
+    mocker.patch.object(
+        action, "_create_expectation_for_asset", side_effect=mock_create_expectation
+    )
+
+    # Run the action
+    return_value = action.run(
+        event=GenerateDataQualityCheckExpectationsEvent(
+            type="generate_data_quality_check_expectations_request.received",
+            organization_id=uuid.uuid4(),
+            datasource_name="test-datasource",
+            data_assets=["test-data-asset1"],
+            selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
+            use_forecast=True,  # <--- feature flag
+        ),
+        id="test-id",
+    )
+
+    # Assert
+    assert len(return_value.created_resources) == 2  # MetricRun + 1 Expectation
+    assert return_value.created_resources[0].type == "MetricRun"
+    assert return_value.created_resources[1].type == "Expectation"
+
+    # Verify only one expectation was created and it's the correct type
+    assert len(created_expectations) == 1
+    expectation = created_expectations[0]
+    assert isinstance(expectation, gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween)
+    assert expectation.column
+
+    # For mixed nulls (30/100), we expect 2 windows with min and max values
+    assert expectation.windows is not None
+    assert len(expectation.windows) == 2  # min and max windows
+    assert isinstance(expectation.min_value, dict) and "$PARAMETER" in expectation.min_value
+    assert isinstance(expectation.max_value, dict) and "$PARAMETER" in expectation.max_value
+    assert expectation.windows[0].constraint_fn == "forecast"
+    assert expectation.windows[1].constraint_fn == "forecast"
+
+
 @pytest.mark.parametrize(
     "null_count, row_count, expected_expectation_count",
     [
