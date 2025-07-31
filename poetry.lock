@@ -606,14 +606,14 @@ typing = ["typing-extensions (>=4.12.2) ; python_version < \"3.11\""]
 
 [[package]]
 name = "freezegun"
-version = "1.5.3"
+version = "1.5.4"
 description = "Let your Python tests travel through time"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "freezegun-1.5.3-py3-none-any.whl", hash = "sha256:1ce20ee4be61349ba52c3af64f5eaba8d08ff51acfcf1b3ea671f03e54c818f1"},
-    {file = "freezegun-1.5.3.tar.gz", hash = "sha256:d7c6204e33a50affd7c7aa284f4f92e04e96f72d63313b89ceaaf60d9c64bc5e"},
+    {file = "freezegun-1.5.4-py3-none-any.whl", hash = "sha256:8bdd75c9d790f53d5a173d273064ccd7900984b36635be552befeedb0cd47b20"},
+    {file = "freezegun-1.5.4.tar.gz", hash = "sha256:798b9372fdd4d907f33e8b6a58bc64e682d9ffa8d494ce60f780197ee81faed1"},
 ]
 
 [package.dependencies]
@@ -621,14 +621,14 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "1.5.6"
+version = "1.5.7"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = "<3.13,>=3.9"
 groups = ["main"]
 files = [
-    {file = "great_expectations-1.5.6-py3-none-any.whl", hash = "sha256:2f1ad7b2f5d124bb6f633feec44a78b13914e80a13ab2189a540ae18d09ea91b"},
-    {file = "great_expectations-1.5.6.tar.gz", hash = "sha256:e02ed519b0c514d3a71686af293206fda2c2c5e9ba416815f1002fc0c4520dd4"},
+    {file = "great_expectations-1.5.7-py3-none-any.whl", hash = "sha256:e8048f3b78167450f5f10a4fa430dbd669b2f16ec86400c8a8565f08f30892d1"},
+    {file = "great_expectations-1.5.7.tar.gz", hash = "sha256:9f0d21444c5f9f17c9be964f186f5dc620e0357852ab18de07e0db39ae6932d4"},
 ]
 
 [package.dependencies]
@@ -646,7 +646,7 @@ pandas = [
     {version = ">=1.3.0,<2.2", markers = "python_version >= \"3.10\""},
     {version = ">=1.3.0,<2.2", optional = true, markers = "python_version >= \"3.10\" and extra == \"snowflake\""},
 ]
-posthog = ">3,<6"
+posthog = ">3"
 psycopg2-binary = {version = ">=2.7.6", optional = true, markers = "extra == \"gx-redshift\" or extra == \"postgresql\""}
 pydantic = ">=1.10.7"
 pyparsing = ">=2.4"
@@ -656,7 +656,7 @@ requests = ">=2.20"
 scipy = ">=1.6.0"
 snowflake-connector-python = {version = ">2.9.0", optional = true, markers = "python_version >= \"3.11\" and extra == \"snowflake\""}
 snowflake-sqlalchemy = {version = ">=1.2.3,<1.7.0 || >1.7.0", optional = true, markers = "extra == \"snowflake\""}
-sqlalchemy = {version = ">=1.4.0", optional = true, markers = "extra == \"databricks\" or extra == \"gx-redshift\" or extra == \"postgresql\" or extra == \"snowflake\""}
+sqlalchemy = {version = ">=1.4.0", optional = true, markers = "extra == \"gx-redshift\" or extra == \"snowflake\" or extra == \"postgresql\" or extra == \"databricks\""}
 tqdm = ">=4.59.0"
 typing-extensions = ">=4.1.0"
 tzlocal = ">=1.2"
@@ -667,13 +667,13 @@ athena = ["pyathena[sqlalchemy] (>=2.0.0,<3)", "sqlalchemy (>=1.4.0)"]
 aws-secrets = ["boto3 (>=1.17.106)"]
 azure = ["azure-identity (>=1.10.0)", "azure-keyvault-secrets (>=4.0.0)", "azure-storage-blob (>=12.5.0)"]
 azure-secrets = ["azure-identity (>=1.10.0)", "azure-keyvault-secrets (>=4.0.0)", "azure-storage-blob (>=12.5.0)"]
-bigquery = ["gcsfs (>=0.5.1)", "google-cloud-bigquery (>=3.3.6)", "google-cloud-bigquery-storage (>=2.20.0)", "google-cloud-secret-manager (>=1.0.0)", "google-cloud-storage (>=1.28.0) ; python_version < \"3.11\"", "google-cloud-storage (>=2.10.0) ; python_version >= \"3.11\"", "pandas-gbq (>=0.26.1)", "sqlalchemy (>=1.4.0)", "sqlalchemy-bigquery (>=1.3.0)"]
+bigquery = ["gcsfs (>=0.5.1)", "google-cloud-bigquery (>=3.3.6)", "google-cloud-bigquery-storage (>=2.20.0)", "google-cloud-secret-manager (>=1.0.0)", "google-cloud-storage (>=1.28.0) ; python_version < \"3.11\"", "google-cloud-storage (>=2.10.0) ; python_version >= \"3.11\"", "pandas_gbq (>=0.26.1)", "sqlalchemy (>=1.4.0)", "sqlalchemy-bigquery (>=1.3.0)"]
 clickhouse = ["clickhouse-sqlalchemy (>=0.2.2) ; python_version < \"3.12\"", "clickhouse-sqlalchemy (>=0.3.0) ; python_version >= \"3.12\"", "sqlalchemy (<2.0.0)"]
 cloud = ["orjson (>=3.9.7)"]
 databricks = ["databricks-sqlalchemy (>=1.0.0)", "sqlalchemy (>=1.4.0)"]
 dremio = ["pyodbc (>=4.0.30)", "sqlalchemy (>=1.4.0)", "sqlalchemy-dremio (==1.2.1)"]
 excel = ["openpyxl (>=3.0.7)", "xlrd (>=1.1.0,<2.0.0)"]
-gcp = ["gcsfs (>=0.5.1)", "google-cloud-bigquery (>=3.3.6)", "google-cloud-bigquery-storage (>=2.20.0)", "google-cloud-secret-manager (>=1.0.0)", "google-cloud-storage (>=1.28.0) ; python_version < \"3.11\"", "google-cloud-storage (>=2.10.0) ; python_version >= \"3.11\"", "pandas-gbq (>=0.26.1)", "sqlalchemy (>=1.4.0)", "sqlalchemy-bigquery (>=1.3.0)"]
+gcp = ["gcsfs (>=0.5.1)", "google-cloud-bigquery (>=3.3.6)", "google-cloud-bigquery-storage (>=2.20.0)", "google-cloud-secret-manager (>=1.0.0)", "google-cloud-storage (>=1.28.0) ; python_version < \"3.11\"", "google-cloud-storage (>=2.10.0) ; python_version >= \"3.11\"", "pandas_gbq (>=0.26.1)", "sqlalchemy (>=1.4.0)", "sqlalchemy-bigquery (>=1.3.0)"]
 gx-redshift = ["gx-sqlalchemy-redshift", "psycopg2-binary (>=2.7.6)", "sqlalchemy (>=1.4.0)"]
 hive = ["PyHive (>=0.6.5)", "sqlalchemy (>=1.4.0)", "thrift (>=0.16.0)", "thrift-sasl (>=0.4.3)"]
 mssql = ["pyodbc (>=4.0.30)", "sqlalchemy (>=1.4.0)"]
@@ -686,7 +686,7 @@ snowflake = ["pandas (<2.2.0) ; python_version >= \"3.9\"", "snowflake-connector
 spark = ["pyspark (>=2.3.2,<4.0)"]
 spark-connect = ["googleapis-common-protos (>=1.56.4)", "grpcio (>=1.48.1)", "grpcio-status (>=1.48.1)"]
 teradata = ["sqlalchemy (<2.0.0)", "teradatasqlalchemy (==17.0.0.5)"]
-test = ["adr-tools-python (==1.0.3)", "boto3 (>=1.17.106)", "coverage[toml] (>=7.5.1)", "docstring-parser (==0.16)", "feather-format (>=0.4.1)", "flaky (>=3.7.0)", "flask (>=1.0.0)", "freezegun (>=0.3.15)", "invoke (>=2.0.0)", "moto[s3,sns] (>=4.2.13,<5.0)", "mypy (==1.15.0)", "pact-python (>=2.0.1)", "pre-commit (>=2.21.0)", "pyarrow", "pyfakefs (>=4.5.1)", "pytest (>=8.2.1)", "pytest-benchmark (>=3.4.1)", "pytest-cov (>=5.0.0)", "pytest-icdiff (>=0.9.0)", "pytest-mock (>=3.14.0)", "pytest-order (>=1.2.1)", "pytest-random-order (>=1.1.1)", "pytest-timeout (>=2.3.1)", "pytest-xdist (>=3.6.1)", "requirements-parser (>=0.9.0)", "responses (>=0.23.1,!=0.25.5)", "ruff (==0.12.2)", "setuptools (>=70.0.0)", "sqlalchemy (>=1.4.0)", "tomli (>=2.0.1)"]
+test = ["adr-tools-python (==1.0.3)", "boto3 (>=1.17.106)", "coverage[toml] (>=7.5.1)", "docstring-parser (==0.16)", "feather-format (>=0.4.1)", "flaky (>=3.7.0)", "flask (>=1.0.0)", "freezegun (>=0.3.15)", "invoke (>=2.0.0)", "moto[s3,sns] (>=4.2.13,<5.0)", "mypy (==1.16.1)", "pact-python (>=2.0.1)", "pre-commit (>=2.21.0)", "pyarrow", "pyfakefs (>=4.5.1)", "pytest (>=8.2.1)", "pytest-benchmark (>=3.4.1)", "pytest-cov (>=5.0.0)", "pytest-icdiff (>=0.9.0)", "pytest-mock (>=3.14.0)", "pytest-order (>=1.2.1)", "pytest-random-order (>=1.1.1)", "pytest-timeout (>=2.3.1)", "pytest-xdist (>=3.6.1)", "requirements-parser (>=0.9.0)", "responses (>=0.23.1,!=0.25.5)", "ruff (==0.12.2)", "setuptools (>=70.0.0)", "sqlalchemy (>=1.4.0)", "tomli (>=2.0.1)"]
 trino = ["sqlalchemy (>=1.4.0)", "trino (>=0.310.0,!=0.316.0)"]
 vertica = ["sqlalchemy (>=1.4.0)", "sqlalchemy-vertica-python (>=0.5.10)"]
 
@@ -1806,14 +1806,14 @@ typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
 name = "pyfakefs"
-version = "5.9.1"
+version = "5.9.2"
 description = "Implements a fake file system that mocks the Python file system modules."
 optional = false
 python-versions = ">=3.7"
 groups = ["dev"]
 files = [
-    {file = "pyfakefs-5.9.1-py3-none-any.whl", hash = "sha256:b3c1f391f1990112ff6b0642182e75f07a6d7fcd81cf1357277680bf6c9b8a84"},
-    {file = "pyfakefs-5.9.1.tar.gz", hash = "sha256:ca02a1441dc77d7512bebfe4224b32f2127e83c45672f5fe2c02c33d4284bc70"},
+    {file = "pyfakefs-5.9.2-py3-none-any.whl", hash = "sha256:8fcea36051d5b8827d49f5e2d242e91a51c5af6b78eeffa8e7adb899a6763e99"},
+    {file = "pyfakefs-5.9.2.tar.gz", hash = "sha256:66c5c6ccd4097b484f8782f9a5078fee0533d465e0d9caf594c9157d54382553"},
 ]
 
 [[package]]
@@ -2312,30 +2312,30 @@ files = [
 
 [[package]]
 name = "ruff"
-version = "0.12.4"
+version = "0.12.7"
 description = "An extremely fast Python linter and code formatter, written in Rust."
 optional = false
 python-versions = ">=3.7"
 groups = ["dev"]
 files = [
-    {file = "ruff-0.12.4-py3-none-linux_armv6l.whl", hash = "sha256:cb0d261dac457ab939aeb247e804125a5d521b21adf27e721895b0d3f83a0d0a"},
-    {file = "ruff-0.12.4-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:55c0f4ca9769408d9b9bac530c30d3e66490bd2beb2d3dae3e4128a1f05c7442"},
-    {file = "ruff-0.12.4-py3-none-macosx_11_0_arm64.whl", hash = "sha256:a8224cc3722c9ad9044da7f89c4c1ec452aef2cfe3904365025dd2f51daeae0e"},
-    {file = "ruff-0.12.4-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e9949d01d64fa3672449a51ddb5d7548b33e130240ad418884ee6efa7a229586"},
-    {file = "ruff-0.12.4-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:be0593c69df9ad1465e8a2d10e3defd111fdb62dcd5be23ae2c06da77e8fcffb"},
-    {file = "ruff-0.12.4-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:a7dea966bcb55d4ecc4cc3270bccb6f87a337326c9dcd3c07d5b97000dbff41c"},
-    {file = "ruff-0.12.4-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:afcfa3ab5ab5dd0e1c39bf286d829e042a15e966b3726eea79528e2e24d8371a"},
-    {file = "ruff-0.12.4-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:c057ce464b1413c926cdb203a0f858cd52f3e73dcb3270a3318d1630f6395bb3"},
-    {file = "ruff-0.12.4-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:e64b90d1122dc2713330350626b10d60818930819623abbb56535c6466cce045"},
-    {file = "ruff-0.12.4-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2abc48f3d9667fdc74022380b5c745873499ff827393a636f7a59da1515e7c57"},
-    {file = "ruff-0.12.4-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:2b2449dc0c138d877d629bea151bee8c0ae3b8e9c43f5fcaafcd0c0d0726b184"},
-    {file = "ruff-0.12.4-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:56e45bb11f625db55f9b70477062e6a1a04d53628eda7784dce6e0f55fd549eb"},
-    {file = "ruff-0.12.4-py3-none-musllinux_1_2_i686.whl", hash = "sha256:478fccdb82ca148a98a9ff43658944f7ab5ec41c3c49d77cd99d44da019371a1"},
-    {file = "ruff-0.12.4-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:0fc426bec2e4e5f4c4f182b9d2ce6a75c85ba9bcdbe5c6f2a74fcb8df437df4b"},
-    {file = "ruff-0.12.4-py3-none-win32.whl", hash = "sha256:4de27977827893cdfb1211d42d84bc180fceb7b72471104671c59be37041cf93"},
-    {file = "ruff-0.12.4-py3-none-win_amd64.whl", hash = "sha256:fe0b9e9eb23736b453143d72d2ceca5db323963330d5b7859d60d101147d461a"},
-    {file = "ruff-0.12.4-py3-none-win_arm64.whl", hash = "sha256:0618ec4442a83ab545e5b71202a5c0ed7791e8471435b94e655b570a5031a98e"},
-    {file = "ruff-0.12.4.tar.gz", hash = "sha256:13efa16df6c6eeb7d0f091abae50f58e9522f3843edb40d56ad52a5a4a4b6873"},
+    {file = "ruff-0.12.7-py3-none-linux_armv6l.whl", hash = "sha256:76e4f31529899b8c434c3c1dede98c4483b89590e15fb49f2d46183801565303"},
+    {file = "ruff-0.12.7-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:789b7a03e72507c54fb3ba6209e4bb36517b90f1a3569ea17084e3fd295500fb"},
+    {file = "ruff-0.12.7-py3-none-macosx_11_0_arm64.whl", hash = "sha256:2e1c2a3b8626339bb6369116e7030a4cf194ea48f49b64bb505732a7fce4f4e3"},
+    {file = "ruff-0.12.7-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:32dec41817623d388e645612ec70d5757a6d9c035f3744a52c7b195a57e03860"},
+    {file = "ruff-0.12.7-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:47ef751f722053a5df5fa48d412dbb54d41ab9b17875c6840a58ec63ff0c247c"},
+    {file = "ruff-0.12.7-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:a828a5fc25a3efd3e1ff7b241fd392686c9386f20e5ac90aa9234a5faa12c423"},
+    {file = "ruff-0.12.7-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:5726f59b171111fa6a69d82aef48f00b56598b03a22f0f4170664ff4d8298efb"},
+    {file = "ruff-0.12.7-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:74e6f5c04c4dd4aba223f4fe6e7104f79e0eebf7d307e4f9b18c18362124bccd"},
+    {file = "ruff-0.12.7-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:5d0bfe4e77fba61bf2ccadf8cf005d6133e3ce08793bbe870dd1c734f2699a3e"},
+    {file = "ruff-0.12.7-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:06bfb01e1623bf7f59ea749a841da56f8f653d641bfd046edee32ede7ff6c606"},
+    {file = "ruff-0.12.7-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:e41df94a957d50083fd09b916d6e89e497246698c3f3d5c681c8b3e7b9bb4ac8"},
+    {file = "ruff-0.12.7-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:4000623300563c709458d0ce170c3d0d788c23a058912f28bbadc6f905d67afa"},
+    {file = "ruff-0.12.7-py3-none-musllinux_1_2_i686.whl", hash = "sha256:69ffe0e5f9b2cf2b8e289a3f8945b402a1b19eff24ec389f45f23c42a3dd6fb5"},
+    {file = "ruff-0.12.7-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:a07a5c8ffa2611a52732bdc67bf88e243abd84fe2d7f6daef3826b59abbfeda4"},
+    {file = "ruff-0.12.7-py3-none-win32.whl", hash = "sha256:c928f1b2ec59fb77dfdf70e0419408898b63998789cc98197e15f560b9e77f77"},
+    {file = "ruff-0.12.7-py3-none-win_amd64.whl", hash = "sha256:9c18f3d707ee9edf89da76131956aba1270c6348bfee8f6c647de841eac7194f"},
+    {file = "ruff-0.12.7-py3-none-win_arm64.whl", hash = "sha256:dfce05101dbd11833a0776716d5d1578641b7fddb537fe7fa956ab85d1769b69"},
+    {file = "ruff-0.12.7.tar.gz", hash = "sha256:1fc3193f238bc2d7968772c82831a4ff69252f673be371fb49663f0068b7ec71"},
 ]
 
 [[package]]
@@ -2836,4 +2836,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "d9cda770fb27aeb9cf1af9a55d3c250891a9c01d2b4ef4982018e5e3ed7ef821"
+content-hash = "11caae64ee706935b342e61613fa1075087410f698b39c553ef1d67133149776"
