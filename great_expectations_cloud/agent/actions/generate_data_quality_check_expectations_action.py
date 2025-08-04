@@ -155,6 +155,7 @@ class GenerateDataQualityCheckExpectationsAction(
                             asset_id=data_asset.id,
                             pre_existing_completeness_change_expectations=pre_existing_completeness_change_expectations,
                             created_via=created_via,
+                            use_forecast=event.use_forecast,
                         )
                         for exp_id in completeness_change_expectation_ids:
                             created_resources.append(
@@ -353,6 +354,7 @@ class GenerateDataQualityCheckExpectationsAction(
             dict[Any, Any]
         ],  # list of ExpectationConfiguration dicts
         created_via: str | None,
+        use_forecast: bool = False,
     ) -> list[UUID]:
         table_row_count = next(
             metric
@@ -404,6 +406,28 @@ class GenerateDataQualityCheckExpectationsAction(
                 expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
                     column=column_name,
                     min_value=1,
+                )
+            elif use_forecast:
+                expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                    windows=[
+                        Window(
+                            constraint_fn=ExpectationConstraintFunction.FORECAST,
+                            parameter_name=min_param_name,
+                            range=1,
+                            offset=Offset(positive=0.0, negative=0.0),
+                            strict=True,
+                        ),
+                        Window(
+                            constraint_fn=ExpectationConstraintFunction.FORECAST,
+                            parameter_name=max_param_name,
+                            range=1,
+                            offset=Offset(positive=0.0, negative=0.0),
+                            strict=True,
+                        ),
+                    ],
+                    column=column_name,
+                    min_value={"$PARAMETER": min_param_name},
+                    max_value={"$PARAMETER": max_param_name},
                 )
             else:
                 # Use triangular interpolation to compute min/max values
