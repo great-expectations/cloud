@@ -504,7 +504,11 @@ class GenerateDataQualityCheckExpectationsAction(
         # Backend expects `expectation_type` instead of `type`:
         expectation_type = expectation_payload.pop("type")
         expectation_payload["expectation_type"] = expectation_type
-        expectation_payload["severity"] = "warning"
+
+        # Add severity to kwargs
+        if "kwargs" not in expectation_payload:
+            expectation_payload["kwargs"] = {}
+        expectation_payload["kwargs"]["severity"] = "warning"
 
         with create_session(access_token=self._auth_key) as session:
             response = session.post(url=url, json=expectation_payload)
