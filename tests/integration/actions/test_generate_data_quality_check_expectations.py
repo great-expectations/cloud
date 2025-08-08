@@ -343,6 +343,7 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
                 assert window.constraint_fn == "mean"
                 assert window.range == 5
                 assert window.offset.positive == window.offset.negative
+        assert exp_config.severity == "warning"
 
 
 def test_generate_data_quality_check_expectations_action_completeness_with_proportion_approach(
