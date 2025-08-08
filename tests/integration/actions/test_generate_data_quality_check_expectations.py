@@ -8,7 +8,6 @@ import pytest
 import sqlalchemy as sa
 from great_expectations import ExpectationSuite, ValidationDefinition
 from great_expectations.datasource.fluent import PostgresDatasource
-from great_expectations.exceptions.exceptions import DataContextError
 from great_expectations.expectations.metadata_types import DataQualityIssues
 
 from great_expectations_cloud.agent.actions.generate_data_quality_check_expectations_action import (
@@ -33,108 +32,43 @@ def user_api_token_headers_org_admin_sc_org():
     }
 
 
-@pytest.fixture(scope="module")
-def seed_and_cleanup_test_data(context: CloudDataContext):  # noqa: C901, PLR0912, PLR0915
+@pytest.fixture
+def seed_and_cleanup_test_data(context: CloudDataContext):
     # Seed data
     data_source_name = "local_mercury_db"
     data_source = context.data_sources.get(data_source_name)
     assert isinstance(data_source, PostgresDatasource)
 
-    table_data_asset_name = "local-mercury-db-checkpoints-table"
-    try:
-        table_data_asset = data_source.get_asset(table_data_asset_name)
-    except LookupError:
-        table_data_asset = data_source.add_table_asset(
-            table_name="checkpoints", name=table_data_asset_name
-        )
+    table_data_asset = data_source.add_table_asset(
+        table_name="checkpoints", name="local-mercury-db-checkpoints-table"
+    )
 
-    suite_name = "local-mercury-db-checkpoints-table Suite"
-    try:
-        suite = context.suites.get(suite_name)
-    except DataContextError:
-        suite = context.suites.add(ExpectationSuite(name=suite_name))
+    suite = context.suites.add(ExpectationSuite(name="local-mercury-db-checkpoints-table Suite"))
 
     # Create validation
-    batch_definition_name = "local-mercury-db-checkpoints-table-batch-definition"
-    try:
-        batch_definition = table_data_asset.get_batch_definition(batch_definition_name)
-    except KeyError:
-        batch_definition = table_data_asset.add_batch_definition_whole_table(
-            name=batch_definition_name
+    batch_definition = table_data_asset.add_batch_definition_whole_table(
+        name="local-mercury-db-checkpoints-table-batch-definition"
+    )
+    validation = context.validation_definitions.add(
+        ValidationDefinition(
+            name="local-mercury-db-checkpoints-table Validation",
+            suite=suite,
+            data=batch_definition,
         )
-
-    validation_name = "local-mercury-db-checkpoints-table Validation"
-    try:
-        validation = context.validation_definitions.get(validation_name)
-    except DataContextError:
-        validation = context.validation_definitions.add(
-            ValidationDefinition(
-                name=validation_name,
-                suite=suite,
-                data=batch_definition,
-            )
-        )
+    )
 
     # Mark the validation as gx_managed
     engine = sa.create_engine("postgresql://postgres:postgres@localhost:5432/mercury")
-
-    # Check if validation is already gx_managed
-    with engine.connect() as conn:
-        result = conn.execute(
-            sa.text(f"SELECT gx_managed FROM validations WHERE id='{validation.id}'")
-        )
-        row = result.fetchone()
-        needs_update = row and not row[0]  # Only update if not already gx_managed
-
-    # Check if there's already a gx_managed=true validation for this asset
-    if needs_update:
-        with engine.connect() as conn:
-            result = conn.execute(
-                sa.text(f"""
-                SELECT COUNT(*) FROM validations
-                WHERE asset_ref_id = (SELECT asset_ref_id FROM validations WHERE id = '{validation.id}')
-                AND gx_managed = true
-                AND id != '{validation.id}'
-            """)
-            )
-            row = result.fetchone()
-            existing_gx_managed = row is not None and row[0] > 0 if row else False
-
-            if existing_gx_managed:
-                # Set the existing gx_managed validation to false first
-                conn.execute(
-                    sa.text(f"""
-                    UPDATE validations SET gx_managed = false
-                    WHERE asset_ref_id = (SELECT asset_ref_id FROM validations WHERE id = '{validation.id}')
-                    AND gx_managed = true
-                """)
-                )
-                conn.commit()
-
-    # Update if needed
-    if needs_update:
-        with engine.connect() as conn:
-            conn.execute(
-                sa.text(f"UPDATE validations SET gx_managed=true WHERE id='{validation.id}'")
-            )
-            conn.commit()
+    with engine.begin() as conn:
+        query = f"UPDATE validations SET gx_managed=true WHERE id='{validation.id}'"
+        conn.execute(sa.text(query))
+        conn.commit()
 
     # Mark the suite as gx_managed
-    # Check if suite is already gx_managed
-    with engine.connect() as conn:
-        result = conn.execute(
-            sa.text(f"SELECT gx_managed FROM expectation_suites WHERE id='{suite.id}'")
-        )
-        row = result.fetchone()
-        needs_update = row and not row[0]  # Only update if not already gx_managed
-
-    # Update if needed
-    if needs_update:
-        with engine.connect() as conn:
-            conn.execute(
-                sa.text(f"UPDATE expectation_suites SET gx_managed=true WHERE id='{suite.id}'")
-            )
-            conn.commit()
+    with engine.begin() as conn:
+        query = f"UPDATE expectation_suites SET gx_managed=true WHERE id='{suite.id}'"
+        conn.execute(sa.text(query))
+        conn.commit()
 
     # Yield
     yield table_data_asset, suite
@@ -142,40 +76,20 @@ def seed_and_cleanup_test_data(context: CloudDataContext):  # noqa: C901, PLR091
     # clean up
 
     # Mark the validation as not gx_managed
-    try:
-        with engine.connect() as conn:
-            conn.execute(
-                sa.text(f"UPDATE validations SET gx_managed=false WHERE id='{validation.id}'")
-            )
-            conn.commit()
-    except Exception as e:
-        print(f"Warning: Error updating validation gx_managed status: {e}")
+    with engine.begin() as conn:
+        query = f"UPDATE validations SET gx_managed=false WHERE id='{validation.id}'"
+        conn.execute(sa.text(query))
+        conn.commit()
 
     # Mark the suite as not gx_managed
-    try:
-        with engine.connect() as conn:
-            conn.execute(
-                sa.text(f"UPDATE expectation_suites SET gx_managed=false WHERE id='{suite.id}'")
-            )
-            conn.commit()
-    except Exception as e:
-        print(f"Warning: Error updating suite gx_managed status: {e}")
+    with engine.begin() as conn:
+        query = f"UPDATE expectation_suites SET gx_managed=false WHERE id='{suite.id}'"
+        conn.execute(sa.text(query))
+        conn.commit()
 
-    # Clean up in reverse order of dependencies
-    try:
-        context.validation_definitions.delete(name="local-mercury-db-checkpoints-table Validation")
-    except Exception as e:
-        print(f"Warning: Error deleting validation: {e}")
-
-    try:
-        context.suites.delete(name="local-mercury-db-checkpoints-table Suite")
-    except Exception as e:
-        print(f"Warning: Error deleting suite: {e}")
-
-    try:
-        data_source.delete_asset(name="local-mercury-db-checkpoints-table")
-    except Exception as e:
-        print(f"Warning: Error deleting asset: {e}")
+    context.validation_definitions.delete(name="local-mercury-db-checkpoints-table Validation")
+    context.suites.delete(name="local-mercury-db-checkpoints-table Suite")
+    data_source.delete_asset(name="local-mercury-db-checkpoints-table")
 
 
 @pytest.fixture
@@ -530,7 +444,7 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
-        base_url="http://localhost:7000",  # Use the correct URL directly
+        base_url=cloud_base_url,
         organization_id=uuid.UUID(org_id_env_var_local),
         auth_key=token_env_var_local,
     )
