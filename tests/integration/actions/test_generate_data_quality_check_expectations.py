@@ -97,7 +97,8 @@ def seed_and_cleanup_test_data(context: CloudDataContext):  # noqa: C901, PLR091
                 AND id != '{validation.id}'
             """)
             )
-            existing_gx_managed = result.fetchone()[0] > 0
+            row = result.fetchone()
+            existing_gx_managed = row is not None and row[0] > 0 if row else False
 
             if existing_gx_managed:
                 # Set the existing gx_managed validation to false first
