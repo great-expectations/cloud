@@ -332,6 +332,7 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
     assert len(generated_expectations) > 0  # At least one expectation was created
     print("generated_expectations", generated_expectations)
     for exp_config in generated_expectations:
+        print("exp_config", exp_config)
         # Verify each expectation is one of the expected types
         assert (
             exp_config.expectation_type
