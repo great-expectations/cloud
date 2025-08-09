@@ -78,26 +78,26 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
     engine = sa.create_engine("postgresql://postgres:postgres@localhost:5432/mercury")
 
     with engine.connect() as conn:
-        # Check if validation is already gx_managed
-        validation_result = conn.execute(
-            sa.text(f"SELECT gx_managed FROM validations WHERE id='{validation.id}'")
-        )
-        result = validation_result.fetchone()
-        validation_needs_update = result and not result[0]
+        # Check if there's already a gx_managed=true validation for this asset
+        existing_gx_managed_validations = conn.execute(
+            sa.text(
+                f"SELECT COUNT(*) FROM validations WHERE asset_ref_id='{table_data_asset.id}' AND gx_managed=true"
+            )
+        ).scalar()
 
-        if validation_needs_update:
+        # Only set gx_managed=true if there isn't already one for this asset
+        if not existing_gx_managed_validations:
             conn.execute(
                 sa.text(f"UPDATE validations SET gx_managed=true WHERE id='{validation.id}'")
             )
 
-        # Mark the suite as gx_managed if it is not already
-        suite_result = conn.execute(
+        # Check if there's already a gx_managed=true suite for this asset
+        existing_gx_managed_suites = conn.execute(
             sa.text(f"SELECT gx_managed FROM expectation_suites WHERE id='{suite.id}'")
-        )
-        result = suite_result.fetchone()
-        suite_needs_update = result and not result[0]
+        ).scalar()
 
-        if suite_needs_update:
+        # Mark the suite as gx_managed if it is not already
+        if not existing_gx_managed_suites:
             conn.execute(
                 sa.text(f"UPDATE expectation_suites SET gx_managed=true WHERE id='{suite.id}'")
             )
