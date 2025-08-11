@@ -13,7 +13,7 @@ LOGGER: Final = logging.getLogger("tests")
 
 @pytest.fixture(scope="module")
 def cloud_base_url() -> str:
-    return "http://localhost:5000"
+    return os.environ.get("GX_CLOUD_BASE_URL", "http://localhost:5000")
 
 
 @pytest.fixture(scope="module")

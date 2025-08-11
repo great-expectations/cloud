@@ -529,6 +529,15 @@ class GenerateDataQualityCheckExpectationsAction(
         expectation_type = expectation_payload.pop("type")
         expectation_payload["expectation_type"] = expectation_type
 
+        # Add failure severity to kwargs
+        if "kwargs" not in expectation_payload:
+            expectation_payload["kwargs"] = {}
+        if not isinstance(expectation_payload["kwargs"], dict):
+            raise InvalidExpectationConfigurationError(  # noqa: TRY003 # one off error
+                "Expectation configuration kwargs must be a dict."
+            )
+        expectation_payload["kwargs"]["severity"] = "warning"
+
         with create_session(access_token=self._auth_key) as session:
             response = session.post(url=url, json=expectation_payload)
 
