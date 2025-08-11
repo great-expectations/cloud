@@ -397,17 +397,7 @@ class GenerateDataQualityCheckExpectationsAction(
             non_null_count = row_count - null_count if row_count > 0 else 0
             non_null_proportion = non_null_count / row_count if row_count > 0 else 0
 
-            if non_null_proportion == 0:
-                expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
-                    column=column_name,
-                    max_value=0,
-                )
-            elif non_null_proportion == 1:
-                expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
-                    column=column_name,
-                    min_value=1,
-                )
-            elif use_forecast:
+            if use_forecast:
                 expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
                     windows=[
                         Window(
@@ -428,6 +418,16 @@ class GenerateDataQualityCheckExpectationsAction(
                     column=column_name,
                     min_value={"$PARAMETER": min_param_name},
                     max_value={"$PARAMETER": max_param_name},
+                )
+            elif non_null_proportion == 0:
+                expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                    column=column_name,
+                    max_value=0,
+                )
+            elif non_null_proportion == 1:
+                expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                    column=column_name,
+                    min_value=1,
                 )
             else:
                 # Use triangular interpolation to compute min/max values
