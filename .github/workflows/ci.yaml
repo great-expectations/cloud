@@ -128,8 +128,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python
-      - name: Install only dev dependencies
-        run: poetry sync --only dev
       - run: poetry run invoke docker --no-pty
 
   check-if-agent-changed:
