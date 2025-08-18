@@ -155,6 +155,7 @@ class GenerateDataQualityCheckExpectationsAction(
                             asset_id=data_asset.id,
                             pre_existing_completeness_change_expectations=pre_existing_completeness_change_expectations,
                             created_via=created_via,
+                            use_forecast=event.use_forecast,
                         )
                         for exp_id in completeness_change_expectation_ids:
                             created_resources.append(
@@ -353,6 +354,7 @@ class GenerateDataQualityCheckExpectationsAction(
             dict[Any, Any]
         ],  # list of ExpectationConfiguration dicts
         created_via: str | None,
+        use_forecast: bool = False,
     ) -> list[UUID]:
         table_row_count = next(
             metric
@@ -395,7 +397,29 @@ class GenerateDataQualityCheckExpectationsAction(
             non_null_count = row_count - null_count if row_count > 0 else 0
             non_null_proportion = non_null_count / row_count if row_count > 0 else 0
 
-            if non_null_proportion == 0:
+            if use_forecast:
+                expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                    windows=[
+                        Window(
+                            constraint_fn=ExpectationConstraintFunction.FORECAST,
+                            parameter_name=min_param_name,
+                            range=1,
+                            offset=Offset(positive=0.0, negative=0.0),
+                            strict=True,
+                        ),
+                        Window(
+                            constraint_fn=ExpectationConstraintFunction.FORECAST,
+                            parameter_name=max_param_name,
+                            range=1,
+                            offset=Offset(positive=0.0, negative=0.0),
+                            strict=True,
+                        ),
+                    ],
+                    column=column_name,
+                    min_value={"$PARAMETER": min_param_name},
+                    max_value={"$PARAMETER": max_param_name},
+                )
+            elif non_null_proportion == 0:
                 expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
                     column=column_name,
                     max_value=0,
@@ -504,6 +528,15 @@ class GenerateDataQualityCheckExpectationsAction(
         # Backend expects `expectation_type` instead of `type`:
         expectation_type = expectation_payload.pop("type")
         expectation_payload["expectation_type"] = expectation_type
+
+        # Add failure severity to kwargs
+        if "kwargs" not in expectation_payload:
+            expectation_payload["kwargs"] = {}
+        if not isinstance(expectation_payload["kwargs"], dict):
+            raise InvalidExpectationConfigurationError(  # noqa: TRY003 # one off error
+                "Expectation configuration kwargs must be a dict."
+            )
+        expectation_payload["kwargs"]["severity"] = "warning"
 
         with create_session(access_token=self._auth_key) as session:
             response = session.post(url=url, json=expectation_payload)
