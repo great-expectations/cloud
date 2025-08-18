@@ -21,7 +21,7 @@ ENV POETRY_CACHE_DIR=/tmp/pypoetry
 # Linux deps and why:
 #   python3-dev: required by build tools
 #   gcc: required to build psutil for arm64
-RUN apt-get update && apt-get install --no-install-recommends python3-dev=3.13.5-1 gcc=14.2.0-19 -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install --no-install-recommends python3-dev=3.13.5-1 gcc=4:14.2.0-1 -y && rm -rf /var/lib/apt/lists/*
 
 RUN pip --no-cache-dir install setuptools==80.9.0 poetry==2.1.2
 
