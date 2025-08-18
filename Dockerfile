@@ -42,8 +42,8 @@ RUN poetry install --only-root && rm -rf POETRY_CACHE_DIR
 RUN apt-get remove -y \
     python3-dev \
     gcc \
-    gcc-12 \
-    cpp-12 \
+    gcc-14 \
+    cpp-14 \
     cpp
 
 # Disable analytics in OSS
