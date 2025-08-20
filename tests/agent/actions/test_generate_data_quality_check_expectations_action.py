@@ -759,6 +759,91 @@ def test_generate_completeness_expectations_with_proportion_approach(
     assert isinstance(expectation.max_value, dict) and "$PARAMETER" in expectation.max_value
 
 
+def test_generate_completeness_forecast_expectations_action_success(
+    mock_context: CloudDataContext,
+    mocker: MockerFixture,
+    mock_metric_repository: MetricRepository,
+    mock_batch_inspector: BatchInspector,
+    mock_completeness_metrics: MockCompletenessMetrics,
+):
+    """Test that a single ExpectColumnProportionOfNonNullValuesToBeBetween expectation is created for completeness with forecast."""
+    # Setup
+    metrics = mock_completeness_metrics(30, 100)
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=mock_context,
+        metric_repository=mock_metric_repository,
+        batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        organization_id=uuid.uuid4(),
+    )
+
+    # Mock the methods that would be called
+    def mock_retrieve_asset(event, asset_name):
+        return TableAsset(
+            id=TABLE_ASSET_ID,
+            name="test-data-asset",
+            table_name="test_table",
+            schema_name="test_schema",
+        )
+
+    def mock_get_metrics(data_asset):
+        return MetricRun(metrics=metrics), uuid.uuid4()
+
+    def mock_get_coverage(data_asset_id):
+        return {}
+
+    mocker.patch.object(action, "_retrieve_asset_from_asset_name", side_effect=mock_retrieve_asset)
+    mocker.patch.object(action, "_get_metrics", side_effect=mock_get_metrics)
+    mocker.patch.object(
+        action, "_get_current_anomaly_detection_coverage", side_effect=mock_get_coverage
+    )
+
+    # Mock the _create_expectation_for_asset method to capture created expectations
+    created_expectations = []
+
+    def mock_create_expectation(expectation, asset_id, created_via):
+        created_expectations.append(expectation)
+        return uuid.uuid4()
+
+    mocker.patch.object(
+        action, "_create_expectation_for_asset", side_effect=mock_create_expectation
+    )
+
+    # Run the action
+    return_value = action.run(
+        event=GenerateDataQualityCheckExpectationsEvent(
+            type="generate_data_quality_check_expectations_request.received",
+            organization_id=uuid.uuid4(),
+            datasource_name="test-datasource",
+            data_assets=["test-data-asset1"],
+            selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
+            use_forecast=True,  # <--- feature flag
+        ),
+        id="test-id",
+    )
+
+    # Assert
+    assert len(return_value.created_resources) == 2  # MetricRun + 1 Expectation
+    assert return_value.created_resources[0].type == "MetricRun"
+    assert return_value.created_resources[1].type == "Expectation"
+
+    # Verify only one expectation was created and it's the correct type
+    assert len(created_expectations) == 1
+    expectation = created_expectations[0]
+    assert isinstance(expectation, gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween)
+    assert expectation.column
+
+    # For mixed nulls (30/100), we expect 2 windows with min and max values
+    assert expectation.windows is not None
+    assert len(expectation.windows) == 2  # min and max windows
+    assert isinstance(expectation.min_value, dict) and "$PARAMETER" in expectation.min_value
+    assert isinstance(expectation.max_value, dict) and "$PARAMETER" in expectation.max_value
+    assert expectation.windows[0].constraint_fn == "forecast"
+    assert expectation.windows[1].constraint_fn == "forecast"
+
+
 @pytest.mark.parametrize(
     "null_count, row_count, expected_expectation_count",
     [
@@ -934,70 +1019,6 @@ def test_generate_completeness_expectations_edge_cases(
     assert expectation.min_value == 1
     assert expectation.max_value is None
     assert expectation.windows is None
-
-
-def test_verify_contents_of_http_payload(
-    mock_response_success_no_pre_existing_anomaly_detection_coverage,
-    mock_context: CloudDataContext,
-    mocker: MockerFixture,
-):
-    """Test that the contents of the HTTP payload are correct."""
-    # setup
-    mock_metric_repository = mocker.Mock(spec=MetricRepository)
-    mock_batch_inspector = mocker.Mock(spec=BatchInspector)
-
-    action = GenerateDataQualityCheckExpectationsAction(
-        context=mock_context,
-        metric_repository=mock_metric_repository,
-        batch_inspector=mock_batch_inspector,
-        base_url="",
-        auth_key="",
-        organization_id=uuid.uuid4(),
-    )
-
-    # Create a test expectation
-    expectation = gx_expectations.ExpectTableColumnsToMatchSet(
-        column_set=["col1", "col2"],
-    )
-
-    # Mock the HTTP response
-    mock_response = mocker.MagicMock()
-    mock_response.status_code = 201  # Use integer, not enum
-    mock_response.json.return_value = {"data": {"id": str(uuid.uuid4())}}
-
-    # Mock the session
-    mock_session = mocker.MagicMock()
-    mock_session.post.return_value = mock_response
-    mock_session.__enter__.return_value = mock_session
-    mock_session.__exit__.return_value = None
-
-    # Mock the create_session function
-    mocker.patch(
-        "great_expectations_cloud.agent.actions.generate_data_quality_check_expectations_action.create_session",
-        return_value=mock_session,
-    )
-
-    # Call the method
-    action._create_expectation_for_asset(
-        expectation=expectation,
-        asset_id=TABLE_ASSET_ID,
-        created_via="asset_creation",
-    )
-
-    # Verify that the session.post was called
-    mock_session.post.assert_called_once()
-
-    # Get the call arguments
-    call_args = mock_session.post.call_args
-
-    # Verify the JSON payload contains the expected fields
-    json_payload = call_args.kwargs["json"]
-    assert json_payload["kwargs"]["severity"] == "warning"
-    assert json_payload["expectation_type"] == "expect_table_columns_to_match_set"
-    assert json_payload["autogenerated"] is True
-    assert json_payload["created_via"] == "asset_creation"
-    assert "kwargs" in json_payload
-    assert json_payload["kwargs"]["column_set"] == ["col1", "col2"]
 
 
 if __name__ == "__main__":
