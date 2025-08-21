@@ -621,14 +621,14 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "1.5.8"
+version = "1.5.9"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = "<3.13,>=3.9"
 groups = ["main"]
 files = [
-    {file = "great_expectations-1.5.8-py3-none-any.whl", hash = "sha256:3f08a5ef0a60bcc5e438f9edf25d9fe31f900e049bfaddb334deb18459c3212b"},
-    {file = "great_expectations-1.5.8.tar.gz", hash = "sha256:641125068d7cf04080ca46d050aab732d7fc29678583fa3598f8bbbba4704fda"},
+    {file = "great_expectations-1.5.9-py3-none-any.whl", hash = "sha256:2d26f566476810c405446e0e0ebd8068e77e4c4c490548b000428fbcc34572bf"},
+    {file = "great_expectations-1.5.9.tar.gz", hash = "sha256:027d189d58e1eef441ee5dfe84cd8576a6ebc07a9a2cb56d15315c06b178447a"},
 ]
 
 [package.dependencies]
@@ -647,7 +647,7 @@ pandas = [
     {version = ">=1.3.0,<2.2", optional = true, markers = "python_version >= \"3.10\" and extra == \"snowflake\""},
 ]
 posthog = ">3"
-psycopg2-binary = {version = ">=2.7.6", optional = true, markers = "extra == \"gx-redshift\" or extra == \"postgresql\""}
+psycopg2-binary = {version = ">=2.7.6", optional = true, markers = "extra == \"postgresql\" or extra == \"gx-redshift\""}
 pydantic = ">=1.10.7"
 pyparsing = ">=2.4"
 python-dateutil = ">=2.8.1"
@@ -656,7 +656,7 @@ requests = ">=2.20"
 scipy = ">=1.6.0"
 snowflake-connector-python = {version = ">2.9.0", optional = true, markers = "python_version >= \"3.11\" and extra == \"snowflake\""}
 snowflake-sqlalchemy = {version = ">=1.2.3,<1.7.0 || >1.7.0", optional = true, markers = "extra == \"snowflake\""}
-sqlalchemy = {version = ">=1.4.0", optional = true, markers = "extra == \"gx-redshift\" or extra == \"snowflake\" or extra == \"postgresql\" or extra == \"databricks\""}
+sqlalchemy = {version = ">=1.4.0", optional = true, markers = "extra == \"postgresql\" or extra == \"databricks\" or extra == \"snowflake\" or extra == \"gx-redshift\""}
 tqdm = ">=4.59.0"
 typing-extensions = ">=4.1.0"
 tzlocal = ">=1.2"
@@ -2836,4 +2836,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "542b6cd39ff7a5134500f36b493e93f1e31f0d0fdf9912cf68e857fc3fea2cf9"
+content-hash = "5259612cd77aef85b127fd8adaa1bf4a5d38d25769100cce9c6a8c521f5f09c5"
