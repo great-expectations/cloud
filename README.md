@@ -97,6 +97,8 @@ The dependencies installed in our CI and the Docker build step are determined by
 poetry update great_expectations
 ```
 
+**Note:** If `poetry update` does not find the latest version of `great_expectations`, you can manually update the version in `pyproject.toml`, and then update the lockfile using `poetry lock`.
+
 [To resolve and update all dependencies ...](https://python-poetry.org/docs/cli/#lock)
 
 ```console

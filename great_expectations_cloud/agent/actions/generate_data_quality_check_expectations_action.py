@@ -156,6 +156,7 @@ class GenerateDataQualityCheckExpectationsAction(
                             asset_id=data_asset.id,
                             pre_existing_completeness_change_expectations=pre_existing_completeness_change_expectations,
                             created_via=created_via,
+                            use_forecast=event.use_forecast,
                         )
                         for exp_id in completeness_change_expectation_ids:
                             created_resources.append(
@@ -355,6 +356,7 @@ class GenerateDataQualityCheckExpectationsAction(
             dict[Any, Any]
         ],  # list of ExpectationConfiguration dicts
         created_via: str | None,
+        use_forecast: bool = False,
     ) -> list[UUID]:
         table_row_count = next(
             metric
@@ -397,7 +399,29 @@ class GenerateDataQualityCheckExpectationsAction(
             non_null_count = row_count - null_count if row_count > 0 else 0
             non_null_proportion = non_null_count / row_count if row_count > 0 else 0
 
-            if non_null_proportion == 0:
+            if use_forecast:
+                expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
+                    windows=[
+                        Window(
+                            constraint_fn=ExpectationConstraintFunction.FORECAST,
+                            parameter_name=min_param_name,
+                            range=1,
+                            offset=Offset(positive=0.0, negative=0.0),
+                            strict=True,
+                        ),
+                        Window(
+                            constraint_fn=ExpectationConstraintFunction.FORECAST,
+                            parameter_name=max_param_name,
+                            range=1,
+                            offset=Offset(positive=0.0, negative=0.0),
+                            strict=True,
+                        ),
+                    ],
+                    column=column_name,
+                    min_value={"$PARAMETER": min_param_name},
+                    max_value={"$PARAMETER": max_param_name},
+                )
+            elif non_null_proportion == 0:
                 expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
                     column=column_name,
                     max_value=0,
