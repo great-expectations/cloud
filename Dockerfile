@@ -10,11 +10,11 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Build-time tools only (kept out of final image)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3-dev gcc ca-certificates curl gnupg && \
+      python3-dev=3.13.5-1 gcc=4:14.2.0-1 ca-certificates=20250419 curl=8.14.1-2 gnupg=2.4.7-21 && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Poetry (kept in builder only)
-RUN pip --no-cache-dir install setuptools==80.9.0 poetry==2.1.2 poetry-plugin-export
+RUN pip --no-cache-dir install setuptools==80.9.0 poetry==2.1.2 poetry-plugin-export==1.9.0
 RUN poetry self add poetry-plugin-export
 
 # Copy lockfiles first to maximize layer caching
@@ -39,6 +39,7 @@ RUN /opt/venv/bin/gx-agent --help
 
 # ---- Prepare Microsoft repo artifacts here (so final stage doesn't need curl/gnupg)
 # NOTE: python:3.11-slim is Debian-based; use Debian 12 (bookworm) repo path.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
       | gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg && \
@@ -70,7 +71,7 @@ COPY --from=builder /etc/apt/sources.list.d/mssql-release.list /etc/apt/sources.
 # - libgssapi-krb5-2: required by msodbcsql18 for kerberos auth
 # - libcurl4t64: includes various protocols required for successful usage of the odbc drivers
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    libcurl4t64 unixodbc msodbcsql18 ca-certificates  tini && \
+    libcurl4t64=8.14.1-2 unixodbc=2.3.12-2 msodbcsql18=18.5.1.1-1 ca-certificates=20250419 tini=0.19.0-3+b3 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy the ready-to-run virtualenv and any runtime data your app expects
