@@ -27,4 +27,4 @@ jobs:
           tags: local_agent
 
       - name: Smoke test image
-        run: docker run --rm local_agent --version
+        run: docker run --rm local_agent gx-agent --version
