@@ -27,6 +27,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 #   gnupg: required to verify the list
 #   unixodbc: required for odbc driver datasources (i.e. Microsoft SQL Server)
 #   msodbcsql18: specific SQL Server odbc driver
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update && apt-get install --no-install-recommends -y \
       python3-dev=3.13.5-1 gcc=4:14.2.0-1 \
       curl=8.14.1-2 gnupg=2.4.7-21 ca-certificates=20250419 unixodbc=2.3.12-2 && \
@@ -35,7 +36,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     echo "deb [arch=amd64,arm64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" \
       > /etc/apt/sources.list.d/mssql-release.list && \
     apt-get update && \
-    apt-get install -y msodbcsql18 && \
+    apt-get install -y msodbcsql18=18.5.1.1-1 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN pip --no-cache-dir install setuptools==80.9.0 poetry==2.1.2
