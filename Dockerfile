@@ -1,82 +1,74 @@
-# =========================
-# Builder stage
-# =========================
-FROM python:3.11-slim AS builder
-WORKDIR /app
+FROM python:3.11-slim
+WORKDIR /app/
 
-# Runtime/logging + poetry cache
-ENV PYTHONUNBUFFERED=1 \
-    POETRY_CACHE_DIR=/tmp/pypoetry
+# File Structure:
+#
+# /app
+# ├── great_expectations_cloud/
+# │         ├── agent/
+# │         └── ...
+# ├── examples/
+# │         └── ...
+# ├── pyproject.toml
+# ├── poetry.lock
+# └── README.md
 
-# Build-time tools only (kept out of final image)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3-dev=3.13.5-1 gcc=4:14.2.0-1 ca-certificates=20250419 curl=8.14.1-2 gnupg=2.4.7-21 && \
-    rm -rf /var/lib/apt/lists/*
+# Disable in-memory buffering of application logs
+#   https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUNBUFFERED
+ENV PYTHONUNBUFFERED=1
+ENV POETRY_CACHE_DIR=/tmp/pypoetry
+ENV ACCEPT_EULA=Y
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Poetry (kept in builder only)
-RUN pip --no-cache-dir install setuptools==80.9.0 poetry==2.1.2 poetry-plugin-export==1.9.0
-RUN poetry self add poetry-plugin-export
+# Linux deps and why:
+#   python3-dev: required by build tools
+#   gcc: required to build psutil for arm64
+#   curl: required to download microsoft distribution lifts
+#   gnupg: required to verify the list
+#   unixodbc: required for odbc driver datasources (i.e. Microsoft SQL Server)
+#   msodbcsql18: specific SQL Server odbc driver
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN apt-get update && apt-get install --no-install-recommends -y \
+      python3-dev=3.13.5-1 gcc=4:14.2.0-1 \
+      curl=8.14.1-2 gnupg=2.4.7-21 ca-certificates=20250419 unixodbc=2.3.12-2 && \
+    mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg && \
+    echo "deb [arch=amd64,arm64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" \
+      > /etc/apt/sources.list.d/mssql-release.list && \
+    apt-get update && \
+    apt-get install -y msodbcsql18=18.5.1.1-1 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy lockfiles first to maximize layer caching
-COPY pyproject.toml poetry.lock ./
+RUN pip --no-cache-dir install setuptools==80.9.0 poetry==2.1.2
 
-# Prepare dependency env via Poetry without project source (faster caching)
-# - export to requirements and install into a dedicated venv
-RUN poetry export --without dev --format requirements.txt --without-hashes -o /tmp/requirements.txt && \
-    python -m venv /opt/venv && \
-    /opt/venv/bin/pip --no-cache-dir install -r /tmp/requirements.txt
+COPY pyproject.toml pyproject.toml
+COPY poetry.lock poetry.lock
 
-# Now add the project code and data
+# Recommended approach for caching build layers with poetry
+#   --no-root: skips project source, --no-directory: skips local dependencies
+#   https://python-poetry.org/docs/faq
+RUN poetry install --without dev --no-root --no-directory
+
 COPY README.md README.md
 COPY great_expectations_cloud great_expectations_cloud
 COPY examples/agent/data data
 
-# Install the project itself into the venv
-RUN /opt/venv/bin/pip --no-cache-dir install .
+RUN poetry install --no-cache --only-root && rm -rf POETRY_CACHE_DIR
 
-# Optional: ensure gx-agent runs
-RUN /opt/venv/bin/gx-agent --help
+# Clean up all non-runtime linux deps
+RUN apt-get remove -y \
+    python3-dev \
+    gcc \
+    gcc-14 \
+    cpp-14 \
+    cpp \
+    curl \
+    gnupg
 
-# ---- Prepare Microsoft repo artifacts here (so final stage doesn't need curl/gnupg)
-# NOTE: python:3.11-slim is Debian-based; use Debian 12 (bookworm) repo path.
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
-      | gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg && \
-    echo "deb [arch=amd64,arm64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" \
-      > /etc/apt/sources.list.d/mssql-release.list
+# Disable analytics in OSS
+ENV GX_ANALYTICS_ENABLED=false
 
-# =========================
-# Final (runtime) stage
-# =========================
-FROM python:3.11-slim
-WORKDIR /app
+# Disable progress bars
+ENV ENABLE_PROGRESS_BARS=false
 
-ENV PYTHONUNBUFFERED=1 \
-    GX_ANALYTICS_ENABLED=false \
-    ENABLE_PROGRESS_BARS=false \
-    ACCEPT_EULA=Y \
-    DEBIAN_FRONTEND=noninteractive \
-    PATH="/opt/venv/bin:${PATH}" \
-    POETRY_CACHE_DIR=/tmp/pypoetry
-
-# Bring in Microsoft repo key/list from builder so no curl/gnupg needed here
-COPY --from=builder /etc/apt/keyrings/microsoft.gpg /etc/apt/keyrings/microsoft.gpg
-COPY --from=builder /etc/apt/sources.list.d/mssql-release.list /etc/apt/sources.list.d/mssql-release.list
-
-# Install:
-# - unixodbc: th the odbc driver driver
-# - tini: init system that will forward signals to our process
-# - msodbcsql18: the SQL Server specific odbc driver
-# - libgssapi-krb5-2: required by msodbcsql18 for kerberos auth
-# - libcurl4t64: includes various protocols required for successful usage of the odbc drivers
-RUN apt-get update && apt-get install --no-install-recommends -y \
-    libcurl4t64=8.14.1-2 unixodbc=2.3.12-2 msodbcsql18=18.5.1.1-1 ca-certificates=20250419 tini=0.19.0-3+b3 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Copy the ready-to-run virtualenv and any runtime data your app expects
-COPY --from=builder /opt/venv /opt/venv
-COPY --from=builder /app/data /app/data
-
-ENTRYPOINT ["tini", "--"]
-CMD ["gx-agent"]
+ENTRYPOINT ["poetry", "run", "gx-agent"]
