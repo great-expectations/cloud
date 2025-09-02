@@ -420,16 +420,19 @@ class GenerateDataQualityCheckExpectationsAction(
                     column=column_name,
                     min_value={"$PARAMETER": min_param_name},
                     max_value={"$PARAMETER": max_param_name},
+                    severity="warning",
                 )
             elif non_null_proportion == 0:
                 expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
                     column=column_name,
                     max_value=0,
+                    severity="warning",
                 )
             elif non_null_proportion == 1:
                 expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
                     column=column_name,
                     min_value=1,
+                    severity="warning",
                 )
             else:
                 # Use triangular interpolation to compute min/max values
