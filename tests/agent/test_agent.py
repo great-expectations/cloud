@@ -339,10 +339,6 @@ def test_gx_agent_updates_cloud_on_job_status(
     subscriber, create_session, get_context, client, gx_agent_config, event_handler
 ):
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
-    url = (
-        f"http://localhost:5000/api/v1/organizations/"
-        f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs/{correlation_id}"
-    )
     job_started_data = UpdateJobStatusRequest(data=JobStarted()).json()
     job_completed = UpdateJobStatusRequest(
         data=JobCompleted(success=True, created_resources=[], processed_by="agent")
@@ -357,6 +353,11 @@ def test_gx_agent_updates_cloud_on_job_status(
         data_asset_name="test-da",
         organization_id=uuid.uuid4(),
         workspace_id=uuid.uuid4(),
+    )
+
+    url = (
+        f"http://localhost:5000/api/v1/organizations/"
+        f"{gx_agent_config.gx_cloud_organization_id}/workspaces/{event.workspace_id}/agent-jobs/{correlation_id}"
     )
 
     end_test = False
@@ -419,10 +420,6 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     This test ensures that the agent sends the correct request to the correct endpoint.
     """
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
-    post_url = (
-        f"http://localhost:5000/api/v1/organizations/"
-        f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs"
-    )
 
     checkpoint_id = uuid.uuid4()
     schedule_id = uuid.uuid4()
@@ -433,6 +430,11 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
         schedule_id=schedule_id,
         organization_id=uuid.uuid4(),
         workspace_id=uuid.uuid4(),
+    )
+
+    post_url = (
+        f"http://localhost:5000/api/v1/organizations/"
+        f"{gx_agent_config.gx_cloud_organization_id}/workspaces/{event.workspace_id}/agent-jobs"
     )
 
     async def redeliver_message():
@@ -536,6 +538,7 @@ def test_custom_user_agent(
     set_required_env_vars: None,
     gx_agent_config: GXAgentConfig,
     data_context_config: DataContextConfigTD,
+    fake_subscriber: FakeSubscriber,
 ):
     """Ensure custom User-Agent header is set on GX Cloud api calls."""
     base_url = gx_agent_config.gx_cloud_base_url
@@ -565,20 +568,8 @@ def test_custom_user_agent(
             workspace_id=uuid.uuid4(),
         )
         # Use FakeSubscriber to inject a single event
-        from tests.agent.conftest import FakeSubscriber  # noqa: PLC0415
-
-        fake_subscriber = FakeSubscriber(client=object())
         fake_subscriber.test_queue.append((event, str(uuid.uuid4())))
-        # Patch Subscriber used by agent to our fake
-        import great_expectations_cloud.agent.agent as agent_module  # noqa: PLC0415
-
-        original = agent_module.Subscriber
-        # mypy: ignore assignment to a type for test monkeypatching
-        agent_module.Subscriber = lambda client: fake_subscriber  # type: ignore[assignment]
-        try:
-            agent.run()
-        finally:
-            agent_module.Subscriber = original  # type: ignore[assignment]
+        agent.run()
 
 
 @pytest.fixture
@@ -747,6 +738,7 @@ def test_handle_event_as_thread_exit_succeeds_when_job_succeeds(
             processed_by="agent",
         ),
         org_id=uuid.UUID(gx_agent_config.gx_cloud_organization_id),
+        workspace_id=event_context.event.workspace_id,
     )
     event_context.processed_successfully.assert_called_once()
     event_context.processed_with_failures.assert_not_called()
@@ -778,6 +770,7 @@ def test_handle_event_as_thread_exit_succeeds_when_job_has_failure(
             error_stack_trace="Test error",
         ),
         org_id=uuid.UUID(gx_agent_config.gx_cloud_organization_id),
+        workspace_id=event_context.event.workspace_id,
     )
     # Should ACK the message since we ran the job
     event_context.processed_successfully.assert_called_once()
@@ -815,6 +808,7 @@ def test_handle_event_as_thread_exit_update_status_failure(mocker, gx_agent_conf
             processed_by="agent",
         ),
         org_id=uuid.UUID(gx_agent_config.gx_cloud_organization_id),
+        workspace_id=event_context.event.workspace_id,
     )
     event_context.processed_successfully.assert_not_called()
     # Should nack the message since we failed to update the status
