@@ -7,7 +7,10 @@ from typing import TYPE_CHECKING, Any, Callable
 import great_expectations.expectations as gx_expectations
 import pytest
 from great_expectations.datasource.fluent.sql_datasource import TableAsset
-from great_expectations.expectations.metadata_types import DataQualityIssues
+from great_expectations.expectations.metadata_types import (
+    DataQualityIssues,
+    FailureSeverity,
+)
 from great_expectations.expectations.window import Offset
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
@@ -328,7 +331,7 @@ def test_generate_schema_change_expectations_action_success(
     mock_create_expectation_for_asset.assert_called_with(
         expectation=gx_expectations.ExpectTableColumnsToMatchSet(
             column_set=["col1", "col2"],
-            severity="warning",
+            severity=FailureSeverity.WARNING,
         ),
         asset_id=TABLE_ASSET_ID,
         created_via="asset_creation",
@@ -379,7 +382,7 @@ def test_anomaly_detection_expectation_not_created_if_asset_already_has_coverage
     mock_create_expectation_for_asset.assert_called_with(
         expectation=gx_expectations.ExpectTableColumnsToMatchSet(
             column_set=["col1", "col2"],
-            severity="warning",
+            severity=FailureSeverity.WARNING,
         ),
         asset_id=TABLE_ASSET_ID,
         created_via="new_expectation",
@@ -656,7 +659,7 @@ def test_generate_volume_change_forecast_expectations_action_success(
     assert len(return_value.created_resources) == expected_created_resources
     assert return_value.type == "generate_data_quality_check_expectations_request.received"
     assert isinstance(expectation, gx_expectations.ExpectTableRowCountToBeBetween)
-    assert expectation.severity == "warning"
+    assert expectation.severity == FailureSeverity.WARNING
     assert isinstance(expectation.windows, list)
     assert len(expectation.windows) == 2
     assert expectation.windows[0].constraint_fn == "forecast"
@@ -754,7 +757,7 @@ def test_generate_completeness_expectations_with_proportion_approach(
     expectation = created_expectations[0]
     assert isinstance(expectation, gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween)
     assert expectation.column
-    assert expectation.severity == "warning"
+    assert expectation.severity == FailureSeverity.WARNING
 
     # For mixed nulls (30/100), we expect 2 windows with min and max values
     assert expectation.windows is not None
@@ -838,7 +841,7 @@ def test_generate_completeness_forecast_expectations_action_success(
     expectation = created_expectations[0]
     assert isinstance(expectation, gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween)
     assert expectation.column
-    assert expectation.severity == "warning"
+    assert expectation.severity == FailureSeverity.WARNING
 
     # For mixed nulls (30/100), we expect 2 windows with min and max values
     assert expectation.windows is not None
@@ -995,7 +998,7 @@ def test_generate_completeness_expectations_edge_cases(
     assert expectation.max_value == 0
     assert expectation.min_value is None
     assert expectation.windows is None
-    assert expectation.severity == "warning"
+    assert expectation.severity == FailureSeverity.WARNING
 
     # No nulls (non_null_proportion = 1)
     created_expectations.clear()
@@ -1025,7 +1028,7 @@ def test_generate_completeness_expectations_edge_cases(
     assert expectation.min_value == 1
     assert expectation.max_value is None
     assert expectation.windows is None
-    assert expectation.severity == "warning"
+    assert expectation.severity == FailureSeverity.WARNING
 
 
 if __name__ == "__main__":
