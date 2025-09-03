@@ -70,6 +70,7 @@ def test_run_window_checkpoint(
         datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
         organization_id=UUID(env_vars.gx_cloud_organization_id),
         checkpoint_id=checkpoint_id,
+        workspace_id=uuid.uuid4(),
     )
     expected_url: str = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"

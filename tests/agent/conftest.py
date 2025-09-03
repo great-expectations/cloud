@@ -187,6 +187,7 @@ def data_context_config() -> DataContextConfigTD:
 class DummyEvent(EventBase):
     type: Literal["event_name.received"] = "event_name.received"
     organization_id: UUID | None = None
+    workspace_id: UUID = UUID("00000000-0000-0000-0000-000000000000")
 
 
 class DummyAction(AgentAction[DummyEvent]):

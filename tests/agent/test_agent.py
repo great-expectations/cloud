@@ -6,12 +6,11 @@ import string
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Any, Callable, Literal
-from unittest.mock import ANY, call
+from unittest.mock import call
 
 import pytest
 import requests
 import responses
-from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import (
     AuthenticationError,
     ConnectionClosedByBroker,
@@ -230,22 +229,19 @@ def test_gx_agent_configures_progress_bars_on_init(
     monkeypatch, enable_progress_bars, get_context, gx_agent_config, requests_post
 ):
     monkeypatch.setenv("ENABLE_PROGRESS_BARS", str(enable_progress_bars))
-    agent = GXAgent()
-    assert agent._context.variables.progress_bars is not None
-    assert agent._context.variables.progress_bars.globally == enable_progress_bars
-    assert agent._context.variables.progress_bars.metric_calculations == enable_progress_bars
+    # Progress bars are now configured per job when creating a context, not on init
+    GXAgent()
 
 
 def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
-    # There is no validation for the token aside from presence, so we set to empty to raise an error.
+    # Token presence is validated by GX when making requests; agent no longer creates context on init
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "")
-    with pytest.raises(gx_exception.GXCloudConfigurationError):
-        GXAgent()
+    GXAgent()
 
 
 def test_gx_agent_initializes_cloud_context(get_context, gx_agent_config):
     GXAgent()
-    get_context.assert_called_with(cloud_mode=True, user_agent_str=ANY)
+    get_context.assert_not_called()
 
 
 def test_gx_agent_run_starts_subscriber(get_context, subscriber, client, gx_agent_config):
@@ -357,7 +353,10 @@ def test_gx_agent_updates_cloud_on_job_status(
         return None
 
     event = RunOnboardingDataAssistantEvent(
-        datasource_name="test-ds", data_asset_name="test-da", organization_id=uuid.uuid4()
+        datasource_name="test-ds",
+        data_asset_name="test-da",
+        organization_id=uuid.uuid4(),
+        workspace_id=uuid.uuid4(),
     )
 
     end_test = False
@@ -433,6 +432,7 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
         splitter_options=None,
         schedule_id=schedule_id,
         organization_id=uuid.uuid4(),
+        workspace_id=uuid.uuid4(),
     )
 
     async def redeliver_message():
@@ -554,7 +554,31 @@ def test_custom_user_agent(
                 )
             ],
         )
-        GXAgent()
+        # Create agent; context is created per job
+        agent = GXAgent()
+        # Push a minimal event and run once to force context creation using our mocked endpoint
+        event = RunOnboardingDataAssistantEvent(
+            type="onboarding_data_assistant_request.received",
+            datasource_name="ds",
+            data_asset_name="asset",
+            organization_id=uuid.uuid4(),
+            workspace_id=uuid.uuid4(),
+        )
+        # Use FakeSubscriber to inject a single event
+        from tests.agent.conftest import FakeSubscriber  # noqa: PLC0415
+
+        fake_subscriber = FakeSubscriber(client=object())
+        fake_subscriber.test_queue.append((event, str(uuid.uuid4())))
+        # Patch Subscriber used by agent to our fake
+        import great_expectations_cloud.agent.agent as agent_module  # noqa: PLC0415
+
+        original = agent_module.Subscriber
+        # mypy: ignore assignment to a type for test monkeypatching
+        agent_module.Subscriber = lambda client: fake_subscriber  # type: ignore[assignment]
+        try:
+            agent.run()
+        finally:
+            agent_module.Subscriber = original  # type: ignore[assignment]
 
 
 @pytest.fixture
@@ -597,6 +621,7 @@ def test_correlation_id_header(
                 DraftDatasourceConfigEvent(
                     config_id=datasource_config_id_1,
                     organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
+                    workspace_id=uuid.uuid4(),
                 ),
                 agent_correlation_ids[0],
             ),
@@ -604,6 +629,7 @@ def test_correlation_id_header(
                 DraftDatasourceConfigEvent(
                     config_id=datasource_config_id_2,
                     organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
+                    workspace_id=uuid.uuid4(),
                 ),
                 agent_correlation_ids[1],
             ),
@@ -612,6 +638,7 @@ def test_correlation_id_header(
                     checkpoint_id=checkpoint_id,
                     datasource_names_to_asset_names={},
                     organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
+                    workspace_id=uuid.uuid4(),
                 ),
                 agent_correlation_ids[2],
             ),

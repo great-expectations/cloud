@@ -135,6 +135,7 @@ class TestDynamicEventUnion:
             "type": "run_checkpoint_request",
             "datasource_names_to_asset_names": {"ds1": ["asset1"]},
             "checkpoint_id": "12345678-1234-1234-1234-123456789012",
+            "workspace_id": "00000000-0000-0000-0000-000000000000",
         }
         checkpoint_event: Any = parse_raw_as(Event, json.dumps(checkpoint_data))  # type: ignore[arg-type]  # MyPy sees plain Union, runtime uses Pydantic discriminated union
         assert isinstance(checkpoint_event, RunCheckpointEvent)
@@ -186,6 +187,7 @@ class TestDynamicEventUnion:
                     "type": event_type,
                     "datasource_names_to_asset_names": {"ds": ["asset"]},
                     "checkpoint_id": "12345678-1234-1234-1234-123456789012",
+                    "workspace_id": "00000000-0000-0000-0000-000000000000",
                 }
             else:
                 data = {"type": event_type}
