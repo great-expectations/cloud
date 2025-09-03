@@ -72,6 +72,30 @@ class TestEventHandler:
             )
         assert result.type == "unknown_event"
 
+    def test_parse_event_includes_workspace_id(self):
+        payload = {
+            "type": "onboarding_data_assistant_request.received",
+            "datasource_name": "ds",
+            "data_asset_name": "asset",
+            "organization_id": str(uuid.uuid4()),
+            "workspace_id": str(uuid.uuid4()),
+        }
+        serialized = orjson.dumps(payload)
+        event = EventHandler.parse_event_from(serialized)
+        assert hasattr(event, "workspace_id")
+        assert str(event.workspace_id) == payload["workspace_id"]
+
+    def test_parse_event_missing_workspace_id_yields_unknown(self):
+        payload = {
+            "type": "onboarding_data_assistant_request.received",
+            "datasource_name": "ds",
+            "data_asset_name": "asset",
+            "organization_id": str(uuid.uuid4()),
+        }
+        serialized = orjson.dumps(payload)
+        event = EventHandler.parse_event_from(serialized)
+        assert event.type == "unknown_event"
+
     @pytest.mark.parametrize(
         "event_name, event, action_type",
         [

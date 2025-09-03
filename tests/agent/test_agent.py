@@ -57,6 +57,74 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.integration
 
 
+@pytest.mark.unit
+def test_agent_does_not_initialize_context_on_init(mocker, monkeypatch):
+    # Provide required env vars for agent config
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", str(uuid.uuid4()))
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "dummy")
+    monkeypatch.setenv("GX_CLOUD_BASE_URL", "http://localhost:5000/")
+    # Arrange
+    get_context_spy = mocker.patch("great_expectations_cloud.agent.agent.get_context")
+    # Act
+    _ = GXAgent()
+    # Assert
+    get_context_spy.assert_not_called()
+
+
+@pytest.mark.unit
+def test_get_data_context_builds_context_per_event(mocker, monkeypatch):
+    # Provide required env vars for agent config
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", str(uuid.uuid4()))
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "dummy")
+    monkeypatch.setenv("GX_CLOUD_BASE_URL", "http://localhost:5000/")
+    # Arrange
+    get_context_spy = mocker.patch("great_expectations_cloud.agent.agent.get_context")
+    agent = GXAgent()
+
+    # Two events with distinct workspace_ids
+    org_id = uuid.uuid4()
+    ws_id_1 = uuid.uuid4()
+    ws_id_2 = uuid.uuid4()
+    correlation_ids = [str(uuid.uuid4()), str(uuid.uuid4())]
+
+    async def _noop() -> None:
+        return None
+
+    # Act: call get_data_context twice, once per event
+    agent.get_data_context(
+        EventContext(
+            event=DraftDatasourceConfigEvent(
+                type="test_datasource_config",
+                config_id=uuid.uuid4(),
+                organization_id=org_id,
+                workspace_id=ws_id_1,
+            ),
+            correlation_id=correlation_ids[0],
+            processed_successfully=lambda: None,
+            processed_with_failures=lambda: None,
+            redeliver_message=_noop,
+        )
+    )
+    agent.get_data_context(
+        EventContext(
+            event=RunCheckpointEvent(
+                type="run_checkpoint_request",
+                datasource_names_to_asset_names={},
+                checkpoint_id=uuid.uuid4(),
+                organization_id=org_id,
+                workspace_id=ws_id_2,
+            ),
+            correlation_id=correlation_ids[1],
+            processed_successfully=lambda: None,
+            processed_with_failures=lambda: None,
+            redeliver_message=_noop,
+        )
+    )
+
+    # Assert - one call per event
+    assert get_context_spy.call_count == 2
+
+
 @pytest.fixture
 def set_required_env_vars(monkeypatch, random_uuid, random_string, local_mercury):
     monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", random_uuid)

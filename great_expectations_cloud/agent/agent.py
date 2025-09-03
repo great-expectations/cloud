@@ -253,9 +253,7 @@ class GXAgent:
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
                     "organization_id": self.get_organization_id(event_context),
-                    "workspace_id": str(self.get_workspace_id(event_context))
-                    if hasattr(event_context.event, "workspace_id")
-                    else None,
+                    "workspace_id": str(self.get_workspace_id(event_context)),
                     "schedule_id": event_context.event.schedule_id
                     if isinstance(event_context.event, ScheduledEventBase)
                     else None,
@@ -383,7 +381,6 @@ class GXAgent:
 
         org_id = self.get_organization_id(event_context)
         workspace_id = self.get_workspace_id(event_context)
-        workspace_id = self.get_workspace_id(event_context)
 
         # get results or errors from the thread
         error = future.exception()
@@ -457,6 +454,7 @@ class GXAgent:
                     "correlation_id": event_context.correlation_id,
                     "status": str(status),
                     "organization_id": str(org_id),
+                    "workspace_id": str(workspace_id),
                 },
             )
             # We do not want to cause an infinite loop of errors
@@ -607,6 +605,7 @@ class GXAgent:
                     "correlation_id": correlation_id,
                     "status": str(status),
                     "organization_id": str(org_id),
+                    "workspace_id": str(workspace_id),
                 },
             )
             GXAgent._log_http_error(
