@@ -12,8 +12,13 @@ def test_get_asset_names_with_sql_datasource(mocker):
     datasource.get_engine.return_value = engine
     inspector = mocker.Mock()
     mock_sqlalchemy_inspect.return_value = inspector
+    dialect = mocker.Mock()
+    inspector.dialect = dialect
+    identifier_preparer = mocker.Mock()
+    inspector.dialect.identifier_preparer = identifier_preparer
     inspector.get_table_names.return_value = ["table_1", "table_2"]
     inspector.get_view_names.return_value = ["view_1", "view_2"]
+    identifier_preparer.quote.side_effect = ["table_1", "table_2", "view_1", "view_2"]
 
     table_names = get_asset_names(datasource)
 
@@ -21,6 +26,14 @@ def test_get_asset_names_with_sql_datasource(mocker):
     mock_sqlalchemy_inspect.assert_called_once_with(engine)
     inspector.get_table_names.assert_called_once_with()
     inspector.get_view_names.assert_called_once_with()
+    identifier_preparer.quote.assert_has_calls(
+        [
+            mocker.call("table_1"),
+            mocker.call("table_2"),
+            mocker.call("view_1"),
+            mocker.call("view_2"),
+        ]
+    )
 
 
 def test_get_asset_names_with_snowflake_datasource(mocker):
@@ -31,8 +44,13 @@ def test_get_asset_names_with_snowflake_datasource(mocker):
     datasource.get_engine.return_value = engine
     inspector = mocker.Mock()
     mock_sqlalchemy_inspect.return_value = inspector
+    dialect = mocker.Mock()
+    inspector.dialect = dialect
+    identifier_preparer = mocker.Mock()
+    inspector.dialect.identifier_preparer = identifier_preparer
     inspector.get_table_names.return_value = ["table_1", "table_2"]
     inspector.get_view_names.return_value = ["view_1", "view_2"]
+    identifier_preparer.quote.side_effect = ["table_1", "table_2", "view_1", "view_2"]
 
     table_names = get_asset_names(datasource)
 
@@ -40,6 +58,14 @@ def test_get_asset_names_with_snowflake_datasource(mocker):
     mock_sqlalchemy_inspect.assert_called_once_with(engine)
     inspector.get_table_names.assert_called_once_with(schema="test_schema")
     inspector.get_view_names.assert_called_once_with(schema="test_schema")
+    identifier_preparer.quote.assert_has_calls(
+        [
+            mocker.call("table_1"),
+            mocker.call("table_2"),
+            mocker.call("view_1"),
+            mocker.call("view_2"),
+        ]
+    )
 
 
 def test_get_asset_names_with_snowflake_datasource_no_schema(mocker):
@@ -50,8 +76,13 @@ def test_get_asset_names_with_snowflake_datasource_no_schema(mocker):
     datasource.get_engine.return_value = engine
     inspector = mocker.Mock()
     mock_sqlalchemy_inspect.return_value = inspector
+    dialect = mocker.Mock()
+    inspector.dialect = dialect
+    identifier_preparer = mocker.Mock()
+    inspector.dialect.identifier_preparer = identifier_preparer
     inspector.get_table_names.return_value = ["table_1", "table_2"]
     inspector.get_view_names.return_value = ["view_1", "view_2"]
+    identifier_preparer.quote.side_effect = ["table_1", "table_2", "view_1", "view_2"]
 
     table_names = get_asset_names(datasource)
 
@@ -59,3 +90,11 @@ def test_get_asset_names_with_snowflake_datasource_no_schema(mocker):
     mock_sqlalchemy_inspect.assert_called_once_with(engine)
     inspector.get_table_names.assert_called_once_with()
     inspector.get_view_names.assert_called_once_with()
+    identifier_preparer.quote.assert_has_calls(
+        [
+            mocker.call("table_1"),
+            mocker.call("table_2"),
+            mocker.call("view_1"),
+            mocker.call("view_2"),
+        ]
+    )
