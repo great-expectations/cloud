@@ -39,7 +39,6 @@ class AgentBaseExtraIgnore(BaseModel):
 class EventBase(AgentBaseExtraIgnore):
     type: str
     organization_id: Optional[UUID] = None  # noqa: UP045
-    workspace_id: UUID
 
 
 class ScheduledEventBase(EventBase):

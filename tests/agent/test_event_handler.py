@@ -57,7 +57,6 @@ def example_event():
         datasource_name="abc",
         data_asset_name="boo",
         organization_id=uuid4(),
-        workspace_id=uuid4(),
     )
 
 
@@ -72,30 +71,6 @@ class TestEventHandler:
             )
         assert result.type == "unknown_event"
 
-    def test_parse_event_includes_workspace_id(self):
-        payload = {
-            "type": "onboarding_data_assistant_request.received",
-            "datasource_name": "ds",
-            "data_asset_name": "asset",
-            "organization_id": str(uuid.uuid4()),
-            "workspace_id": str(uuid.uuid4()),
-        }
-        serialized = orjson.dumps(payload)
-        event = EventHandler.parse_event_from(serialized)
-        assert hasattr(event, "workspace_id")
-        assert str(event.workspace_id) == payload["workspace_id"]
-
-    def test_parse_event_missing_workspace_id_yields_unknown(self):
-        payload = {
-            "type": "onboarding_data_assistant_request.received",
-            "datasource_name": "ds",
-            "data_asset_name": "asset",
-            "organization_id": str(uuid.uuid4()),
-        }
-        serialized = orjson.dumps(payload)
-        event = EventHandler.parse_event_from(serialized)
-        assert event.type == "unknown_event"
-
     @pytest.mark.parametrize(
         "event_name, event, action_type",
         [
@@ -105,7 +80,6 @@ class TestEventHandler:
                     checkpoint_id=UUID("3ecd140b-1dd5-41f4-bdb1-c8009d4f1940"),
                     datasource_names_to_asset_names={"Data Source name": {"Asset name"}},
                     organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                    workspace_id=uuid4(),
                 ),
                 RunCheckpointAction,
             ),
@@ -114,7 +88,6 @@ class TestEventHandler:
                 DraftDatasourceConfigEvent(
                     config_id=uuid4(),
                     organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                    workspace_id=uuid4(),
                 ),
                 DraftDatasourceConfigAction,
             ),
@@ -123,7 +96,6 @@ class TestEventHandler:
                 ListAssetNamesEvent(
                     datasource_name="test-datasource",
                     organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                    workspace_id=uuid4(),
                 ),
                 ListAssetNamesAction,
             ),
@@ -134,7 +106,6 @@ class TestEventHandler:
                     data_asset_name="test-data-asset",
                     metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
                     organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                    workspace_id=uuid4(),
                 ),
                 MetricListAction,
             ),
@@ -175,7 +146,6 @@ class TestEventHandler:
                     checkpoint_id=UUID("3ecd140b-1dd5-41f4-bdb1-c8009d4f1940"),
                     datasource_names_to_asset_names={"Data Source name": {"Asset name"}},
                     organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                    workspace_id=uuid4(),
                 ),
                 RunCheckpointAction,
             ),
@@ -184,7 +154,6 @@ class TestEventHandler:
                 DraftDatasourceConfigEvent(
                     config_id=uuid4(),
                     organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                    workspace_id=uuid4(),
                 ),
                 DraftDatasourceConfigAction,
             ),
@@ -193,7 +162,6 @@ class TestEventHandler:
                 ListAssetNamesEvent(
                     datasource_name="test-datasource",
                     organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                    workspace_id=uuid4(),
                 ),
                 ListAssetNamesAction,
             ),
@@ -204,7 +172,6 @@ class TestEventHandler:
                     data_asset_name="test-data-asset",
                     metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
                     organization_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                    workspace_id=uuid4(),
                 ),
                 MetricListAction,
             ),

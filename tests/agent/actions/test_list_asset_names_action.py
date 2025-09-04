@@ -59,7 +59,6 @@ def event():
         type="list_table_names_request.received",
         datasource_name="test-datasource",
         organization_id=uuid.uuid4(),
-        workspace_id=uuid.uuid4(),
     )
 
 

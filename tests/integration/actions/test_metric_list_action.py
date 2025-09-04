@@ -131,7 +131,6 @@ def test_running_metric_list_action(
             MetricTypes.TABLE_ROW_COUNT,
         ],
         organization_id=uuid.UUID(org_id_env_var),
-        workspace_id=uuid.uuid4(),
     )
 
     action = MetricListAction(
