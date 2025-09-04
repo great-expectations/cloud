@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING
 
 from great_expectations.datasource.fluent import SnowflakeDatasource, SQLDatasource
 from sqlalchemy import inspect
-from sqlalchemy.sql.compiler import IdentifierPreparer
 
 if TYPE_CHECKING:
     from sqlalchemy.engine import Inspector
+    from sqlalchemy.sql.compiler import IdentifierPreparer
 
 
 def get_asset_names(datasource: SQLDatasource) -> list[str]:
@@ -29,5 +29,7 @@ def get_asset_names(datasource: SQLDatasource) -> list[str]:
         asset_names = tables + views
 
     # the identifier preparer adds quotes when they are necessary
-    quoted_asset_names: list[str] = [identifier_preparer.quote(asset_name) for asset_name in asset_names]
+    quoted_asset_names: list[str] = [
+        identifier_preparer.quote(asset_name) for asset_name in asset_names
+    ]
     return quoted_asset_names

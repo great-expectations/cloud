@@ -27,7 +27,12 @@ def test_get_asset_names_with_sql_datasource(mocker):
     inspector.get_table_names.assert_called_once_with()
     inspector.get_view_names.assert_called_once_with()
     identifier_preparer.quote.assert_has_calls(
-        [mocker.call("table_1"), mocker.call("table_2"), mocker.call("view_1"), mocker.call("view_2")]
+        [
+            mocker.call("table_1"),
+            mocker.call("table_2"),
+            mocker.call("view_1"),
+            mocker.call("view_2"),
+        ]
     )
 
 
@@ -54,7 +59,12 @@ def test_get_asset_names_with_snowflake_datasource(mocker):
     inspector.get_table_names.assert_called_once_with(schema="test_schema")
     inspector.get_view_names.assert_called_once_with(schema="test_schema")
     identifier_preparer.quote.assert_has_calls(
-        [mocker.call("table_1"), mocker.call("table_2"), mocker.call("view_1"), mocker.call("view_2")]
+        [
+            mocker.call("table_1"),
+            mocker.call("table_2"),
+            mocker.call("view_1"),
+            mocker.call("view_2"),
+        ]
     )
 
 
@@ -81,5 +91,10 @@ def test_get_asset_names_with_snowflake_datasource_no_schema(mocker):
     inspector.get_table_names.assert_called_once_with()
     inspector.get_view_names.assert_called_once_with()
     identifier_preparer.quote.assert_has_calls(
-        [mocker.call("table_1"), mocker.call("table_2"), mocker.call("view_1"), mocker.call("view_2")]
+        [
+            mocker.call("table_1"),
+            mocker.call("table_2"),
+            mocker.call("view_1"),
+            mocker.call("view_2"),
+        ]
     )
