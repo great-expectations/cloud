@@ -130,6 +130,11 @@ def test_test_draft_datasource_config_success_sql_ds(
     mock_inspector = inspect.return_value
     mock_inspector.get_table_names.return_value = table_names
     mock_inspector.get_view_names.return_value = view_names
+    dialect = mocker.Mock()
+    mock_inspector.dialect = dialect
+    identifier_preparer = mocker.Mock()
+    mock_inspector.dialect.identifier_preparer = identifier_preparer
+    identifier_preparer.quote.side_effect = table_names + view_names
 
     env_vars = GxAgentEnvVars()
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
@@ -218,6 +223,11 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
     mock_inspector = inspect.return_value
     mock_inspector.get_table_names.return_value = table_names
     mock_inspector.get_view_names.return_value = view_names
+    dialect = mocker.Mock()
+    mock_inspector.dialect = dialect
+    identifier_preparer = mocker.Mock()
+    mock_inspector.dialect.identifier_preparer = identifier_preparer
+    identifier_preparer.quote.side_effect = table_names + view_names
 
     env_vars = GxAgentEnvVars()
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
