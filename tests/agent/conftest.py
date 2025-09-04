@@ -20,9 +20,6 @@ from great_expectations_cloud.agent.actions.agent_action import ActionResult, Ag
 from great_expectations_cloud.agent.event_handler import (
     register_event_action,
 )
-from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
-    AsyncRabbitMQClient,
-)
 from great_expectations_cloud.agent.message_service.subscriber import (
     EventContext,
     OnMessageCallback,
@@ -64,7 +61,7 @@ class FakeMessagePayload(NamedTuple):
     The real payload is a JSON string which must be parsed into an Event
     """
 
-    event: Event
+    event: Event | DummyEvent
     correlation_id: str
 
 
@@ -76,12 +73,12 @@ class FakeSubscriber(Subscriber):
     The real Subscriber pulls from a RabbitMQ queue and receives JSON strings/bytes which must be parsed into an Event.
     """
 
-    test_queue: deque[tuple[Event, str]]
+    test_queue: deque[FakeMessagePayload | tuple[Event, str]]
 
     def __init__(
         self,
-        client: AsyncRabbitMQClient,
-        test_events: Iterable[tuple[Event, str]] | None = None,
+        client: Any,
+        test_events: Iterable[FakeMessagePayload | tuple[Event, str]] | None = None,
     ):
         self.client = client
         self.test_queue = deque()
@@ -94,16 +91,12 @@ class FakeSubscriber(Subscriber):
         while self.test_queue:
             event, correlation_id = self.test_queue.pop()
             LOGGER.info(f"FakeSubscriber.consume() received -> {event!r}")
-
-            async def _noop() -> None:
-                return None
-
             event_context = EventContext(
-                event=event,
+                event=event,  # type: ignore[arg-type] # In tests, could be a DummyEvent
                 correlation_id=correlation_id,
                 processed_successfully=lambda: None,
                 processed_with_failures=lambda: None,
-                redeliver_message=_noop,
+                redeliver_message=lambda: None,  # type: ignore[arg-type,return-value] # should be Coroutine
             )
             on_message(event_context)
             # allow time for thread to process the event
@@ -118,8 +111,7 @@ class FakeSubscriber(Subscriber):
 @pytest.fixture
 def fake_subscriber(mocker) -> FakeSubscriber:
     """Patch the agent.Subscriber constuctor to return a FakeSubscriber that pulls from a `.test_queue` in-memory list."""
-    client = mocker.MagicMock(spec=AsyncRabbitMQClient)
-    subscriber = FakeSubscriber(client=client)
+    subscriber = FakeSubscriber(client=object())
     mocker.patch("great_expectations_cloud.agent.agent.Subscriber", return_value=subscriber)
     return subscriber
 
@@ -195,7 +187,6 @@ def data_context_config() -> DataContextConfigTD:
 class DummyEvent(EventBase):
     type: Literal["event_name.received"] = "event_name.received"
     organization_id: UUID | None = None
-    workspace_id: UUID = uuid.uuid4()
 
 
 class DummyAction(AgentAction[DummyEvent]):

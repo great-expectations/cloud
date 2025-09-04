@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -35,7 +34,6 @@ def test_running_list_table_names_action(
         type="list_table_names_request.received",
         datasource_name="local_mercury_db",
         organization_id=UUID(org_id_env_var),
-        workspace_id=uuid.uuid4(),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -92,9 +90,8 @@ def test_running_list_table_names_action_fails_for_unreachable_datasource(
     )
     list_table_names_event = ListAssetNamesEvent(
         type="list_table_names_request.received",
-        datasource_name="unreachable_datasource",
         organization_id=UUID(org_id_env_var),
-        workspace_id=uuid.uuid4(),
+        datasource_name="local_mercury_db_bad_password",
     )
     event_id = "64842838-c7bf-4038-8b27-c7a32eba4b7b"
 

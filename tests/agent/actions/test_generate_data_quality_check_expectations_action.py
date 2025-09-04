@@ -317,7 +317,6 @@ def test_generate_schema_change_expectations_action_success(
             data_assets=data_asset_names,
             selected_data_quality_issues=[DataQualityIssues.SCHEMA],
             created_via="asset_creation",
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )
@@ -372,7 +371,6 @@ def test_anomaly_detection_expectation_not_created_if_asset_already_has_coverage
             data_assets=["data_asset_name"],
             selected_data_quality_issues=[DataQualityIssues.SCHEMA, DataQualityIssues.VOLUME],
             created_via="new_expectation",
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )
@@ -447,7 +445,6 @@ def test_generate_completeness_expectation_not_added_when_coverage_already_exist
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )
@@ -534,7 +531,6 @@ def test_succeeding_and_failing_assets_together(
                 datasource_name="test-datasource",
                 data_assets=succeeding_data_asset_names + failing_data_asset_names,
                 selected_data_quality_issues=[DataQualityIssues.SCHEMA],
-                workspace_id=uuid.uuid4(),
             ),
             id="test-id",
         )
@@ -592,7 +588,6 @@ def test_missing_table_columns_metric_raises_runtime_error(
         datasource_name="test-datasource",
         data_assets=["test-asset"],
         selected_data_quality_issues=[DataQualityIssues.SCHEMA],
-        workspace_id=uuid.uuid4(),
     )
 
     # Act & Assert
@@ -648,7 +643,6 @@ def test_generate_volume_change_forecast_expectations_action_success(
                 DataQualityIssues.VOLUME
             ],  # <--- Only supports volume for now
             use_forecast=True,  # <--- feature flag
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )
@@ -743,7 +737,6 @@ def test_generate_completeness_expectations_with_proportion_approach(
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )
@@ -827,7 +820,6 @@ def test_generate_completeness_forecast_expectations_action_success(
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
             use_forecast=True,  # <--- feature flag
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )
@@ -922,7 +914,6 @@ def test_completeness_expectations_count_based_on_data(
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )
@@ -987,7 +978,6 @@ def test_generate_completeness_expectations_edge_cases(
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )
@@ -1017,7 +1007,6 @@ def test_generate_completeness_expectations_edge_cases(
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )

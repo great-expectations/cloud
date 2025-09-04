@@ -6,11 +6,12 @@ import string
 import uuid
 from time import sleep
 from typing import TYPE_CHECKING, Any, Callable, Literal
-from unittest.mock import call
+from unittest.mock import ANY, call
 
 import pytest
 import requests
 import responses
+from great_expectations.exceptions import exceptions as gx_exception
 from pika.exceptions import (
     AuthenticationError,
     ConnectionClosedByBroker,
@@ -55,74 +56,6 @@ if TYPE_CHECKING:
 
 # TODO: This should be marked as unit tests after fixing the tests to mock outgoing calls
 pytestmark = pytest.mark.integration
-
-
-@pytest.mark.unit
-def test_agent_does_not_initialize_context_on_init(mocker, monkeypatch):
-    # Provide required env vars for agent config
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", str(uuid.uuid4()))
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "dummy")
-    monkeypatch.setenv("GX_CLOUD_BASE_URL", "http://localhost:5000/")
-    # Arrange
-    get_context_spy = mocker.patch("great_expectations_cloud.agent.agent.get_context")
-    # Act
-    _ = GXAgent()
-    # Assert
-    get_context_spy.assert_not_called()
-
-
-@pytest.mark.unit
-def test_get_data_context_builds_context_per_event(mocker, monkeypatch):
-    # Provide required env vars for agent config
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", str(uuid.uuid4()))
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "dummy")
-    monkeypatch.setenv("GX_CLOUD_BASE_URL", "http://localhost:5000/")
-    # Arrange
-    get_context_spy = mocker.patch("great_expectations_cloud.agent.agent.get_context")
-    agent = GXAgent()
-
-    # Two events with distinct workspace_ids
-    org_id = uuid.uuid4()
-    ws_id_1 = uuid.uuid4()
-    ws_id_2 = uuid.uuid4()
-    correlation_ids = [str(uuid.uuid4()), str(uuid.uuid4())]
-
-    async def _noop() -> None:
-        return None
-
-    # Act: call get_data_context twice, once per event
-    agent.get_data_context(
-        EventContext(
-            event=DraftDatasourceConfigEvent(
-                type="test_datasource_config",
-                config_id=uuid.uuid4(),
-                organization_id=org_id,
-                workspace_id=ws_id_1,
-            ),
-            correlation_id=correlation_ids[0],
-            processed_successfully=lambda: None,
-            processed_with_failures=lambda: None,
-            redeliver_message=_noop,
-        )
-    )
-    agent.get_data_context(
-        EventContext(
-            event=RunCheckpointEvent(
-                type="run_checkpoint_request",
-                datasource_names_to_asset_names={},
-                checkpoint_id=uuid.uuid4(),
-                organization_id=org_id,
-                workspace_id=ws_id_2,
-            ),
-            correlation_id=correlation_ids[1],
-            processed_successfully=lambda: None,
-            processed_with_failures=lambda: None,
-            redeliver_message=_noop,
-        )
-    )
-
-    # Assert - one call per event
-    assert get_context_spy.call_count == 2
 
 
 @pytest.fixture
@@ -297,19 +230,22 @@ def test_gx_agent_configures_progress_bars_on_init(
     monkeypatch, enable_progress_bars, get_context, gx_agent_config, requests_post
 ):
     monkeypatch.setenv("ENABLE_PROGRESS_BARS", str(enable_progress_bars))
-    # Progress bars are now configured per job when creating a context, not on init
-    GXAgent()
+    agent = GXAgent()
+    assert agent._context.variables.progress_bars is not None
+    assert agent._context.variables.progress_bars.globally == enable_progress_bars
+    assert agent._context.variables.progress_bars.metric_calculations == enable_progress_bars
 
 
 def test_gx_agent_invalid_token(monkeypatch, set_required_env_vars: None):
-    # Token presence is validated by GX when making requests; agent no longer creates context on init
+    # There is no validation for the token aside from presence, so we set to empty to raise an error.
     monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "")
-    GXAgent()
+    with pytest.raises(gx_exception.GXCloudConfigurationError):
+        GXAgent()
 
 
 def test_gx_agent_initializes_cloud_context(get_context, gx_agent_config):
     GXAgent()
-    get_context.assert_not_called()
+    get_context.assert_called_with(cloud_mode=True, user_agent_str=ANY)
 
 
 def test_gx_agent_run_starts_subscriber(get_context, subscriber, client, gx_agent_config):
@@ -407,6 +343,10 @@ def test_gx_agent_updates_cloud_on_job_status(
     subscriber, create_session, get_context, client, gx_agent_config, event_handler
 ):
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
+    url = (
+        f"http://localhost:5000/api/v1/organizations/"
+        f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs/{correlation_id}"
+    )
     job_started_data = UpdateJobStatusRequest(data=JobStarted()).json()
     job_completed = UpdateJobStatusRequest(
         data=JobCompleted(success=True, created_resources=[], processed_by="agent")
@@ -417,15 +357,7 @@ def test_gx_agent_updates_cloud_on_job_status(
         return None
 
     event = RunOnboardingDataAssistantEvent(
-        datasource_name="test-ds",
-        data_asset_name="test-da",
-        organization_id=uuid.uuid4(),
-        workspace_id=uuid.uuid4(),
-    )
-
-    url = (
-        f"http://localhost:5000/api/v1/organizations/"
-        f"{gx_agent_config.gx_cloud_organization_id}/workspaces/{event.workspace_id}/agent-jobs/{correlation_id}"
+        datasource_name="test-ds", data_asset_name="test-da", organization_id=uuid.uuid4()
     )
 
     end_test = False
@@ -488,6 +420,10 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
     This test ensures that the agent sends the correct request to the correct endpoint.
     """
     correlation_id = "4ae63677-4dd5-4fb0-b511-870e7a286e77"
+    post_url = (
+        f"http://localhost:5000/api/v1/organizations/"
+        f"{gx_agent_config.gx_cloud_organization_id}/agent-jobs"
+    )
 
     checkpoint_id = uuid.uuid4()
     schedule_id = uuid.uuid4()
@@ -497,12 +433,6 @@ def test_gx_agent_sends_request_to_create_scheduled_job(
         splitter_options=None,
         schedule_id=schedule_id,
         organization_id=uuid.uuid4(),
-        workspace_id=uuid.uuid4(),
-    )
-
-    post_url = (
-        f"http://localhost:5000/api/v1/organizations/"
-        f"{gx_agent_config.gx_cloud_organization_id}/workspaces/{event.workspace_id}/agent-jobs"
     )
 
     async def redeliver_message():
@@ -606,7 +536,6 @@ def test_custom_user_agent(
     set_required_env_vars: None,
     gx_agent_config: GXAgentConfig,
     data_context_config: DataContextConfigTD,
-    fake_subscriber: FakeSubscriber,
 ):
     """Ensure custom User-Agent header is set on GX Cloud api calls."""
     base_url = gx_agent_config.gx_cloud_base_url
@@ -625,19 +554,7 @@ def test_custom_user_agent(
                 )
             ],
         )
-        # Create agent; context is created per job
-        agent = GXAgent()
-        # Push a minimal event and run once to force context creation using our mocked endpoint
-        event = RunOnboardingDataAssistantEvent(
-            type="onboarding_data_assistant_request.received",
-            datasource_name="ds",
-            data_asset_name="asset",
-            organization_id=uuid.uuid4(),
-            workspace_id=uuid.uuid4(),
-        )
-        # Use FakeSubscriber to inject a single event
-        fake_subscriber.test_queue.append((event, str(uuid.uuid4())))
-        agent.run()
+        GXAgent()
 
 
 @pytest.fixture
@@ -680,7 +597,6 @@ def test_correlation_id_header(
                 DraftDatasourceConfigEvent(
                     config_id=datasource_config_id_1,
                     organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
-                    workspace_id=uuid.uuid4(),
                 ),
                 agent_correlation_ids[0],
             ),
@@ -688,7 +604,6 @@ def test_correlation_id_header(
                 DraftDatasourceConfigEvent(
                     config_id=datasource_config_id_2,
                     organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
-                    workspace_id=uuid.uuid4(),
                 ),
                 agent_correlation_ids[1],
             ),
@@ -697,7 +612,6 @@ def test_correlation_id_header(
                     checkpoint_id=checkpoint_id,
                     datasource_names_to_asset_names={},
                     organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
-                    workspace_id=uuid.uuid4(),
                 ),
                 agent_correlation_ids[2],
             ),
@@ -806,7 +720,6 @@ def test_handle_event_as_thread_exit_succeeds_when_job_succeeds(
             processed_by="agent",
         ),
         org_id=uuid.UUID(gx_agent_config.gx_cloud_organization_id),
-        workspace_id=event_context.event.workspace_id,
     )
     event_context.processed_successfully.assert_called_once()
     event_context.processed_with_failures.assert_not_called()
@@ -838,7 +751,6 @@ def test_handle_event_as_thread_exit_succeeds_when_job_has_failure(
             error_stack_trace="Test error",
         ),
         org_id=uuid.UUID(gx_agent_config.gx_cloud_organization_id),
-        workspace_id=event_context.event.workspace_id,
     )
     # Should ACK the message since we ran the job
     event_context.processed_successfully.assert_called_once()
@@ -876,7 +788,6 @@ def test_handle_event_as_thread_exit_update_status_failure(mocker, gx_agent_conf
             processed_by="agent",
         ),
         org_id=uuid.UUID(gx_agent_config.gx_cloud_organization_id),
-        workspace_id=event_context.event.workspace_id,
     )
     event_context.processed_successfully.assert_not_called()
     # Should nack the message since we failed to update the status

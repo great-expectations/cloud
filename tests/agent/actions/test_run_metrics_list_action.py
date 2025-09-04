@@ -53,7 +53,6 @@ def test_run_metrics_list_computes_metric_run(
             data_asset_name="test-data-asset",
             metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
             organization_id=uuid.uuid4(),
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )
@@ -90,7 +89,6 @@ def test_run_metrics_list_computes_metric_run_missing_batch_inspector(
             data_asset_name="test-data-asset",
             metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
             organization_id=uuid.uuid4(),
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )
@@ -125,7 +123,6 @@ def test_run_metrics_list_creates_metric_run(mock_context, mocker: MockerFixture
             data_asset_name="test-data-asset",
             metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
             organization_id=uuid.uuid4(),
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )
@@ -158,7 +155,6 @@ def test_run_metrics_list_returns_action_result(mock_context, mocker: MockerFixt
             data_asset_name="test-data-asset",
             metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
             organization_id=uuid.uuid4(),
-            workspace_id=uuid.uuid4(),
         ),
         id="test-id",
     )
@@ -199,7 +195,6 @@ def test_run_column_descriptive_metrics_raises_on_test_connection_to_data_asset_
                 data_asset_name="test-data-asset",
                 metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
                 organization_id=uuid.uuid4(),
-                workspace_id=uuid.uuid4(),
             ),
             id="test-id",
         )
@@ -256,7 +251,6 @@ def test_run_metrics_list_creates_metric_run_then_raises_on_any_metric_exception
                 data_asset_name="test-data-asset",
                 metric_names=[MetricTypes.TABLE_COLUMN_TYPES, MetricTypes.TABLE_COLUMNS],
                 organization_id=uuid.uuid4(),
-                workspace_id=uuid.uuid4(),
             ),
             id="test-id",
         )

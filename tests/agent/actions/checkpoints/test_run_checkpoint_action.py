@@ -65,7 +65,6 @@ run_checkpoint_action_class_and_event = (
         checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
         checkpoint_name="Checkpoint Z",
         organization_id=UUID(fixture_id),
-        workspace_id=uuid.uuid4(),
     ),
     None,
 )
@@ -78,7 +77,6 @@ run_scheduled_checkpoint_action_class_and_event = (
         checkpoint_name="Checkpoint Z",
         schedule_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
         organization_id=UUID(fixture_id),
-        workspace_id=uuid.uuid4(),
     ),
     "great_expectations_cloud.agent.actions.run_scheduled_checkpoint.run_checkpoint",
 )
@@ -89,7 +87,6 @@ run_window_checkpoint_action_class_and_event = (
         datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
         checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
         organization_id=UUID(fixture_id),
-        workspace_id=uuid.uuid4(),
     ),
 )
 
