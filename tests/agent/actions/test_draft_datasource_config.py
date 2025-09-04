@@ -76,7 +76,11 @@ def test_test_draft_datasource_config_success_non_sql_ds(
     _update_asset_names_list_spy = mocker.spy(action, "_update_asset_names_list")
 
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
-    event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
+    event = DraftDatasourceConfigEvent(
+        config_id=config_id,
+        organization_id=uuid.uuid4(),
+        workspace_id=uuid.uuid4(),
+    )
     expected_url: str = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
         f"/draft-datasources/{config_id}"
@@ -148,7 +152,11 @@ def test_test_draft_datasource_config_success_sql_ds(
     _update_asset_names_list_spy = mocker.spy(action, "_update_asset_names_list")
 
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
-    event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
+    event = DraftDatasourceConfigEvent(
+        config_id=config_id,
+        organization_id=uuid.uuid4(),
+        workspace_id=uuid.uuid4(),
+    )
     expected_url_get: str = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
         f"/draft-datasources/{config_id}"
@@ -229,7 +237,11 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
     )
 
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
-    event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
+    event = DraftDatasourceConfigEvent(
+        config_id=config_id,
+        organization_id=uuid.uuid4(),
+        workspace_id=uuid.uuid4(),
+    )
 
     expected_url_get: str = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
@@ -277,7 +289,11 @@ def test_test_draft_datasource_config_failure(
         organization_id=org_id,
     )
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
-    event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
+    event = DraftDatasourceConfigEvent(
+        config_id=config_id,
+        organization_id=uuid.uuid4(),
+        workspace_id=uuid.uuid4(),
+    )
     expected_url = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
         f"/draft-datasources/{config_id}"
@@ -310,7 +326,11 @@ def test_test_draft_datasource_config_raises_for_non_fds(mock_context, set_requi
         organization_id=org_id,
     )
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
-    event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
+    event = DraftDatasourceConfigEvent(
+        config_id=config_id,
+        organization_id=uuid.uuid4(),
+        workspace_id=uuid.uuid4(),
+    )
     expected_url = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
         f"/draft-datasources/{config_id}"
@@ -352,7 +372,11 @@ def test_draft_datasource_config_failure_raises_correct_gx_core_error(
     )
     mock_check_draft_datasource_config.side_effect = TestConnectionError(error_message)
 
-    event = DraftDatasourceConfigEvent(config_id=uuid.uuid4(), organization_id=uuid.uuid4())
+    event = DraftDatasourceConfigEvent(
+        config_id=uuid.uuid4(),
+        organization_id=uuid.uuid4(),
+        workspace_id=uuid.uuid4(),
+    )
     with pytest.raises(GXCoreError) as e:
         action.run(event=event, id=str(uuid.uuid4()))
 
@@ -377,7 +401,11 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
         organization_id=org_id,
     )
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
-    event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
+    event = DraftDatasourceConfigEvent(
+        config_id=config_id,
+        organization_id=uuid.uuid4(),
+        workspace_id=uuid.uuid4(),
+    )
     expected_url = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
         f"/draft-datasources/{config_id}"
@@ -411,7 +439,11 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
         organization_id=org_id,
     )
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
-    event = DraftDatasourceConfigEvent(config_id=config_id, organization_id=uuid.uuid4())
+    event = DraftDatasourceConfigEvent(
+        config_id=config_id,
+        organization_id=uuid.uuid4(),
+        workspace_id=uuid.uuid4(),
+    )
     expected_url = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
         f"/draft-datasources/{config_id}"

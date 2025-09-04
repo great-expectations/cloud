@@ -73,6 +73,7 @@ def checkpoint_event(scheduled_checkpoint, datasource_names_to_asset_names, org_
         schedule_id=uuid.UUID("e37cc13f-141d-4818-93c2-e3ec60024683"),
         datasource_names_to_asset_names=datasource_names_to_asset_names,
         organization_id=uuid.UUID(org_id_env_var),
+        workspace_id=uuid.uuid4(),
     )
 
 
@@ -116,6 +117,7 @@ def test_checkpoint_event_with_name():
         schedule_id=uuid.uuid4(),
         datasource_names_to_asset_names={},
         organization_id=uuid.uuid4(),
+        workspace_id=uuid.uuid4(),
         checkpoint_id=uuid.uuid4(),
     )
     assert checkpoint_event.checkpoint_name == "my_checkpoint"

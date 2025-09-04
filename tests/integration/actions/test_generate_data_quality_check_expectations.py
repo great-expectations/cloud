@@ -115,6 +115,7 @@ def test_generate_data_quality_check_expectations_action_no_selected_data_qualit
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
+        workspace_id=uuid.uuid4(),
         selected_data_quality_issues=None,
     )
 
@@ -159,6 +160,7 @@ def test_generate_data_quality_check_expectations_action_schema_change_selected_
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
+        workspace_id=uuid.uuid4(),
         selected_data_quality_issues=[DataQualityIssues.SCHEMA],
     )
 
@@ -208,6 +210,7 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
             DataQualityIssues.SCHEMA,
             DataQualityIssues.VOLUME,
         ],
+        workspace_id=uuid.uuid4(),
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
@@ -275,6 +278,7 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
         selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
+        workspace_id=uuid.uuid4(),
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
@@ -355,6 +359,7 @@ def test_generate_data_quality_check_expectations_action_completeness_with_propo
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
         selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
+        workspace_id=uuid.uuid4(),
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
@@ -440,6 +445,7 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
         selected_data_quality_issues=[DataQualityIssues.SCHEMA, DataQualityIssues.VOLUME],
+        workspace_id=uuid.uuid4(),
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
