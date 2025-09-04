@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from great_expectations.datasource.fluent import SnowflakeDatasource, SQLDatasource
 from sqlalchemy import inspect
+from sqlalchemy.sql.compiler import IdentifierPreparer
 
 if TYPE_CHECKING:
     from sqlalchemy.engine import Inspector
@@ -11,6 +12,8 @@ if TYPE_CHECKING:
 
 def get_asset_names(datasource: SQLDatasource) -> list[str]:
     inspector: Inspector = inspect(datasource.get_engine())
+    identifier_preparer: IdentifierPreparer = inspector.dialect.identifier_preparer
+
     if isinstance(datasource, SnowflakeDatasource) and datasource.schema_:
         # Snowflake-SQLAlchemy uses the default_schema if no schema is provided to get_table_names
         # Or if the role does not have access to the schema (it silently fails and defaults to using default_schema)
@@ -19,8 +22,12 @@ def get_asset_names(datasource: SQLDatasource) -> list[str]:
         # Also converting to list to ensure JSON serializable
         tables = list(inspector.get_table_names(schema=datasource.schema_))
         views = list(inspector.get_view_names(schema=datasource.schema_))
-        return tables + views
+        asset_names = tables + views
+    else:
+        tables = list(inspector.get_table_names())
+        views = list(inspector.get_view_names())
+        asset_names = tables + views
 
-    tables = list(inspector.get_table_names())
-    views = list(inspector.get_view_names())
-    return tables + views
+    # the identifier preparer adds quotes when they are necessary
+    quoted_asset_names: list[str] = [identifier_preparer.quote(asset_name) for asset_name in asset_names]
+    return quoted_asset_names
