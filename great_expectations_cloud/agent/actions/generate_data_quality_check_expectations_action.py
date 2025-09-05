@@ -13,6 +13,7 @@ from great_expectations.core.http import create_session
 from great_expectations.exceptions import GXCloudError, InvalidExpectationConfigurationError
 from great_expectations.expectations.metadata_types import (
     DataQualityIssues,
+    FailureSeverity,
 )
 from great_expectations.expectations.window import Offset, Window
 from great_expectations.experimental.metric_repository.batch_inspector import (
@@ -319,6 +320,7 @@ class GenerateDataQualityCheckExpectationsAction(
             strict_max=strict_max,
             min_value=min_value,
             max_value=max_value,
+            severity=FailureSeverity.WARNING,
         )
         expectation_id = self._create_expectation_for_asset(
             expectation=expectation, asset_id=asset_id, created_via=created_via
@@ -341,7 +343,8 @@ class GenerateDataQualityCheckExpectationsAction(
             raise RuntimeError("missing TABLE_COLUMNS metric")  # noqa: TRY003
 
         expectation = gx_expectations.ExpectTableColumnsToMatchSet(
-            column_set=table_columns_metric.value
+            column_set=table_columns_metric.value,
+            severity=FailureSeverity.WARNING,
         )
         expectation_id = self._create_expectation_for_asset(
             expectation=expectation, asset_id=asset_id, created_via=created_via
@@ -420,16 +423,19 @@ class GenerateDataQualityCheckExpectationsAction(
                     column=column_name,
                     min_value={"$PARAMETER": min_param_name},
                     max_value={"$PARAMETER": max_param_name},
+                    severity=FailureSeverity.WARNING,
                 )
             elif non_null_proportion == 0:
                 expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
                     column=column_name,
                     max_value=0,
+                    severity=FailureSeverity.WARNING,
                 )
             elif non_null_proportion == 1:
                 expectation = gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween(
                     column=column_name,
                     min_value=1,
+                    severity=FailureSeverity.WARNING,
                 )
             else:
                 # Use triangular interpolation to compute min/max values
@@ -461,6 +467,7 @@ class GenerateDataQualityCheckExpectationsAction(
                     column=column_name,
                     min_value={"$PARAMETER": min_param_name},
                     max_value={"$PARAMETER": max_param_name},
+                    severity=FailureSeverity.WARNING,
                 )
 
             expectation_id = self._create_expectation_for_asset(
