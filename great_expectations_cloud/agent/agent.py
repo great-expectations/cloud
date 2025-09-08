@@ -17,6 +17,8 @@ from uuid import UUID
 
 import orjson
 import requests
+from great_expectations import __version__
+from great_expectations.core import http
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
@@ -151,19 +153,7 @@ class GXAgent:
                 "great_expectations_version": great_expectations_version,
             },
         )
-        LOGGER.debug("Loading a DataContext - this might take a moment.")
-
-        with warnings.catch_warnings():
-            # suppress warnings about GX version
-            warnings.filterwarnings("ignore", message="You are using great_expectations version")
-            self._context: CloudDataContext = get_context(
-                cloud_mode=True,
-                user_agent_str=self.user_agent_str,
-            )
-            self._configure_progress_bars(data_context=self._context)
-        LOGGER.debug("DataContext is ready.")
-
-        self._set_http_session_headers(data_context=self._context)
+        # DataContext is created per job in get_data_context
 
         # Create a thread pool with a single worker, so we can run long-lived
         # GX processes and maintain our connection to the broker. Note that
@@ -264,6 +254,7 @@ class GXAgent:
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
                     "organization_id": self.get_organization_id(event_context),
+                    "workspace_id": str(self.get_workspace_id(event_context)),
                     "schedule_id": event_context.event.schedule_id
                     if isinstance(event_context.event, ScheduledEventBase)
                     else None,
@@ -288,8 +279,19 @@ class GXAgent:
             self._current_task.add_done_callback(on_exit_callback)
 
     def get_data_context(self, event_context: EventContext) -> CloudDataContext:
-        """Helper method to get a DataContext Agent. Overridden in GX-Runner."""
-        return self._context
+        """Create a new CloudDataContext for each job using the event's workspace_id."""
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="You are using great_expectations version")
+            # Validate presence of workspace_id (required), even if not passed directly to get_context
+            if getattr(event_context.event, "workspace_id", None) is None:
+                raise GXAgentError()
+
+            context: CloudDataContext = get_context(
+                cloud_mode=True,
+                user_agent_str=self.user_agent_str,
+            )
+            self._configure_progress_bars(data_context=context)
+        return context
 
     def get_organization_id(self, event_context: EventContext) -> UUID:
         """Helper method to get the organization ID. Overridden in GX-Runner."""
@@ -298,6 +300,13 @@ class GXAgent:
     def get_auth_key(self) -> str:
         """Helper method to get the auth key. Overridden in GX-Runner."""
         return self._get_config().gx_cloud_access_token
+
+    def get_workspace_id(self, event_context: EventContext) -> UUID:
+        """Helper method to get the workspace ID from the event."""
+        workspace_id: UUID | None = getattr(event_context.event, "workspace_id", None)
+        if workspace_id is None:
+            raise GXAgentError()
+        return workspace_id
 
     def _set_sentry_tags(self, even_context: EventContext) -> None:
         """Used by GX-Runner to set tags for Sentry logging. No-op in the Agent."""
@@ -321,14 +330,18 @@ class GXAgent:
         )
 
         org_id = self.get_organization_id(event_context)
+        workspace_id = self.get_workspace_id(event_context)
         base_url = self._get_config().gx_cloud_base_url
         auth_key = self.get_auth_key()
 
         if isinstance(event_context.event, ScheduledEventBase):
-            self._create_scheduled_job_and_set_started(event_context, org_id)
+            self._create_scheduled_job_and_set_started(event_context, org_id, workspace_id)
         else:
             self._update_status(
-                correlation_id=event_context.correlation_id, status=JobStarted(), org_id=org_id
+                correlation_id=event_context.correlation_id,
+                status=JobStarted(),
+                org_id=org_id,
+                workspace_id=workspace_id,
             )
         LOGGER.info(
             "Starting job",
@@ -336,6 +349,7 @@ class GXAgent:
                 "event_type": event_context.event.type,
                 "correlation_id": event_context.correlation_id,
                 "organization_id": str(org_id),
+                "workspace_id": str(workspace_id),
                 "schedule_id": event_context.event.schedule_id
                 if isinstance(event_context.event, ScheduledEventBase)
                 else None,
@@ -367,6 +381,7 @@ class GXAgent:
         # warning:  this method will not be executed in the main thread
 
         org_id = self.get_organization_id(event_context)
+        workspace_id = self.get_workspace_id(event_context)
 
         # get results or errors from the thread
         error = future.exception()
@@ -386,6 +401,7 @@ class GXAgent:
                         "event_type": event_context.event.type,
                         "id": event_context.correlation_id,
                         "organization_id": str(org_id),
+                        "workspace_id": str(workspace_id),
                         "schedule_id": event_context.event.schedule_id
                         if isinstance(event_context.event, ScheduledEventBase)
                         else None,
@@ -406,6 +422,7 @@ class GXAgent:
                             result.job_duration.total_seconds() if result.job_duration else None
                         ),
                         "organization_id": str(org_id),
+                        "workspace_id": str(workspace_id),
                         "schedule_id": event_context.event.schedule_id
                         if isinstance(event_context.event, ScheduledEventBase)
                         else None,
@@ -420,12 +437,16 @@ class GXAgent:
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
                     "organization_id": str(org_id),
+                    "workspace_id": str(workspace_id),
                 },
             )
 
         try:
             self._update_status(
-                correlation_id=event_context.correlation_id, status=status, org_id=org_id
+                correlation_id=event_context.correlation_id,
+                status=status,
+                org_id=org_id,
+                workspace_id=workspace_id,
             )
         except Exception:
             LOGGER.exception(
@@ -434,6 +455,7 @@ class GXAgent:
                     "correlation_id": event_context.correlation_id,
                     "status": str(status),
                     "organization_id": str(org_id),
+                    "workspace_id": str(workspace_id),
                 },
             )
             # We do not want to cause an infinite loop of errors
@@ -553,7 +575,9 @@ class GXAgent:
                 )
             )
 
-    def _update_status(self, correlation_id: str, status: JobStatus, org_id: UUID) -> None:
+    def _update_status(
+        self, correlation_id: str, status: JobStatus, org_id: UUID, workspace_id: UUID
+    ) -> None:
         """Update GX Cloud on the status of a job.
 
         Args:
@@ -566,11 +590,12 @@ class GXAgent:
                 "correlation_id": correlation_id,
                 "status": str(status),
                 "organization_id": str(org_id),
+                "workspace_id": str(workspace_id),
             },
         )
         agent_sessions_url = urljoin(
             self._get_config().gx_cloud_base_url,
-            f"/api/v1/organizations/{org_id}/agent-jobs/{correlation_id}",
+            f"/api/v1/organizations/{org_id}/workspaces/{workspace_id}/agent-jobs/{correlation_id}",
         )
         with create_session(access_token=self.get_auth_key()) as session:
             data = UpdateJobStatusRequest(data=status).json()
@@ -581,6 +606,7 @@ class GXAgent:
                     "correlation_id": correlation_id,
                     "status": str(status),
                     "organization_id": str(org_id),
+                    "workspace_id": str(workspace_id),
                 },
             )
             GXAgent._log_http_error(
@@ -588,7 +614,7 @@ class GXAgent:
             )
 
     def _create_scheduled_job_and_set_started(
-        self, event_context: EventContext, org_id: UUID
+        self, event_context: EventContext, org_id: UUID, workspace_id: UUID
     ) -> None:
         """Create a job in GX Cloud for scheduled events.
 
@@ -610,13 +636,14 @@ class GXAgent:
                 "correlation_id": str(event_context.correlation_id),
                 "event_type": str(event_context.event.type),
                 "organization_id": str(org_id),
+                "workspace_id": str(workspace_id),
                 "schedule_id": str(event_context.event.schedule_id),
             },
         )
 
         agent_sessions_url = urljoin(
             self._get_config().gx_cloud_base_url,
-            f"/api/v1/organizations/{org_id}/agent-jobs",
+            f"/api/v1/organizations/{org_id}/workspaces/{workspace_id}/agent-jobs",
         )
         data = CreateScheduledJobAndSetJobStarted(
             type="run_scheduled_checkpoint.received",
@@ -637,6 +664,7 @@ class GXAgent:
                     "event_type": str(event_context.event.type),
                     "organization_id": str(org_id),
                     "schedule_id": str(event_context.event.schedule_id),
+                    "workspace_id": str(workspace_id),
                 },
             )
             GXAgent._log_http_error(
@@ -687,8 +715,6 @@ class GXAgent:
         Note: the Agent-Job-Id header value will be set for all GX Cloud request until this method is
         called again.
         """
-        from great_expectations import __version__  # noqa: PLC0415
-        from great_expectations.core import http  # noqa: PLC0415
 
         header_name = self.get_header_name()
         user_agent_header_value = self.user_agent_str
