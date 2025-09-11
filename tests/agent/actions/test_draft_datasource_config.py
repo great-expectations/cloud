@@ -83,7 +83,7 @@ def test_test_draft_datasource_config_success_non_sql_ds(
     )
     expected_url: str = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/draft-datasources/{config_id}"
+        f"/workspaces/{event.workspace_id}/draft-datasources/{config_id}"
     )
 
     responses.get(
@@ -164,12 +164,12 @@ def test_test_draft_datasource_config_success_sql_ds(
     )
     expected_url_get: str = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/draft-datasources/{config_id}"
+        f"/workspaces/{event.workspace_id}/draft-datasources/{config_id}"
     )
 
     expected_url_put: str = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/draft-table-names/{config_id}"
+        f"/workspaces/{event.workspace_id}/draft-table-names/{config_id}"
     )
 
     responses.get(

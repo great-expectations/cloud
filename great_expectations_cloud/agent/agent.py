@@ -23,9 +23,7 @@ from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
 from great_expectations.data_context.data_context.context_factory import get_context
 from great_expectations.data_context.types.base import ProgressBarsConfig
-from pika.adapters.utils.connection_workflow import (
-    AMQPConnectorException,
-)
+from pika.adapters.utils.connection_workflow import AMQPConnectorException
 from pika.exceptions import (
     AMQPConnectionError,
     AMQPError,
@@ -48,9 +46,7 @@ from great_expectations_cloud.agent.config import (
     generate_config_validation_error_text,
 )
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
-from great_expectations_cloud.agent.event_handler import (
-    EventHandler,
-)
+from great_expectations_cloud.agent.event_handler import EventHandler
 from great_expectations_cloud.agent.exceptions import (
     GXAgentConfigError,
     GXAgentError,
@@ -285,6 +281,8 @@ class GXAgent:
             # Validate presence of workspace_id (required), even if not passed directly to get_context
             if getattr(event_context.event, "workspace_id", None) is None:
                 raise GXAgentError()
+
+            # TODO: do we need to pass the workspace_id to get_context?
 
             context: CloudDataContext = get_context(
                 cloud_mode=True,
@@ -687,7 +685,9 @@ class GXAgent:
         """
         Sets headers on all stores in the data context.
         """
-        from great_expectations.data_context.store.gx_cloud_store_backend import GXCloudStoreBackend  # noqa: I001, PLC0415
+        from great_expectations.data_context.store.gx_cloud_store_backend import (  # noqa: PLC0415
+            GXCloudStoreBackend,
+        )
 
         # OSS doesn't use the same session for all requests, so we need to set the header for each store
         stores = list(data_context.stores.values())
