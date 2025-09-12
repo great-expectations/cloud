@@ -547,7 +547,7 @@ def test_custom_user_agent(
         )
         rsps.add(
             responses.GET,
-            f"{base_url}api/v1/organizations/{org_id}/data-context-configuration",
+            f"{base_url}api/v1/organizations/{org_id}/workspaces/workspace-123/data-context-configuration",
             json=data_context_config,
         )
         agent = GXAgent()
@@ -630,7 +630,7 @@ def test_correlation_id_header(
         )
         rsps.add(
             responses.GET,
-            f"{base_url}api/v1/organizations/{org_id}/data-context-configuration",
+            f"{base_url}api/v1/organizations/{org_id}/workspaces/workspace-123/data-context-configuration",
             json=data_context_config,
         )
         rsps.add(
