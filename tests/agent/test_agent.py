@@ -869,9 +869,13 @@ def test_get_workspace_id_raises_when_workspace_id_missing(
 ):
     agent = GXAgent()
 
-    # mock event context where event has no workspace_id
     mock_event_context = mocker.Mock(spec=EventContext)
-    mock_event_context.event = mocker.Mock()
+
+    # mock event with no workspace_id
+    class MockEventWithoutWorkspaceId:
+        pass
+
+    mock_event_context.event = MockEventWithoutWorkspaceId()
 
     with pytest.raises(GXAgentError):
         agent.get_workspace_id(mock_event_context)
