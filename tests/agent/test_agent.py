@@ -600,32 +600,13 @@ def test_invalid_config_agent_missing_org_id(
 def test_custom_user_agent(
     mock_gx_version_check: None,
     set_required_env_vars: None,
-    gx_agent_config: GXAgentConfig,
-    data_context_config: DataContextConfigTD,
-    fake_subscriber: FakeSubscriber,
 ):
     """Ensure custom User-Agent header is set on GX Cloud api calls."""
-    base_url = gx_agent_config.gx_cloud_base_url
-    org_id = gx_agent_config.gx_cloud_organization_id
-    with responses.RequestsMock() as rsps:
-        rsps.add(
-            responses.GET,
-            f"{base_url}organizations/{org_id}/accounts/me",
-            json={
-                "user_id": "12345678-1234-1234-1234-123456789abc",
-                "workspaces": [{"id": "workspace-123", "role": "admin"}],
-            },
-        )
-        rsps.add(
-            responses.GET,
-            f"{base_url}api/v1/organizations/{org_id}/workspaces/workspace-123/data-context-configuration",
-            json=data_context_config,
-        )
-        agent = GXAgent()
+    agent = GXAgent()
 
-        # Verify that the agent sets the correct User-Agent string property
-        expected_user_agent = f"{USER_AGENT_HEADER}/{GXAgent.get_current_gx_agent_version()}"
-        assert agent.user_agent_str == expected_user_agent
+    # Verify that the agent sets the correct User-Agent string property
+    expected_user_agent = f"{USER_AGENT_HEADER}/{GXAgent.get_current_gx_agent_version()}"
+    assert agent.user_agent_str == expected_user_agent
 
 
 @pytest.fixture
@@ -661,6 +642,7 @@ def test_correlation_id_header(
     datasource_config_id_1 = uuid.UUID("00000000-0000-0000-0000-000000000001")
     datasource_config_id_2 = uuid.UUID("00000000-0000-0000-0000-000000000002")
     checkpoint_id = uuid.UUID("00000000-0000-0000-0000-000000000003")
+    workspace_id = "12345678-1234-1234-1234-123456789abc"
     # seed the fake queue with an event that will be consumed by the agent
     fake_subscriber.test_queue.extendleft(
         [
@@ -668,7 +650,7 @@ def test_correlation_id_header(
                 DraftDatasourceConfigEvent(
                     config_id=datasource_config_id_1,
                     organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
-                    workspace_id=uuid.uuid4(),
+                    workspace_id=uuid.UUID(workspace_id),
                 ),
                 agent_correlation_ids[0],
             ),
@@ -676,7 +658,7 @@ def test_correlation_id_header(
                 DraftDatasourceConfigEvent(
                     config_id=datasource_config_id_2,
                     organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
-                    workspace_id=uuid.uuid4(),
+                    workspace_id=uuid.UUID(workspace_id),
                 ),
                 agent_correlation_ids[1],
             ),
@@ -685,7 +667,7 @@ def test_correlation_id_header(
                     checkpoint_id=checkpoint_id,
                     datasource_names_to_asset_names={},
                     organization_id=random_uuid,  # type: ignore[arg-type] # str coerced to UUID
-                    workspace_id=uuid.uuid4(),
+                    workspace_id=uuid.UUID(workspace_id),
                 ),
                 agent_correlation_ids[2],
             ),
@@ -699,17 +681,17 @@ def test_correlation_id_header(
             f"{base_url}organizations/{org_id}/accounts/me",
             json={
                 "user_id": "12345678-1234-1234-1234-123456789abc",
-                "workspaces": [{"id": "workspace-123", "role": "admin"}],
+                "workspaces": [{"id": workspace_id, "role": "admin"}],
             },
         )
         rsps.add(
             responses.GET,
-            f"{base_url}api/v1/organizations/{org_id}/workspaces/workspace-123/data-context-configuration",
+            f"{base_url}api/v1/organizations/{org_id}/workspaces/{workspace_id}/data-context-configuration",
             json=data_context_config,
         )
         rsps.add(
             responses.GET,
-            f"{base_url}api/v1/organizations/{org_id}/draft-datasources/{datasource_config_id_1}",
+            f"{base_url}api/v1/organizations/{org_id}/workspaces/{workspace_id}/draft-datasources/{datasource_config_id_1}",
             json={
                 "data": {
                     "config": {
@@ -722,7 +704,7 @@ def test_correlation_id_header(
         )
         rsps.add(
             responses.GET,
-            f"{base_url}api/v1/organizations/{org_id}/draft-datasources/{datasource_config_id_2}",
+            f"{base_url}api/v1/organizations/{org_id}/workspaces/{workspace_id}/draft-datasources/{datasource_config_id_2}",
             json={
                 "data": {
                     "config": {
@@ -735,7 +717,7 @@ def test_correlation_id_header(
         )
         rsps.add(
             responses.PUT,
-            f"{base_url}api/v1/organizations/{org_id}/draft-table-names/{datasource_config_id_1}",
+            f"{base_url}api/v1/organizations/{org_id}/workspaces/{workspace_id}/draft-table-names/{datasource_config_id_1}",
             json={
                 "data": {
                     "table_names": [],
@@ -744,7 +726,7 @@ def test_correlation_id_header(
         )
         rsps.add(
             responses.PUT,
-            f"{base_url}api/v1/organizations/{org_id}/draft-table-names/{datasource_config_id_2}",
+            f"{base_url}api/v1/organizations/{org_id}/workspaces/{workspace_id}/draft-table-names/{datasource_config_id_2}",
             json={
                 "data": {
                     "table_names": [],
