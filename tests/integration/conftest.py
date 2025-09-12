@@ -24,6 +24,13 @@ def org_id_env_var() -> str:
 
 
 @pytest.fixture(scope="module")
+def workspace_id_env_var() -> str:
+    workspace_id = os.environ.get("GX_CLOUD_WORKSPACE_ID")
+    assert workspace_id, "No GX_CLOUD_WORKSPACE_ID env var"
+    return workspace_id
+
+
+@pytest.fixture(scope="module")
 def token_env_var() -> str:
     gx_token = os.environ.get("GX_CLOUD_ACCESS_TOKEN")
     assert gx_token, "No GX_CLOUD_ACCESS_TOKEN env var"
@@ -31,13 +38,13 @@ def token_env_var() -> str:
 
 
 @pytest.fixture(scope="module")
-def context(org_id_env_var: str, token_env_var: str) -> CloudDataContext:
+def context(org_id_env_var: str, workspace_id_env_var: str, token_env_var: str) -> CloudDataContext:
     context = gx.get_context(
         mode="cloud",
         cloud_base_url=os.environ.get("GX_CLOUD_BASE_URL"),
         cloud_organization_id=org_id_env_var,
         cloud_access_token=token_env_var,
-        cloud_workspace_id=os.environ.get("GX_CLOUD_WORKSPACE_ID"),
+        cloud_workspace_id=workspace_id_env_var,
     )
     assert isinstance(context, CloudDataContext)
     return context

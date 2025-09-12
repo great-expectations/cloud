@@ -21,6 +21,7 @@ def test_running_draft_datasource_config_action(
     context: CloudDataContext,
     cloud_base_url: str,
     org_id_env_var: str,
+    workspace_id_env_var: str,
     token_env_var: str,
     mocker: MockerFixture,
 ):
@@ -41,7 +42,7 @@ def test_running_draft_datasource_config_action(
         type="test_datasource_config",
         config_id=UUID(draft_datasource_id_for_connect_successfully),
         organization_id=UUID(org_id_env_var),
-        workspace_id=UUID(org_id_env_var),
+        workspace_id=UUID(workspace_id_env_var),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
