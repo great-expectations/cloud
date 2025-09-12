@@ -59,7 +59,7 @@ def graphql_test_client(
     org_id_env_var,
 ):
     mercury_api_host = "localhost"
-    mercury_api_port = 6002
+    mercury_api_port = 5000
 
     class GraphQlTestClient:
         client = requests.Session()
