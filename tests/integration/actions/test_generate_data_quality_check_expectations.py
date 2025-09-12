@@ -141,6 +141,7 @@ def test_generate_data_quality_check_expectations_action_schema_change_selected_
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
+    workspace_id_env_var_local: str,
     cloud_base_url: str,
     token_env_var_local: str,
     seed_and_cleanup_test_data,
@@ -160,7 +161,7 @@ def test_generate_data_quality_check_expectations_action_schema_change_selected_
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
-        workspace_id=uuid.uuid4(),
+        workspace_id=uuid.UUID(workspace_id_env_var_local),
         selected_data_quality_issues=[DataQualityIssues.SCHEMA],
     )
 
@@ -187,6 +188,7 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
+    workspace_id_env_var_local: str,
     cloud_base_url: str,
     token_env_var_local: str,
     seed_and_cleanup_test_data,
@@ -206,11 +208,11 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
+        workspace_id=uuid.UUID(workspace_id_env_var_local),
         selected_data_quality_issues=[
             DataQualityIssues.SCHEMA,
             DataQualityIssues.VOLUME,
         ],
-        workspace_id=uuid.uuid4(),
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
@@ -237,6 +239,7 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
+    workspace_id_env_var_local: str,
     cloud_base_url: str,
     token_env_var_local: str,
     seed_and_cleanup_test_data,
@@ -277,8 +280,8 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
+        workspace_id=uuid.UUID(workspace_id_env_var_local),
         selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-        workspace_id=uuid.uuid4(),
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
@@ -318,6 +321,7 @@ def test_generate_data_quality_check_expectations_action_completeness_with_propo
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
+    workspace_id_env_var_local: str,
     cloud_base_url: str,
     token_env_var_local: str,
     seed_and_cleanup_test_data,
@@ -358,8 +362,8 @@ def test_generate_data_quality_check_expectations_action_completeness_with_propo
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
+        workspace_id=uuid.UUID(workspace_id_env_var_local),
         selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
-        workspace_id=uuid.uuid4(),
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
@@ -422,6 +426,7 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
     org_id_env_var_local: str,
+    workspace_id_env_var_local: str,
     cloud_base_url: str,
     token_env_var_local: str,
     seed_and_cleanup_test_data,
@@ -444,8 +449,8 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var_local),
+        workspace_id=uuid.UUID(workspace_id_env_var_local),
         selected_data_quality_issues=[DataQualityIssues.SCHEMA, DataQualityIssues.VOLUME],
-        workspace_id=uuid.uuid4(),
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
