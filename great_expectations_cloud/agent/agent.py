@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import sys
+import os
+import signal
 import traceback
 import warnings
 from collections import defaultdict
@@ -218,7 +219,7 @@ class GXAgent:
             LOGGER.exception("The connection to GX Cloud has encountered an error.")
         except GXAgentUnrecoverableConnectionError:
             LOGGER.exception("The connection to GX Cloud has encountered an unrecoverable error.")
-            sys.exit(1)
+            os.kill(os.getpid(), signal.SIGTERM)
         except (
             AuthenticationError,
             ProbableAuthenticationError,
