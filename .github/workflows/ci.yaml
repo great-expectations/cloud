@@ -4,6 +4,7 @@ on:
   pull_request:
   schedule:
     - cron: "0 */2 * * *"
+  workflow_dispatch: # allows manual triggering with branch picker
 
 jobs:
   static-analysis:
