@@ -37,6 +37,7 @@ def context(org_id_env_var: str, token_env_var: str) -> CloudDataContext:
         cloud_base_url=os.environ.get("GX_CLOUD_BASE_URL"),
         cloud_organization_id=org_id_env_var,
         cloud_access_token=token_env_var,
+        cloud_workspace_id=os.environ.get("GX_CLOUD_WORKSPACE_ID"),
     )
     assert isinstance(context, CloudDataContext)
     return context
