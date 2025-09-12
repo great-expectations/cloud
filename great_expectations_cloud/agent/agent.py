@@ -17,11 +17,10 @@ from uuid import UUID
 
 import orjson
 import requests
-from great_expectations import __version__
+from great_expectations import __version__, get_context
 from great_expectations.core import http
 from great_expectations.core.http import create_session
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
-from great_expectations.data_context.data_context.context_factory import get_context
 from great_expectations.data_context.types.base import ProgressBarsConfig
 from pika.adapters.utils.connection_workflow import AMQPConnectorException
 from pika.exceptions import (
@@ -278,15 +277,12 @@ class GXAgent:
         """Create a new CloudDataContext for each job using the event's workspace_id."""
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
-            # Validate presence of workspace_id (required), even if not passed directly to get_context
-            if getattr(event_context.event, "workspace_id", None) is None:
-                raise GXAgentError()
-
-            # TODO: do we need to pass the workspace_id to get_context?
+            workspace_id = self.get_workspace_id(event_context)
 
             context: CloudDataContext = get_context(
                 cloud_mode=True,
                 user_agent_str=self.user_agent_str,
+                cloud_workspace_id=str(workspace_id),
             )
             self._configure_progress_bars(data_context=context)
         return context
