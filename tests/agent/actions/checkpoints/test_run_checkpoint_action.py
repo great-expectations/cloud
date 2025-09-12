@@ -9,9 +9,14 @@ import pytest
 import responses
 from great_expectations import Checkpoint, ValidationDefinition
 from great_expectations.core import ExpectationSuiteValidationResult
-from great_expectations.data_context.types.resource_identifiers import ValidationResultIdentifier
+from great_expectations.data_context.types.resource_identifiers import (
+    ValidationResultIdentifier,
+)
 from great_expectations.datasource.fluent import Datasource
-from great_expectations.datasource.fluent.interfaces import DataAsset, TestConnectionError
+from great_expectations.datasource.fluent.interfaces import (
+    DataAsset,
+    TestConnectionError,
+)
 from great_expectations.exceptions import GXCloudError
 
 from great_expectations_cloud.agent.actions import RunWindowCheckpointAction
@@ -147,7 +152,7 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
     event.splitter_options = splitter_options
 
     if event.type == "run_scheduled_checkpoint.received":
-        url = f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
+        url = f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
         responses.get(
             url,
             json={"data": {"expectation_parameters": {"something_min": 0, "something_max": 1}}},
@@ -210,7 +215,7 @@ def test_run_checkpoint_action_raises_on_test_connection_failure(
     # Test errs with and without this mock for the window checkpoint
     if event.type == "run_scheduled_checkpoint.received":
         responses.get(
-            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
+            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
             json={"data": {"expectation_parameters": {}}},
         )
 
@@ -246,7 +251,7 @@ def test_run_checkpoint_action_raises_on_gx_cloud_error(
     if event.type == "run_scheduled_checkpoint.received":
         responses.add(
             method=responses.GET,
-            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
+            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
             status=503,
         )
 
@@ -282,7 +287,7 @@ def test_run_checkpoint_action_raises_on_key_error(
     if event.type == "run_scheduled_checkpoint.received":
         responses.add(
             method=responses.GET,
-            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
+            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
             status=200,
             json={"data": {}},
         )

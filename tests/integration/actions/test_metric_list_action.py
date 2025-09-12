@@ -11,9 +11,7 @@ from great_expectations.datasource.fluent import PostgresDatasource
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
 
 from great_expectations_cloud.agent.actions import MetricListAction
-from great_expectations_cloud.agent.models import (
-    RunMetricsListEvent,
-)
+from great_expectations_cloud.agent.models import RunMetricsListEvent
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -61,7 +59,7 @@ def graphql_test_client(
     org_id_env_var,
 ):
     mercury_api_host = "localhost"
-    mercury_api_port = 5000
+    mercury_api_port = 6002
 
     class GraphQlTestClient:
         client = requests.Session()
