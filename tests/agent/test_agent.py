@@ -23,7 +23,7 @@ from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.agent import GXAgentConfig
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER
-from great_expectations_cloud.agent.exceptions import GXAgentConfigError
+from great_expectations_cloud.agent.exceptions import GXAgentConfigError, GXAgentError
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     AsyncRabbitMQClient,
     ClientError,
@@ -860,3 +860,18 @@ def test_handle_event_as_thread_exit_update_status_failure(mocker, gx_agent_conf
     # Should nack the message since we failed to update the status
     event_context.processed_with_failures.assert_called_once()
     assert agent._current_task is None
+
+
+def test_get_workspace_id_raises_when_workspace_id_missing(
+    set_required_env_vars: None,
+    mock_gx_version_check: None,
+    mocker,
+):
+    agent = GXAgent()
+
+    # mock event context where event has no workspace_id
+    mock_event_context = mocker.Mock(spec=EventContext)
+    mock_event_context.event = mocker.Mock()
+
+    with pytest.raises(GXAgentError):
+        agent.get_workspace_id(mock_event_context)

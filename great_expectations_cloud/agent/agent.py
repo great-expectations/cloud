@@ -148,7 +148,6 @@ class GXAgent:
                 "great_expectations_version": great_expectations_version,
             },
         )
-        # DataContext is created per job in get_data_context
 
         # Create a thread pool with a single worker, so we can run long-lived
         # GX processes and maintain our connection to the broker. Note that
@@ -279,12 +278,17 @@ class GXAgent:
             warnings.filterwarnings("ignore", message="You are using great_expectations version")
             workspace_id = self.get_workspace_id(event_context)
 
+            LOGGER.debug("Loading a DataContext - this might take a moment.")
+
             context: CloudDataContext = get_context(
                 cloud_mode=True,
                 user_agent_str=self.user_agent_str,
                 cloud_workspace_id=str(workspace_id),
             )
             self._configure_progress_bars(data_context=context)
+
+            LOGGER.debug("DataContext is ready.")
+
         return context
 
     def get_organization_id(self, event_context: EventContext) -> UUID:
