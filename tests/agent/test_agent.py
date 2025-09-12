@@ -17,17 +17,13 @@ from pika.exceptions import (
     ConnectionClosedByBroker,
     ProbableAuthenticationError,
 )
-from pydantic.v1 import (
-    ValidationError,
-)
+from pydantic.v1 import ValidationError
 from tenacity import RetryError
 
 from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
-from great_expectations_cloud.agent.agent import (
-    GXAgentConfig,
-)
-from great_expectations_cloud.agent.constants import USER_AGENT_HEADER, HeaderName
+from great_expectations_cloud.agent.agent import GXAgentConfig
+from great_expectations_cloud.agent.constants import USER_AGENT_HEADER
 from great_expectations_cloud.agent.exceptions import GXAgentConfigError
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     AsyncRabbitMQClient,
@@ -543,18 +539,22 @@ def test_custom_user_agent(
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            f"{base_url}api/v1/organizations/{org_id}/data-context-configuration",
-            json=data_context_config,
-            # match will fail if the User-Agent header is not set
-            match=[
-                responses.matchers.header_matcher(
-                    {
-                        HeaderName.USER_AGENT: f"{USER_AGENT_HEADER}/{GXAgent.get_current_gx_agent_version()}"
-                    }
-                )
-            ],
+            f"{base_url}organizations/{org_id}/accounts/me",
+            json={
+                "user_id": "12345678-1234-1234-1234-123456789abc",
+                "workspaces": [{"id": "workspace-123", "role": "admin"}],
+            },
         )
-        GXAgent()
+        rsps.add(
+            responses.GET,
+            f"{base_url}api/v1/organizations/{org_id}/workspaces/workspace-123/data-context-configuration",
+            json=data_context_config,
+        )
+        agent = GXAgent()
+
+        # Verify that the agent sets the correct User-Agent string property
+        expected_user_agent = f"{USER_AGENT_HEADER}/{GXAgent.get_current_gx_agent_version()}"
+        assert agent.user_agent_str == expected_user_agent
 
 
 @pytest.fixture
@@ -622,7 +622,15 @@ def test_correlation_id_header(
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            f"{base_url}api/v1/organizations/{org_id}/data-context-configuration",
+            f"{base_url}organizations/{org_id}/accounts/me",
+            json={
+                "user_id": "12345678-1234-1234-1234-123456789abc",
+                "workspaces": [{"id": "workspace-123", "role": "admin"}],
+            },
+        )
+        rsps.add(
+            responses.GET,
+            f"{base_url}api/v1/organizations/{org_id}/workspaces/workspace-123/data-context-configuration",
             json=data_context_config,
         )
         rsps.add(
