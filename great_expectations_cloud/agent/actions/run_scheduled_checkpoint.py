@@ -48,6 +48,7 @@ def run_scheduled_checkpoint(
             response=response,
         )
     data = response.json()
+
     try:
         expectation_parameters = (
             data["data"]["expectation_parameters"]
