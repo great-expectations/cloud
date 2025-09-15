@@ -11,9 +11,7 @@ from great_expectations.datasource.fluent import PostgresDatasource
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
 
 from great_expectations_cloud.agent.actions import MetricListAction
-from great_expectations_cloud.agent.models import (
-    RunMetricsListEvent,
-)
+from great_expectations_cloud.agent.models import RunMetricsListEvent
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -131,6 +129,7 @@ def test_running_metric_list_action(
             MetricTypes.TABLE_ROW_COUNT,
         ],
         organization_id=uuid.UUID(org_id_env_var),
+        workspace_id=uuid.uuid4(),
     )
 
     action = MetricListAction(

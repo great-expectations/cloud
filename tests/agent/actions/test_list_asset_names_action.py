@@ -6,15 +6,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 import responses
-from great_expectations.datasource.fluent import (
-    PandasDatasource,
-    SQLDatasource,
-)
+from great_expectations.datasource.fluent import PandasDatasource, SQLDatasource
 from great_expectations.exceptions import StoreBackendError
 
-from great_expectations_cloud.agent.actions import (
-    ListAssetNamesAction,
-)
+from great_expectations_cloud.agent.actions import ListAssetNamesAction
 from great_expectations_cloud.agent.actions.utils import get_asset_names
 from great_expectations_cloud.agent.models import ListAssetNamesEvent
 
@@ -59,6 +54,7 @@ def event():
         type="list_table_names_request.received",
         datasource_name="test-datasource",
         organization_id=uuid.uuid4(),
+        workspace_id=uuid.uuid4(),
     )
 
 
@@ -104,7 +100,9 @@ def test_run_list_table_names_action_returns_action_result(
     mock_context.data_sources.get.return_value = datasource
 
     responses.put(
-        re.compile(rf"{dummy_base_url}/api/v1/organizations/{dummy_org_id}/table-names/.*"),
+        re.compile(
+            rf"{dummy_base_url}/api/v1/organizations/{dummy_org_id}/workspaces/.*/table-names/.*"
+        ),
         status=200,
     )
 

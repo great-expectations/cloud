@@ -19,6 +19,7 @@ def test_running_list_table_names_action(
     context: CloudDataContext,
     cloud_base_url: str,
     org_id_env_var: str,
+    workspace_id_env_var: str,
     token_env_var: str,
     mocker: MockerFixture,
 ):
@@ -34,6 +35,7 @@ def test_running_list_table_names_action(
         type="list_table_names_request.received",
         datasource_name="local_mercury_db",
         organization_id=UUID(org_id_env_var),
+        workspace_id=UUID(workspace_id_env_var),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -79,7 +81,11 @@ def test_running_list_table_names_action(
 
 
 def test_running_list_table_names_action_fails_for_unreachable_datasource(
-    context: CloudDataContext, cloud_base_url: str, org_id_env_var: str, token_env_var: str
+    context: CloudDataContext,
+    cloud_base_url: str,
+    org_id_env_var: str,
+    workspace_id_env_var: str,
+    token_env_var: str,
 ):
     # Arrange
     action = ListAssetNamesAction(
@@ -90,8 +96,9 @@ def test_running_list_table_names_action_fails_for_unreachable_datasource(
     )
     list_table_names_event = ListAssetNamesEvent(
         type="list_table_names_request.received",
+        datasource_name="unreachable_datasource",
         organization_id=UUID(org_id_env_var),
-        datasource_name="local_mercury_db_bad_password",
+        workspace_id=UUID(workspace_id_env_var),
     )
     event_id = "64842838-c7bf-4038-8b27-c7a32eba4b7b"
 

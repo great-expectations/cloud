@@ -10,9 +10,7 @@ import responses
 
 from great_expectations_cloud.agent.actions import RunWindowCheckpointAction
 from great_expectations_cloud.agent.config import GxAgentEnvVars
-from great_expectations_cloud.agent.models import (
-    RunWindowCheckpointEvent,
-)
+from great_expectations_cloud.agent.models import RunWindowCheckpointEvent
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -70,10 +68,11 @@ def test_run_window_checkpoint(
         datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
         organization_id=UUID(env_vars.gx_cloud_organization_id),
         checkpoint_id=checkpoint_id,
+        workspace_id=uuid.uuid4(),
     )
     expected_url: str = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/checkpoints/{checkpoint_id}/expectation-parameters"
+        f"/workspaces/{event.workspace_id}/checkpoints/{checkpoint_id}/expectation-parameters"
     )
     # 'https://test-base-url/api/v1/organizations/81f4e105-e37d-4168-85a0-2526943f9956/checkpoints/120ba4c5-2004-4222-9d34-c59e6059a6f7/expectation-parameters'
     expectation_parameters = {"param_name_min": 4.0, "param_name_max": 6.0}

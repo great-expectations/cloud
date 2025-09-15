@@ -92,37 +92,28 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
     data_source.delete_asset(name="local-mercury-db-checkpoints-table")
 
 
-@pytest.fixture
-def org_id_env_var_local():
-    return "0ccac18e-7631-4bdd-8a42-3c35cce574c6"
-
-
-@pytest.fixture
-def token_env_var_local():
-    return os.environ.get("GX_CLOUD_ACCESS_TOKEN")
-
-
 def test_generate_data_quality_check_expectations_action_no_selected_data_quality_issues(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
-    org_id_env_var_local: str,
+    org_id_env_var: str,
     cloud_base_url: str,
-    token_env_var_local: str,
+    token_env_var: str,
     seed_and_cleanup_test_data,
 ):
     generate_schema_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
         type="generate_data_quality_check_expectations_request.received",
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
-        organization_id=uuid.UUID(org_id_env_var_local),
+        organization_id=uuid.UUID(org_id_env_var),
+        workspace_id=uuid.uuid4(),
         selected_data_quality_issues=None,
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var_local),
-        auth_key=token_env_var_local,
+        organization_id=uuid.UUID(org_id_env_var),
+        auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -139,9 +130,10 @@ def test_generate_data_quality_check_expectations_action_no_selected_data_qualit
 def test_generate_data_quality_check_expectations_action_schema_change_selected_data_quality_issues_no_pre_existing_anomaly_detection_coverage(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
-    org_id_env_var_local: str,
+    org_id_env_var: str,
+    workspace_id_env_var: str,
     cloud_base_url: str,
-    token_env_var_local: str,
+    token_env_var: str,
     seed_and_cleanup_test_data,
     monkeypatch,
 ):
@@ -158,15 +150,16 @@ def test_generate_data_quality_check_expectations_action_schema_change_selected_
         type="generate_data_quality_check_expectations_request.received",
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
-        organization_id=uuid.UUID(org_id_env_var_local),
+        organization_id=uuid.UUID(org_id_env_var),
+        workspace_id=uuid.UUID(workspace_id_env_var),
         selected_data_quality_issues=[DataQualityIssues.SCHEMA],
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var_local),
-        auth_key=token_env_var_local,
+        organization_id=uuid.UUID(org_id_env_var),
+        auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -184,9 +177,10 @@ def test_generate_data_quality_check_expectations_action_schema_change_selected_
 def test_generate_data_quality_check_expectations_action_multiple_selected_data_quality_issues_no_pre_existing_anomaly_detection_coverage(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
-    org_id_env_var_local: str,
+    org_id_env_var: str,
+    workspace_id_env_var: str,
     cloud_base_url: str,
-    token_env_var_local: str,
+    token_env_var: str,
     seed_and_cleanup_test_data,
     monkeypatch,
 ):
@@ -203,7 +197,8 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
         type="generate_data_quality_check_expectations_request.received",
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
-        organization_id=uuid.UUID(org_id_env_var_local),
+        organization_id=uuid.UUID(org_id_env_var),
+        workspace_id=uuid.UUID(workspace_id_env_var),
         selected_data_quality_issues=[
             DataQualityIssues.SCHEMA,
             DataQualityIssues.VOLUME,
@@ -213,8 +208,8 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var_local),
-        auth_key=token_env_var_local,
+        organization_id=uuid.UUID(org_id_env_var),
+        auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -233,9 +228,10 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
 def test_generate_data_quality_check_expectations_action_completeness_selected_data_quality_issues_no_pre_existing_anomaly_detection_coverage(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
-    org_id_env_var_local: str,
+    org_id_env_var: str,
+    workspace_id_env_var: str,
     cloud_base_url: str,
-    token_env_var_local: str,
+    token_env_var: str,
     seed_and_cleanup_test_data,
     monkeypatch,
 ):
@@ -273,15 +269,16 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
         type="generate_data_quality_check_expectations_request.received",
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
-        organization_id=uuid.UUID(org_id_env_var_local),
+        organization_id=uuid.UUID(org_id_env_var),
+        workspace_id=uuid.UUID(workspace_id_env_var),
         selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var_local),
-        auth_key=token_env_var_local,
+        organization_id=uuid.UUID(org_id_env_var),
+        auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -313,9 +310,10 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
 def test_generate_data_quality_check_expectations_action_completeness_with_proportion_approach(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
-    org_id_env_var_local: str,
+    org_id_env_var: str,
+    workspace_id_env_var: str,
     cloud_base_url: str,
-    token_env_var_local: str,
+    token_env_var: str,
     seed_and_cleanup_test_data,
     monkeypatch,
 ):
@@ -353,15 +351,16 @@ def test_generate_data_quality_check_expectations_action_completeness_with_propo
         type="generate_data_quality_check_expectations_request.received",
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
-        organization_id=uuid.UUID(org_id_env_var_local),
+        organization_id=uuid.UUID(org_id_env_var),
+        workspace_id=uuid.UUID(workspace_id_env_var),
         selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var_local),
-        auth_key=token_env_var_local,
+        organization_id=uuid.UUID(org_id_env_var),
+        auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -416,9 +415,10 @@ def test_generate_data_quality_check_expectations_action_completeness_with_propo
 def test_generate_data_quality_check_expectations_action_multiple_selected_data_quality_issues_pre_existing_volume_anomaly_detection_coverage(
     context: CloudDataContext,
     user_api_token_headers_org_admin_sc_org,
-    org_id_env_var_local: str,
+    org_id_env_var: str,
+    workspace_id_env_var: str,
     cloud_base_url: str,
-    token_env_var_local: str,
+    token_env_var: str,
     seed_and_cleanup_test_data,
     monkeypatch,
 ):
@@ -438,15 +438,16 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
         type="generate_data_quality_check_expectations_request.received",
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
-        organization_id=uuid.UUID(org_id_env_var_local),
+        organization_id=uuid.UUID(org_id_env_var),
+        workspace_id=uuid.UUID(workspace_id_env_var),
         selected_data_quality_issues=[DataQualityIssues.SCHEMA, DataQualityIssues.VOLUME],
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var_local),
-        auth_key=token_env_var_local,
+        organization_id=uuid.UUID(org_id_env_var),
+        auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 

@@ -10,7 +10,10 @@ from uuid import UUID
 
 import great_expectations.expectations as gx_expectations
 from great_expectations.core.http import create_session
-from great_expectations.exceptions import GXCloudError, InvalidExpectationConfigurationError
+from great_expectations.exceptions import (
+    GXCloudError,
+    InvalidExpectationConfigurationError,
+)
 from great_expectations.expectations.metadata_types import (
     DataQualityIssues,
     FailureSeverity,
@@ -49,9 +52,7 @@ from great_expectations_cloud.agent.utils import (
 )
 
 if TYPE_CHECKING:
-    from great_expectations.core.suite_parameters import (
-        SuiteParameterDict,
-    )
+    from great_expectations.core.suite_parameters import SuiteParameterDict
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent import DataAsset
 
@@ -100,6 +101,8 @@ class GenerateDataQualityCheckExpectationsAction(
 
     @override
     def run(self, event: GenerateDataQualityCheckExpectationsEvent, id: str) -> ActionResult:
+        self._workspace_id = event.workspace_id
+
         created_resources: list[CreatedResource] = []
         assets_with_errors: list[str] = []
         selected_dqis: Sequence[DataQualityIssues] = event.selected_data_quality_issues or []
@@ -224,7 +227,7 @@ class GenerateDataQualityCheckExpectationsAction(
         """
         url = urljoin(
             base=self._base_url,
-            url=f"/api/v1/organizations/{self._organization_id}/expectations/",
+            url=f"/api/v1/organizations/{self._organization_id}/workspaces/{self._workspace_id}/expectations/",
         )
         with create_session(access_token=self._auth_key) as session:
             response = session.get(
@@ -526,7 +529,7 @@ class GenerateDataQualityCheckExpectationsAction(
     ) -> UUID:
         url = urljoin(
             base=self._base_url,
-            url=f"/api/v1/organizations/{self._organization_id}/expectations/{asset_id}",
+            url=f"/api/v1/organizations/{self._organization_id}/workspaces/{self._workspace_id}/expectations/{asset_id}",
         )
 
         expectation_payload = expectation.configuration.to_json_dict()

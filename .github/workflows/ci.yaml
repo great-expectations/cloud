@@ -4,6 +4,7 @@ on:
   pull_request:
   schedule:
     - cron: "0 */2 * * *"
+  workflow_dispatch: # allows manual triggering with branch picker
 
 jobs:
   static-analysis:
@@ -67,6 +68,7 @@ jobs:
       # GX Agent
       GX_CLOUD_ACCESS_TOKEN: ${{ secrets.GX_CLOUD_ACCESS_TOKEN }}
       GX_CLOUD_ORGANIZATION_ID: ${{ secrets.GX_CLOUD_ORGANIZATION_ID }}
+      GX_CLOUD_WORKSPACE_ID: ${{ secrets.GX_CLOUD_WORKSPACE_ID }}
       GX_CLOUD_BASE_URL: "http://localhost:5000"
       # GX Cloud
       AUTH0_DOMAIN: ${{secrets.AUTH0_DOMAIN}}
@@ -105,7 +107,7 @@ jobs:
           docker compose -f docker-compose.yml logs
 
       - name: Run tests
-        run: poetry run pytest -vv -m integration -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml --junitxml=junit.xml -ra
+        run: poetry run pytest -vv -m integration -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml --junitxml=junit.xml -rEf
 
       # upload coverage report to codecov
       - name: Upload coverage reports to Codecov

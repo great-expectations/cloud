@@ -13,9 +13,7 @@ from great_expectations_cloud.agent.actions.agent_action import (
 )
 from great_expectations_cloud.agent.actions.run_checkpoint import run_checkpoint
 from great_expectations_cloud.agent.event_handler import register_event_action
-from great_expectations_cloud.agent.models import (
-    RunWindowCheckpointEvent,
-)
+from great_expectations_cloud.agent.models import RunWindowCheckpointEvent
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -26,7 +24,7 @@ class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
     def run(self, event: RunWindowCheckpointEvent, id: str) -> ActionResult:
         expectation_parameters_url = urljoin(
             base=self._base_url,
-            url=f"/api/v1/organizations/{self._organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
+            url=f"/api/v1/organizations/{self._organization_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
         )
         return run_window_checkpoint(
             self._context,

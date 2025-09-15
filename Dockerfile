@@ -72,5 +72,4 @@ ENV GX_ANALYTICS_ENABLED=false
 # Disable progress bars
 ENV ENABLE_PROGRESS_BARS=false
 
-ENTRYPOINT ["tini", "--"]
-CMD ["poetry", "run", "gx-agent"]
+ENTRYPOINT ["tini", "--", "poetry", "run", "gx-agent"]

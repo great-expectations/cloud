@@ -70,6 +70,7 @@ def checkpoint_event(checkpoint, datasource_names_to_asset_names, org_id_env_var
         checkpoint_id=checkpoint.ge_cloud_id,
         datasource_names_to_asset_names=datasource_names_to_asset_names,
         organization_id=uuid.UUID(org_id_env_var),
+        workspace_id=uuid.uuid4(),
     )
 
 

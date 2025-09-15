@@ -21,6 +21,7 @@ def test_running_draft_datasource_config_action(
     context: CloudDataContext,
     cloud_base_url: str,
     org_id_env_var: str,
+    workspace_id_env_var: str,
     token_env_var: str,
     mocker: MockerFixture,
 ):
@@ -41,6 +42,7 @@ def test_running_draft_datasource_config_action(
         type="test_datasource_config",
         config_id=UUID(draft_datasource_id_for_connect_successfully),
         organization_id=UUID(org_id_env_var),
+        workspace_id=UUID(workspace_id_env_var),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -83,7 +85,11 @@ def test_running_draft_datasource_config_action(
 
 
 def test_running_draft_datasource_config_action_fails_for_unreachable_datasource(
-    context: CloudDataContext, cloud_base_url: str, org_id_env_var: str, token_env_var: str
+    context: CloudDataContext,
+    cloud_base_url: str,
+    org_id_env_var: str,
+    workspace_id_env_var: str,
+    token_env_var: str,
 ):
     # Arrange
     # Note: Draft config is loaded in mercury seed data
@@ -101,6 +107,7 @@ def test_running_draft_datasource_config_action_fails_for_unreachable_datasource
         type="test_datasource_config",
         config_id=UUID(datasource_id_for_connect_failure),
         organization_id=UUID(org_id_env_var),
+        workspace_id=UUID(workspace_id_env_var),
     )
     event_id = "64842838-c7bf-4038-8b27-c7a32eba4b7b"
 

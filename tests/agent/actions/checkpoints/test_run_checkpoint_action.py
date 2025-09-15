@@ -9,9 +9,14 @@ import pytest
 import responses
 from great_expectations import Checkpoint, ValidationDefinition
 from great_expectations.core import ExpectationSuiteValidationResult
-from great_expectations.data_context.types.resource_identifiers import ValidationResultIdentifier
+from great_expectations.data_context.types.resource_identifiers import (
+    ValidationResultIdentifier,
+)
 from great_expectations.datasource.fluent import Datasource
-from great_expectations.datasource.fluent.interfaces import DataAsset, TestConnectionError
+from great_expectations.datasource.fluent.interfaces import (
+    DataAsset,
+    TestConnectionError,
+)
 from great_expectations.exceptions import GXCloudError
 
 from great_expectations_cloud.agent.actions import RunWindowCheckpointAction
@@ -65,6 +70,7 @@ run_checkpoint_action_class_and_event = (
         checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
         checkpoint_name="Checkpoint Z",
         organization_id=UUID(fixture_id),
+        workspace_id=uuid.uuid4(),
     ),
     None,
 )
@@ -77,6 +83,7 @@ run_scheduled_checkpoint_action_class_and_event = (
         checkpoint_name="Checkpoint Z",
         schedule_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
         organization_id=UUID(fixture_id),
+        workspace_id=uuid.uuid4(),
     ),
     "great_expectations_cloud.agent.actions.run_scheduled_checkpoint.run_checkpoint",
 )
@@ -87,6 +94,7 @@ run_window_checkpoint_action_class_and_event = (
         datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
         checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
         organization_id=UUID(fixture_id),
+        workspace_id=uuid.uuid4(),
     ),
 )
 
@@ -144,7 +152,7 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
     event.splitter_options = splitter_options
 
     if event.type == "run_scheduled_checkpoint.received":
-        url = f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
+        url = f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
         responses.get(
             url,
             json={"data": {"expectation_parameters": {"something_min": 0, "something_max": 1}}},
@@ -207,7 +215,7 @@ def test_run_checkpoint_action_raises_on_test_connection_failure(
     # Test errs with and without this mock for the window checkpoint
     if event.type == "run_scheduled_checkpoint.received":
         responses.get(
-            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
+            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
             json={"data": {"expectation_parameters": {}}},
         )
 
@@ -243,7 +251,7 @@ def test_run_checkpoint_action_raises_on_gx_cloud_error(
     if event.type == "run_scheduled_checkpoint.received":
         responses.add(
             method=responses.GET,
-            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
+            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
             status=503,
         )
 
@@ -279,7 +287,7 @@ def test_run_checkpoint_action_raises_on_key_error(
     if event.type == "run_scheduled_checkpoint.received":
         responses.add(
             method=responses.GET,
-            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
+            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
             status=200,
             json={"data": {}},
         )
