@@ -40,7 +40,9 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
     def check_draft_datasource_config(
         self, event: DraftDatasourceConfigEvent, id: str
     ) -> ActionResult:
-        draft_config = self.get_draft_config(config_id=event.config_id)
+        draft_config = self.get_draft_config(
+            config_id=event.config_id, workspace_id=event.workspace_id
+        )
         datasource_type = draft_config.get("type", None)
         if datasource_type is None:
             raise TypeError(  # noqa: TRY003 # one off error
@@ -58,7 +60,9 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
 
         if isinstance(datasource, SQLDatasource):
             asset_names = get_asset_names(datasource)
-            self._update_asset_names_list(config_id=event.config_id, asset_names=asset_names)
+            self._update_asset_names_list(
+                config_id=event.config_id, workspace_id=event.workspace_id, asset_names=asset_names
+            )
 
         return ActionResult(
             id=id,
@@ -66,11 +70,13 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
             created_resources=[],
         )
 
-    def _update_asset_names_list(self, config_id: UUID, asset_names: list[str]) -> None:
+    def _update_asset_names_list(
+        self, config_id: UUID, workspace_id: UUID, asset_names: list[str]
+    ) -> None:
         with create_session(access_token=self._auth_key) as session:
             url = urljoin(
                 base=self._base_url,
-                url=f"/api/v1/organizations/{self._organization_id}/draft-table-names/{config_id}",
+                url=f"/api/v1/organizations/{self._organization_id}/workspaces/{workspace_id}/draft-table-names/{config_id}",
             )
             response = session.put(
                 url=url,
@@ -84,10 +90,10 @@ class DraftDatasourceConfigAction(AgentAction[DraftDatasourceConfigEvent]):
                 f"={config_id}.",
             )
 
-    def get_draft_config(self, config_id: UUID) -> dict[str, Any]:
+    def get_draft_config(self, config_id: UUID, workspace_id: UUID) -> dict[str, Any]:
         resource_url = urljoin(
             base=self._base_url,
-            url=f"/api/v1/organizations/{self._organization_id}/draft-datasources/{config_id}",
+            url=f"/api/v1/organizations/{self._organization_id}/workspaces/{workspace_id}/draft-datasources/{config_id}",
         )
         with create_session(access_token=self._auth_key) as session:
             response = session.get(resource_url)

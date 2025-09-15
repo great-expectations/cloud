@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from urllib.parse import urljoin
+from uuid import UUID
 
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
@@ -13,9 +14,7 @@ from great_expectations_cloud.agent.actions.agent_action import (
 )
 from great_expectations_cloud.agent.actions.utils import get_asset_names
 from great_expectations_cloud.agent.event_handler import register_event_action
-from great_expectations_cloud.agent.models import (
-    ListAssetNamesEvent,
-)
+from great_expectations_cloud.agent.models import ListAssetNamesEvent
 
 
 class ListAssetNamesAction(AgentAction[ListAssetNamesEvent]):
@@ -34,7 +33,9 @@ class ListAssetNamesAction(AgentAction[ListAssetNamesEvent]):
         asset_names = get_asset_names(datasource)
 
         self._add_or_update_asset_names_list(
-            datasource_id=str(datasource.id), asset_names=asset_names
+            datasource_id=str(datasource.id),
+            workspace_id=event.workspace_id,
+            asset_names=asset_names,
         )
 
         return ActionResult(
@@ -43,11 +44,13 @@ class ListAssetNamesAction(AgentAction[ListAssetNamesEvent]):
             created_resources=[],
         )
 
-    def _add_or_update_asset_names_list(self, datasource_id: str, asset_names: list[str]) -> None:
+    def _add_or_update_asset_names_list(
+        self, datasource_id: str, workspace_id: UUID, asset_names: list[str]
+    ) -> None:
         with create_session(access_token=self._auth_key) as session:
             url = urljoin(
                 base=self._base_url,
-                url=f"/api/v1/organizations/{self._organization_id}/table-names/{datasource_id}",
+                url=f"/api/v1/organizations/{self._organization_id}/workspaces/{workspace_id}/table-names/{datasource_id}",
             )
             response = session.put(
                 url=url,
