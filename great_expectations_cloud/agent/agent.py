@@ -248,7 +248,7 @@ class GXAgent:
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
                     "organization_id": self.get_organization_id(event_context),
-                    "workspace_id": str(self.get_workspace_id(event_context)),
+                    "workspace_id": str(workspace_id := self.get_workspace_id(event_context)) if workspace_id else "None",
                     "schedule_id": event_context.event.schedule_id
                     if isinstance(event_context.event, ScheduledEventBase)
                     else None,
@@ -283,7 +283,7 @@ class GXAgent:
             context: CloudDataContext = get_context(
                 cloud_mode=True,
                 user_agent_str=self.user_agent_str,
-                cloud_workspace_id=str(workspace_id),
+                cloud_workspace_id=str(workspace_id) if workspace_id else None,
             )
             self._configure_progress_bars(data_context=context)
 
@@ -299,11 +299,9 @@ class GXAgent:
         """Helper method to get the auth key. Overridden in GX-Runner."""
         return self._get_config().gx_cloud_access_token
 
-    def get_workspace_id(self, event_context: EventContext) -> UUID:
+    def get_workspace_id(self, event_context: EventContext) -> UUID | None:
         """Helper method to get the workspace ID from the event."""
         workspace_id: UUID | None = getattr(event_context.event, "workspace_id", None)
-        if workspace_id is None:
-            raise GXAgentError()
         return workspace_id
 
     def _set_sentry_tags(self, even_context: EventContext) -> None:
@@ -347,7 +345,7 @@ class GXAgent:
                 "event_type": event_context.event.type,
                 "correlation_id": event_context.correlation_id,
                 "organization_id": str(org_id),
-                "workspace_id": str(workspace_id),
+                "workspace_id": str(workspace_id) if workspace_id else "None",
                 "schedule_id": event_context.event.schedule_id
                 if isinstance(event_context.event, ScheduledEventBase)
                 else None,
@@ -399,7 +397,7 @@ class GXAgent:
                         "event_type": event_context.event.type,
                         "id": event_context.correlation_id,
                         "organization_id": str(org_id),
-                        "workspace_id": str(workspace_id),
+                        "workspace_id": str(workspace_id) if workspace_id else "None",
                         "schedule_id": event_context.event.schedule_id
                         if isinstance(event_context.event, ScheduledEventBase)
                         else None,
@@ -420,7 +418,7 @@ class GXAgent:
                             result.job_duration.total_seconds() if result.job_duration else None
                         ),
                         "organization_id": str(org_id),
-                        "workspace_id": str(workspace_id),
+                        "workspace_id": str(workspace_id) if workspace_id else "None",
                         "schedule_id": event_context.event.schedule_id
                         if isinstance(event_context.event, ScheduledEventBase)
                         else None,
@@ -435,7 +433,7 @@ class GXAgent:
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
                     "organization_id": str(org_id),
-                    "workspace_id": str(workspace_id),
+                    "workspace_id": str(workspace_id) if workspace_id else "None",
                 },
             )
 
@@ -453,7 +451,7 @@ class GXAgent:
                     "correlation_id": event_context.correlation_id,
                     "status": str(status),
                     "organization_id": str(org_id),
-                    "workspace_id": str(workspace_id),
+                    "workspace_id": str(workspace_id) if workspace_id else "None",
                 },
             )
             # We do not want to cause an infinite loop of errors
@@ -574,7 +572,7 @@ class GXAgent:
             )
 
     def _update_status(
-        self, correlation_id: str, status: JobStatus, org_id: UUID, workspace_id: UUID
+        self, correlation_id: str, status: JobStatus, org_id: UUID, workspace_id: UUID | None
     ) -> None:
         """Update GX Cloud on the status of a job.
 
@@ -588,9 +586,13 @@ class GXAgent:
                 "correlation_id": correlation_id,
                 "status": str(status),
                 "organization_id": str(org_id),
-                "workspace_id": str(workspace_id),
+                "workspace_id": str(workspace_id) if workspace_id else "None",
             },
         )
+        if workspace_id is None:
+            LOGGER.warning("Skipping status update - workspace_id is None")
+            return
+
         agent_sessions_url = urljoin(
             self._get_config().gx_cloud_base_url,
             f"/api/v1/organizations/{org_id}/workspaces/{workspace_id}/agent-jobs/{correlation_id}",
@@ -604,7 +606,7 @@ class GXAgent:
                     "correlation_id": correlation_id,
                     "status": str(status),
                     "organization_id": str(org_id),
-                    "workspace_id": str(workspace_id),
+                    "workspace_id": str(workspace_id) if workspace_id else "None",
                 },
             )
             GXAgent._log_http_error(
@@ -612,7 +614,7 @@ class GXAgent:
             )
 
     def _create_scheduled_job_and_set_started(
-        self, event_context: EventContext, org_id: UUID, workspace_id: UUID
+        self, event_context: EventContext, org_id: UUID, workspace_id: UUID | None
     ) -> None:
         """Create a job in GX Cloud for scheduled events.
 
@@ -634,10 +636,14 @@ class GXAgent:
                 "correlation_id": str(event_context.correlation_id),
                 "event_type": str(event_context.event.type),
                 "organization_id": str(org_id),
-                "workspace_id": str(workspace_id),
+                "workspace_id": str(workspace_id) if workspace_id else "None",
                 "schedule_id": str(event_context.event.schedule_id),
             },
         )
+
+        if workspace_id is None:
+            LOGGER.warning("Skipping scheduled job creation - workspace_id is None")
+            return
 
         agent_sessions_url = urljoin(
             self._get_config().gx_cloud_base_url,
@@ -662,7 +668,7 @@ class GXAgent:
                     "event_type": str(event_context.event.type),
                     "organization_id": str(org_id),
                     "schedule_id": str(event_context.event.schedule_id),
-                    "workspace_id": str(workspace_id),
+                    "workspace_id": str(workspace_id) if workspace_id else "None",
                 },
             )
             GXAgent._log_http_error(
