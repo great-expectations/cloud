@@ -11,7 +11,7 @@ from great_expectations.exceptions import StoreBackendError
 
 from great_expectations_cloud.agent.actions import ListAssetNamesAction
 from great_expectations_cloud.agent.actions.utils import get_asset_names
-from great_expectations_cloud.agent.models import ListAssetNamesEvent
+from great_expectations_cloud.agent.models import DomainContext, ListAssetNamesEvent
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -53,7 +53,7 @@ def event():
     return ListAssetNamesEvent(
         type="list_table_names_request.received",
         datasource_name="test-datasource",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
         workspace_id=uuid.uuid4(),
     )
 
@@ -64,7 +64,7 @@ def test_list_table_names_event_raises_for_non_sql_datasource(
     action = ListAssetNamesAction(
         context=mock_context,
         base_url="https://api.greatexpectations.io/",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
         auth_key="",
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
@@ -84,7 +84,9 @@ def test_run_list_table_names_action_returns_action_result(
     action = ListAssetNamesAction(
         context=mock_context,
         base_url=dummy_base_url,
-        organization_id=uuid.UUID(dummy_org_id),
+        domain_context=DomainContext(
+            organization_id=uuid.UUID(dummy_org_id), workspace_id=uuid.uuid4()
+        ),
         auth_key="",
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"

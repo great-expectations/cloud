@@ -27,6 +27,7 @@ from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.models import (
     CreatedResource,
+    DomainContext,
     RunCheckpointEvent,
     RunScheduledCheckpointEvent,
     RunWindowCheckpointEvent,
@@ -209,7 +210,7 @@ def test_run_checkpoint_action_raises_on_test_connection_failure(
     action = action_class(
         context=mock_context,
         base_url=env_vars.gx_cloud_base_url,
-        organization_id=org_id,
+        domain_context=DomainContext(organization_id=org_id, workspace_id=uuid.uuid4()),
         auth_key="",
     )
     # Test errs with and without this mock for the window checkpoint
@@ -244,7 +245,7 @@ def test_run_checkpoint_action_raises_on_gx_cloud_error(
     action = action_class(
         context=mock_context,
         base_url=env_vars.gx_cloud_base_url,
-        organization_id=org_id,
+        domain_context=DomainContext(organization_id=org_id, workspace_id=uuid.uuid4()),
         auth_key="",
     )
     # Test errs with and without this mock for the window checkpoint
@@ -280,7 +281,7 @@ def test_run_checkpoint_action_raises_on_key_error(
     action = action_class(
         context=mock_context,
         base_url=env_vars.gx_cloud_base_url,
-        organization_id=org_id,
+        domain_context=DomainContext(organization_id=org_id, workspace_id=uuid.uuid4()),
         auth_key="",
     )
     # Test errs with and without this mock for the window checkpoint
