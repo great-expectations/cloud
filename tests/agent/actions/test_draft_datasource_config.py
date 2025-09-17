@@ -61,12 +61,13 @@ def test_test_draft_datasource_config_success_non_sql_ds(
     datasource_config = {"type": "pandas", "name": "test-1-2-3"}
     config_id = UUID("df02b47c-e1b8-48a8-9aaa-b6ed9c49ffa5")
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    workspace_id = uuid.uuid4()
     env_vars = GxAgentEnvVars()
     action = DraftDatasourceConfigAction(
         context=mock_context,
         base_url="https://test-base-url",
         auth_key="",
-        domain_context=DomainContext(organization_id=org_id, workspace_id=uuid.uuid4()),
+        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
     )
 
     _get_asset_names_spy = mocker.patch(
@@ -79,7 +80,7 @@ def test_test_draft_datasource_config_success_non_sql_ds(
     event = DraftDatasourceConfigEvent(
         config_id=config_id,
         organization_id=uuid.uuid4(),
-        workspace_id=uuid.uuid4(),
+        workspace_id=workspace_id,
     )
     expected_url: str = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
@@ -142,11 +143,12 @@ def test_test_draft_datasource_config_success_sql_ds(
 
     env_vars = GxAgentEnvVars()
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    workspace_id = uuid.uuid4()
     action = DraftDatasourceConfigAction(
         context=mock_context,
         base_url="https://test-base-url",
         auth_key="",
-        domain_context=DomainContext(organization_id=org_id, workspace_id=uuid.uuid4()),
+        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
     )
 
     # add spies to the action methods
@@ -160,7 +162,7 @@ def test_test_draft_datasource_config_success_sql_ds(
     event = DraftDatasourceConfigEvent(
         config_id=config_id,
         organization_id=uuid.uuid4(),
-        workspace_id=uuid.uuid4(),
+        workspace_id=workspace_id,
     )
     expected_url_get: str = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
@@ -196,7 +198,7 @@ def test_test_draft_datasource_config_success_sql_ds(
     # assert that the action properly calls helper methods to get table names and update the draft config
     _get_asset_names_spy.assert_called_with(datasource_cls(**datasource_config))
     _update_asset_names_list_spy.assert_called_with(
-        config_id=config_id, workspace_id=event.workspace_id, asset_names=table_names + view_names
+        config_id=config_id, asset_names=table_names + view_names
     )
 
 
@@ -239,18 +241,19 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
 
     env_vars = GxAgentEnvVars()
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    workspace_id = uuid.uuid4()
     action = DraftDatasourceConfigAction(
         context=mock_context,
         base_url="https://test-base-url",
         auth_key="",
-        domain_context=DomainContext(organization_id=org_id, workspace_id=uuid.uuid4()),
+        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
     )
 
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(
         config_id=config_id,
         organization_id=uuid.uuid4(),
-        workspace_id=uuid.uuid4(),
+        workspace_id=workspace_id,
     )
 
     expected_url_get: str = (
@@ -292,17 +295,18 @@ def test_test_draft_datasource_config_failure(
     env_vars = GxAgentEnvVars()
     base_url = "https://test-base-url"
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    workspace_id = uuid.uuid4()
     action = DraftDatasourceConfigAction(
         context=mock_context,
         base_url=base_url,
         auth_key="",
-        domain_context=DomainContext(organization_id=org_id, workspace_id=uuid.uuid4()),
+        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
     )
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(
         config_id=config_id,
         organization_id=uuid.uuid4(),
-        workspace_id=uuid.uuid4(),
+        workspace_id=workspace_id,
     )
     expected_url = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
@@ -329,17 +333,18 @@ def test_test_draft_datasource_config_raises_for_non_fds(mock_context, set_requi
     env_vars = GxAgentEnvVars()
     base_url = "https://test-base-url"
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    workspace_id = uuid.uuid4()
     action = DraftDatasourceConfigAction(
         context=mock_context,
         base_url=base_url,
         auth_key="",
-        domain_context=DomainContext(organization_id=org_id, workspace_id=uuid.uuid4()),
+        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
     )
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(
         config_id=config_id,
         organization_id=uuid.uuid4(),
-        workspace_id=uuid.uuid4(),
+        workspace_id=workspace_id,
     )
     expected_url = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
@@ -371,11 +376,12 @@ def test_draft_datasource_config_failure_raises_correct_gx_core_error(
 ):
     base_url = "https://test-base-url"
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    workspace_id = uuid.uuid4()
     action = DraftDatasourceConfigAction(
         context=mock_context,
         base_url=base_url,
         auth_key="",
-        domain_context=DomainContext(organization_id=org_id, workspace_id=uuid.uuid4()),
+        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
     )
     mock_check_draft_datasource_config = mocker.patch(
         f"{DraftDatasourceConfigAction.__module__}.{DraftDatasourceConfigAction.__name__}.check_draft_datasource_config"
@@ -385,7 +391,7 @@ def test_draft_datasource_config_failure_raises_correct_gx_core_error(
     event = DraftDatasourceConfigEvent(
         config_id=uuid.uuid4(),
         organization_id=uuid.uuid4(),
-        workspace_id=uuid.uuid4(),
+        workspace_id=workspace_id,
     )
     with pytest.raises(GXCoreError) as e:
         action.run(event=event, id=str(uuid.uuid4()))
@@ -404,17 +410,18 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
     env_vars = GxAgentEnvVars()
     base_url = "https://test-base-url"
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    workspace_id = uuid.uuid4()
     action = DraftDatasourceConfigAction(
         context=mock_context,
         base_url=base_url,
         auth_key="",
-        domain_context=DomainContext(organization_id=org_id, workspace_id=uuid.uuid4()),
+        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
     )
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(
         config_id=config_id,
         organization_id=uuid.uuid4(),
-        workspace_id=uuid.uuid4(),
+        workspace_id=workspace_id,
     )
     expected_url = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
@@ -442,17 +449,18 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
     env_vars = GxAgentEnvVars()
     base_url = "https://test-base-url"
     org_id = UUID("81f4e105-e37d-4168-85a0-2526943f9956")
+    workspace_id = uuid.uuid4()
     action = DraftDatasourceConfigAction(
         context=mock_context,
         base_url=base_url,
         auth_key="",
-        domain_context=DomainContext(organization_id=org_id, workspace_id=uuid.uuid4()),
+        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
     )
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(
         config_id=config_id,
         organization_id=uuid.uuid4(),
-        workspace_id=uuid.uuid4(),
+        workspace_id=workspace_id,
     )
     expected_url = (
         f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"

@@ -101,8 +101,6 @@ class GenerateDataQualityCheckExpectationsAction(
 
     @override
     def run(self, event: GenerateDataQualityCheckExpectationsEvent, id: str) -> ActionResult:
-        self._workspace_id = event._domain_context.workspace_id
-
         created_resources: list[CreatedResource] = []
         assets_with_errors: list[str] = []
         selected_dqis: Sequence[DataQualityIssues] = event.selected_data_quality_issues or []
