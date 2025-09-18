@@ -318,7 +318,7 @@ def test_generate_schema_change_expectations_action_success(
     return_value = action.run(
         event=GenerateDataQualityCheckExpectationsEvent(
             type="generate_data_quality_check_expectations_request.received",
-            domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+            organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=data_asset_names,
             selected_data_quality_issues=[DataQualityIssues.SCHEMA],
@@ -374,7 +374,7 @@ def test_anomaly_detection_expectation_not_created_if_asset_already_has_coverage
     return_value = action.run(
         event=GenerateDataQualityCheckExpectationsEvent(
             type="generate_data_quality_check_expectations_request.received",
-            domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+            organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=["data_asset_name"],
             selected_data_quality_issues=[DataQualityIssues.SCHEMA, DataQualityIssues.VOLUME],
@@ -451,7 +451,7 @@ def test_generate_completeness_expectation_not_added_when_coverage_already_exist
     return_value = action.run(
         event=GenerateDataQualityCheckExpectationsEvent(
             type="generate_data_quality_check_expectations_request.received",
-            domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+            organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
@@ -538,9 +538,7 @@ def test_succeeding_and_failing_assets_together(
         action.run(
             event=GenerateDataQualityCheckExpectationsEvent(
                 type="generate_data_quality_check_expectations_request.received",
-                domain_context=DomainContext(
-                    organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()
-                ),
+                organization_id=uuid.uuid4(),
                 datasource_name="test-datasource",
                 data_assets=succeeding_data_asset_names + failing_data_asset_names,
                 selected_data_quality_issues=[DataQualityIssues.SCHEMA],
@@ -598,7 +596,7 @@ def test_missing_table_columns_metric_raises_runtime_error(
     # Create the event
     event = GenerateDataQualityCheckExpectationsEvent(
         type="generate_data_quality_check_expectations_request.received",
-        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        organization_id=uuid.uuid4(),
         datasource_name="test-datasource",
         data_assets=["test-asset"],
         selected_data_quality_issues=[DataQualityIssues.SCHEMA],
@@ -651,7 +649,7 @@ def test_generate_volume_change_forecast_expectations_action_success(
     return_value = action.run(
         event=GenerateDataQualityCheckExpectationsEvent(
             type="generate_data_quality_check_expectations_request.received",
-            domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+            organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=data_asset_names,
             selected_data_quality_issues=[
@@ -750,7 +748,7 @@ def test_generate_completeness_expectations_with_proportion_approach(
     return_value = action.run(
         event=GenerateDataQualityCheckExpectationsEvent(
             type="generate_data_quality_check_expectations_request.received",
-            domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+            organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
@@ -834,7 +832,7 @@ def test_generate_completeness_forecast_expectations_action_success(
     return_value = action.run(
         event=GenerateDataQualityCheckExpectationsEvent(
             type="generate_data_quality_check_expectations_request.received",
-            domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+            organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
@@ -931,7 +929,7 @@ def test_completeness_expectations_count_based_on_data(
     action.run(
         event=GenerateDataQualityCheckExpectationsEvent(
             type="generate_data_quality_check_expectations_request.received",
-            domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+            organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
@@ -996,7 +994,7 @@ def test_generate_completeness_expectations_edge_cases(
     action.run(
         event=GenerateDataQualityCheckExpectationsEvent(
             type="generate_data_quality_check_expectations_request.received",
-            domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+            organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
@@ -1027,7 +1025,7 @@ def test_generate_completeness_expectations_edge_cases(
     action.run(
         event=GenerateDataQualityCheckExpectationsEvent(
             type="generate_data_quality_check_expectations_request.received",
-            domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+            organization_id=uuid.uuid4(),
             datasource_name="test-datasource",
             data_assets=["test-data-asset1"],
             selected_data_quality_issues=[DataQualityIssues.COMPLETENESS],
