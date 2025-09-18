@@ -65,6 +65,7 @@ from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
     CreateScheduledJobAndSetJobStarted,
     CreateScheduledJobAndSetJobStartedRequest,
+    DomainContext,
     JobCompleted,
     JobStarted,
     JobStatus,
@@ -363,7 +364,7 @@ class GXAgent:
             id=event_context.correlation_id,
             base_url=base_url,
             auth_key=auth_key,
-            organization_id=org_id,
+            domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
         )
         return result
 
