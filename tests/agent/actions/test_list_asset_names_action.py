@@ -53,7 +53,7 @@ def event():
     return ListAssetNamesEvent(
         type="list_table_names_request.received",
         datasource_name="test-datasource",
-        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        organization_id=uuid.uuid4(),
         workspace_id=uuid.uuid4(),
     )
 
