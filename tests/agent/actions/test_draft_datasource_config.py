@@ -77,6 +77,7 @@ def test_test_draft_datasource_config_success_non_sql_ds(
     _update_asset_names_list_spy = mocker.spy(action, "_update_asset_names_list")
 
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
+    # We track the workspace_id because we're pulling it from the event and pulling the organization_id from the env vars.
     event = DraftDatasourceConfigEvent(
         config_id=config_id,
         organization_id=uuid.uuid4(),
