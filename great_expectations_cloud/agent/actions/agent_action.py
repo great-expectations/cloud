@@ -4,7 +4,6 @@ import datetime
 from abc import abstractmethod
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Generic, Optional, TypeVar, Union
-from uuid import UUID
 
 from pydantic.v1 import BaseModel
 
@@ -12,6 +11,7 @@ from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
     AgentBaseExtraIgnore,
     CreatedResource,
+    DomainContext,
 )
 
 if TYPE_CHECKING:
@@ -32,11 +32,11 @@ _EventT = TypeVar("_EventT", bound=Union[AgentBaseExtraForbid, AgentBaseExtraIgn
 
 class AgentAction(Generic[_EventT]):
     def __init__(
-        self, context: CloudDataContext, base_url: str, organization_id: UUID, auth_key: str
+        self, context: CloudDataContext, base_url: str, domain_context: DomainContext, auth_key: str
     ):
         self._context = context
         self._base_url = base_url
-        self._organization_id = organization_id
+        self._domain_context = domain_context
         self._auth_key = auth_key
 
     @abstractmethod

@@ -14,6 +14,7 @@ from great_expectations_cloud.agent.actions.generate_data_quality_check_expectat
     GenerateDataQualityCheckExpectationsAction,
 )
 from great_expectations_cloud.agent.models import (
+    DomainContext,
     GenerateDataQualityCheckExpectationsEvent,
 )
 
@@ -100,19 +101,22 @@ def test_generate_data_quality_check_expectations_action_no_selected_data_qualit
     token_env_var: str,
     seed_and_cleanup_test_data,
 ):
+    workspace_id = uuid.uuid4()
     generate_schema_change_expectations_event = GenerateDataQualityCheckExpectationsEvent(
         type="generate_data_quality_check_expectations_request.received",
         datasource_name="local_mercury_db",
         data_assets=["local-mercury-db-checkpoints-table"],
         organization_id=uuid.UUID(org_id_env_var),
-        workspace_id=uuid.uuid4(),
+        workspace_id=workspace_id,
         selected_data_quality_issues=None,
     )
 
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var),
+        domain_context=DomainContext(
+            organization_id=uuid.UUID(org_id_env_var), workspace_id=workspace_id
+        ),
         auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
@@ -158,7 +162,9 @@ def test_generate_data_quality_check_expectations_action_schema_change_selected_
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var),
+        domain_context=DomainContext(
+            organization_id=uuid.UUID(org_id_env_var), workspace_id=uuid.UUID(workspace_id_env_var)
+        ),
         auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
@@ -208,7 +214,9 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var),
+        domain_context=DomainContext(
+            organization_id=uuid.UUID(org_id_env_var), workspace_id=uuid.UUID(workspace_id_env_var)
+        ),
         auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
@@ -277,7 +285,9 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var),
+        domain_context=DomainContext(
+            organization_id=uuid.UUID(org_id_env_var), workspace_id=uuid.UUID(workspace_id_env_var)
+        ),
         auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
@@ -359,7 +369,9 @@ def test_generate_data_quality_check_expectations_action_completeness_with_propo
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var),
+        domain_context=DomainContext(
+            organization_id=uuid.UUID(org_id_env_var), workspace_id=uuid.UUID(workspace_id_env_var)
+        ),
         auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
@@ -446,7 +458,9 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
     action = GenerateDataQualityCheckExpectationsAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var),
+        domain_context=DomainContext(
+            organization_id=uuid.UUID(org_id_env_var), workspace_id=uuid.UUID(workspace_id_env_var)
+        ),
         auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
