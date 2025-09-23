@@ -30,7 +30,10 @@ from great_expectations_cloud.agent.actions.generate_data_quality_check_expectat
     GenerateDataQualityCheckExpectationsAction,
     PartialGenerateDataQualityCheckExpectationError,
 )
-from great_expectations_cloud.agent.models import GenerateDataQualityCheckExpectationsEvent
+from great_expectations_cloud.agent.models import (
+    DomainContext,
+    GenerateDataQualityCheckExpectationsEvent,
+)
 
 if TYPE_CHECKING:
     from great_expectations.data_context.data_context.cloud_data_context import CloudDataContext
@@ -301,7 +304,7 @@ def test_generate_schema_change_expectations_action_success(
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     # run the action
@@ -357,7 +360,7 @@ def test_anomaly_detection_expectation_not_created_if_asset_already_has_coverage
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     # run the action
@@ -409,7 +412,7 @@ def test_generate_completeness_expectation_not_added_when_coverage_already_exist
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     # Mock the methods that would be called
@@ -527,7 +530,7 @@ def test_succeeding_and_failing_assets_together(
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     # run the action
@@ -587,7 +590,7 @@ def test_missing_table_columns_metric_raises_runtime_error(
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     # Create the event
@@ -632,7 +635,7 @@ def test_generate_volume_change_forecast_expectations_action_success(
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     # run the action
@@ -706,7 +709,7 @@ def test_generate_completeness_expectations_with_proportion_approach(
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     # Mock the methods that would be called
@@ -790,7 +793,7 @@ def test_generate_completeness_forecast_expectations_action_success(
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     # Mock the methods that would be called
@@ -887,7 +890,7 @@ def test_completeness_expectations_count_based_on_data(
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     # Mock the methods that would be called
@@ -953,7 +956,7 @@ def test_generate_completeness_expectations_edge_cases(
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     def mock_retrieve_asset(event, asset_name):

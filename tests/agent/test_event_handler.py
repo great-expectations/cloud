@@ -29,6 +29,7 @@ from great_expectations_cloud.agent.event_handler import (
 )
 from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
+    DomainContext,
     DraftDatasourceConfigEvent,
     Event,
     ListAssetNamesEvent,
@@ -68,7 +69,13 @@ class TestEventHandler:
         handler = EventHandler(context=mock_context)
         with pytest.warns(GXAgentUserWarning):
             result = handler.handle_event(
-                event=event, id=correlation_id, base_url="", auth_key="", organization_id=uuid4()
+                event=event,
+                id=correlation_id,
+                base_url="",
+                auth_key="",
+                domain_context=DomainContext(
+                    organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()
+                ),
             )
         assert result.type == "unknown_event"
 
@@ -156,13 +163,15 @@ class TestEventHandler:
         handler = EventHandler(context=mock_context)
 
         fake_org_id = UUID("00000000-0000-0000-0000-000000000000")
+        fake_workspace_id = uuid4()
+        domain_context = DomainContext(organization_id=fake_org_id, workspace_id=fake_workspace_id)
 
         handler.handle_event(
-            event=event, id=correlation_id, base_url="", auth_key="", organization_id=fake_org_id
+            event=event, id=correlation_id, base_url="", auth_key="", domain_context=domain_context
         )
 
         action.assert_called_with(
-            context=mock_context, base_url="", organization_id=fake_org_id, auth_key=""
+            context=mock_context, base_url="", domain_context=domain_context, auth_key=""
         )
         action().run.assert_called_with(event=event, id=correlation_id)
 
@@ -232,7 +241,9 @@ class TestEventHandler:
                 id=correlation_id,
                 base_url="",
                 auth_key="",
-                organization_id=uuid.UUID(org_id_different_from_event),
+                domain_context=DomainContext(
+                    organization_id=uuid.UUID(org_id_different_from_event), workspace_id=uuid4()
+                ),
             )
 
     def test_event_handler_raises_on_no_version_implementation(
@@ -251,7 +262,7 @@ class TestEventHandler:
                 DummyEvent(organization_id=test_org_id),  # type: ignore[arg-type]  # Dummy event only used in testing, get_event_action is not used by external systems, so we can keep the type narrowed to known Events
                 base_url="",
                 auth_key="",
-                organization_id=test_org_id,
+                domain_context=DomainContext(organization_id=test_org_id, workspace_id=uuid4()),
             )
 
 
@@ -284,7 +295,7 @@ class TestEventHandlerRegistry:
                 DummyEvent(organization_id=test_org_id),  # type: ignore[arg-type]  # Dummy event only used in testing, get_event_action is not used by external systems, so we can keep the type narrowed to known Events
                 base_url="",
                 auth_key="",
-                organization_id=test_org_id,
+                domain_context=DomainContext(organization_id=test_org_id, workspace_id=uuid4()),
             ),
             DummyAction,
         )
