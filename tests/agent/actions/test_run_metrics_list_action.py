@@ -19,7 +19,11 @@ from great_expectations.experimental.metric_repository.metrics import (
 )
 
 from great_expectations_cloud.agent.actions import MetricListAction
-from great_expectations_cloud.agent.models import CreatedResource, RunMetricsListEvent
+from great_expectations_cloud.agent.models import (
+    CreatedResource,
+    DomainContext,
+    RunMetricsListEvent,
+)
 
 if TYPE_CHECKING:
     from great_expectations.data_context.data_context.cloud_data_context import CloudDataContext
@@ -40,7 +44,7 @@ def test_run_metrics_list_computes_metric_run(
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
@@ -77,7 +81,7 @@ def test_run_metrics_list_computes_metric_run_missing_batch_inspector(
         batch_inspector=None,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
@@ -112,7 +116,7 @@ def test_run_metrics_list_creates_metric_run(mock_context, mocker: MockerFixture
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
@@ -146,7 +150,7 @@ def test_run_metrics_list_returns_action_result(mock_context, mocker: MockerFixt
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
     action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
     # mock so that we don't raise
@@ -188,7 +192,7 @@ def test_run_column_descriptive_metrics_raises_on_test_connection_to_data_asset_
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     with pytest.raises(TestConnectionError):
@@ -245,7 +249,7 @@ def test_run_metrics_list_creates_metric_run_then_raises_on_any_metric_exception
         batch_inspector=mock_batch_inspector,
         base_url="",
         auth_key="",
-        organization_id=uuid.uuid4(),
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
     )
 
     with pytest.raises(RuntimeError):

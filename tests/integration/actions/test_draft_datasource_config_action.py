@@ -8,7 +8,7 @@ import pytest
 from great_expectations_cloud.agent.actions import DraftDatasourceConfigAction
 from great_expectations_cloud.agent.actions.utils import get_asset_names
 from great_expectations_cloud.agent.exceptions import GXCoreError
-from great_expectations_cloud.agent.models import DraftDatasourceConfigEvent
+from great_expectations_cloud.agent.models import DomainContext, DraftDatasourceConfigEvent
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -31,7 +31,9 @@ def test_running_draft_datasource_config_action(
     action = DraftDatasourceConfigAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=UUID(org_id_env_var),
+        domain_context=DomainContext(
+            organization_id=UUID(org_id_env_var), workspace_id=UUID(workspace_id_env_var)
+        ),
         auth_key=token_env_var,
     )
 
@@ -97,7 +99,9 @@ def test_running_draft_datasource_config_action_fails_for_unreachable_datasource
     action = DraftDatasourceConfigAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=UUID(org_id_env_var),
+        domain_context=DomainContext(
+            organization_id=UUID(org_id_env_var), workspace_id=UUID(workspace_id_env_var)
+        ),
         auth_key=token_env_var,
     )
     datasource_id_for_connect_failure = (

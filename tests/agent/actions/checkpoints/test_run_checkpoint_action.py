@@ -27,6 +27,7 @@ from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.models import (
     CreatedResource,
+    DomainContext,
     RunCheckpointEvent,
     RunScheduledCheckpointEvent,
     RunWindowCheckpointEvent,
@@ -132,10 +133,11 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
 ):
     # ARRANGE
     env_vars = GxAgentEnvVars()
+    workspace_id = uuid.uuid4()
     action = action_class(
         context=mock_context,
         base_url=env_vars.gx_cloud_base_url,
-        organization_id=UUID(org_id),
+        domain_context=DomainContext(organization_id=UUID(org_id), workspace_id=workspace_id),
         auth_key="",
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
@@ -152,7 +154,7 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
     event.splitter_options = splitter_options
 
     if event.type == "run_scheduled_checkpoint.received":
-        url = f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
+        url = f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}/workspaces/{workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
         responses.get(
             url,
             json={"data": {"expectation_parameters": {"something_min": 0, "something_max": 1}}},
@@ -206,16 +208,17 @@ def test_run_checkpoint_action_raises_on_test_connection_failure(
     type(mock_validation_definition).data_source = mocker.PropertyMock(return_value=mock_datasource)
     type(mock_validation_definition).asset = mocker.PropertyMock(return_value=mock_asset)
     org_id = uuid.uuid4()
+    workspace_id = uuid.uuid4()
     action = action_class(
         context=mock_context,
         base_url=env_vars.gx_cloud_base_url,
-        organization_id=org_id,
+        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
         auth_key="",
     )
     # Test errs with and without this mock for the window checkpoint
     if event.type == "run_scheduled_checkpoint.received":
         responses.get(
-            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
+            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
             json={"data": {"expectation_parameters": {}}},
         )
 
@@ -241,17 +244,18 @@ def test_run_checkpoint_action_raises_on_gx_cloud_error(
     mock_context.data_sources.get.return_value = mock_datasource
     mock_datasource.test_connection.side_effect = TestConnectionError()
     org_id = uuid.uuid4()
+    workspace_id = uuid.uuid4()
     action = action_class(
         context=mock_context,
         base_url=env_vars.gx_cloud_base_url,
-        organization_id=org_id,
+        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
         auth_key="",
     )
     # Test errs with and without this mock for the window checkpoint
     if event.type == "run_scheduled_checkpoint.received":
         responses.add(
             method=responses.GET,
-            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
+            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
             status=503,
         )
 
@@ -277,17 +281,18 @@ def test_run_checkpoint_action_raises_on_key_error(
     mock_context.data_sources.get.return_value = mock_datasource
     mock_datasource.test_connection.side_effect = TestConnectionError()
     org_id = uuid.uuid4()
+    workspace_id = uuid.uuid4()
     action = action_class(
         context=mock_context,
         base_url=env_vars.gx_cloud_base_url,
-        organization_id=org_id,
+        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
         auth_key="",
     )
     # Test errs with and without this mock for the window checkpoint
     if event.type == "run_scheduled_checkpoint.received":
         responses.add(
             method=responses.GET,
-            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{event.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
+            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
             status=200,
             json={"data": {}},
         )
