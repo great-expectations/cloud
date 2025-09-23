@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from urllib.parse import urljoin
-from uuid import UUID
 
 from great_expectations.core.http import create_session
 from great_expectations.datasource.fluent import SQLDatasource
@@ -34,7 +33,6 @@ class ListAssetNamesAction(AgentAction[ListAssetNamesEvent]):
 
         self._add_or_update_asset_names_list(
             datasource_id=str(datasource.id),
-            workspace_id=event.workspace_id,
             asset_names=asset_names,
         )
 
@@ -44,13 +42,11 @@ class ListAssetNamesAction(AgentAction[ListAssetNamesEvent]):
             created_resources=[],
         )
 
-    def _add_or_update_asset_names_list(
-        self, datasource_id: str, workspace_id: UUID, asset_names: list[str]
-    ) -> None:
+    def _add_or_update_asset_names_list(self, datasource_id: str, asset_names: list[str]) -> None:
         with create_session(access_token=self._auth_key) as session:
             url = urljoin(
                 base=self._base_url,
-                url=f"/api/v1/organizations/{self._organization_id}/workspaces/{workspace_id}/table-names/{datasource_id}",
+                url=f"/api/v1/organizations/{self._domain_context.organization_id}/workspaces/{self._domain_context.workspace_id}/table-names/{datasource_id}",
             )
             response = session.put(
                 url=url,

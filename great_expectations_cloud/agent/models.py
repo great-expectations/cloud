@@ -24,6 +24,18 @@ def all_subclasses(cls: type) -> list[type]:
     return all_sub_cls
 
 
+class DomainContext(BaseModel):
+    """
+    Encapsulates domain-related context information.
+
+    This dataclass consolidates organization_id and workspace_id to reduce
+    parameter proliferation and improve code maintainability.
+    """
+
+    organization_id: UUID
+    workspace_id: UUID
+
+
 class AgentBaseExtraForbid(BaseModel):
     class Config:
         # 2024-03-04: ZEL-501 Strictly enforce models for handling outdated APIs

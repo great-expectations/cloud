@@ -11,7 +11,7 @@ from great_expectations.datasource.fluent import PostgresDatasource
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
 
 from great_expectations_cloud.agent.actions import MetricListAction
-from great_expectations_cloud.agent.models import RunMetricsListEvent
+from great_expectations_cloud.agent.models import DomainContext, RunMetricsListEvent
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -118,6 +118,7 @@ def test_running_metric_list_action(
     cloud_base_url: str,
     token_env_var: str,
 ):
+    workspace_id = uuid.uuid4()
     # MetricListEvent with only the Table Metrics requested
     metrics_list_event = RunMetricsListEvent(
         type="metrics_list_request.received",
@@ -129,13 +130,15 @@ def test_running_metric_list_action(
             MetricTypes.TABLE_ROW_COUNT,
         ],
         organization_id=uuid.UUID(org_id_env_var),
-        workspace_id=uuid.uuid4(),
+        workspace_id=workspace_id,
     )
 
     action = MetricListAction(
         context=context,
         base_url=cloud_base_url,
-        organization_id=uuid.UUID(org_id_env_var),
+        domain_context=DomainContext(
+            organization_id=uuid.UUID(org_id_env_var), workspace_id=workspace_id
+        ),
         auth_key=token_env_var,
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"

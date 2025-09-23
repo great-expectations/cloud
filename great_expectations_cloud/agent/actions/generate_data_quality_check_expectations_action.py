@@ -43,6 +43,7 @@ from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
     CreatedResource,
+    DomainContext,
     GenerateDataQualityCheckExpectationsEvent,
 )
 from great_expectations_cloud.agent.utils import (
@@ -84,13 +85,13 @@ class GenerateDataQualityCheckExpectationsAction(
         self,
         context: CloudDataContext,
         base_url: str,
-        organization_id: UUID,
+        domain_context: DomainContext,
         auth_key: str,
         metric_repository: MetricRepository | None = None,
         batch_inspector: BatchInspector | None = None,
     ):
         super().__init__(
-            context=context, base_url=base_url, organization_id=organization_id, auth_key=auth_key
+            context=context, base_url=base_url, domain_context=domain_context, auth_key=auth_key
         )
         self._metric_repository = metric_repository or MetricRepository(
             data_store=CloudDataStore(self._context)
@@ -101,8 +102,6 @@ class GenerateDataQualityCheckExpectationsAction(
 
     @override
     def run(self, event: GenerateDataQualityCheckExpectationsEvent, id: str) -> ActionResult:
-        self._workspace_id = event.workspace_id
-
         created_resources: list[CreatedResource] = []
         assets_with_errors: list[str] = []
         selected_dqis: Sequence[DataQualityIssues] = event.selected_data_quality_issues or []
@@ -227,7 +226,7 @@ class GenerateDataQualityCheckExpectationsAction(
         """
         url = urljoin(
             base=self._base_url,
-            url=f"/api/v1/organizations/{self._organization_id}/workspaces/{self._workspace_id}/expectations/",
+            url=f"/api/v1/organizations/{self._domain_context.organization_id}/workspaces/{self._domain_context.workspace_id}/expectations/",
         )
         with create_session(access_token=self._auth_key) as session:
             response = session.get(
@@ -529,7 +528,7 @@ class GenerateDataQualityCheckExpectationsAction(
     ) -> UUID:
         url = urljoin(
             base=self._base_url,
-            url=f"/api/v1/organizations/{self._organization_id}/workspaces/{self._workspace_id}/expectations/{asset_id}",
+            url=f"/api/v1/organizations/{self._domain_context.organization_id}/workspaces/{self._domain_context.workspace_id}/expectations/{asset_id}",
         )
 
         expectation_payload = expectation.configuration.to_json_dict()

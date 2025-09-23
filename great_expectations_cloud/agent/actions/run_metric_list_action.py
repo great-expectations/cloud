@@ -21,6 +21,7 @@ from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     CreatedResource,
+    DomainContext,
     RunMetricsListEvent,
 )
 
@@ -41,13 +42,13 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
         self,
         context: CloudDataContext,
         base_url: str,
-        organization_id: UUID,
+        domain_context: DomainContext,
         auth_key: str,
         metric_repository: MetricRepository | None = None,
         batch_inspector: BatchInspector | None = None,
     ):
         super().__init__(
-            context=context, base_url=base_url, organization_id=organization_id, auth_key=auth_key
+            context=context, base_url=base_url, domain_context=domain_context, auth_key=auth_key
         )
         self._metric_repository = metric_repository or MetricRepository(
             data_store=CloudDataStore(self._context)
