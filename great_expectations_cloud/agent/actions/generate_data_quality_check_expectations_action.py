@@ -205,7 +205,7 @@ class GenerateDataQualityCheckExpectationsAction(
             metric_list=[
                 MetricTypes.TABLE_COLUMNS,
                 MetricTypes.TABLE_COLUMN_TYPES,
-                MetricTypes.COLUMN_NULL_COUNT,
+                MetricTypes.COLUMN_NON_NULL_COUNT,
                 MetricTypes.TABLE_ROW_COUNT,
             ],
         )
@@ -374,11 +374,11 @@ class GenerateDataQualityCheckExpectationsAction(
             metric
             for metric in metric_run.metrics
             if isinstance(metric, ColumnMetric)
-            and metric.metric_name == MetricTypes.COLUMN_NULL_COUNT
+            and metric.metric_name == MetricTypes.COLUMN_NON_NULL_COUNT
         ]
 
         if not column_null_values_metric or len(column_null_values_metric) == 0:
-            raise RuntimeError("missing COLUMN_NULL_COUNT metrics")  # noqa: TRY003
+            raise RuntimeError("missing COLUMN_NON_NULL_COUNT metrics")  # noqa: TRY003
 
         expectation_ids = []
         # Single-expectation approach using ExpectColumnProportionOfNonNullValuesToBeBetween
@@ -389,7 +389,7 @@ class GenerateDataQualityCheckExpectationsAction(
         )
         for column in columns_missing_completeness_coverage:
             column_name = column.column
-            null_count = column.value
+            non_null_count = column.value
             row_count = table_row_count.value
             expectation: gx_expectations.Expectation
 
@@ -399,7 +399,6 @@ class GenerateDataQualityCheckExpectationsAction(
             max_param_name = f"{unique_id}_proportion_max"
 
             # Calculate non-null proportion
-            non_null_count = row_count - null_count if row_count > 0 else 0
             non_null_proportion = non_null_count / row_count if row_count > 0 else 0
 
             if use_forecast:

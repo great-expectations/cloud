@@ -252,6 +252,7 @@ MockCompletenessMetrics = Callable[[int, int], list[Metric[Any]]]
 @pytest.fixture
 def mock_completeness_metrics() -> MockCompletenessMetrics:
     def _completeness_metrics(null_count: int, row_count: int) -> list[Metric[Any]]:
+        non_null_count = row_count - null_count
         return [
             TableMetric(
                 batch_id="batch_id",
@@ -267,8 +268,8 @@ def mock_completeness_metrics() -> MockCompletenessMetrics:
             ),
             ColumnMetric(
                 batch_id="batch_id",
-                metric_name=MetricTypes.COLUMN_NULL_COUNT,
-                value=null_count,
+                metric_name=MetricTypes.COLUMN_NON_NULL_COUNT,
+                value=non_null_count,
                 exception=None,
                 column="col1",
             ),
@@ -1003,13 +1004,13 @@ def test_generate_completeness_expectations_edge_cases(
         id="test-id",
     )
 
-    # Verify expectation for all nulls case
+    # Verify expectation for all nulls case (non_null_proportion = 0)
     assert len(created_expectations) == 1
     expectation = created_expectations[0]
     assert isinstance(expectation, gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween)
     assert expectation.column
-    assert expectation.max_value == 0
     assert expectation.min_value is None
+    assert expectation.max_value == 0
     assert expectation.windows is None
     assert expectation.severity == FailureSeverity.WARNING
 
@@ -1034,13 +1035,13 @@ def test_generate_completeness_expectations_edge_cases(
         id="test-id",
     )
 
-    # Verify expectation for no nulls case
+    # Verify expectation for no nulls case (non_null_proportion = 1)
     assert len(created_expectations) == 1
     expectation = created_expectations[0]
     assert isinstance(expectation, gx_expectations.ExpectColumnProportionOfNonNullValuesToBeBetween)
     assert expectation.column
-    assert expectation.min_value == 1
     assert expectation.max_value is None
+    assert expectation.min_value == 1
     assert expectation.windows is None
     assert expectation.severity == FailureSeverity.WARNING
 
