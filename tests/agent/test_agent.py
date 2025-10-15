@@ -678,14 +678,6 @@ def test_correlation_id_header(
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            f"{base_url}organizations/{org_id}/accounts/me",
-            json={
-                "user_id": "12345678-1234-1234-1234-123456789abc",
-                "workspaces": [{"id": workspace_id, "role": "admin"}],
-            },
-        )
-        rsps.add(
-            responses.GET,
             f"{base_url}api/v1/organizations/{org_id}/workspaces/{workspace_id}/data-context-configuration",
             json=data_context_config,
         )
