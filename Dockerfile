@@ -28,9 +28,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 #   unixodbc: required for odbc driver datasources (i.e. Microsoft SQL Server)
 #   msodbcsql18: specific SQL Server odbc driver
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN apt-get update && \
+    CURL_VERSION=$(apt-cache madison curl | head -1 | awk '{print $3}') && \
+    apt-get install --no-install-recommends -y \
       python3-dev=3.13.5-1 gcc=4:14.2.0-1 \
-      curl gnupg=2.4.7-21 ca-certificates=20250419 unixodbc=2.3.12-2 \
+      "curl=${CURL_VERSION}" gnupg=2.4.7-21 ca-certificates=20250419 unixodbc=2.3.12-2 \
       tini=0.19.0-3+b3 && \
     mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg && \
