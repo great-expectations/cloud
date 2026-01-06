@@ -601,14 +601,14 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "1.9.3"
+version = "1.10.0"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = "<3.14,>=3.10"
 groups = ["main"]
 files = [
-    {file = "great_expectations-1.9.3-py3-none-any.whl", hash = "sha256:bd39e5d5cf8eafe31bb1d246b4b8f5bb7c81dd5c397879a1a3b502949c6bf66c"},
-    {file = "great_expectations-1.9.3.tar.gz", hash = "sha256:25889f6174dbb1ed68c0e06b58befe9ceb9623852cf491419c44b4897fa43ad6"},
+    {file = "great_expectations-1.10.0-py3-none-any.whl", hash = "sha256:e0c3a92a2a906dced70079295e88018e4a9ec51355e8333fed6598549abaa919"},
+    {file = "great_expectations-1.10.0.tar.gz", hash = "sha256:272fa5bd4ee77cac30b25558de94d0a64f46e96477bceaaeac08793fe38be3ee"},
 ]
 
 [package.dependencies]
@@ -664,7 +664,7 @@ snowflake = ["pyarrow (>=14) ; python_version >= \"3.12\"", "snowflake-connector
 spark = ["pyspark (>=2.3.2,<4.0)"]
 spark-connect = ["googleapis-common-protos (>=1.56.4)", "grpcio (>=1.48.1)", "grpcio-status (>=1.48.1)"]
 teradata = ["sqlalchemy (<2.0.0)", "teradatasqlalchemy (==17.0.0.5)"]
-test = ["adr-tools-python (==1.0.3)", "boto3 (>=1.17.106)", "coverage[toml] (>=7.5.1)", "datasets (>=4.1.0)", "docstring-parser (==0.16)", "feather-format (>=0.4.1)", "flaky (>=3.7.0)", "flask (>=1.0.0)", "freezegun (>=0.3.15)", "invoke (>=2.0.0)", "moto[s3,sns] (>=4.2.13,<5.0)", "mypy (==1.19.0)", "pact-python (>=2.0.1,<3)", "pdf2image (>=1.17.0)", "pre-commit (>=2.21.0)", "pyarrow (>=14) ; python_version >= \"3.12\"", "pyarrow ; python_version < \"3.12\"", "pyfakefs (>=4.5.1)", "pytesseract (>=0.3.13)", "pytest (>=8.2.1)", "pytest-benchmark (>=3.4.1)", "pytest-cov (>=5.0.0)", "pytest-icdiff (>=0.9.0)", "pytest-mock (>=3.14.0)", "pytest-order (>=1.2.1)", "pytest-random-order (>=1.1.1)", "pytest-timeout (>=2.3.1)", "pytest-xdist (>=3.6.1)", "requirements-parser (>=0.9.0)", "responses (>=0.23.1,!=0.25.5)", "ruff (==0.14.8)", "setuptools (>=70.0.0)", "sqlalchemy (>=1.4.0)", "tomli (>=2.0.1)"]
+test = ["adr-tools-python (==1.0.3)", "boto3 (>=1.17.106)", "coverage[toml] (>=7.5.1)", "datasets (>=4.1.0)", "docstring-parser (==0.16)", "feather-format (>=0.4.1)", "flaky (>=3.7.0)", "flask (>=1.0.0)", "freezegun (>=0.3.15)", "invoke (>=2.0.0)", "moto[s3,sns] (>=4.2.13,<5.0)", "mypy (==1.19.0)", "pact-python (>=2.0.1,<3)", "pdf2image (>=1.17.0)", "pre-commit (>=2.21.0)", "pyarrow (>=14) ; python_version >= \"3.12\"", "pyarrow ; python_version < \"3.12\"", "pyfakefs (>=4.5.1)", "pytesseract (>=0.3.13)", "pytest (>=8.2.1)", "pytest-benchmark (>=3.4.1)", "pytest-cov (>=5.0.0)", "pytest-icdiff (>=0.9.0)", "pytest-mock (>=3.14.0)", "pytest-order (>=1.2.1)", "pytest-random-order (>=1.1.1)", "pytest-timeout (>=2.3.1)", "pytest-xdist (>=3.6.1)", "requirements-parser (>=0.9.0)", "responses (>=0.23.1,!=0.25.5)", "ruff (==0.14.9)", "setuptools (>=70.0.0)", "sqlalchemy (>=1.4.0)", "tomli (>=2.0.1)"]
 trino = ["sqlalchemy (>=1.4.0)", "trino (>=0.310.0,!=0.316.0)"]
 vertica = ["sqlalchemy (>=1.4.0)", "sqlalchemy-vertica-python (>=0.5.10)"]
 
@@ -1102,14 +1102,14 @@ files = [
 
 [[package]]
 name = "marshmallow"
-version = "3.26.1"
+version = "3.26.2"
 description = "A lightweight library for converting complex datatypes to and from native Python datatypes."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "marshmallow-3.26.1-py3-none-any.whl", hash = "sha256:3350409f20a70a7e4e11a27661187b77cdcaeb20abca41c1454fe33636bea09c"},
-    {file = "marshmallow-3.26.1.tar.gz", hash = "sha256:e6d8affb6cb61d39d26402096dc0aee12d5a26d490a121f118d2e81dc0719dc6"},
+    {file = "marshmallow-3.26.2-py3-none-any.whl", hash = "sha256:013fa8a3c4c276c24d26d84ce934dc964e2aa794345a0f8c7e5a7191482c8a73"},
+    {file = "marshmallow-3.26.2.tar.gz", hash = "sha256:bbe2adb5a03e6e3571b573f42527c6fe926e17467833660bebd11593ab8dfd57"},
 ]
 
 [package.dependencies]
@@ -1859,14 +1859,14 @@ typing-extensions = ">=4.14.1"
 
 [[package]]
 name = "pyfakefs"
-version = "5.10.2"
+version = "6.0.0"
 description = "Implements a fake file system that mocks the Python file system modules."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "pyfakefs-5.10.2-py3-none-any.whl", hash = "sha256:6ff0e84653a71efc6a73f9ee839c3141e3a7cdf4e1fb97666f82ac5b24308d64"},
-    {file = "pyfakefs-5.10.2.tar.gz", hash = "sha256:8ae0e5421e08de4e433853a4609a06a1835f4bc2a3ce13b54f36713a897474ba"},
+    {file = "pyfakefs-6.0.0-py3-none-any.whl", hash = "sha256:44ef5ab0294e7e623b8e56b4f2d8c9468b737d6e8641053063c43033d2c8c180"},
+    {file = "pyfakefs-6.0.0.tar.gz", hash = "sha256:059fd0b2174bfeed499ecb0a59bccff557f267cc6d885afc0e5b76e78b6d50da"},
 ]
 
 [[package]]
@@ -3073,4 +3073,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11.4,<3.12"
-content-hash = "53928d6d0b360cf601aa1146cc4a30837d40737481f490e5c4708bdc82ab1e1f"
+content-hash = "a4ee9f178da89cd1538d8e7e00390ac3c9d3aa7c8cc1ae23a0a97e3b78b1a62a"
