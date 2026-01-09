@@ -244,23 +244,14 @@ class GXAgent:
 
         def sigterm_handler(signum: int, frame: Any) -> None:
             self._log_signal_received("SIGTERM", signum)
-            # Call original handler if it exists and is callable
-            if callable(original_sigterm) and original_sigterm not in (
-                signal.SIG_IGN,
-                signal.SIG_DFL,
-            ):
+            if callable(original_sigterm):
                 original_sigterm(signum, frame)
             elif original_sigterm == signal.SIG_DFL:
-                # Default behavior for SIGTERM is to terminate
                 raise SystemExit(128 + signum)
 
         def sigint_handler(signum: int, frame: Any) -> None:
             self._log_signal_received("SIGINT", signum)
-            # Call original handler if it exists and is callable
-            if callable(original_sigint) and original_sigint not in (
-                signal.SIG_IGN,
-                signal.SIG_DFL,
-            ):
+            if callable(original_sigint):
                 original_sigint(signum, frame)
             elif original_sigint == signal.SIG_DFL:
                 raise KeyboardInterrupt
@@ -305,8 +296,11 @@ class GXAgent:
         self._heartbeat_stop_event = threading.Event()
 
         def heartbeat_loop() -> None:
-            while not self._heartbeat_stop_event.wait(timeout=self._HEARTBEAT_INTERVAL_SECONDS):
-                if self._heartbeat_stop_event.is_set():
+            stop_event = self._heartbeat_stop_event
+            if stop_event is None:
+                return
+            while not stop_event.wait(timeout=self._HEARTBEAT_INTERVAL_SECONDS):
+                if stop_event.is_set():
                     break
                 elapsed = time.time() - (self._current_job_start_time or time.time())
                 memory_mb = self._get_memory_usage_mb()
