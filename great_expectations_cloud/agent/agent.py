@@ -3,8 +3,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import resource
 import signal
 import socket
+import sys
+import threading
+import time
 import traceback
 import warnings
 from collections import defaultdict
@@ -139,6 +143,9 @@ class GXAgent:
     _PYPI_GX_AGENT_PACKAGE_NAME = "great_expectations_cloud"
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
+    # Heartbeat interval in seconds (log progress every 60 seconds during job processing)
+    _HEARTBEAT_INTERVAL_SECONDS = 60
+
     def __init__(self: Self):
         self._config = self._create_config()
 
@@ -161,6 +168,15 @@ class GXAgent:
         self._redeliver_msg_task: asyncio.Task[Any] | None = None
         self._correlation_ids: defaultdict[str, int] = defaultdict(lambda: 0)
         self._listen_tries = 0
+
+        # Heartbeat tracking
+        self._heartbeat_stop_event: threading.Event | None = None
+        self._heartbeat_thread: threading.Thread | None = None
+        self._current_job_correlation_id: str | None = None
+        self._current_job_start_time: float | None = None
+
+        # Install signal handlers for graceful shutdown logging
+        self._install_signal_handlers()
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
@@ -220,6 +236,105 @@ class GXAgent:
         finally:
             if subscriber is not None:
                 subscriber.close()
+
+    def _install_signal_handlers(self) -> None:
+        """Install signal handlers to log when the process receives shutdown signals."""
+        original_sigterm = signal.getsignal(signal.SIGTERM)
+        original_sigint = signal.getsignal(signal.SIGINT)
+
+        def sigterm_handler(signum: int, frame: Any) -> None:
+            self._log_signal_received("SIGTERM", signum)
+            # Call original handler if it exists and is callable
+            if callable(original_sigterm) and original_sigterm not in (
+                signal.SIG_IGN,
+                signal.SIG_DFL,
+            ):
+                original_sigterm(signum, frame)
+            elif original_sigterm == signal.SIG_DFL:
+                # Default behavior for SIGTERM is to terminate
+                raise SystemExit(128 + signum)
+
+        def sigint_handler(signum: int, frame: Any) -> None:
+            self._log_signal_received("SIGINT", signum)
+            # Call original handler if it exists and is callable
+            if callable(original_sigint) and original_sigint not in (
+                signal.SIG_IGN,
+                signal.SIG_DFL,
+            ):
+                original_sigint(signum, frame)
+            elif original_sigint == signal.SIG_DFL:
+                raise KeyboardInterrupt
+
+        signal.signal(signal.SIGTERM, sigterm_handler)
+        signal.signal(signal.SIGINT, sigint_handler)
+
+    def _log_signal_received(self, signal_name: str, signum: int) -> None:
+        """Log when a shutdown signal is received, including current job info."""
+        memory_mb = self._get_memory_usage_mb()
+        LOGGER.warning(
+            f"Received {signal_name} signal - shutting down",
+            extra={
+                "signal": signal_name,
+                "signal_number": signum,
+                "hostname": socket.gethostname(),
+                "current_job_correlation_id": self._current_job_correlation_id,
+                "job_elapsed_seconds": (
+                    time.time() - self._current_job_start_time
+                    if self._current_job_start_time
+                    else None
+                ),
+                "memory_usage_mb": memory_mb,
+                "has_active_task": self._current_task is not None
+                and not self._current_task.done(),
+            },
+        )
+
+    def _get_memory_usage_mb(self) -> float:
+        """Get current memory usage in MB using resource module."""
+        # ru_maxrss is in KB on Linux, bytes on macOS
+        usage = resource.getrusage(resource.RUSAGE_SELF)
+        # On macOS, ru_maxrss is in bytes; on Linux, it's in KB
+        if sys.platform == "darwin":
+            return usage.ru_maxrss / (1024 * 1024)
+        return usage.ru_maxrss / 1024
+
+    def _start_heartbeat(self, correlation_id: str, org_id: UUID, workspace_id: UUID) -> None:
+        """Start a background thread that logs periodic heartbeats during job processing."""
+        self._current_job_correlation_id = correlation_id
+        self._current_job_start_time = time.time()
+        self._heartbeat_stop_event = threading.Event()
+
+        def heartbeat_loop() -> None:
+            while not self._heartbeat_stop_event.wait(timeout=self._HEARTBEAT_INTERVAL_SECONDS):
+                if self._heartbeat_stop_event.is_set():
+                    break
+                elapsed = time.time() - (self._current_job_start_time or time.time())
+                memory_mb = self._get_memory_usage_mb()
+                LOGGER.info(
+                    "Job heartbeat - still processing",
+                    extra={
+                        "correlation_id": correlation_id,
+                        "organization_id": str(org_id),
+                        "workspace_id": str(workspace_id),
+                        "hostname": socket.gethostname(),
+                        "elapsed_seconds": round(elapsed, 1),
+                        "memory_usage_mb": round(memory_mb, 1),
+                    },
+                )
+
+        self._heartbeat_thread = threading.Thread(target=heartbeat_loop, daemon=True)
+        self._heartbeat_thread.start()
+
+    def _stop_heartbeat(self) -> None:
+        """Stop the heartbeat thread."""
+        if self._heartbeat_stop_event:
+            self._heartbeat_stop_event.set()
+        if self._heartbeat_thread and self._heartbeat_thread.is_alive():
+            self._heartbeat_thread.join(timeout=2)
+        self._heartbeat_thread = None
+        self._heartbeat_stop_event = None
+        self._current_job_correlation_id = None
+        self._current_job_start_time = None
 
     @classmethod
     def get_current_gx_agent_version(cls) -> str:
@@ -379,6 +494,7 @@ class GXAgent:
                 org_id=org_id,
                 workspace_id=workspace_id,
             )
+        memory_mb = self._get_memory_usage_mb()
         LOGGER.info(
             "Starting job",
             extra={
@@ -391,8 +507,12 @@ class GXAgent:
                 else None,
                 "hostname": socket.gethostname(),
                 "redelivered": event_context.redelivered,
+                "memory_usage_mb": round(memory_mb, 1),
             },
         )
+
+        # Start heartbeat logging for long-running jobs
+        self._start_heartbeat(event_context.correlation_id, org_id, workspace_id)
 
         self._set_sentry_tags(event_context)
 
@@ -418,8 +538,24 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
+        # Stop the heartbeat thread now that the job is done
+        self._stop_heartbeat()
+
         org_id = self.get_organization_id(event_context)
         workspace_id = self.get_workspace_id(event_context)
+
+        # Log thread exit state for diagnostics (GX-2311)
+        memory_mb = self._get_memory_usage_mb()
+        LOGGER.debug(
+            "Job thread exiting",
+            extra={
+                "correlation_id": event_context.correlation_id,
+                "hostname": socket.gethostname(),
+                "has_exception": future.exception() is not None,
+                "cancelled": future.cancelled(),
+                "memory_usage_mb": round(memory_mb, 1),
+            },
+        )
 
         # get results or errors from the thread
         error = future.exception()
