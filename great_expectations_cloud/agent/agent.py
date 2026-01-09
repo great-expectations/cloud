@@ -275,8 +275,7 @@ class GXAgent:
                     else None
                 ),
                 "memory_usage_mb": memory_mb,
-                "has_active_task": self._current_task is not None
-                and not self._current_task.done(),
+                "has_active_task": self._current_task is not None and not self._current_task.done(),
             },
         )
 
