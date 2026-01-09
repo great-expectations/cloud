@@ -27,6 +27,7 @@ class OnMessagePayload:
     correlation_id: str
     delivery_tag: int
     body: bytes
+    redelivered: bool = False  # Set by RabbitMQ when message is redelivered
 
 
 class OnMessageFn(Protocol):
@@ -174,8 +175,12 @@ class AsyncRabbitMQClient:
         # param on_message is provided by the caller as an argument to AsyncRabbitMQClient.run
         correlation_id = header_frame.correlation_id
         delivery_tag = method_frame.delivery_tag
+        redelivered = method_frame.redelivered  # RabbitMQ sets this flag on redelivery
         payload = OnMessagePayload(
-            correlation_id=correlation_id, delivery_tag=delivery_tag, body=body
+            correlation_id=correlation_id,
+            delivery_tag=delivery_tag,
+            body=body,
+            redelivered=redelivered,
         )
         return on_message(payload)
 

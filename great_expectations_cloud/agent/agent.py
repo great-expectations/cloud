@@ -240,13 +240,14 @@ class GXAgent:
         Args:
             event_context: An Event with related properties and actions.
         """
-        # Track how many times this correlation_id has been seen (for diagnostics)
-        redelivery_count = self._correlation_ids.get(event_context.correlation_id, 0)
+        # Track how many times this correlation_id has been seen BY THIS POD (for local diagnostics)
+        # Note: event_context.redelivered is set by RabbitMQ and indicates cross-pod redelivery
+        local_delivery_count = self._correlation_ids.get(event_context.correlation_id, 0)
 
         if self._reject_correlation_id(event_context.correlation_id) is True:
-            # this event has been redelivered too many times - remove it from circulation
+            # this event has been redelivered too many times to THIS pod - remove it from circulation
             LOGGER.error(
-                "Message redelivered too many times, removing from queue",
+                "Message redelivered too many times to this pod, removing from queue",
                 extra={
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
@@ -255,7 +256,8 @@ class GXAgent:
                     "schedule_id": event_context.event.schedule_id
                     if isinstance(event_context.event, ScheduledEventBase)
                     else None,
-                    "redelivery_count": redelivery_count,
+                    "local_delivery_count": local_delivery_count,
+                    "redelivered": event_context.redelivered,
                 },
             )
             event_context.processed_with_failures()
@@ -271,7 +273,7 @@ class GXAgent:
                     "schedule_id": event_context.event.schedule_id
                     if isinstance(event_context.event, ScheduledEventBase)
                     else None,
-                    "redelivery_count": redelivery_count,
+                    "redelivered": event_context.redelivered,
                 },
             )
             # request that this message is redelivered later
@@ -280,10 +282,10 @@ class GXAgent:
             self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
             return
 
-        # Log when accepting a task, especially if it's a redelivery
-        if redelivery_count > 0:
-            LOGGER.info(
-                "Accepting redelivered message for processing",
+        # Log when accepting a redelivered message (RabbitMQ flag indicates another consumer failed)
+        if event_context.redelivered:
+            LOGGER.warning(
+                "Accepting redelivered message - another consumer failed to acknowledge",
                 extra={
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
@@ -292,7 +294,7 @@ class GXAgent:
                     "schedule_id": event_context.event.schedule_id
                     if isinstance(event_context.event, ScheduledEventBase)
                     else None,
-                    "redelivery_count": redelivery_count,
+                    "redelivered": event_context.redelivered,
                 },
             )
 
@@ -388,6 +390,7 @@ class GXAgent:
                 if isinstance(event_context.event, ScheduledEventBase)
                 else None,
                 "hostname": socket.gethostname(),
+                "redelivered": event_context.redelivered,
             },
         )
 

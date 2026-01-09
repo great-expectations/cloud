@@ -37,6 +37,8 @@ class EventContext:
             can be removed from the queue.
         redeliver_message: async callable to signal that the broker should
             try to deliver this message again.
+        redelivered: True if RabbitMQ is redelivering this message (another
+            consumer failed to acknowledge it).
     """
 
     event: Event
@@ -44,6 +46,7 @@ class EventContext:
     processed_successfully: Callable[[], None]
     processed_with_failures: Callable[[], None]
     redeliver_message: Callable[[], Coroutine[OnMessageCallback, None, None]]
+    redelivered: bool = False
 
 
 class OnMessageCallback(Protocol):
@@ -142,6 +145,7 @@ class Subscriber:
             processed_successfully=ack_callback,
             processed_with_failures=nack_callback,
             redeliver_message=redeliver_message,
+            redelivered=payload.redelivered,
         )
 
         return on_message(event_context)
