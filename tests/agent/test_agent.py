@@ -884,7 +884,6 @@ def test_create_scheduled_job_logs_warning_on_400_response(
     This occurs when a message is redelivered and another runner has already
     started processing the job. We continue processing as a safety measure in case
     the original runner fails to complete the job.
-    See GX-2311 for context.
     """
     agent = GXAgent()
 

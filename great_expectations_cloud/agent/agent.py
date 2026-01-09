@@ -397,7 +397,6 @@ class GXAgent:
             self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
             return
 
-        # Log when accepting a redelivered message (RabbitMQ flag indicates another consumer failed)
         if event_context.redelivered:
             LOGGER.warning(
                 "Accepting redelivered message - another consumer failed to acknowledge",
@@ -511,7 +510,6 @@ class GXAgent:
             },
         )
 
-        # Start heartbeat logging for long-running jobs
         self._start_heartbeat(event_context.correlation_id, org_id, workspace_id)
 
         self._set_sentry_tags(event_context)
@@ -538,13 +536,11 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
-        # Stop the heartbeat thread now that the job is done
         self._stop_heartbeat()
 
         org_id = self.get_organization_id(event_context)
         workspace_id = self.get_workspace_id(event_context)
 
-        # Log thread exit state for diagnostics (GX-2311)
         memory_mb = self._get_memory_usage_mb()
         LOGGER.debug(
             "Job thread exiting",
@@ -837,8 +833,6 @@ class GXAgent:
             payload = CreateScheduledJobAndSetJobStartedRequest(data=data).json()
             response = session.post(agent_sessions_url, data=payload)
 
-            # Enhanced diagnostic logging for 400 errors (job already exists)
-            # This indicates RabbitMQ redelivered a message that another runner already claimed
             if response.status_code == HTTPStatus.BAD_REQUEST:
                 try:
                     response_body = response.json()
@@ -860,7 +854,7 @@ class GXAgent:
                 )
                 # Note: We intentionally continue processing instead of NACKing.
                 # This ensures job completion even if the first runner fails.
-                # TODO(GX-2311): Once we add inProgress timeout in Mercury, we can
+                # TODO: Once we add inProgress timeout in Mercury, we can
                 # safely NACK here to prevent duplicate processing.
 
             LOGGER.info(

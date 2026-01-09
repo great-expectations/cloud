@@ -42,11 +42,7 @@ class RunScheduledCheckpointAction(AgentAction[RunScheduledCheckpointEvent]):
 def run_scheduled_checkpoint(
     context: CloudDataContext, event: RunScheduledCheckpointEvent, id: str, auth_key: str, url: str
 ) -> ActionResult:
-    """Run a scheduled checkpoint, fetching expectation parameters from GX Cloud first.
-
-    This function includes detailed lifecycle logging to help diagnose
-    where jobs may get stuck (GX-2311).
-    """
+    """Run a scheduled checkpoint, fetching expectation parameters from GX Cloud first."""
     hostname = socket.gethostname()
     log_extra = {
         "correlation_id": id,
@@ -55,7 +51,7 @@ def run_scheduled_checkpoint(
         "hostname": hostname,
     }
 
-    LOGGER.info("Fetching expectation parameters from GX Cloud", extra=log_extra)
+    LOGGER.debug("Fetching expectation parameters from GX Cloud", extra=log_extra)
     with create_session(access_token=auth_key) as session:
         response = session.get(url=url)
 
@@ -70,7 +66,7 @@ def run_scheduled_checkpoint(
             response=response,
         )
     data = response.json()
-    LOGGER.info("Expectation parameters fetched successfully", extra=log_extra)
+    LOGGER.debug("Expectation parameters fetched successfully", extra=log_extra)
 
     try:
         expectation_parameters = (
@@ -85,7 +81,7 @@ def run_scheduled_checkpoint(
             response=response,
         ) from e
 
-    LOGGER.info(
+    LOGGER.debug(
         "Proceeding to run checkpoint",
         extra={**log_extra, "has_expectation_parameters": expectation_parameters is not None},
     )

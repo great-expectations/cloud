@@ -49,11 +49,7 @@ def run_checkpoint(
     id: str,
     expectation_parameters: dict[str, Any] | None = None,
 ) -> ActionResult:
-    """Run a checkpoint and return the result.
-
-    This function includes detailed lifecycle logging to help diagnose
-    where jobs may get stuck (GX-2311).
-    """
+    """Run a checkpoint and return the result."""
     hostname = socket.gethostname()
     log_extra = {
         "correlation_id": id,
@@ -66,9 +62,9 @@ def run_checkpoint(
     if not event.checkpoint_name:
         raise MissingCheckpointNameError
 
-    LOGGER.info("Fetching checkpoint from context", extra=log_extra)
+    LOGGER.debug("Fetching checkpoint from context", extra=log_extra)
     checkpoint = context.checkpoints.get(name=event.checkpoint_name)
-    LOGGER.info(
+    LOGGER.debug(
         "Checkpoint fetched successfully",
         extra={
             **log_extra,
@@ -93,28 +89,28 @@ def run_checkpoint(
     # Test connections to all datasources and assets
     for ds_name, data_sources_assets in data_sources_assets_by_data_source_name.items():
         data_source = data_sources_assets.data_source
-        LOGGER.info(
+        LOGGER.debug(
             "Testing datasource connection",
             extra={**log_extra, "datasource_name": ds_name},
         )
         data_source.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
-        LOGGER.info(
+        LOGGER.debug(
             "Datasource connection successful",
             extra={**log_extra, "datasource_name": ds_name},
         )
 
         for asset_name, data_asset in data_sources_assets.assets_by_name.items():
-            LOGGER.info(
+            LOGGER.debug(
                 "Testing data asset connection",
                 extra={**log_extra, "datasource_name": ds_name, "asset_name": asset_name},
             )
             data_asset.test_connection()  # raises `TestConnectionError` on failure
-            LOGGER.info(
+            LOGGER.debug(
                 "Data asset connection successful",
                 extra={**log_extra, "datasource_name": ds_name, "asset_name": asset_name},
             )
 
-    LOGGER.info(
+    LOGGER.debug(
         "Running checkpoint",
         extra={
             **log_extra,
@@ -125,7 +121,7 @@ def run_checkpoint(
     checkpoint_run_result = checkpoint.run(
         batch_parameters=event.splitter_options, expectation_parameters=expectation_parameters
     )
-    LOGGER.info(
+    LOGGER.debug(
         "Checkpoint run completed",
         extra={
             **log_extra,
@@ -145,7 +141,7 @@ def run_checkpoint(
         )
         created_resources.append(created_resource)
 
-    LOGGER.info(
+    LOGGER.debug(
         "Checkpoint action completed successfully",
         extra={
             **log_extra,

@@ -242,7 +242,6 @@ class AsyncRabbitMQClient:
 
     def _on_connection_closed(self, connection: AsyncioConnection, reason: pika.Exception) -> None:
         """Callback invoked after the broker closes the connection"""
-        # Enhanced logging for GX-2311 diagnostics
         if isinstance(reason, (ConnectionClosed, ChannelClosed)):
             LOGGER.warning(
                 "Connection to RabbitMQ has been closed",
