@@ -190,10 +190,13 @@ class AsyncRabbitMQClient:
     def _on_consumer_canceled(self, method_frame: Basic.Cancel) -> None:
         """Callback invoked when the broker cancels the client's connection."""
         if self._channel is not None:
-            LOGGER.info(
-                "Consumer was cancelled remotely, shutting down",
+            LOGGER.warning(
+                "Consumer was cancelled remotely by RabbitMQ - this may indicate DAT timeout",
                 extra={
-                    "method_frame": method_frame,
+                    "consumer_tag": method_frame.consumer_tag
+                    if hasattr(method_frame, "consumer_tag")
+                    else None,
+                    "was_consuming": self.was_consuming,
                 },
             )
             self._channel.close()
@@ -232,11 +235,29 @@ class AsyncRabbitMQClient:
         self._reconnect()
         self._log_pika_exception("Connection open failed", reason)
 
-    def _on_connection_closed(
-        self, connection: AsyncioConnection, _unused_reason: pika.Exception
-    ) -> None:
+    def _on_connection_closed(self, connection: AsyncioConnection, reason: pika.Exception) -> None:
         """Callback invoked after the broker closes the connection"""
-        LOGGER.debug("Connection to RabbitMQ has been closed")
+        # Enhanced logging for GX-2311 diagnostics
+        if isinstance(reason, (ConnectionClosed, ChannelClosed)):
+            LOGGER.warning(
+                "Connection to RabbitMQ has been closed",
+                extra={
+                    "reply_code": reason.reply_code,
+                    "reply_text": reason.reply_text,
+                    "was_consuming": self.was_consuming,
+                    "is_closing": self._closing,
+                },
+            )
+        else:
+            LOGGER.warning(
+                "Connection to RabbitMQ has been closed",
+                extra={
+                    "reason": str(reason),
+                    "reason_type": type(reason).__name__,
+                    "was_consuming": self.was_consuming,
+                    "is_closing": self._closing,
+                },
+            )
         self._channel = None
         self._is_unrecoverable = True
         if self._closing:

@@ -4,12 +4,14 @@ import asyncio
 import logging
 import os
 import signal
+import socket
 import traceback
 import warnings
 from collections import defaultdict
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
+from http import HTTPStatus
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Final, Literal
 from urllib.parse import urljoin, urlparse
@@ -238,8 +240,24 @@ class GXAgent:
         Args:
             event_context: An Event with related properties and actions.
         """
+        # Track how many times this correlation_id has been seen (for diagnostics)
+        redelivery_count = self._correlation_ids.get(event_context.correlation_id, 0)
+
         if self._reject_correlation_id(event_context.correlation_id) is True:
             # this event has been redelivered too many times - remove it from circulation
+            LOGGER.error(
+                "Message redelivered too many times, removing from queue",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                    "organization_id": self.get_organization_id(event_context),
+                    "workspace_id": str(self.get_workspace_id(event_context)),
+                    "schedule_id": event_context.event.schedule_id
+                    if isinstance(event_context.event, ScheduledEventBase)
+                    else None,
+                    "redelivery_count": redelivery_count,
+                },
+            )
             event_context.processed_with_failures()
             return
         elif self._can_accept_new_task() is not True:
@@ -253,6 +271,7 @@ class GXAgent:
                     "schedule_id": event_context.event.schedule_id
                     if isinstance(event_context.event, ScheduledEventBase)
                     else None,
+                    "redelivery_count": redelivery_count,
                 },
             )
             # request that this message is redelivered later
@@ -260,6 +279,22 @@ class GXAgent:
             # store a reference the task to ensure it isn't garbage collected
             self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
             return
+
+        # Log when accepting a task, especially if it's a redelivery
+        if redelivery_count > 0:
+            LOGGER.info(
+                "Accepting redelivered message for processing",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                    "organization_id": self.get_organization_id(event_context),
+                    "workspace_id": str(self.get_workspace_id(event_context)),
+                    "schedule_id": event_context.event.schedule_id
+                    if isinstance(event_context.event, ScheduledEventBase)
+                    else None,
+                    "redelivery_count": redelivery_count,
+                },
+            )
 
         self._current_task = self._executor.submit(
             self._handle_event,
@@ -352,6 +387,7 @@ class GXAgent:
                 "schedule_id": event_context.event.schedule_id
                 if isinstance(event_context.event, ScheduledEventBase)
                 else None,
+                "hostname": socket.gethostname(),
             },
         )
 
@@ -384,6 +420,7 @@ class GXAgent:
 
         # get results or errors from the thread
         error = future.exception()
+
         if error is None:
             result: ActionResult = future.result()
 
@@ -425,18 +462,22 @@ class GXAgent:
                         "schedule_id": event_context.event.schedule_id
                         if isinstance(event_context.event, ScheduledEventBase)
                         else None,
+                        "hostname": socket.gethostname(),
                     },
                 )
         else:
             status = build_failed_job_completed_status(error)
             LOGGER.info(traceback.format_exc())
-            LOGGER.info(
+            LOGGER.warning(
                 "Job completed with error",
                 extra={
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
                     "organization_id": str(org_id),
                     "workspace_id": str(workspace_id),
+                    "hostname": socket.gethostname(),
+                    "error_type": type(error).__name__,
+                    "error_message": str(error)[:500],  # Truncate to avoid huge logs
                 },
             )
 
@@ -656,6 +697,33 @@ class GXAgent:
         with create_session(access_token=self.get_auth_key()) as session:
             payload = CreateScheduledJobAndSetJobStartedRequest(data=data).json()
             response = session.post(agent_sessions_url, data=payload)
+
+            # Enhanced diagnostic logging for 400 errors (job already exists)
+            # This indicates RabbitMQ redelivered a message that another runner already claimed
+            if response.status_code == HTTPStatus.BAD_REQUEST:
+                try:
+                    response_body = response.json()
+                except Exception:
+                    response_body = response.text
+                LOGGER.warning(
+                    "Job already exists - this message was likely redelivered by RabbitMQ "
+                    "after another runner already claimed it. Continuing to process anyway "
+                    "as a safety measure in case the original runner failed.",
+                    extra={
+                        "correlation_id": str(event_context.correlation_id),
+                        "event_type": str(event_context.event.type),
+                        "organization_id": str(org_id),
+                        "schedule_id": str(event_context.event.schedule_id),
+                        "workspace_id": str(workspace_id),
+                        "response_status": response.status_code,
+                        "response_body": response_body,
+                    },
+                )
+                # Note: We intentionally continue processing instead of NACKing.
+                # This ensures job completion even if the first runner fails.
+                # TODO(GX-2311): Once we add inProgress timeout in Mercury, we can
+                # safely NACK here to prevent duplicate processing.
+
             LOGGER.info(
                 "Created scheduled job and set started",
                 extra={
@@ -664,6 +732,7 @@ class GXAgent:
                     "organization_id": str(org_id),
                     "schedule_id": str(event_context.event.schedule_id),
                     "workspace_id": str(workspace_id),
+                    "response_status": response.status_code,
                 },
             )
             GXAgent._log_http_error(
