@@ -3,13 +3,19 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import resource
 import signal
+import socket
+import sys
+import threading
+import time
 import traceback
 import warnings
 from collections import defaultdict
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
+from http import HTTPStatus
 from importlib.metadata import version as metadata_version
 from typing import TYPE_CHECKING, Any, Callable, Final, Literal
 from urllib.parse import urljoin, urlparse
@@ -137,6 +143,9 @@ class GXAgent:
     _PYPI_GX_AGENT_PACKAGE_NAME = "great_expectations_cloud"
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
+    # Heartbeat interval in seconds (log progress every 60 seconds during job processing)
+    _HEARTBEAT_INTERVAL_SECONDS = 60
+
     def __init__(self: Self):
         self._config = self._create_config()
 
@@ -159,6 +168,15 @@ class GXAgent:
         self._redeliver_msg_task: asyncio.Task[Any] | None = None
         self._correlation_ids: defaultdict[str, int] = defaultdict(lambda: 0)
         self._listen_tries = 0
+
+        # Heartbeat tracking
+        self._heartbeat_stop_event: threading.Event | None = None
+        self._heartbeat_thread: threading.Thread | None = None
+        self._current_job_correlation_id: str | None = None
+        self._current_job_start_time: float | None = None
+
+        # Install signal handlers for graceful shutdown logging
+        self._install_signal_handlers()
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
@@ -219,6 +237,98 @@ class GXAgent:
             if subscriber is not None:
                 subscriber.close()
 
+    def _install_signal_handlers(self) -> None:
+        """Install signal handlers to log when the process receives shutdown signals."""
+        original_sigterm = signal.getsignal(signal.SIGTERM)
+        original_sigint = signal.getsignal(signal.SIGINT)
+
+        def sigterm_handler(signum: int, frame: Any) -> None:
+            self._log_signal_received("SIGTERM", signum)
+            if callable(original_sigterm):
+                original_sigterm(signum, frame)
+            elif original_sigterm == signal.SIG_DFL:
+                raise SystemExit(128 + signum)
+
+        def sigint_handler(signum: int, frame: Any) -> None:
+            self._log_signal_received("SIGINT", signum)
+            if callable(original_sigint):
+                original_sigint(signum, frame)
+            elif original_sigint == signal.SIG_DFL:
+                raise KeyboardInterrupt
+
+        signal.signal(signal.SIGTERM, sigterm_handler)
+        signal.signal(signal.SIGINT, sigint_handler)
+
+    def _log_signal_received(self, signal_name: str, signum: int) -> None:
+        """Log when a shutdown signal is received, including current job info."""
+        memory_mb = self._get_memory_usage_mb()
+        LOGGER.warning(
+            f"Received {signal_name} signal - shutting down",
+            extra={
+                "signal": signal_name,
+                "signal_number": signum,
+                "hostname": socket.gethostname(),
+                "current_job_correlation_id": self._current_job_correlation_id,
+                "job_elapsed_seconds": (
+                    time.time() - self._current_job_start_time
+                    if self._current_job_start_time
+                    else None
+                ),
+                "memory_usage_mb": memory_mb,
+                "has_active_task": self._current_task is not None and not self._current_task.done(),
+            },
+        )
+
+    def _get_memory_usage_mb(self) -> float:
+        """Get current memory usage in MB using resource module."""
+        # ru_maxrss is in KB on Linux, bytes on macOS
+        usage = resource.getrusage(resource.RUSAGE_SELF)
+        # On macOS, ru_maxrss is in bytes; on Linux, it's in KB
+        if sys.platform == "darwin":
+            return usage.ru_maxrss / (1024 * 1024)
+        return usage.ru_maxrss / 1024
+
+    def _start_heartbeat(self, correlation_id: str, org_id: UUID, workspace_id: UUID) -> None:
+        """Start a background thread that logs periodic heartbeats during job processing."""
+        self._current_job_correlation_id = correlation_id
+        self._current_job_start_time = time.time()
+        self._heartbeat_stop_event = threading.Event()
+
+        def heartbeat_loop() -> None:
+            stop_event = self._heartbeat_stop_event
+            if stop_event is None:
+                return
+            while not stop_event.wait(timeout=self._HEARTBEAT_INTERVAL_SECONDS):
+                if stop_event.is_set():
+                    break
+                elapsed = time.time() - (self._current_job_start_time or time.time())
+                memory_mb = self._get_memory_usage_mb()
+                LOGGER.debug(
+                    "job.heartbeat",
+                    extra={
+                        "correlation_id": correlation_id,
+                        "organization_id": str(org_id),
+                        "workspace_id": str(workspace_id),
+                        "hostname": socket.gethostname(),
+                        "elapsed_seconds": round(elapsed, 1),
+                        "memory_usage_mb": round(memory_mb, 1),
+                    },
+                )
+
+        self._heartbeat_thread = threading.Thread(target=heartbeat_loop, daemon=True)
+        self._heartbeat_thread.start()
+
+    def _stop_heartbeat(self) -> None:
+        """Stop the heartbeat thread."""
+        if self._heartbeat_stop_event:
+            self._heartbeat_stop_event.set()
+        if self._heartbeat_thread and self._heartbeat_thread.is_alive():
+            self._heartbeat_thread.join(timeout=2)
+        self._heartbeat_thread = None
+        self._heartbeat_stop_event = None
+        self._current_job_correlation_id = None
+        self._current_job_start_time = None
+
     @classmethod
     def get_current_gx_agent_version(cls) -> str:
         version: str = metadata_version(cls._PYPI_GX_AGENT_PACKAGE_NAME)
@@ -238,8 +348,26 @@ class GXAgent:
         Args:
             event_context: An Event with related properties and actions.
         """
+        # Track how many times this correlation_id has been seen BY THIS POD (for local diagnostics)
+        # Note: event_context.redelivered is set by RabbitMQ and indicates cross-pod redelivery
+        local_delivery_count = self._correlation_ids.get(event_context.correlation_id, 0)
+
         if self._reject_correlation_id(event_context.correlation_id) is True:
-            # this event has been redelivered too many times - remove it from circulation
+            # this event has been redelivered too many times to THIS pod - remove it from circulation
+            LOGGER.error(
+                "Message redelivered too many times to this pod, removing from queue",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                    "organization_id": self.get_organization_id(event_context),
+                    "workspace_id": str(self.get_workspace_id(event_context)),
+                    "schedule_id": event_context.event.schedule_id
+                    if isinstance(event_context.event, ScheduledEventBase)
+                    else None,
+                    "local_delivery_count": local_delivery_count,
+                    "redelivered": event_context.redelivered,
+                },
+            )
             event_context.processed_with_failures()
             return
         elif self._can_accept_new_task() is not True:
@@ -253,6 +381,7 @@ class GXAgent:
                     "schedule_id": event_context.event.schedule_id
                     if isinstance(event_context.event, ScheduledEventBase)
                     else None,
+                    "redelivered": event_context.redelivered,
                 },
             )
             # request that this message is redelivered later
@@ -260,6 +389,20 @@ class GXAgent:
             # store a reference the task to ensure it isn't garbage collected
             self._redeliver_msg_task = loop.create_task(event_context.redeliver_message())
             return
+
+        if event_context.redelivered:
+            LOGGER.warning(
+                "rabbitmq.message.redelivered",
+                extra={
+                    "event_type": event_context.event.type,
+                    "correlation_id": event_context.correlation_id,
+                    "organization_id": self.get_organization_id(event_context),
+                    "workspace_id": str(self.get_workspace_id(event_context)),
+                    "schedule_id": event_context.event.schedule_id
+                    if isinstance(event_context.event, ScheduledEventBase)
+                    else None,
+                },
+            )
 
         self._current_task = self._executor.submit(
             self._handle_event,
@@ -342,8 +485,9 @@ class GXAgent:
                 org_id=org_id,
                 workspace_id=workspace_id,
             )
+        memory_mb = self._get_memory_usage_mb()
         LOGGER.info(
-            "Starting job",
+            "job.started",
             extra={
                 "event_type": event_context.event.type,
                 "correlation_id": event_context.correlation_id,
@@ -352,8 +496,13 @@ class GXAgent:
                 "schedule_id": event_context.event.schedule_id
                 if isinstance(event_context.event, ScheduledEventBase)
                 else None,
+                "hostname": socket.gethostname(),
+                "redelivered": event_context.redelivered,
+                "memory_usage_mb": round(memory_mb, 1),
             },
         )
+
+        self._start_heartbeat(event_context.correlation_id, org_id, workspace_id)
 
         self._set_sentry_tags(event_context)
 
@@ -379,11 +528,26 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
+        self._stop_heartbeat()
+
         org_id = self.get_organization_id(event_context)
         workspace_id = self.get_workspace_id(event_context)
 
+        memory_mb = self._get_memory_usage_mb()
+        LOGGER.debug(
+            "job.thread_exiting",
+            extra={
+                "correlation_id": event_context.correlation_id,
+                "hostname": socket.gethostname(),
+                "has_exception": future.exception() is not None,
+                "cancelled": future.cancelled(),
+                "memory_usage_mb": round(memory_mb, 1),
+            },
+        )
+
         # get results or errors from the thread
         error = future.exception()
+
         if error is None:
             result: ActionResult = future.result()
 
@@ -413,30 +577,36 @@ class GXAgent:
                     processed_by=self._get_processed_by(),
                 )
                 LOGGER.info(
-                    "Completed job",
+                    "job.completed",
                     extra={
                         "event_type": event_context.event.type,
                         "correlation_id": event_context.correlation_id,
                         "job_duration": (
                             result.job_duration.total_seconds() if result.job_duration else None
                         ),
+                        "success": True,
                         "organization_id": str(org_id),
                         "workspace_id": str(workspace_id),
                         "schedule_id": event_context.event.schedule_id
                         if isinstance(event_context.event, ScheduledEventBase)
                         else None,
+                        "hostname": socket.gethostname(),
                     },
                 )
         else:
             status = build_failed_job_completed_status(error)
             LOGGER.info(traceback.format_exc())
-            LOGGER.info(
-                "Job completed with error",
+            LOGGER.warning(
+                "job.completed",
                 extra={
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
+                    "success": False,
                     "organization_id": str(org_id),
                     "workspace_id": str(workspace_id),
+                    "hostname": socket.gethostname(),
+                    "error_type": type(error).__name__,
+                    "error_message": str(error)[:500],  # Truncate to avoid huge logs
                 },
             )
 
@@ -656,6 +826,31 @@ class GXAgent:
         with create_session(access_token=self.get_auth_key()) as session:
             payload = CreateScheduledJobAndSetJobStartedRequest(data=data).json()
             response = session.post(agent_sessions_url, data=payload)
+
+            if response.status_code == HTTPStatus.BAD_REQUEST:
+                try:
+                    response_body = response.json()
+                except Exception:
+                    response_body = response.text
+                LOGGER.warning(
+                    "Job already exists - this message was likely redelivered by RabbitMQ "
+                    "after another runner already claimed it. Continuing to process anyway "
+                    "as a safety measure in case the original runner failed.",
+                    extra={
+                        "correlation_id": str(event_context.correlation_id),
+                        "event_type": str(event_context.event.type),
+                        "organization_id": str(org_id),
+                        "schedule_id": str(event_context.event.schedule_id),
+                        "workspace_id": str(workspace_id),
+                        "response_status": response.status_code,
+                        "response_body": response_body,
+                    },
+                )
+                # Note: We intentionally continue processing instead of NACKing.
+                # This ensures job completion even if the first runner fails.
+                # TODO: Once we add inProgress timeout in Mercury, we can
+                # safely NACK here to prevent duplicate processing.
+
             LOGGER.info(
                 "Created scheduled job and set started",
                 extra={
@@ -664,6 +859,7 @@ class GXAgent:
                     "organization_id": str(org_id),
                     "schedule_id": str(event_context.event.schedule_id),
                     "workspace_id": str(workspace_id),
+                    "response_status": response.status_code,
                 },
             )
             GXAgent._log_http_error(

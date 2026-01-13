@@ -27,6 +27,7 @@ class OnMessagePayload:
     correlation_id: str
     delivery_tag: int
     body: bytes
+    redelivered: bool = False  # Set by RabbitMQ when message is redelivered
 
 
 class OnMessageFn(Protocol):
@@ -174,8 +175,12 @@ class AsyncRabbitMQClient:
         # param on_message is provided by the caller as an argument to AsyncRabbitMQClient.run
         correlation_id = header_frame.correlation_id
         delivery_tag = method_frame.delivery_tag
+        redelivered = method_frame.redelivered  # RabbitMQ sets this flag on redelivery
         payload = OnMessagePayload(
-            correlation_id=correlation_id, delivery_tag=delivery_tag, body=body
+            correlation_id=correlation_id,
+            delivery_tag=delivery_tag,
+            body=body,
+            redelivered=redelivered,
         )
         return on_message(payload)
 
@@ -190,10 +195,13 @@ class AsyncRabbitMQClient:
     def _on_consumer_canceled(self, method_frame: Basic.Cancel) -> None:
         """Callback invoked when the broker cancels the client's connection."""
         if self._channel is not None:
-            LOGGER.info(
-                "Consumer was cancelled remotely, shutting down",
+            LOGGER.warning(
+                "rabbitmq.consumer.cancelled",
                 extra={
-                    "method_frame": method_frame,
+                    "consumer_tag": method_frame.consumer_tag
+                    if hasattr(method_frame, "consumer_tag")
+                    else None,
+                    "was_consuming": self.was_consuming,
                 },
             )
             self._channel.close()
@@ -232,11 +240,30 @@ class AsyncRabbitMQClient:
         self._reconnect()
         self._log_pika_exception("Connection open failed", reason)
 
-    def _on_connection_closed(
-        self, connection: AsyncioConnection, _unused_reason: pika.Exception
-    ) -> None:
+    def _on_connection_closed(self, connection: AsyncioConnection, reason: pika.Exception) -> None:
         """Callback invoked after the broker closes the connection"""
-        LOGGER.debug("Connection to RabbitMQ has been closed")
+        # Use DEBUG for expected closes, WARNING for unexpected
+        log_level = LOGGER.debug if self._closing else LOGGER.warning
+        if isinstance(reason, (ConnectionClosed, ChannelClosed)):
+            log_level(
+                "rabbitmq.connection.closed",
+                extra={
+                    "reply_code": reason.reply_code,
+                    "reply_text": reason.reply_text,
+                    "was_consuming": self.was_consuming,
+                    "is_closing": self._closing,
+                },
+            )
+        else:
+            log_level(
+                "rabbitmq.connection.closed",
+                extra={
+                    "reason": str(reason),
+                    "reason_type": type(reason).__name__,
+                    "was_consuming": self.was_consuming,
+                    "is_closing": self._closing,
+                },
+            )
         self._channel = None
         self._is_unrecoverable = True
         if self._closing:

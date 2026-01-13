@@ -167,3 +167,4 @@ logs/
 # VSCode
 .vscode
 .DS_Store
+CLAUDE.md

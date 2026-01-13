@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import random
+import signal
 import string
 import uuid
 from time import sleep
@@ -23,7 +24,10 @@ from great_expectations_cloud.agent import GXAgent
 from great_expectations_cloud.agent.actions.agent_action import ActionResult
 from great_expectations_cloud.agent.agent import GXAgentConfig
 from great_expectations_cloud.agent.constants import USER_AGENT_HEADER
-from great_expectations_cloud.agent.exceptions import GXAgentConfigError, GXAgentError
+from great_expectations_cloud.agent.exceptions import (
+    GXAgentConfigError,
+    GXAgentError,
+)
 from great_expectations_cloud.agent.message_service.asyncio_rabbit_mq_client import (
     AsyncRabbitMQClient,
     ClientError,
@@ -871,3 +875,129 @@ def test_get_workspace_id_raises_when_workspace_id_missing(
 
     with pytest.raises(GXAgentError):
         agent.get_workspace_id(mock_event_context)
+
+
+def test_create_scheduled_job_logs_warning_on_400_response(
+    mocker, gx_agent_config, get_context, caplog
+):
+    """When the API returns 400 (job already exists), we log a warning but continue processing.
+
+    This occurs when a message is redelivered and another runner has already
+    started processing the job. We continue processing as a safety measure in case
+    the original runner fails to complete the job.
+    """
+    agent = GXAgent()
+
+    org_id = uuid.UUID(gx_agent_config.gx_cloud_organization_id)
+    workspace_id = uuid.uuid4()
+    schedule_id = uuid.uuid4()
+    checkpoint_id = uuid.uuid4()
+    correlation_id = str(uuid.uuid4())
+
+    event = RunScheduledCheckpointEvent(
+        checkpoint_id=checkpoint_id,
+        datasource_names_to_asset_names={},
+        splitter_options=None,
+        schedule_id=schedule_id,
+        organization_id=org_id,
+        workspace_id=workspace_id,
+    )
+
+    async def redeliver_message():
+        return None
+
+    event_context = EventContext(
+        event=event,
+        correlation_id=correlation_id,
+        processed_successfully=lambda: None,
+        processed_with_failures=lambda: None,
+        redeliver_message=redeliver_message,
+    )
+
+    # Mock the session to return a 400 response
+    mock_session = mocker.MagicMock()
+    mock_response = mocker.MagicMock()
+    mock_response.status_code = 400
+    mock_response.json.return_value = {
+        "errors": [{"detail": "Job with correlation ID already exists"}]
+    }
+    mock_session.__enter__.return_value.post.return_value = mock_response
+
+    mocker.patch(
+        "great_expectations_cloud.agent.agent.create_session",
+        return_value=mock_session,
+    )
+
+    # Should NOT raise an exception - we continue processing as a safety measure
+    agent._create_scheduled_job_and_set_started(event_context, org_id, workspace_id)
+
+    # Should have logged a warning about the duplicate
+    assert "Job already exists" in caplog.text
+    assert "redelivered by RabbitMQ" in caplog.text
+
+
+@pytest.mark.unit
+def test_get_memory_usage_mb_returns_positive_value(monkeypatch):
+    """Memory usage helper should return a positive value."""
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", str(uuid.uuid4()))
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "dummy")
+    monkeypatch.setenv("GX_CLOUD_BASE_URL", "http://localhost:5000/")
+
+    agent = GXAgent()
+    memory_mb = agent._get_memory_usage_mb()
+
+    assert isinstance(memory_mb, float)
+    assert memory_mb > 0
+
+
+@pytest.mark.unit
+def test_heartbeat_start_and_stop(monkeypatch, mocker):
+    """Heartbeat thread should start and stop without errors."""
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", str(uuid.uuid4()))
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "dummy")
+    monkeypatch.setenv("GX_CLOUD_BASE_URL", "http://localhost:5000/")
+
+    agent = GXAgent()
+    org_id = uuid.uuid4()
+    workspace_id = uuid.uuid4()
+    correlation_id = str(uuid.uuid4())
+
+    # Start heartbeat
+    agent._start_heartbeat(correlation_id, org_id, workspace_id)
+
+    assert agent._heartbeat_thread is not None
+    assert agent._heartbeat_thread.is_alive()
+    assert agent._current_job_correlation_id == correlation_id
+
+    # Stop heartbeat
+    agent._stop_heartbeat()
+
+    assert agent._heartbeat_thread is None
+    assert agent._current_job_correlation_id is None
+
+
+@pytest.mark.unit
+def test_signal_handlers_installed(monkeypatch):
+    """Signal handlers should be installed during agent initialization."""
+    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", str(uuid.uuid4()))
+    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "dummy")
+    monkeypatch.setenv("GX_CLOUD_BASE_URL", "http://localhost:5000/")
+
+    # Store original handlers
+    original_sigterm = signal.getsignal(signal.SIGTERM)
+    original_sigint = signal.getsignal(signal.SIGINT)
+
+    try:
+        _agent = GXAgent()
+
+        # Handlers should be different from the originals (our custom handlers)
+        current_sigterm = signal.getsignal(signal.SIGTERM)
+        current_sigint = signal.getsignal(signal.SIGINT)
+
+        # They should be callable (our custom handlers)
+        assert callable(current_sigterm)
+        assert callable(current_sigint)
+    finally:
+        # Restore original handlers
+        signal.signal(signal.SIGTERM, original_sigterm)
+        signal.signal(signal.SIGINT, original_sigint)
