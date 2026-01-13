@@ -303,8 +303,8 @@ class GXAgent:
                     break
                 elapsed = time.time() - (self._current_job_start_time or time.time())
                 memory_mb = self._get_memory_usage_mb()
-                LOGGER.info(
-                    "Job heartbeat - still processing",
+                LOGGER.debug(
+                    "job.heartbeat",
                     extra={
                         "correlation_id": correlation_id,
                         "organization_id": str(org_id),
@@ -392,7 +392,7 @@ class GXAgent:
 
         if event_context.redelivered:
             LOGGER.warning(
-                "Accepting redelivered message - another consumer failed to acknowledge",
+                "rabbitmq.message.redelivered",
                 extra={
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
@@ -401,7 +401,6 @@ class GXAgent:
                     "schedule_id": event_context.event.schedule_id
                     if isinstance(event_context.event, ScheduledEventBase)
                     else None,
-                    "redelivered": event_context.redelivered,
                 },
             )
 
@@ -488,7 +487,7 @@ class GXAgent:
             )
         memory_mb = self._get_memory_usage_mb()
         LOGGER.info(
-            "Starting job",
+            "job.started",
             extra={
                 "event_type": event_context.event.type,
                 "correlation_id": event_context.correlation_id,
@@ -536,7 +535,7 @@ class GXAgent:
 
         memory_mb = self._get_memory_usage_mb()
         LOGGER.debug(
-            "Job thread exiting",
+            "job.thread_exiting",
             extra={
                 "correlation_id": event_context.correlation_id,
                 "hostname": socket.gethostname(),
@@ -578,13 +577,14 @@ class GXAgent:
                     processed_by=self._get_processed_by(),
                 )
                 LOGGER.info(
-                    "Completed job",
+                    "job.completed",
                     extra={
                         "event_type": event_context.event.type,
                         "correlation_id": event_context.correlation_id,
                         "job_duration": (
                             result.job_duration.total_seconds() if result.job_duration else None
                         ),
+                        "success": True,
                         "organization_id": str(org_id),
                         "workspace_id": str(workspace_id),
                         "schedule_id": event_context.event.schedule_id
@@ -597,10 +597,11 @@ class GXAgent:
             status = build_failed_job_completed_status(error)
             LOGGER.info(traceback.format_exc())
             LOGGER.warning(
-                "Job completed with error",
+                "job.completed",
                 extra={
                     "event_type": event_context.event.type,
                     "correlation_id": event_context.correlation_id,
+                    "success": False,
                     "organization_id": str(org_id),
                     "workspace_id": str(workspace_id),
                     "hostname": socket.gethostname(),
