@@ -196,7 +196,7 @@ class AsyncRabbitMQClient:
         """Callback invoked when the broker cancels the client's connection."""
         if self._channel is not None:
             LOGGER.warning(
-                "Consumer was cancelled remotely by RabbitMQ - this may indicate DAT timeout",
+                "rabbitmq.consumer.cancelled",
                 extra={
                     "consumer_tag": method_frame.consumer_tag
                     if hasattr(method_frame, "consumer_tag")
@@ -242,9 +242,11 @@ class AsyncRabbitMQClient:
 
     def _on_connection_closed(self, connection: AsyncioConnection, reason: pika.Exception) -> None:
         """Callback invoked after the broker closes the connection"""
+        # Use DEBUG for expected closes, WARNING for unexpected
+        log_level = LOGGER.debug if self._closing else LOGGER.warning
         if isinstance(reason, (ConnectionClosed, ChannelClosed)):
-            LOGGER.warning(
-                "Connection to RabbitMQ has been closed",
+            log_level(
+                "rabbitmq.connection.closed",
                 extra={
                     "reply_code": reason.reply_code,
                     "reply_text": reason.reply_text,
@@ -253,8 +255,8 @@ class AsyncRabbitMQClient:
                 },
             )
         else:
-            LOGGER.warning(
-                "Connection to RabbitMQ has been closed",
+            log_level(
+                "rabbitmq.connection.closed",
                 extra={
                     "reason": str(reason),
                     "reason_type": type(reason).__name__,
