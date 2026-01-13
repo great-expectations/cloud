@@ -31,8 +31,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install --no-install-recommends -y \
       python3-dev=3.13.5-1 gcc=4:14.2.0-1 \
-      curl gnupg=2.4.7-21 ca-certificates=20250419 unixodbc=2.3.12-2 \
-      tini=0.19.0-3+b3 && \
+      curl gnupg ca-certificates=20250419 unixodbc=2.3.12-2 \
+      tini && \
     mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg && \
     echo "deb [arch=amd64,arm64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" \
