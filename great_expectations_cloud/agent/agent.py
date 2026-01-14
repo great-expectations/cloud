@@ -530,9 +530,7 @@ class GXAgent:
 
         # Calculate job duration before stopping heartbeat (which clears start time)
         job_elapsed_time = (
-            time.time() - self._current_job_start_time
-            if self._current_job_start_time
-            else None
+            time.time() - self._current_job_start_time if self._current_job_start_time else None
         )
 
         self._stop_heartbeat()
