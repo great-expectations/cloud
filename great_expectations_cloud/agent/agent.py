@@ -532,7 +532,6 @@ class GXAgent:
         job_elapsed_time = (
             time.time() - self._current_job_start_time if self._current_job_start_time else None
         )
-
         self._stop_heartbeat()
 
         org_id = self.get_organization_id(event_context)
