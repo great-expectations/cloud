@@ -532,7 +532,6 @@ class GXAgent:
         job_elapsed_time = (
             time.time() - self._current_job_start_time if self._current_job_start_time else None
         )
-
         self._stop_heartbeat()
 
         org_id = self.get_organization_id(event_context)
@@ -572,6 +571,9 @@ class GXAgent:
                         "success": False,
                         "organization_id": str(org_id),
                         "workspace_id": str(workspace_id),
+                        "schedule_id": event_context.event.schedule_id
+                        if isinstance(event_context.event, ScheduledEventBase)
+                        else None,
                         "hostname": socket.gethostname(),
                         "error_type": "UnknownEvent",
                         "error_message": "Agent does not support this event type. Upgrade required.",
@@ -601,7 +603,7 @@ class GXAgent:
                     },
                 )
         else:
-            status = build_failed_job_completed_status(error)
+            status = build_failed_job_completed_status(error, processed_by=self._get_processed_by())
             LOGGER.info(traceback.format_exc())
             LOGGER.warning(
                 "job.completed",
@@ -612,6 +614,9 @@ class GXAgent:
                     "success": False,
                     "organization_id": str(org_id),
                     "workspace_id": str(workspace_id),
+                    "schedule_id": event_context.event.schedule_id
+                    if isinstance(event_context.event, ScheduledEventBase)
+                    else None,
                     "hostname": socket.gethostname(),
                     "error_type": type(error).__name__,
                     "error_message": str(error)[:500],  # Truncate to avoid huge logs

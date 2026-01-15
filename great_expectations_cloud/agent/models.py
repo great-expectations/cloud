@@ -289,15 +289,23 @@ class CreateScheduledJobAndSetJobStartedRequest(AgentBaseExtraForbid):
     data: CreateScheduledJobAndSetJobStarted
 
 
-def build_failed_job_completed_status(error: BaseException) -> JobCompleted:
+def build_failed_job_completed_status(
+    error: BaseException,
+    processed_by: Literal["agent", "runner"] | None = None,
+) -> JobCompleted:
     if isinstance(error, GXCoreError):
         status = JobCompleted(
             success=False,
             error_stack_trace=str(error),
             error_code=error.error_code,
             error_params=error.get_error_params(),
+            processed_by=processed_by,
         )
     else:
-        status = JobCompleted(success=False, error_stack_trace=str(error))
+        status = JobCompleted(
+            success=False,
+            error_stack_trace=str(error),
+            processed_by=processed_by,
+        )
 
     return status
