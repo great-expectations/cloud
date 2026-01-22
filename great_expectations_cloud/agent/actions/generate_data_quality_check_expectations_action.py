@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Sequence
 from enum import Enum
 from http import HTTPStatus
@@ -10,6 +11,7 @@ from uuid import UUID
 
 import great_expectations.expectations as gx_expectations
 from great_expectations.core.http import create_session
+from great_expectations.datasource.fluent.interfaces import TestConnectionError
 from great_expectations.exceptions import (
     GXCloudError,
     InvalidExpectationConfigurationError,
@@ -68,10 +70,33 @@ class ExpectationConstraintFunction(str, Enum):
     MEAN = "mean"
 
 
+def _strip_bracketed_error_code(error_message: str) -> str:
+    """Strip bracketed error codes like [DELTA_TABLE_NOT_FOUND] from error messages.
+
+    Databricks and other systems often prefix error messages with bracketed codes.
+    We strip these to show cleaner, more user-friendly messages while preserving
+    the descriptive text.
+
+    Examples:
+        "[DELTA_TABLE_NOT_FOUND] The table cannot be found." -> "The table cannot be found."
+        "[ERROR_CODE] Some message. SQLSTATE: XX000" -> "Some message. SQLSTATE: XX000"
+        "No bracketed code here" -> "No bracketed code here"
+    """
+    # Match bracketed codes at the start of the message (with optional leading whitespace)
+    return re.sub(r"^\s*\[[A-Z_0-9]+\]\s*", "", error_message)
+
+
 class PartialGenerateDataQualityCheckExpectationError(GXAgentError):
-    def __init__(self, assets_with_errors: list[str], assets_attempted: int):
+    def __init__(self, assets_with_errors: dict[str, str], assets_attempted: int):
         message_header = f"Unable to autogenerate expectations for {len(assets_with_errors)} of {assets_attempted} Data Assets."
-        errors = ", ".join(assets_with_errors)
+
+        # Format each asset with its error detail (stripped of bracketed codes)
+        asset_errors = []
+        for asset_name, error_detail in assets_with_errors.items():
+            cleaned_error = _strip_bracketed_error_code(error_detail)
+            asset_errors.append(f"{asset_name}: {cleaned_error}")
+
+        errors = "\n\u2022 ".join(asset_errors)
         message_footer = "Check your connection details, delete and recreate these Data Assets."
         message = f"{message_header}\n\u2022 {errors}\n{message_footer}"
         super().__init__(message)
@@ -102,7 +127,7 @@ class GenerateDataQualityCheckExpectationsAction(
     @override
     def run(self, event: GenerateDataQualityCheckExpectationsEvent, id: str) -> ActionResult:
         created_resources: list[CreatedResource] = []
-        assets_with_errors: list[str] = []
+        assets_with_errors: dict[str, str] = {}
         selected_dqis: Sequence[DataQualityIssues] = event.selected_data_quality_issues or []
         created_via: str | None = event.created_via or None
         for asset_name in event.data_assets:
@@ -165,9 +190,19 @@ class GenerateDataQualityCheckExpectationsAction(
                                 CreatedResource(resource_id=str(exp_id), type="Expectation")
                             )
 
+            except TestConnectionError as e:
+                # User configuration error - log at WARNING to avoid Sentry capture
+                LOGGER.warning(
+                    "User configuration error for asset %s: %s",
+                    asset_name,
+                    str(e),
+                    exc_info=True,
+                )
+                assets_with_errors[asset_name] = str(e)
             except Exception as e:
+                # Unexpected error - log at ERROR for Sentry visibility
                 LOGGER.exception("Failed to generate expectations for %s: %s", asset_name, str(e))  # noqa: TRY401
-                assets_with_errors.append(asset_name)
+                assets_with_errors[asset_name] = str(e)
 
         if assets_with_errors:
             raise PartialGenerateDataQualityCheckExpectationError(
@@ -188,10 +223,11 @@ class GenerateDataQualityCheckExpectationsAction(
             datasource = self._context.data_sources.get(event.datasource_name)
             data_asset = datasource.get_asset(asset_name)
             data_asset.test_connection()  # raises `TestConnectionError` on failure
-
+        except TestConnectionError:
+            # Let TestConnectionError propagate directly - it's a user configuration error
+            raise
         except Exception as e:
-            # TODO - see if this can be made more specific
-            raise RuntimeError(f"Failed to retrieve asset: {e}") from e  # noqa: TRY003 # want to keep this informative for now
+            raise RuntimeError(f"Failed to retrieve asset: {e}") from e  # noqa: TRY003
 
         return data_asset  # type: ignore[no-any-return]  # unable to narrow types strictly based on names
 

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import great_expectations.expectations as gx_expectations
 import pytest
+from great_expectations.datasource.fluent.interfaces import TestConnectionError
 from great_expectations.datasource.fluent.sql_datasource import TableAsset
 from great_expectations.expectations.metadata_types import (
     DataQualityIssues,
@@ -29,6 +30,7 @@ from great_expectations.experimental.metric_repository.metrics import (
 from great_expectations_cloud.agent.actions.generate_data_quality_check_expectations_action import (
     GenerateDataQualityCheckExpectationsAction,
     PartialGenerateDataQualityCheckExpectationError,
+    _strip_bracketed_error_code,
 )
 from great_expectations_cloud.agent.models import (
     DomainContext,
@@ -1044,6 +1046,260 @@ def test_generate_completeness_expectations_edge_cases(
     assert expectation.min_value == 1
     assert expectation.windows is None
     assert expectation.severity == FailureSeverity.WARNING
+
+
+def test_test_connection_error_logs_at_warning_not_error(
+    mock_context: CloudDataContext,
+    mocker: MockerFixture,
+    caplog: pytest.LogCaptureFixture,
+):
+    """
+    Test that TestConnectionError is logged at WARNING level (not ERROR/exception).
+
+    This is critical because:
+    - ERROR level logs are captured by Sentry and create alerts
+    - TestConnectionError represents user configuration issues (e.g., table not found, permission denied)
+    - We want these in logs for debugging but NOT in Sentry as they cause alert fatigue
+
+    See GX-1859 for context.
+    """
+    # Setup
+    mock_metric_repository = mocker.Mock(spec=MetricRepository)
+    mock_batch_inspector = mocker.Mock(spec=BatchInspector)
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=mock_context,
+        metric_repository=mock_metric_repository,
+        batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+    )
+
+    # Mock _retrieve_asset_from_asset_name to raise TestConnectionError
+    test_connection_error_msg = (
+        "Attempt to connect to table: nonexistent_table failed. [DELTA_TABLE_NOT_FOUND]"
+    )
+
+    def mock_retrieve_asset_raises_test_connection_error(event, asset_name):
+        raise TestConnectionError(message=test_connection_error_msg)
+
+    mocker.patch.object(
+        action,
+        "_retrieve_asset_from_asset_name",
+        side_effect=mock_retrieve_asset_raises_test_connection_error,
+    )
+
+    # Capture logs at DEBUG level to ensure we catch all levels
+    with caplog.at_level(
+        logging.DEBUG,
+        logger="great_expectations_cloud.agent.actions.generate_data_quality_check_expectations_action",
+    ):
+        # Run the action - expect PartialGenerateDataQualityCheckExpectationError
+        with pytest.raises(PartialGenerateDataQualityCheckExpectationError) as exc_info:
+            action.run(
+                event=GenerateDataQualityCheckExpectationsEvent(
+                    type="generate_data_quality_check_expectations_request.received",
+                    organization_id=uuid.uuid4(),
+                    datasource_name="test-datasource",
+                    data_assets=["failing-asset"],
+                    selected_data_quality_issues=[],
+                    workspace_id=uuid.uuid4(),
+                ),
+                id="test-id",
+            )
+
+    # Verify the exception message includes the asset name
+    assert "failing-asset" in str(exc_info.value)
+
+    # Verify WARNING log was emitted (not ERROR)
+    warning_logs = [
+        record
+        for record in caplog.records
+        if record.levelno == logging.WARNING and "User configuration error" in record.message
+    ]
+    assert len(warning_logs) == 1, f"Expected exactly 1 WARNING log, got {len(warning_logs)}"
+    assert "failing-asset" in warning_logs[0].message
+
+    # Verify NO ERROR logs were emitted for this TestConnectionError
+    error_logs = [
+        record
+        for record in caplog.records
+        if record.levelno == logging.ERROR and "failing-asset" in str(record.message)
+    ]
+    assert len(error_logs) == 0, (
+        f"Expected no ERROR logs for TestConnectionError, but got: {error_logs}"
+    )
+
+
+def test_non_test_connection_error_logs_at_error(
+    mock_context: CloudDataContext,
+    mocker: MockerFixture,
+    caplog: pytest.LogCaptureFixture,
+):
+    """
+    Test that non-TestConnectionError exceptions are still logged at ERROR level.
+
+    This ensures we haven't accidentally suppressed all error logging -
+    only user configuration errors (TestConnectionError) should be at WARNING.
+    """
+    # Setup
+    mock_metric_repository = mocker.Mock(spec=MetricRepository)
+    mock_batch_inspector = mocker.Mock(spec=BatchInspector)
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=mock_context,
+        metric_repository=mock_metric_repository,
+        batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+    )
+
+    # Mock _retrieve_asset_from_asset_name to raise a RuntimeError (not TestConnectionError)
+    def mock_retrieve_asset_raises_runtime_error(event, asset_name):
+        raise RuntimeError("Unexpected internal error")  # noqa: TRY003
+
+    mocker.patch.object(
+        action,
+        "_retrieve_asset_from_asset_name",
+        side_effect=mock_retrieve_asset_raises_runtime_error,
+    )
+
+    # Capture logs
+    with caplog.at_level(
+        logging.DEBUG,
+        logger="great_expectations_cloud.agent.actions.generate_data_quality_check_expectations_action",
+    ):
+        with pytest.raises(PartialGenerateDataQualityCheckExpectationError):
+            action.run(
+                event=GenerateDataQualityCheckExpectationsEvent(
+                    type="generate_data_quality_check_expectations_request.received",
+                    organization_id=uuid.uuid4(),
+                    datasource_name="test-datasource",
+                    data_assets=["failing-asset"],
+                    selected_data_quality_issues=[],
+                    workspace_id=uuid.uuid4(),
+                ),
+                id="test-id",
+            )
+
+    # Verify ERROR log was emitted (not WARNING)
+    error_logs = [
+        record
+        for record in caplog.records
+        if record.levelno == logging.ERROR and "failing-asset" in str(record.message)
+    ]
+    assert len(error_logs) == 1, (
+        f"Expected exactly 1 ERROR log for RuntimeError, got {len(error_logs)}"
+    )
+
+
+@pytest.mark.parametrize(
+    "input_message, expected_output",
+    [
+        pytest.param(
+            "[DELTA_TABLE_NOT_FOUND] The table or view cannot be found.",
+            "The table or view cannot be found.",
+            id="databricks_delta_table_not_found",
+        ),
+        pytest.param(
+            "[PERMISSION_DENIED] User does not have SELECT permission.",
+            "User does not have SELECT permission.",
+            id="databricks_permission_denied",
+        ),
+        pytest.param(
+            "[INCOMPATIBLE_VIEW_SCHEMA_CHANGE] View schema changed.",
+            "View schema changed.",
+            id="databricks_incompatible_view",
+        ),
+        pytest.param(
+            "No bracketed code at start",
+            "No bracketed code at start",
+            id="no_bracketed_code",
+        ),
+        pytest.param(
+            "Message with [BRACKETED] in middle",
+            "Message with [BRACKETED] in middle",
+            id="bracketed_code_in_middle_preserved",
+        ),
+        pytest.param(
+            "  [LEADING_WHITESPACE] Message after whitespace.",
+            "Message after whitespace.",
+            id="leading_whitespace_stripped",
+        ),
+        pytest.param(
+            "[ERROR_CODE_123] Message with numbers in code.",
+            "Message with numbers in code.",
+            id="error_code_with_numbers",
+        ),
+    ],
+)
+def test_strip_bracketed_error_code(input_message: str, expected_output: str):
+    """Test that bracketed error codes are stripped from the beginning of messages."""
+    assert _strip_bracketed_error_code(input_message) == expected_output
+
+
+def test_error_message_includes_asset_error_details(
+    mock_context: CloudDataContext,
+    mocker: MockerFixture,
+):
+    """
+    Test that PartialGenerateDataQualityCheckExpectationError includes
+    per-asset error details with bracketed codes stripped.
+    """
+    # Setup
+    mock_metric_repository = mocker.Mock(spec=MetricRepository)
+    mock_batch_inspector = mocker.Mock(spec=BatchInspector)
+
+    action = GenerateDataQualityCheckExpectationsAction(
+        context=mock_context,
+        metric_repository=mock_metric_repository,
+        batch_inspector=mock_batch_inspector,
+        base_url="",
+        auth_key="",
+        domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+    )
+
+    # Mock _retrieve_asset_from_asset_name to raise TestConnectionError with bracketed code
+    databricks_error_msg = (
+        "[DELTA_TABLE_NOT_FOUND] The table or view `schema`.`table` cannot be found."
+    )
+
+    def mock_retrieve_asset_raises(event, asset_name):
+        raise TestConnectionError(message=databricks_error_msg)
+
+    mocker.patch.object(
+        action,
+        "_retrieve_asset_from_asset_name",
+        side_effect=mock_retrieve_asset_raises,
+    )
+
+    # Run the action
+    with pytest.raises(PartialGenerateDataQualityCheckExpectationError) as exc_info:
+        action.run(
+            event=GenerateDataQualityCheckExpectationsEvent(
+                type="generate_data_quality_check_expectations_request.received",
+                organization_id=uuid.uuid4(),
+                datasource_name="test-datasource",
+                data_assets=["my_table"],
+                selected_data_quality_issues=[],
+                workspace_id=uuid.uuid4(),
+            ),
+            id="test-id",
+        )
+
+    error_message = str(exc_info.value)
+
+    # Verify the message includes the asset name with error detail
+    assert "my_table:" in error_message
+    # Verify the bracketed code was stripped
+    assert "[DELTA_TABLE_NOT_FOUND]" not in error_message
+    # Verify the descriptive portion was preserved
+    assert "The table or view `schema`.`table` cannot be found." in error_message
+    # Verify header and footer are present
+    assert "Unable to autogenerate expectations for 1 of 1 Data Assets." in error_message
+    assert "Check your connection details" in error_message
 
 
 if __name__ == "__main__":
