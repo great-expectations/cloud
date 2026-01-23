@@ -810,6 +810,7 @@ def test_handle_event_as_thread_exit_succeeds_when_job_has_failure(
             success=False,
             created_resources=[],
             error_stack_trace="Test error",
+            processed_by="agent",
         ),
         org_id=uuid.UUID(gx_agent_config.gx_cloud_organization_id),
         workspace_id=event_context.event.workspace_id,

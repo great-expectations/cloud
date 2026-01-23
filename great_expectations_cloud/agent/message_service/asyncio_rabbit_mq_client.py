@@ -258,7 +258,8 @@ class AsyncRabbitMQClient:
             log_level(
                 "rabbitmq.connection.closed",
                 extra={
-                    "reason": str(reason),
+                    "reply_code": 0,  # Unknown/non-AMQP error
+                    "reply_text": str(reason),
                     "reason_type": type(reason).__name__,
                     "was_consuming": self.was_consuming,
                     "is_closing": self._closing,
