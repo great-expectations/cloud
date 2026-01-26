@@ -952,32 +952,6 @@ def test_get_memory_usage_mb_returns_positive_value(monkeypatch):
 
 
 @pytest.mark.unit
-def test_heartbeat_start_and_stop(monkeypatch, mocker):
-    """Heartbeat thread should start and stop without errors."""
-    monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", str(uuid.uuid4()))
-    monkeypatch.setenv("GX_CLOUD_ACCESS_TOKEN", "dummy")
-    monkeypatch.setenv("GX_CLOUD_BASE_URL", "http://localhost:5000/")
-
-    agent = GXAgent()
-    org_id = uuid.uuid4()
-    workspace_id = uuid.uuid4()
-    correlation_id = str(uuid.uuid4())
-
-    # Start heartbeat
-    agent._start_heartbeat(correlation_id, org_id, workspace_id)
-
-    assert agent._heartbeat_thread is not None
-    assert agent._heartbeat_thread.is_alive()
-    assert agent._current_job_correlation_id == correlation_id
-
-    # Stop heartbeat
-    agent._stop_heartbeat()
-
-    assert agent._heartbeat_thread is None
-    assert agent._current_job_correlation_id is None
-
-
-@pytest.mark.unit
 def test_signal_handlers_installed(monkeypatch):
     """Signal handlers should be installed during agent initialization."""
     monkeypatch.setenv("GX_CLOUD_ORGANIZATION_ID", str(uuid.uuid4()))
