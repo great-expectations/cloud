@@ -7,7 +7,6 @@ import resource
 import signal
 import socket
 import sys
-import threading
 import time
 import traceback
 import warnings
@@ -170,8 +169,6 @@ class GXAgent:
         self._listen_tries = 0
 
         # Heartbeat tracking
-        self._heartbeat_stop_event: threading.Event | None = None
-        self._heartbeat_thread: threading.Thread | None = None
         self._current_job_correlation_id: str | None = None
         self._current_job_start_time: float | None = None
 
@@ -287,47 +284,6 @@ class GXAgent:
         if sys.platform == "darwin":
             return usage.ru_maxrss / (1024 * 1024)
         return usage.ru_maxrss / 1024
-
-    def _start_heartbeat(self, correlation_id: str, org_id: UUID, workspace_id: UUID) -> None:
-        """Start a background thread that logs periodic heartbeats during job processing."""
-        self._current_job_correlation_id = correlation_id
-        self._current_job_start_time = time.time()
-        self._heartbeat_stop_event = threading.Event()
-
-        def heartbeat_loop() -> None:
-            stop_event = self._heartbeat_stop_event
-            if stop_event is None:
-                return
-            while not stop_event.wait(timeout=self._HEARTBEAT_INTERVAL_SECONDS):
-                if stop_event.is_set():
-                    break
-                elapsed = time.time() - (self._current_job_start_time or time.time())
-                memory_mb = self._get_memory_usage_mb()
-                LOGGER.debug(
-                    "job.heartbeat",
-                    extra={
-                        "correlation_id": correlation_id,
-                        "organization_id": str(org_id),
-                        "workspace_id": str(workspace_id),
-                        "hostname": socket.gethostname(),
-                        "elapsed_seconds": round(elapsed, 1),
-                        "memory_usage_mb": round(memory_mb, 1),
-                    },
-                )
-
-        self._heartbeat_thread = threading.Thread(target=heartbeat_loop, daemon=True)
-        self._heartbeat_thread.start()
-
-    def _stop_heartbeat(self) -> None:
-        """Stop the heartbeat thread."""
-        if self._heartbeat_stop_event:
-            self._heartbeat_stop_event.set()
-        if self._heartbeat_thread and self._heartbeat_thread.is_alive():
-            self._heartbeat_thread.join(timeout=2)
-        self._heartbeat_thread = None
-        self._heartbeat_stop_event = None
-        self._current_job_correlation_id = None
-        self._current_job_start_time = None
 
     @classmethod
     def get_current_gx_agent_version(cls) -> str:
@@ -502,8 +458,6 @@ class GXAgent:
             },
         )
 
-        self._start_heartbeat(event_context.correlation_id, org_id, workspace_id)
-
         self._set_sentry_tags(event_context)
 
         handler = EventHandler(context=data_context)
@@ -528,11 +482,9 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
-        # Calculate job duration before stopping heartbeat (which clears start time)
         job_elapsed_time = (
             time.time() - self._current_job_start_time if self._current_job_start_time else None
         )
-        self._stop_heartbeat()
 
         org_id = self.get_organization_id(event_context)
         workspace_id = self.get_workspace_id(event_context)
