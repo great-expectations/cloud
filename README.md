@@ -13,19 +13,19 @@ To use the GX Agent, you will need to have a Great Expectations Cloud account. Y
 
 Deployment instructions for the GX Agent can be found in the [GX Cloud documentation](https://docs.greatexpectations.io/docs/cloud/deploy/deploy_gx_agent).
 
-## Dev Setup
+## Contributing
 
-The following instructions are for those who are contributing to the GX Agent, to deploy and use the GX agent please see the Quick Start section above.
+Follow these steps to create a development environment:
 
-See also [CONTRIBUTING.md](https://github.com/great-expectations/cloud/blob/main/CONTRIBUTING.md)
-
-1. [Install or upgrade `poetry` to the latest version](https://python-poetry.org/docs/#installing-with-pipx)
-   - `pipx install poetry` or `pipx upgrade poetry`
-2. Set up virtual environment and install dependencies
+1. Use the version of Python specified in [`.python-version`](./.python-version)
+   - confirm with `python --version`
+2. Use the version of Poetry specified in [`poetry.lock`](./poetry.lock)
+   - confirm with `poetry --version`
+3. Set up virtual environment and install dependencies
    - `poetry sync`
-3. Activate your virtual environment
+4. Activate your virtual environment
    - `eval $(poetry env activate)`
-4. Set up precommit hooks
+5. Set up precommit hooks
    - `pre-commit install`
 
 ### Troubleshooting
