@@ -165,10 +165,7 @@ class GXAgent:
         self._correlation_ids: defaultdict[str, int] = defaultdict(lambda: 0)
         self._listen_tries = 0
 
-        # Initialize job tracking properties
         self._init_job_tracking()
-
-        # Install signal handlers for graceful shutdown logging
         self._install_signal_handlers()
 
     def _init_job_tracking(self) -> None:
@@ -260,7 +257,7 @@ class GXAgent:
     def _log_signal_received(self, signal_name: str, signum: int) -> None:
         """Log when a shutdown signal is received, including current job info."""
         memory_mb = self._get_memory_usage_mb()
-        # Defensive access to job tracking properties (may not be initialized in subclasses)
+        # May not be initialized in subclasses that don't call super().__init__()
         current_job_correlation_id = getattr(self, "_current_job_correlation_id", None)
         current_job_start_time = getattr(self, "_current_job_start_time", None)
         LOGGER.warning(
@@ -362,6 +359,10 @@ class GXAgent:
                 },
             )
 
+        # Set before task submission so signal handlers can access immediately
+        self._current_job_correlation_id = event_context.correlation_id
+        self._current_job_start_time = time.time()
+
         self._current_task = self._executor.submit(
             self._handle_event,
             event_context=event_context,
@@ -444,10 +445,6 @@ class GXAgent:
                 workspace_id=workspace_id,
             )
 
-        # Set current job tracking for signal handlers and exit logging
-        self._current_job_correlation_id = event_context.correlation_id
-        self._current_job_start_time = time.time()
-
         memory_mb = self._get_memory_usage_mb()
         LOGGER.info(
             "job.started",
@@ -489,7 +486,7 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
-        # Defensive access to job tracking properties (may not be initialized in subclasses)
+        # May not be initialized in subclasses that don't call super().__init__()
         current_job_start_time = getattr(self, "_current_job_start_time", None)
         job_elapsed_time = time.time() - current_job_start_time if current_job_start_time else None
 
@@ -604,16 +601,12 @@ class GXAgent:
             # Otherwise, it would attempt to handle the error again via this done callback
             event_context.processed_with_failures()
             self._current_task = None
-            # Clear current job tracking
             self._current_job_correlation_id = None
             self._current_job_start_time = None
-            # Return so we don't also ack as processed successfully
             return
 
-        # ack message and cleanup resources
         event_context.processed_successfully()
         self._current_task = None
-        # Clear current job tracking
         self._current_job_correlation_id = None
         self._current_job_start_time = None
 
