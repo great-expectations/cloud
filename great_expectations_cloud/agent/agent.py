@@ -142,9 +142,6 @@ class GXAgent:
     _PYPI_GX_AGENT_PACKAGE_NAME = "great_expectations_cloud"
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
-    # Heartbeat interval in seconds (log progress every 60 seconds during job processing)
-    _HEARTBEAT_INTERVAL_SECONDS = 60
-
     def __init__(self: Self):
         self._config = self._create_config()
 
@@ -168,12 +165,13 @@ class GXAgent:
         self._correlation_ids: defaultdict[str, int] = defaultdict(lambda: 0)
         self._listen_tries = 0
 
-        # Heartbeat tracking
+        self._init_job_tracking()
+        self._install_signal_handlers()
+
+    def _init_job_tracking(self) -> None:
+        """Initialize job tracking properties for signal handlers and exit logging. Can be called by subclasses that don't call super().__init__()."""
         self._current_job_correlation_id: str | None = None
         self._current_job_start_time: float | None = None
-
-        # Install signal handlers for graceful shutdown logging
-        self._install_signal_handlers()
 
     def run(self) -> None:
         """Open a connection to GX Cloud."""
@@ -259,17 +257,18 @@ class GXAgent:
     def _log_signal_received(self, signal_name: str, signum: int) -> None:
         """Log when a shutdown signal is received, including current job info."""
         memory_mb = self._get_memory_usage_mb()
+        # May not be initialized in subclasses that don't call super().__init__()
+        current_job_correlation_id = getattr(self, "_current_job_correlation_id", None)
+        current_job_start_time = getattr(self, "_current_job_start_time", None)
         LOGGER.warning(
             f"Received {signal_name} signal - shutting down",
             extra={
                 "signal": signal_name,
                 "signal_number": signum,
                 "hostname": socket.gethostname(),
-                "current_job_correlation_id": self._current_job_correlation_id,
+                "current_job_correlation_id": current_job_correlation_id,
                 "job_elapsed_seconds": (
-                    time.time() - self._current_job_start_time
-                    if self._current_job_start_time
-                    else None
+                    time.time() - current_job_start_time if current_job_start_time else None
                 ),
                 "memory_usage_mb": memory_mb,
                 "has_active_task": self._current_task is not None and not self._current_task.done(),
@@ -360,6 +359,10 @@ class GXAgent:
                 },
             )
 
+        # Set before task submission so signal handlers can access immediately
+        self._current_job_correlation_id = event_context.correlation_id
+        self._current_job_start_time = time.time()
+
         self._current_task = self._executor.submit(
             self._handle_event,
             event_context=event_context,
@@ -441,6 +444,7 @@ class GXAgent:
                 org_id=org_id,
                 workspace_id=workspace_id,
             )
+
         memory_mb = self._get_memory_usage_mb()
         LOGGER.info(
             "job.started",
@@ -482,9 +486,9 @@ class GXAgent:
         """
         # warning:  this method will not be executed in the main thread
 
-        job_elapsed_time = (
-            time.time() - self._current_job_start_time if self._current_job_start_time else None
-        )
+        # May not be initialized in subclasses that don't call super().__init__()
+        current_job_start_time = getattr(self, "_current_job_start_time", None)
+        job_elapsed_time = time.time() - current_job_start_time if current_job_start_time else None
 
         org_id = self.get_organization_id(event_context)
         workspace_id = self.get_workspace_id(event_context)
@@ -597,12 +601,14 @@ class GXAgent:
             # Otherwise, it would attempt to handle the error again via this done callback
             event_context.processed_with_failures()
             self._current_task = None
-            # Return so we don't also ack as processed successfully
+            self._current_job_correlation_id = None
+            self._current_job_start_time = None
             return
 
-        # ack message and cleanup resources
         event_context.processed_successfully()
         self._current_task = None
+        self._current_job_correlation_id = None
+        self._current_job_start_time = None
 
     def _get_processed_by(self) -> Literal["agent", "runner"]:
         """Return the name of the service that processed the event."""
