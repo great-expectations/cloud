@@ -271,9 +271,7 @@ class GXAgent:
                 "hostname": socket.gethostname(),
                 "current_job_correlation_id": current_job_correlation_id,
                 "job_elapsed_seconds": (
-                    time.time() - current_job_start_time
-                    if current_job_start_time
-                    else None
+                    time.time() - current_job_start_time if current_job_start_time else None
                 ),
                 "memory_usage_mb": memory_mb,
                 "has_active_task": self._current_task is not None and not self._current_task.done(),
@@ -493,9 +491,7 @@ class GXAgent:
 
         # Defensive access to job tracking properties (may not be initialized in subclasses)
         current_job_start_time = getattr(self, "_current_job_start_time", None)
-        job_elapsed_time = (
-            time.time() - current_job_start_time if current_job_start_time else None
-        )
+        job_elapsed_time = time.time() - current_job_start_time if current_job_start_time else None
 
         org_id = self.get_organization_id(event_context)
         workspace_id = self.get_workspace_id(event_context)
