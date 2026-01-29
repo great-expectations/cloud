@@ -75,8 +75,6 @@ jobs:
           docker compose run db-seeder
           echo "STARTING mq-wait"
           docker compose run mq-wait
-          echo "STARTING mercury-service-api"
-          docker compose up mercury-service-api -d
           echo "STARTING mercury-service-api-v1"
           docker compose up mercury-service-api-v1 -d
           echo "STARTING nginx"

@@ -56,7 +56,7 @@ def query():
 
 @pytest.fixture
 def graphql_test_client(
-    org_id_env_var,
+    org_id_env_var: str,
 ):
     mercury_api_host = "localhost"
     mercury_api_port = 5000
