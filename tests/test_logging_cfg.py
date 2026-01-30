@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 import uuid
 from logging import makeLogRecord
 from pathlib import Path
-from typing import Any
+from types import TracebackType
+from typing import Any, NoReturn
 
 import freezegun
 import pytest
@@ -116,6 +118,34 @@ def test_json_formatter_exc_info():
     out_str = fmt.format(log_record)
     actual = json.loads(out_str)
     assert is_subset(expected, actual)
+
+
+def _get_exc_info() -> tuple[
+    type[BaseException] | None, BaseException | None, TracebackType | None
+]:
+    """Raise and capture exc_info for testing. Same return type as sys.exc_info()."""
+
+    def _raise() -> NoReturn:
+        raise ValueError("test")
+
+    try:
+        _raise()
+    except ValueError:
+        return sys.exc_info()
+
+
+@freezegun.freeze_time(TIMESTAMP)
+def test_json_formatter_does_not_mutate_record_exc_info():
+    """JSONFormatter must not mutate record since other handlers depend on it."""
+    exc_info = _get_exc_info()
+    log_record = makeLogRecord({**default_log_emitted, "exc_info": exc_info})
+    keys_before = set(log_record.__dict__.keys())
+    fmt = JSONFormatter()
+    fmt.format(log_record)
+    # Verify log record is unchanged by verifying the keys are identical
+    assert set(log_record.__dict__.keys()) == keys_before
+    # and that exc_info is identical. Tuples are immutable so this check is sufficient.
+    assert log_record.exc_info is exc_info
 
 
 @freezegun.freeze_time(TIMESTAMP)
