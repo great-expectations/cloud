@@ -218,7 +218,7 @@ class GXAgent:
         except GXAgentUnrecoverableConnectionError as e:
             _log_exception(e, "The connection to GX Cloud has encountered an unrecoverable error.")
             # We log before we kill the process so we have an log line for auditing.
-            LOGGER.error("Killing process.")
+            LOGGER.error("Killing process.")  # noqa: TRY400
             os.kill(os.getpid(), signal.SIGTERM)
         except (
             AuthenticationError,

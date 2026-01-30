@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 import uuid
 from logging import makeLogRecord
 from pathlib import Path
@@ -118,15 +119,22 @@ def test_json_formatter_exc_info():
     assert is_subset(expected, actual)
 
 
+def _get_exc_info() -> tuple[type[BaseException], BaseException, Any]:
+    """Raise and capture exc_info for testing."""
+
+    def _raise() -> None:
+        raise ValueError("test")
+
+    try:
+        _raise()
+    except ValueError:
+        return sys.exc_info()
+
+
 @freezegun.freeze_time(TIMESTAMP)
 def test_json_formatter_does_not_mutate_record_exc_info():
     """JSONFormatter must not mutate record since other handlers depend on it."""
-    try:
-        raise ValueError("test")
-    except ValueError:
-        import sys
-
-        exc_info = sys.exc_info()
+    exc_info = _get_exc_info()
     log_record = makeLogRecord({**default_log_emitted, "exc_info": exc_info})
     keys_before = set(log_record.__dict__.keys())
     fmt = JSONFormatter()
