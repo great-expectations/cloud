@@ -6,7 +6,8 @@ import sys
 import uuid
 from logging import makeLogRecord
 from pathlib import Path
-from typing import Any
+from types import TracebackType
+from typing import Any, NoReturn
 
 import freezegun
 import pytest
@@ -119,10 +120,12 @@ def test_json_formatter_exc_info():
     assert is_subset(expected, actual)
 
 
-def _get_exc_info() -> tuple[type[BaseException], BaseException, Any]:
-    """Raise and capture exc_info for testing."""
+def _get_exc_info() -> (
+    tuple[type[BaseException] | None, BaseException | None, TracebackType | None]
+):
+    """Raise and capture exc_info for testing. Same return type as sys.exc_info()."""
 
-    def _raise() -> None:
+    def _raise() -> NoReturn:
         raise ValueError("test")
 
     try:
