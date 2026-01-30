@@ -120,9 +120,9 @@ def test_json_formatter_exc_info():
     assert is_subset(expected, actual)
 
 
-def _get_exc_info() -> (
-    tuple[type[BaseException] | None, BaseException | None, TracebackType | None]
-):
+def _get_exc_info() -> tuple[
+    type[BaseException] | None, BaseException | None, TracebackType | None
+]:
     """Raise and capture exc_info for testing. Same return type as sys.exc_info()."""
 
     def _raise() -> NoReturn:
