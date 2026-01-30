@@ -119,6 +119,25 @@ def test_json_formatter_exc_info():
 
 
 @freezegun.freeze_time(TIMESTAMP)
+def test_json_formatter_does_not_mutate_record_exc_info():
+    """JSONFormatter must not mutate record since other handlers depend on it."""
+    try:
+        raise ValueError("test")
+    except ValueError:
+        import sys
+
+        exc_info = sys.exc_info()
+    log_record = makeLogRecord({**default_log_emitted, "exc_info": exc_info})
+    keys_before = set(log_record.__dict__.keys())
+    fmt = JSONFormatter()
+    fmt.format(log_record)
+    # Verify log record is unchanged by verifying the keys are identical
+    assert set(log_record.__dict__.keys()) == keys_before
+    # and that exc_info is identical. Tuples are immutable so this check is sufficient.
+    assert log_record.exc_info is exc_info
+
+
+@freezegun.freeze_time(TIMESTAMP)
 def test_json_formatter_extra():
     expected = {**default_log_formatted, "user": "123"}
     fmt = JSONFormatter()

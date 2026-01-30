@@ -186,7 +186,8 @@ class JSONFormatter(logging.Formatter):
             PLATFORM,
         )
         """
-        log_full = record.__dict__
+        # Copy so we do not mutate the shared LogRecord
+        log_full = dict(record.__dict__)
 
         log_full["event"] = record.msg
         log_full["level"] = record.levelname
