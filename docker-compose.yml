@@ -82,7 +82,7 @@ services:
       LD_SDK_KEY: ${LD_SDK_KEY}
 
   db-seeder:
-    image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api
+    image: 258143015559.dkr.ecr.us-east-1.amazonaws.com/mercury/api:v1api-latest
     restart: always
     # For using localhost as db target
     network_mode: "host"
