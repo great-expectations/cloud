@@ -157,7 +157,7 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
         url = f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}/workspaces/{workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters"
         responses.get(
             url,
-            json={"data": {"expectation_parameters": {"something_min": 0, "something_max": 1}}},
+            json={"data": {"expectation_parameters": None}},
         )
 
     # ACT
@@ -165,9 +165,7 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
 
     # ASSERT
     if mock_patch is not None:
-        mock_checkpoint.assert_called_with(
-            ANY, event, ANY, expectation_parameters={"something_min": 0, "something_max": 1}
-        )
+        mock_checkpoint.assert_called_with(ANY, event, ANY, expectation_parameters=None)
     else:
         mock_checkpoint.run.assert_called_with(
             batch_parameters=splitter_options, expectation_parameters=None
