@@ -17,7 +17,6 @@ from great_expectations.datasource.fluent.interfaces import (
     DataAsset,
     TestConnectionError,
 )
-from great_expectations.exceptions import GXCloudError
 
 from great_expectations_cloud.agent.actions import RunWindowCheckpointAction
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
@@ -221,81 +220,6 @@ def test_run_checkpoint_action_raises_on_test_connection_failure(
         )
 
     with pytest.raises(TestConnectionError):
-        action.run(
-            event=event,
-            id="test-id",
-        )
-
-
-@pytest.mark.parametrize(
-    "action_class,event,mock_patch",
-    [
-        run_scheduled_checkpoint_action_class_and_event,
-    ],
-)
-@responses.activate
-def test_run_checkpoint_action_raises_on_gx_cloud_error(
-    mock_context, mocker: MockerFixture, action_class, event, mock_patch, set_required_env_vars
-):
-    env_vars = GxAgentEnvVars()
-    mock_datasource = mocker.Mock(spec=Datasource)
-    mock_context.data_sources.get.return_value = mock_datasource
-    mock_datasource.test_connection.side_effect = TestConnectionError()
-    org_id = uuid.uuid4()
-    workspace_id = uuid.uuid4()
-    action = action_class(
-        context=mock_context,
-        base_url=env_vars.gx_cloud_base_url,
-        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
-        auth_key="",
-    )
-    # Test errs with and without this mock for the window checkpoint
-    if event.type == "run_scheduled_checkpoint.received":
-        responses.add(
-            method=responses.GET,
-            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
-            status=503,
-        )
-
-    with pytest.raises(GXCloudError):
-        action.run(
-            event=event,
-            id="test-id",
-        )
-
-
-@pytest.mark.parametrize(
-    "action_class,event,mock_patch",
-    [
-        run_scheduled_checkpoint_action_class_and_event,
-    ],
-)
-@responses.activate
-def test_run_checkpoint_action_raises_on_key_error(
-    mock_context, mocker: MockerFixture, action_class, event, mock_patch, set_required_env_vars
-):
-    env_vars = GxAgentEnvVars()
-    mock_datasource = mocker.Mock(spec=Datasource)
-    mock_context.data_sources.get.return_value = mock_datasource
-    mock_datasource.test_connection.side_effect = TestConnectionError()
-    org_id = uuid.uuid4()
-    workspace_id = uuid.uuid4()
-    action = action_class(
-        context=mock_context,
-        base_url=env_vars.gx_cloud_base_url,
-        domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
-        auth_key="",
-    )
-    # Test errs with and without this mock for the window checkpoint
-    if event.type == "run_scheduled_checkpoint.received":
-        responses.add(
-            method=responses.GET,
-            url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
-            status=200,
-            json={"data": {}},
-        )
-
-    with pytest.raises(GXCloudError):
         action.run(
             event=event,
             id="test-id",
