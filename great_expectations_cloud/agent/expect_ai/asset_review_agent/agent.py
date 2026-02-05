@@ -124,18 +124,33 @@ class AssetReviewAgent:
 
     def get_raw_graph_for_langgraph_studio(
         self,
-    ) -> CompiledStateGraph[GenerateExpectationsState, GenerateExpectationsConfig, GenerateExpectationsInput, GenerateExpectationsOutput]:
+    ) -> CompiledStateGraph[
+        GenerateExpectationsState,
+        GenerateExpectationsConfig,
+        GenerateExpectationsInput,
+        GenerateExpectationsOutput,
+    ]:
         return self._get_graph_builder().compile()
 
     def _build_agent_graph(
         self,
-    ) -> CompiledStateGraph[GenerateExpectationsState, GenerateExpectationsConfig, GenerateExpectationsInput, GenerateExpectationsOutput]:
+    ) -> CompiledStateGraph[
+        GenerateExpectationsState,
+        GenerateExpectationsConfig,
+        GenerateExpectationsInput,
+        GenerateExpectationsOutput,
+    ]:
         builder = self._get_graph_builder()
         return builder.compile()
 
     def _get_graph_builder(
         self,
-    ) -> StateGraph[GenerateExpectationsState, GenerateExpectationsConfig, GenerateExpectationsInput, GenerateExpectationsOutput]:
+    ) -> StateGraph[
+        GenerateExpectationsState,
+        GenerateExpectationsConfig,
+        GenerateExpectationsInput,
+        GenerateExpectationsOutput,
+    ]:
         self._expectation_checker_subgraph = ExpectationChecker(
             query_runner=self._query_runner,
         ).graph()
@@ -206,7 +221,9 @@ class ExpectationAssistantNode:
     def __init__(self, tools_manager: AgentToolsManager):
         self._tools_manager = tools_manager
 
-    async def __call__(self, state: GenerateExpectationsState, config: RunnableConfig) -> GenerateExpectationsState:
+    async def __call__(
+        self, state: GenerateExpectationsState, config: RunnableConfig
+    ) -> GenerateExpectationsState:
         """Use the metrics and the plan to generate data quality expectations."""
         logger.debug("Reviewing current metrics and data")
         state.total_turns += 1

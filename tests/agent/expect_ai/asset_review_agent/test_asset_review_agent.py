@@ -29,7 +29,12 @@ from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRun
 
 
 @pytest.fixture
-def noop_graph_getter() -> CompiledStateGraph[GenerateExpectationsState, GenerateExpectationsConfig, GenerateExpectationsInput, GenerateExpectationsOutput]:
+def noop_graph_getter() -> CompiledStateGraph[
+    GenerateExpectationsState,
+    GenerateExpectationsConfig,
+    GenerateExpectationsInput,
+    GenerateExpectationsOutput,
+]:
     # This graph should be essentially a no-op version of the agent's real graph, with matching input/output schemas
     builder = StateGraph(
         state_schema=GenerateExpectationsState,
@@ -68,7 +73,12 @@ def noop_graph_getter() -> CompiledStateGraph[GenerateExpectationsState, Generat
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_asset_review_agent_interface(
-    noop_graph_getter: CompiledStateGraph[GenerateExpectationsState, GenerateExpectationsConfig, GenerateExpectationsInput, GenerateExpectationsOutput],
+    noop_graph_getter: CompiledStateGraph[
+        GenerateExpectationsState,
+        GenerateExpectationsConfig,
+        GenerateExpectationsInput,
+        GenerateExpectationsOutput,
+    ],
 ) -> None:
     organization_id = "test_org_id"
     data_source_name = "test_data_source_name"
@@ -83,7 +93,7 @@ async def test_asset_review_agent_interface(
     )
     with mock.patch.object(agent, "_build_agent_graph") as mock_build_agent_graph:
         mock_build_agent_graph.return_value = noop_graph_getter
-        echoes_input = GenerateExpectationsInput(
+        generate_expectations_input = GenerateExpectationsInput(
             organization_id=organization_id,
             workspace_id="test_workspace_id",
             data_source_name=data_source_name,
@@ -91,7 +101,7 @@ async def test_asset_review_agent_interface(
             batch_definition_name=batch_definition_name,
             batch_parameters=batch_parameters,
         )
-        result = await agent.arun(echoes_input=echoes_input)
+        result = await agent.arun(generate_expectations_input=generate_expectations_input)
 
     assert isinstance(result, ExpectationSuite)
     assert len(result.expectations) == 1

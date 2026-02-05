@@ -46,7 +46,7 @@ def random_resource_name() -> str:
     return "".join(random.choices(string.ascii_lowercase, k=10))
 
 
-async def create_snowflake_echoes_suite(
+async def create_snowflake_generate_expectations_suite(
     context: CloudDataContext,
 ) -> AsyncGenerator[str, None]:
     data_source = None
@@ -89,7 +89,7 @@ async def create_snowflake_echoes_suite(
         batch_definition_name = random_resource_name()
         batch_definition = table_asset.add_batch_definition_monthly(batch_definition_name, "col_3")
 
-        echoes_input = GenerateExpectationsInput(
+        generate_expectations_input = GenerateExpectationsInput(
             organization_id=context.ge_cloud_config.organization_id,
             workspace_id=context.ge_cloud_config.workspace_id,
             data_source_name=table_asset.datasource.name,
@@ -106,7 +106,7 @@ async def create_snowflake_echoes_suite(
 
         yield await do_run_gx_e2e(
             context=context,
-            echoes_input=echoes_input,
+            generate_expectations_input=generate_expectations_input,
         )
     finally:
         # Clean up all resources
@@ -127,10 +127,10 @@ async def create_snowflake_echoes_suite(
 
 async def do_run_gx_e2e(
     context: CloudDataContext,
-    echoes_input: GenerateExpectationsInput,
+    generate_expectations_input: GenerateExpectationsInput,
 ) -> str:
     suffix = datetime.now(tz=UTC).strftime("%Y%m%dT%H%M%S")
-    suite_name = f"echoes-{suffix}"
+    suite_name = f"generate_expectations-{suffix}"
 
     metric_service = MetricService(context=context)
     tools_manager = AgentToolsManager(
@@ -144,7 +144,7 @@ async def do_run_gx_e2e(
     )
 
     suite = await agent.arun(
-        echoes_input=echoes_input,
+        generate_expectations_input=generate_expectations_input,
         temperature=0.0,
         seed=20241209,
     )
@@ -160,10 +160,10 @@ async def do_run_gx_e2e(
     logger.info(f"Adding suite {suite.name}")
     suite = context.suites.add(suite)
     suite = context.suites.get(suite.name)
-    asset = context.data_sources.get(echoes_input.data_source_name).get_asset(
-        echoes_input.data_asset_name
+    asset = context.data_sources.get(generate_expectations_input.data_source_name).get_asset(
+        generate_expectations_input.data_asset_name
     )
-    bd = asset.get_batch_definition(echoes_input.batch_definition_name)
+    bd = asset.get_batch_definition(generate_expectations_input.batch_definition_name)
 
     logger.info("Storing validation definition")
     vd = context.validation_definitions.add(
@@ -184,13 +184,13 @@ async def do_run_gx_e2e(
 
     logger.info("Running validation definition")
     try:
-        result = checkpoint.run(batch_parameters=echoes_input.batch_parameters)
+        result = checkpoint.run(batch_parameters=generate_expectations_input.batch_parameters)
     except StoreBackendError as e:
         # this can happen if we have too many results and so the store backend can't handle it
         # try running again a simpler result format
         logger.warning(f"StoreBackendError: {e}")
         logger.warning("Retrying with a simpler result format")
-        result = checkpoint.run(batch_parameters=echoes_input.batch_parameters)
+        result = checkpoint.run(batch_parameters=generate_expectations_input.batch_parameters)
     for run_result in result.run_results.values():
         logger.info(f"Results available at {run_result.result_url}")
     return suite_name
@@ -210,7 +210,7 @@ async def test_e2e_gxcloud() -> None:
         cloud_access_token=os.getenv("GX_CLOUD_ACCESS_TOKEN"),
     )
 
-    suite_name = await anext(create_snowflake_echoes_suite(context=context))
+    suite_name = await anext(create_snowflake_generate_expectations_suite(context=context))
 
     suite = context.suites.get(suite_name)
     assert suite.name == suite_name

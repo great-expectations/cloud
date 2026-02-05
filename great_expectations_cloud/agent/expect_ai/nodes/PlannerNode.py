@@ -57,11 +57,15 @@ class PlannerNode:
         self._tools_manager = tools_manager
         self._metric_service = metric_service
 
-    async def __call__(self, state: GenerateExpectationsInput, config: RunnableConfig) -> GenerateExpectationsState:
+    async def __call__(
+        self, state: GenerateExpectationsInput, config: RunnableConfig
+    ) -> GenerateExpectationsState:
         """Generate a plan for how to develop useful data quality tests for this data."""
         return self._update_state_with_core_metrics(state)
 
-    def _update_state_with_core_metrics(self, state: GenerateExpectationsInput) -> GenerateExpectationsState:
+    def _update_state_with_core_metrics(
+        self, state: GenerateExpectationsInput
+    ) -> GenerateExpectationsState:
         """
         Updates the state with core metrics about the data asset.
 
