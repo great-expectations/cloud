@@ -94,7 +94,7 @@ class AssetReviewAgent:
 
     async def arun(
         self,
-        echoes_input: GenerateExpectationsInput,
+        generate_expectations_input: GenerateExpectationsInput,
         thread_id: str | None = None,
         temperature: float = 0.7,
         seed: int | None = None,
@@ -105,7 +105,7 @@ class AssetReviewAgent:
         agent = self._build_agent_graph()
 
         output = await agent.ainvoke(
-            echoes_input,
+            generate_expectations_input,
             config={
                 "configurable": {
                     "thread_id": thread_id,
@@ -117,7 +117,7 @@ class AssetReviewAgent:
         )
         result = GenerateExpectationsOutput(**output)
         suite = ExpectationSuite(
-            name=f"echoes--{echoes_input.data_asset_name}",
+            name=f"generate_expectations--{generate_expectations_input.data_asset_name}",
             expectations=[expectation.get_gx_expectation() for expectation in result.expectations],
         )
         return suite
