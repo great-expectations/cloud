@@ -75,11 +75,12 @@ class AgentToolsManager:
             name=BatchColumnTypes.__name__,
             description=BatchColumnTypes.__doc__ or "",
             args_schema=NoArgs,
-            func=lambda batch_definition,
-            batch_parameters: metric_service.get_metric_value_or_error_text(
-                metric=BatchColumnTypes(),
-                batch_definition=self._ensure_core_batch_definition(batch_definition),
-                batch_parameters=batch_parameters,
+            func=lambda batch_definition, batch_parameters: (
+                metric_service.get_metric_value_or_error_text(
+                    metric=BatchColumnTypes(),
+                    batch_definition=self._ensure_core_batch_definition(batch_definition),
+                    batch_parameters=batch_parameters,
+                )
             ),
         )
 
@@ -87,11 +88,12 @@ class AgentToolsManager:
             name=BatchRowCount.__name__,
             description=BatchRowCount.__doc__ or "",
             args_schema=NoArgs,
-            func=lambda batch_definition,
-            batch_parameters: metric_service.get_metric_value_or_error_text(
-                metric=BatchRowCount(),
-                batch_definition=self._ensure_core_batch_definition(batch_definition),
-                batch_parameters=batch_parameters,
+            func=lambda batch_definition, batch_parameters: (
+                metric_service.get_metric_value_or_error_text(
+                    metric=BatchRowCount(),
+                    batch_definition=self._ensure_core_batch_definition(batch_definition),
+                    batch_parameters=batch_parameters,
+                )
             ),
         )
 
@@ -99,11 +101,12 @@ class AgentToolsManager:
             name=SampleValues.__name__,
             description=SampleValues.__doc__ or "",
             args_schema=NoArgs,
-            func=lambda batch_definition,
-            batch_parameters: metric_service.get_metric_value_or_error_text(
-                metric=SampleValues(),
-                batch_definition=self._ensure_core_batch_definition(batch_definition),
-                batch_parameters=batch_parameters,
+            func=lambda batch_definition, batch_parameters: (
+                metric_service.get_metric_value_or_error_text(
+                    metric=SampleValues(),
+                    batch_definition=self._ensure_core_batch_definition(batch_definition),
+                    batch_parameters=batch_parameters,
+                )
             ),
         )
 
@@ -124,12 +127,12 @@ class AgentToolsManager:
             name=ColumnNullCount.__name__,
             description=ColumnNullCount.__doc__ or "",
             args_schema=ColumnArgs,
-            func=lambda batch_definition,
-            batch_parameters,
-            column: metric_service.get_metric_value_or_error_text(
-                metric=ColumnNullCount(column=column),
-                batch_definition=self._ensure_core_batch_definition(batch_definition),
-                batch_parameters=batch_parameters,
+            func=lambda batch_definition, batch_parameters, column: (
+                metric_service.get_metric_value_or_error_text(
+                    metric=ColumnNullCount(column=column),
+                    batch_definition=self._ensure_core_batch_definition(batch_definition),
+                    batch_parameters=batch_parameters,
+                )
             ),
         )
 
@@ -137,12 +140,12 @@ class AgentToolsManager:
             name=ColumnDistinctValuesCount.__name__,
             description=ColumnDistinctValuesCount.__doc__ or "",
             args_schema=ColumnArgs,
-            func=lambda batch_definition,
-            batch_parameters,
-            column: metric_service.get_metric_value_or_error_text(
-                metric=ColumnDistinctValuesCount(column=column),
-                batch_definition=self._ensure_core_batch_definition(batch_definition),
-                batch_parameters=batch_parameters,
+            func=lambda batch_definition, batch_parameters, column: (
+                metric_service.get_metric_value_or_error_text(
+                    metric=ColumnDistinctValuesCount(column=column),
+                    batch_definition=self._ensure_core_batch_definition(batch_definition),
+                    batch_parameters=batch_parameters,
+                )
             ),
         )
 
@@ -192,16 +195,15 @@ class AgentToolsManager:
             name=ColumnValuesMatchRegexCount.__name__,
             description=ColumnValuesMatchRegexCount.__doc__ or "",
             args_schema=ColumnRegexValuesArgs,
-            func=lambda batch_definition,
-            batch_parameters,
-            column,
-            regex: metric_service.get_metric_value_or_error_text(
-                metric=ColumnValuesMatchRegexCount(
-                    column=column,
-                    regex=regex,
-                ),
-                batch_definition=self._ensure_core_batch_definition(batch_definition),
-                batch_parameters=batch_parameters,
+            func=lambda batch_definition, batch_parameters, column, regex: (
+                metric_service.get_metric_value_or_error_text(
+                    metric=ColumnValuesMatchRegexCount(
+                        column=column,
+                        regex=regex,
+                    ),
+                    batch_definition=self._ensure_core_batch_definition(batch_definition),
+                    batch_parameters=batch_parameters,
+                )
             ),
         )
 
@@ -225,16 +227,15 @@ class AgentToolsManager:
             name=ColumnValuesNotMatchRegexCount.__name__,
             description=ColumnValuesNotMatchRegexCount.__doc__ or "",
             args_schema=ColumnRegexValuesArgs,
-            func=lambda batch_definition,
-            batch_parameters,
-            column,
-            regex: metric_service.get_metric_value_or_error_text(
-                metric=ColumnValuesNotMatchRegexCount(
-                    column=column,
-                    regex=regex,
-                ),
-                batch_definition=self._ensure_core_batch_definition(batch_definition),
-                batch_parameters=batch_parameters,
+            func=lambda batch_definition, batch_parameters, column, regex: (
+                metric_service.get_metric_value_or_error_text(
+                    metric=ColumnValuesNotMatchRegexCount(
+                        column=column,
+                        regex=regex,
+                    ),
+                    batch_definition=self._ensure_core_batch_definition(batch_definition),
+                    batch_parameters=batch_parameters,
+                )
             ),
         )
 
@@ -242,12 +243,12 @@ class AgentToolsManager:
             name=ColumnDescriptiveStats.__name__,
             description=ColumnDescriptiveStats.__doc__ or "",
             args_schema=ColumnArgs,
-            func=lambda batch_definition,
-            batch_parameters,
-            column: metric_service.get_metric_value_or_error_text(
-                metric=ColumnDescriptiveStats(column=column),
-                batch_definition=self._ensure_core_batch_definition(batch_definition),
-                batch_parameters=batch_parameters,
+            func=lambda batch_definition, batch_parameters, column: (
+                metric_service.get_metric_value_or_error_text(
+                    metric=ColumnDescriptiveStats(column=column),
+                    batch_definition=self._ensure_core_batch_definition(batch_definition),
+                    batch_parameters=batch_parameters,
+                )
             ),
         )
 
