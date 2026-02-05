@@ -52,13 +52,6 @@ def noop_graph_getter() -> CompiledStateGraph[EchoesState, EchoesConfig, EchoesI
             batch_definition=batch_definition,
             messages=[],
             potential_expectations=[],
-            expectations=[],  # Don't set expectations in state to avoid reducer duplication
-            collected_metrics=EchoesOutputMetrics(),
-        )
-
-    def transform_to_output(state: EchoesState) -> EchoesOutput:
-        # Create expectations directly in output to avoid add reducer duplication
-        return EchoesOutput(
             expectations=[
                 ExpectColumnValuesToBeUnique(
                     column="test_column",
@@ -66,14 +59,11 @@ def noop_graph_getter() -> CompiledStateGraph[EchoesState, EchoesConfig, EchoesI
                     mostly=1.0,
                 )
             ],
-            metrics=state.collected_metrics,
         )
 
     builder.add_node("mock_expectations_node", mock_expectations_node)
-    builder.add_node("transform_to_output", transform_to_output)
     builder.add_edge(START, "mock_expectations_node")
-    builder.add_edge("mock_expectations_node", "transform_to_output")
-    builder.add_edge("transform_to_output", END)
+    builder.add_edge("mock_expectations_node", END)
     return builder.compile()
 
 
@@ -105,7 +95,6 @@ async def test_asset_review_agent_interface(
         )
         result = await agent.arun(echoes_input=echoes_input)
 
-    assert isinstance(result, AssetReviewAgentResult)
-    assert isinstance(result.expectation_suite, ExpectationSuite)
-    assert len(result.expectation_suite.expectations) == 1
-    assert isinstance(result.expectation_suite.expectations[0], GXExpectColumnValuesToBeUnique)
+    assert isinstance(result, ExpectationSuite)
+    assert len(result.expectations) == 1
+    assert isinstance(result.expectations[0], GXExpectColumnValuesToBeUnique)
