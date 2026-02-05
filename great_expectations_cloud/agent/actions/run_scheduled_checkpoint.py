@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import socket
 from typing import Final
 
 from typing_extensions import override
@@ -20,12 +19,10 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 class RunScheduledCheckpointAction(AgentAction[RunScheduledCheckpointEvent]):
     @override
     def run(self, event: RunScheduledCheckpointEvent, id: str) -> ActionResult:
-        hostname = socket.gethostname()
         log_extra = {
             "correlation_id": id,
             "checkpoint_id": str(event.checkpoint_id),
             "schedule_id": str(event.schedule_id),
-            "hostname": hostname,
         }
         LOGGER.debug(
             "Proceeding to run checkpoint",
