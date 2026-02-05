@@ -215,21 +215,24 @@ class GXAgent:
             )
         except KeyboardInterrupt:
             LOGGER.debug("Received request to shut down.")
-        except (SubscriberError, ClientError) as e:
-            _log_exception(e, "The connection to GX Cloud has encountered an error.")
-        except GXAgentUnrecoverableConnectionError as e:
-            _log_exception(e, "The connection to GX Cloud has encountered an unrecoverable error.")
-            # We log before we kill the process so we have an log line for auditing.
+        except (SubscriberError, ClientError):
+            LOGGER.exception("The connection to GX Cloud has encountered an error.")
+        except GXAgentUnrecoverableConnectionError:
+            LOGGER.exception("The connection to GX Cloud has encountered an unrecoverable error.")
+            # We want to kill the process immediately and rely on the orchestrator to bring up a
+            # replacement worker. We SIGKILL since we are running in a container and process
+            # cleanup isn't necessary since that will happen when the container dies. Also note,
+            # SIGTERM will wait for inflight jobs to finish since we are using ThreadPoolExecutor.
             LOGGER.error("Killing process.")  # noqa: TRY400
-            os.kill(os.getpid(), signal.SIGTERM)
+            os.kill(os.getpid(), signal.SIGKILL)
         except (
             AuthenticationError,
             ProbableAuthenticationError,
             AMQPConnectorException,
             AMQPConnectionError,
-        ) as e:
+        ):
             # Raise to use the retry decorator to handle the retry logic
-            _log_exception(e, "Failed authentication to MQ.")
+            LOGGER.exception("Failed authentication to MQ.")
             raise
 
         finally:
@@ -590,9 +593,8 @@ class GXAgent:
                 org_id=org_id,
                 workspace_id=workspace_id,
             )
-        except Exception as e:
-            _log_exception(
-                e,
+        except Exception:
+            LOGGER.exception(
                 "Error updating status, removing message from queue",
                 extra={
                     "correlation_id": event_context.correlation_id,
@@ -936,18 +938,5 @@ class GXAgent:
         """
         try:
             response.raise_for_status()
-        except requests.HTTPError as e:
-            _log_exception(e, message, extra={"response": response})
-
-
-def _log_exception(exception: Exception, msg: str, extra: dict[str, Any] | None = None) -> None:
-    """Log an exception."""
-    if extra is None:
-        extra = {}
-    try:
-        LOGGER.exception(msg, extra=extra)
-    except Exception:
-        # We sometimes hit a bug in traceback.py when logging an exception:
-        # AttributeError: 'str' object has no attribute 'tb_frame'
-        # So we fallback to logging an error.
-        LOGGER.error(f"Error: {msg}, Exception: {exception}", extra=extra)  # noqa: TRY400
+        except requests.HTTPError:
+            LOGGER.exception(message, extra={"response": response})
