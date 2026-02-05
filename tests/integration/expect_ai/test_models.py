@@ -67,8 +67,16 @@ def test_expectation_type_coverage() -> None:
 async def test_individual_expectation_schemas(
     expectation_type: type[OpenAIGXExpectation], model_name: str
 ) -> None:
-    model = ChatOpenAI(model=model_name).with_structured_output(
-        schema=expectation_type, method="json_schema", strict=True
-    )
-    res = await model.ainvoke("Recommend an expectation about a table of NYC Taxi Data.")
-    assert isinstance(res, expectation_type)
+    chat_model = ChatOpenAI(model=model_name)
+    try:
+        model = chat_model.with_structured_output(
+            schema=expectation_type, method="json_schema", strict=True
+        )
+        res = await model.ainvoke("Recommend an expectation about a table of NYC Taxi Data.")
+        assert isinstance(res, expectation_type)
+    finally:
+        # Close the underlying httpx clients to prevent resource warnings
+        if chat_model.root_client is not None:
+            chat_model.root_client.close()
+        if chat_model.root_async_client is not None:
+            await chat_model.root_async_client.close()
