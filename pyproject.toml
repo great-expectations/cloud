@@ -243,6 +243,12 @@ filterwarnings = [
     # Marshmallow errors come from GX and we don't plan to update it there.
     "ignore::marshmallow.warnings.ChangedInMarshmallow4Warning",
     "ignore::marshmallow.warnings.RemovedInMarshmallow4Warning",
+    # langchain-openai's ChatOpenAI creates shared async httpx clients that aren't properly
+    # closed when tests finish. These warnings are from the garbage collector detecting
+    # unclosed sockets/transports. This is a known issue with the library's client lifecycle.
+    # See: https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings
+    "ignore:Exception ignored in.*socket.socket:pytest.PytestUnraisableExceptionWarning",
+    "ignore:Exception ignored in.*_SelectorTransport.__del__:pytest.PytestUnraisableExceptionWarning",
 ]
 
 [tool.coverage.report]
