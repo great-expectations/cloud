@@ -127,6 +127,10 @@ jobs:
           flags: integration
 
   e2e-tests:
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
     runs-on: ubuntu-latest
 
     env:
@@ -151,6 +155,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python
+      - name: Configure ECR AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::258143015559:role/github-amazonec2containerregistryreadonly
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Start services
         run: |
