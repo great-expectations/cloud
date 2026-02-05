@@ -217,9 +217,12 @@ class GXAgent:
             _log_exception(e, "The connection to GX Cloud has encountered an error.")
         except GXAgentUnrecoverableConnectionError as e:
             _log_exception(e, "The connection to GX Cloud has encountered an unrecoverable error.")
-            # We log before we kill the process so we have an log line for auditing.
+            # We want to kill the process immediately and rely on the orchestrator to bring up a
+            # replacement worker. We SIGKILL since we are running in a container and process
+            # cleanup isn't necessary since that will happen when the container dies. Also note,
+            # SIGTERM will wait for inflight jobs to finish since we are using ThreadPoolExecutor.
             LOGGER.error("Killing process.")  # noqa: TRY400
-            os.kill(os.getpid(), signal.SIGTERM)
+            os.kill(os.getpid(), signal.SIGKILL)
         except (
             AuthenticationError,
             ProbableAuthenticationError,
