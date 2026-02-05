@@ -134,7 +134,7 @@ jobs:
       GX_CLOUD_ACCESS_TOKEN: ${{ secrets.GX_CLOUD_ACCESS_TOKEN }}
       GX_CLOUD_ORGANIZATION_ID: ${{ secrets.GX_CLOUD_ORGANIZATION_ID }}
       GX_CLOUD_WORKSPACE_ID: ${{ secrets.GX_CLOUD_WORKSPACE_ID }}
-      GX_CLOUD_BASE_URL: ${{ secrets.GX_CLOUD_BASE_URL }}
+      GX_CLOUD_BASE_URL: "http://localhost:5000"
       # OpenAI
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       # Snowflake
@@ -151,6 +151,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python
+
+      - name: Start services
+        run: |
+          docker compose up db mq -d
+          docker compose run db-provisioner
+          docker compose run db-seeder
+          docker compose run mq-wait
+          docker compose up mercury-service-api-v1 -d
+          docker compose up nginx -d
+
+      - name: Show logs for debugging
+        if: failure()
+        run: |
+          docker compose -f docker-compose.yml logs
 
       - name: Run e2e tests
         run: poetry run pytest -vv -m e2e -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml --junitxml=junit.xml -rEf
