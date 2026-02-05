@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python
       - name: Run unit tests
-        run: poetry run pytest -m "not agentjobs and not integration" --cov-report xml --junitxml=junit.xml -ra
+        run: poetry run pytest -m "not agentjobs and not integration and not e2e" --cov-report xml --junitxml=junit.xml -ra
         env:
           # GX Agent
           GX_CLOUD_ACCESS_TOKEN: ${{ secrets.GX_CLOUD_ACCESS_TOKEN }}
@@ -70,6 +70,8 @@ jobs:
       GX_CLOUD_ORGANIZATION_ID: ${{ secrets.GX_CLOUD_ORGANIZATION_ID }}
       GX_CLOUD_WORKSPACE_ID: ${{ secrets.GX_CLOUD_WORKSPACE_ID }}
       GX_CLOUD_BASE_URL: "http://localhost:5000"
+      # OpenAI
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       # GX Cloud
       AUTH0_DOMAIN: ${{secrets.AUTH0_DOMAIN}}
       AUTH0_API_AUDIENCE: ${{secrets.AUTH0_API_AUDIENCE}}
@@ -123,6 +125,51 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: integration
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+
+    env:
+      # GX Agent
+      GX_CLOUD_ACCESS_TOKEN: ${{ secrets.GX_CLOUD_ACCESS_TOKEN }}
+      GX_CLOUD_ORGANIZATION_ID: ${{ secrets.GX_CLOUD_ORGANIZATION_ID }}
+      GX_CLOUD_WORKSPACE_ID: ${{ secrets.GX_CLOUD_WORKSPACE_ID }}
+      GX_CLOUD_BASE_URL: ${{ secrets.GX_CLOUD_BASE_URL }}
+      # OpenAI
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # Snowflake
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PW: ${{ secrets.SNOWFLAKE_PW }}
+      SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+      SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+      LOGGING_LEVEL: DEBUG
+      ENVIRONMENT: local
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python
+
+      - name: Run e2e tests
+        run: poetry run pytest -vv -m e2e -W default::great_expectations.datasource.fluent.GxInvalidDatasourceWarning --cov-report xml --junitxml=junit.xml -rEf
+
+      # upload coverage report to codecov
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.1.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: great-expectations/cloud
+          flags: e2e
+
+      # upload test results to codecov
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: e2e
 
   test-docker-build:
     runs-on: ubuntu-latest
