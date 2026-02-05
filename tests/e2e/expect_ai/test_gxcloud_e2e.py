@@ -27,7 +27,7 @@ from sqlalchemy import text
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.agent import AssetReviewAgent
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
     BatchParameters,
-    EchoesInput,
+    GenerateExpectationsInput,
 )
 from great_expectations_cloud.agent.expect_ai.config import logging_config
 from great_expectations_cloud.agent.expect_ai.metric_service import MetricService
@@ -89,7 +89,7 @@ async def create_snowflake_echoes_suite(
         batch_definition_name = random_resource_name()
         batch_definition = table_asset.add_batch_definition_monthly(batch_definition_name, "col_3")
 
-        echoes_input = EchoesInput(
+        echoes_input = GenerateExpectationsInput(
             organization_id=context.ge_cloud_config.organization_id,
             workspace_id=context.ge_cloud_config.workspace_id,
             data_source_name=table_asset.datasource.name,
@@ -127,7 +127,7 @@ async def create_snowflake_echoes_suite(
 
 async def do_run_gx_e2e(
     context: CloudDataContext,
-    echoes_input: EchoesInput,
+    echoes_input: GenerateExpectationsInput,
 ) -> str:
     suffix = datetime.now(tz=UTC).strftime("%Y%m%dT%H%M%S")
     suite_name = f"echoes-{suffix}"

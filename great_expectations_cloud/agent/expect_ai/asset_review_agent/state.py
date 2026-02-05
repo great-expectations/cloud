@@ -58,7 +58,7 @@ class ExistingExpectationContext(BaseModel):
     description: str = Field(description="The description of the expectation")
 
 
-class EchoesInput(BaseModel):
+class GenerateExpectationsInput(BaseModel):
     """The input should simply describe the asset for which we want to generate expectations.
     Because the model needs to connect to user data, we also provide sufficient information to connect to the data source."""
 
@@ -81,11 +81,11 @@ class SubgraphInput(BaseModel):
     data_asset_name: str
 
 
-class EchoesOutput(BaseModel):
+class GenerateExpectationsOutput(BaseModel):
     expectations: Annotated[list[OpenAIGXExpectation], add]
 
 
-class EchoesState(EchoesInput):
+class GenerateExpectationsState(GenerateExpectationsInput):
     # TODO: Provide a non-Any type for batch_definition when Core uses pydantic v2 models.
     # This currently is required because of of mismatches between pydantic v1 and v2 models.
     batch_definition: Any
@@ -124,7 +124,7 @@ class ExpectationBuilderState(BaseModel):
     existing_expectation_contexts: list[ExistingExpectationContext] = Field(default_factory=list)
 
 
-class EchoesConfig(TypedDict):
+class GenerateExpectationsConfig(TypedDict):
     temperature: float
     seed: int | None
     thread_id: str

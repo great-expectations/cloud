@@ -17,8 +17,8 @@ from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig  # noqa: TC002
 
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
-    EchoesInput,
-    EchoesState,
+    GenerateExpectationsInput,
+    GenerateExpectationsState,
 )
 from great_expectations_cloud.agent.expect_ai.exceptions import (
     InvalidAssetTypeError,
@@ -57,11 +57,11 @@ class PlannerNode:
         self._tools_manager = tools_manager
         self._metric_service = metric_service
 
-    async def __call__(self, state: EchoesInput, config: RunnableConfig) -> EchoesState:
+    async def __call__(self, state: GenerateExpectationsInput, config: RunnableConfig) -> GenerateExpectationsState:
         """Generate a plan for how to develop useful data quality tests for this data."""
         return self._update_state_with_core_metrics(state)
 
-    def _update_state_with_core_metrics(self, state: EchoesInput) -> EchoesState:
+    def _update_state_with_core_metrics(self, state: GenerateExpectationsInput) -> GenerateExpectationsState:
         """
         Updates the state with core metrics about the data asset.
 
@@ -135,7 +135,7 @@ class PlannerNode:
                 )
             )
 
-        return EchoesState(
+        return GenerateExpectationsState(
             organization_id=state.organization_id,
             data_source_name=state.data_source_name,
             data_asset_name=state.data_asset_name,

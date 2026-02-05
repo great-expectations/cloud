@@ -8,7 +8,9 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.agent import MetricProviderNode
-from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import EchoesState
+from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
+    GenerateExpectationsState,
+)
 from great_expectations_cloud.agent.expect_ai.tools.metrics import AgentToolsManager
 
 
@@ -32,7 +34,7 @@ class TestMetricProviderNodeCall:
         return MetricProviderNode(tools_manager=mock_tools_manager)
 
     @pytest.fixture
-    def sample_state_with_tool_calls(self) -> EchoesState:
+    def sample_state_with_tool_calls(self) -> GenerateExpectationsState:
         ai_message = AIMessage(
             content="Getting metrics",
             tool_calls=[
@@ -48,7 +50,7 @@ class TestMetricProviderNodeCall:
                 },
             ],
         )
-        return EchoesState(
+        return GenerateExpectationsState(
             organization_id="test_org",
             data_source_name="test_datasource",
             data_asset_name="test_asset",
@@ -60,8 +62,8 @@ class TestMetricProviderNodeCall:
         )
 
     @pytest.fixture
-    def sample_state_without_tool_calls(self) -> EchoesState:
-        return EchoesState(
+    def sample_state_without_tool_calls(self) -> GenerateExpectationsState:
+        return GenerateExpectationsState(
             organization_id="test_org",
             data_source_name="test_datasource",
             data_asset_name="test_asset",
@@ -81,7 +83,7 @@ class TestMetricProviderNodeCall:
     async def test_call_with_successful_metrics(
         self,
         metric_provider_node: MetricProviderNode,
-        sample_state_with_tool_calls: EchoesState,
+        sample_state_with_tool_calls: GenerateExpectationsState,
         mock_config: RunnableConfig,
         mock_tools_manager: Mock,
     ) -> None:
@@ -133,7 +135,7 @@ class TestMetricProviderNodeCall:
     async def test_call_with_failed_metric(
         self,
         metric_provider_node: MetricProviderNode,
-        sample_state_with_tool_calls: EchoesState,
+        sample_state_with_tool_calls: GenerateExpectationsState,
         mock_config: RunnableConfig,
         mock_tools_manager: Mock,
     ) -> None:
@@ -166,7 +168,7 @@ class TestMetricProviderNodeCall:
     async def test_call_with_list_observation(
         self,
         metric_provider_node: MetricProviderNode,
-        sample_state_with_tool_calls: EchoesState,
+        sample_state_with_tool_calls: GenerateExpectationsState,
         mock_config: RunnableConfig,
         mock_tools_manager: Mock,
     ) -> None:
@@ -195,7 +197,7 @@ class TestMetricProviderNodeCall:
     async def test_call_without_tool_calls(
         self,
         metric_provider_node: MetricProviderNode,
-        sample_state_without_tool_calls: EchoesState,
+        sample_state_without_tool_calls: GenerateExpectationsState,
         mock_config: RunnableConfig,
     ) -> None:
         result = await metric_provider_node(sample_state_without_tool_calls, mock_config)
@@ -211,7 +213,7 @@ class TestMetricProviderNodeCall:
         metric_provider_node: MetricProviderNode,
         mock_config: RunnableConfig,
     ) -> None:
-        mixed_state = EchoesState(
+        mixed_state = GenerateExpectationsState(
             organization_id="test_org",
             data_source_name="test_datasource",
             data_asset_name="test_asset",

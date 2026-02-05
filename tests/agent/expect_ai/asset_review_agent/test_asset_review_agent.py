@@ -17,10 +17,10 @@ from great_expectations_cloud.agent.expect_ai.asset_review_agent.agent import (
 )
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
     BatchParameters,
-    EchoesConfig,
-    EchoesInput,
-    EchoesOutput,
-    EchoesState,
+    GenerateExpectationsConfig,
+    GenerateExpectationsInput,
+    GenerateExpectationsOutput,
+    GenerateExpectationsState,
 )
 from great_expectations_cloud.agent.expect_ai.expectations import ExpectColumnValuesToBeUnique
 from great_expectations_cloud.agent.expect_ai.metric_service import MetricService
@@ -29,18 +29,18 @@ from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRun
 
 
 @pytest.fixture
-def noop_graph_getter() -> CompiledStateGraph[EchoesState, EchoesConfig, EchoesInput, EchoesOutput]:
+def noop_graph_getter() -> CompiledStateGraph[GenerateExpectationsState, GenerateExpectationsConfig, GenerateExpectationsInput, GenerateExpectationsOutput]:
     # This graph should be essentially a no-op version of the agent's real graph, with matching input/output schemas
     builder = StateGraph(
-        state_schema=EchoesState,
-        context_schema=EchoesConfig,
-        input_schema=EchoesInput,
-        output_schema=EchoesOutput,
+        state_schema=GenerateExpectationsState,
+        context_schema=GenerateExpectationsConfig,
+        input_schema=GenerateExpectationsInput,
+        output_schema=GenerateExpectationsOutput,
     )
 
-    def mock_expectations_node(state: EchoesInput) -> EchoesState:
+    def mock_expectations_node(state: GenerateExpectationsInput) -> GenerateExpectationsState:
         batch_definition = mock.MagicMock(spec=BatchDefinition)
-        return EchoesState(
+        return GenerateExpectationsState(
             organization_id=state.organization_id,
             workspace_id=state.workspace_id,
             data_source_name=state.data_source_name,
@@ -68,7 +68,7 @@ def noop_graph_getter() -> CompiledStateGraph[EchoesState, EchoesConfig, EchoesI
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_asset_review_agent_interface(
-    noop_graph_getter: CompiledStateGraph[EchoesState, EchoesConfig, EchoesInput, EchoesOutput],
+    noop_graph_getter: CompiledStateGraph[GenerateExpectationsState, GenerateExpectationsConfig, GenerateExpectationsInput, GenerateExpectationsOutput],
 ) -> None:
     organization_id = "test_org_id"
     data_source_name = "test_data_source_name"
@@ -83,7 +83,7 @@ async def test_asset_review_agent_interface(
     )
     with mock.patch.object(agent, "_build_agent_graph") as mock_build_agent_graph:
         mock_build_agent_graph.return_value = noop_graph_getter
-        echoes_input = EchoesInput(
+        echoes_input = GenerateExpectationsInput(
             organization_id=organization_id,
             workspace_id="test_workspace_id",
             data_source_name=data_source_name,

@@ -17,8 +17,8 @@ from great_expectations_cloud.agent.expect_ai.asset_review_agent.agent import (
 )
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
     DataQualityPlanComponent,
-    EchoesState,
     ExistingExpectationContext,
+    GenerateExpectationsState,
 )
 from great_expectations_cloud.agent.expect_ai.expectations import AddExpectationsResponse
 from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRunner
@@ -39,7 +39,7 @@ def test_get_raw_graph_for_langgraph_studio_compiles() -> None:
 @pytest.mark.unit
 def test_tools_condition_returns_metric_provider_when_ai_message_has_tool_calls() -> None:
     # Arrange
-    state = EchoesState(
+    state = GenerateExpectationsState(
         organization_id="org",
         data_source_name="ds",
         data_asset_name="asset",
@@ -60,7 +60,7 @@ def test_tools_condition_returns_metric_provider_when_ai_message_has_tool_calls(
 @pytest.mark.unit
 def test_tools_condition_returns_quality_issue_summarizer_when_no_tool_calls() -> None:
     # Arrange
-    state = EchoesState(
+    state = GenerateExpectationsState(
         organization_id="org",
         data_source_name="ds",
         data_asset_name="asset",
@@ -129,7 +129,7 @@ async def test_metric_provider_converts_batch_parameters_and_handles_missing_fun
     node = MetricProviderNode(tools_manager=tools_manager)
 
     batch_definition = create_autospec(BatchDefinition, instance=True)
-    state = EchoesState(
+    state = GenerateExpectationsState(
         organization_id="org",
         data_source_name="ds",
         data_asset_name="asset",

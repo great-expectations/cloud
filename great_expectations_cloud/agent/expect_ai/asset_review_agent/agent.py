@@ -32,12 +32,12 @@ from great_expectations_cloud.agent.expect_ai.asset_review_agent.prompts import 
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
     BatchParameters,
     DataQualityPlan,
-    EchoesConfig,
-    EchoesInput,
-    EchoesOutput,
-    EchoesState,
     ExpectationBuilderOutput,
     ExpectationBuilderState,
+    GenerateExpectationsConfig,
+    GenerateExpectationsInput,
+    GenerateExpectationsOutput,
+    GenerateExpectationsState,
 )
 from great_expectations_cloud.agent.expect_ai.config import OPENAI_MODEL
 from great_expectations_cloud.agent.expect_ai.exceptions import (
@@ -94,7 +94,7 @@ class AssetReviewAgent:
 
     async def arun(
         self,
-        echoes_input: EchoesInput,
+        echoes_input: GenerateExpectationsInput,
         thread_id: str | None = None,
         temperature: float = 0.7,
         seed: int | None = None,
@@ -115,7 +115,7 @@ class AssetReviewAgent:
                 "recursion_limit": 30,
             },
         )
-        result = EchoesOutput(**output)
+        result = GenerateExpectationsOutput(**output)
         suite = ExpectationSuite(
             name=f"echoes--{echoes_input.data_asset_name}",
             expectations=[expectation.get_gx_expectation() for expectation in result.expectations],
@@ -124,27 +124,27 @@ class AssetReviewAgent:
 
     def get_raw_graph_for_langgraph_studio(
         self,
-    ) -> CompiledStateGraph[EchoesState, EchoesConfig, EchoesInput, EchoesOutput]:
+    ) -> CompiledStateGraph[GenerateExpectationsState, GenerateExpectationsConfig, GenerateExpectationsInput, GenerateExpectationsOutput]:
         return self._get_graph_builder().compile()
 
     def _build_agent_graph(
         self,
-    ) -> CompiledStateGraph[EchoesState, EchoesConfig, EchoesInput, EchoesOutput]:
+    ) -> CompiledStateGraph[GenerateExpectationsState, GenerateExpectationsConfig, GenerateExpectationsInput, GenerateExpectationsOutput]:
         builder = self._get_graph_builder()
         return builder.compile()
 
     def _get_graph_builder(
         self,
-    ) -> StateGraph[EchoesState, EchoesConfig, EchoesInput, EchoesOutput]:
+    ) -> StateGraph[GenerateExpectationsState, GenerateExpectationsConfig, GenerateExpectationsInput, GenerateExpectationsOutput]:
         self._expectation_checker_subgraph = ExpectationChecker(
             query_runner=self._query_runner,
         ).graph()
 
         builder = StateGraph(
-            state_schema=EchoesState,
-            context_schema=EchoesConfig,
-            input_schema=EchoesInput,
-            output_schema=EchoesOutput,
+            state_schema=GenerateExpectationsState,
+            context_schema=GenerateExpectationsConfig,
+            input_schema=GenerateExpectationsInput,
+            output_schema=GenerateExpectationsOutput,
         )
         builder.add_node(
             "planner",
@@ -186,8 +186,8 @@ class AssetReviewAgent:
         return builder
 
     async def _invoke_expectation_checker(
-        self, state: EchoesState, config: RunnableConfig
-    ) -> EchoesOutput:
+        self, state: GenerateExpectationsState, config: RunnableConfig
+    ) -> GenerateExpectationsOutput:
         expectations = []
         for expectation in state.potential_expectations:
             checker_input = ExpectationCheckerInput(
@@ -199,14 +199,14 @@ class AssetReviewAgent:
             if result.get("error") is None:
                 expectations.append(result["expectation"])
 
-        return EchoesOutput(expectations=expectations)
+        return GenerateExpectationsOutput(expectations=expectations)
 
 
 class ExpectationAssistantNode:
     def __init__(self, tools_manager: AgentToolsManager):
         self._tools_manager = tools_manager
 
-    async def __call__(self, state: EchoesState, config: RunnableConfig) -> EchoesState:
+    async def __call__(self, state: GenerateExpectationsState, config: RunnableConfig) -> GenerateExpectationsState:
         """Use the metrics and the plan to generate data quality expectations."""
         logger.debug("Reviewing current metrics and data")
         state.total_turns += 1
@@ -258,7 +258,7 @@ class MetricProviderNode:
         self._tools_manager = tools_manager
 
     async def __call__(
-        self, state: EchoesState, config: RunnableConfig
+        self, state: GenerateExpectationsState, config: RunnableConfig
     ) -> dict[str, list[BaseMessage]]:
         """Call the tools to get the metrics."""
         logger.debug("Getting additional metrics")
@@ -327,7 +327,7 @@ class MetricProviderNode:
 
 class QualityIssueSummarizerNode:
     async def __call__(
-        self, state: EchoesState, config: RunnableConfig
+        self, state: GenerateExpectationsState, config: RunnableConfig
     ) -> dict[str, DataQualityPlan]:
         logger.debug("Building a data quality plan")
         task = HumanMessage(content=QUALITY_ISSUE_SUMMARIZER_TASK_MESSAGE)
@@ -421,7 +421,7 @@ class ExpectationBuilderNode:
 ##############################
 
 
-def tools_condition(state: EchoesState) -> str:
+def tools_condition(state: GenerateExpectationsState) -> str:
     """Condition for whether to call the tools."""
     ai_message = state.messages[-1]
     remaining_batches = max(0, MAX_PLAN_DEPTH - state.metric_batches_executed)
@@ -435,7 +435,7 @@ def tools_condition(state: EchoesState) -> str:
     return "quality_issue_summarizer"
 
 
-def expectation_builder_fanout(state: EchoesState) -> list[Send]:
+def expectation_builder_fanout(state: GenerateExpectationsState) -> list[Send]:
     if state.data_quality_plan is None:
         raise MissingDataQualityPlanError()
     return [

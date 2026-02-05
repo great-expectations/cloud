@@ -12,7 +12,9 @@ from openai import APIConnectionError, APITimeoutError
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.agent import (
     ExpectationAssistantNode,
 )
-from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import EchoesState
+from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
+    GenerateExpectationsState,
+)
 from great_expectations_cloud.agent.expect_ai.tools.metrics import AgentToolsManager
 
 
@@ -37,9 +39,9 @@ class TestExpectationAssistantNodeCall:
         return ExpectationAssistantNode(tools_manager=mock_tools_manager)
 
     @pytest.fixture
-    def sample_state(self) -> EchoesState:
+    def sample_state(self) -> GenerateExpectationsState:
         batch_definition = create_autospec(BatchDefinition, instance=True)
-        return EchoesState(
+        return GenerateExpectationsState(
             organization_id="test_org",
             data_source_name="test_datasource",
             data_asset_name="test_asset",
@@ -64,7 +66,7 @@ class TestExpectationAssistantNodeCall:
     async def test_call_success(
         self,
         expectation_assistant_node: ExpectationAssistantNode,
-        sample_state: EchoesState,
+        sample_state: GenerateExpectationsState,
         mock_config: RunnableConfig,
         mock_tools_manager: Mock,
     ) -> None:
@@ -103,7 +105,7 @@ class TestExpectationAssistantNodeCall:
     async def test_call_with_system_message(
         self,
         expectation_assistant_node: ExpectationAssistantNode,
-        sample_state: EchoesState,
+        sample_state: GenerateExpectationsState,
         mock_config: RunnableConfig,
     ) -> None:
         mock_response = AIMessage(content="Test response", tool_calls=[])
@@ -129,7 +131,7 @@ class TestExpectationAssistantNodeCall:
     async def test_call_with_default_temperature(
         self,
         expectation_assistant_node: ExpectationAssistantNode,
-        sample_state: EchoesState,
+        sample_state: GenerateExpectationsState,
     ) -> None:
         mock_config = RunnableConfig(configurable={})
         mock_response = AIMessage(content="Test response", tool_calls=[])
@@ -157,7 +159,7 @@ class TestExpectationAssistantNodeCall:
     async def test_call_uses_retry_wrapper(
         self,
         expectation_assistant_node: ExpectationAssistantNode,
-        sample_state: EchoesState,
+        sample_state: GenerateExpectationsState,
         mock_config: RunnableConfig,
     ) -> None:
         mock_response = AIMessage(content="Test response", tool_calls=[])
@@ -183,7 +185,7 @@ class TestExpectationAssistantNodeCall:
     async def test_clears_tool_calls_when_no_batches_remain(
         self,
         expectation_assistant_node: ExpectationAssistantNode,
-        sample_state: EchoesState,
+        sample_state: GenerateExpectationsState,
         mock_config: RunnableConfig,
     ) -> None:
         sample_state.metric_batches_executed = 3  # remaining_batches == 0
@@ -210,7 +212,7 @@ class TestExpectationAssistantNodeCall:
     async def test_deduplicates_tool_calls(
         self,
         expectation_assistant_node: ExpectationAssistantNode,
-        sample_state: EchoesState,
+        sample_state: GenerateExpectationsState,
         mock_config: RunnableConfig,
     ) -> None:
         sample_state.metric_batches_executed = 0

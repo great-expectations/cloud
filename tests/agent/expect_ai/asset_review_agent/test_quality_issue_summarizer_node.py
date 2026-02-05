@@ -14,7 +14,7 @@ from great_expectations_cloud.agent.expect_ai.asset_review_agent.agent import (
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
     DataQualityPlan,
     DataQualityPlanComponent,
-    EchoesState,
+    GenerateExpectationsState,
 )
 from great_expectations_cloud.agent.expect_ai.exceptions import InvalidResponseTypeError
 
@@ -25,8 +25,8 @@ class TestQualityIssueSummarizerNodeCall:
         return QualityIssueSummarizerNode()
 
     @pytest.fixture
-    def sample_state(self) -> EchoesState:
-        return EchoesState(
+    def sample_state(self) -> GenerateExpectationsState:
+        return GenerateExpectationsState(
             organization_id="test_org",
             data_source_name="test_datasource",
             data_asset_name="test_asset",
@@ -68,7 +68,7 @@ class TestQualityIssueSummarizerNodeCall:
     async def test_call_success(
         self,
         quality_summarizer_node: QualityIssueSummarizerNode,
-        sample_state: EchoesState,
+        sample_state: GenerateExpectationsState,
         mock_config: RunnableConfig,
         mock_data_quality_plan: DataQualityPlan,
     ) -> None:
@@ -109,7 +109,7 @@ class TestQualityIssueSummarizerNodeCall:
     async def test_call_with_system_message(
         self,
         quality_summarizer_node: QualityIssueSummarizerNode,
-        sample_state: EchoesState,
+        sample_state: GenerateExpectationsState,
         mock_config: RunnableConfig,
         mock_data_quality_plan: DataQualityPlan,
     ) -> None:
@@ -136,7 +136,7 @@ class TestQualityIssueSummarizerNodeCall:
     async def test_call_with_default_temperature(
         self,
         quality_summarizer_node: QualityIssueSummarizerNode,
-        sample_state: EchoesState,
+        sample_state: GenerateExpectationsState,
         mock_data_quality_plan: DataQualityPlan,
     ) -> None:
         mock_config = RunnableConfig(configurable={})
@@ -164,7 +164,7 @@ class TestQualityIssueSummarizerNodeCall:
     async def test_call_invalid_response_type(
         self,
         quality_summarizer_node: QualityIssueSummarizerNode,
-        sample_state: EchoesState,
+        sample_state: GenerateExpectationsState,
         mock_config: RunnableConfig,
     ) -> None:
         with patch(
