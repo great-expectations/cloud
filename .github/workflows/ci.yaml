@@ -102,6 +102,24 @@ jobs:
           docker compose up mercury-service-api-v1 -d
           docker compose up nginx -d
 
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for mercury-service-api-v1 to be ready..."
+          for i in {1..30}; do
+            # Check if the service is responding (any HTTP response, not 502)
+            http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/ || echo "000")
+            if [ "$http_code" != "000" ] && [ "$http_code" != "502" ] && [ "$http_code" != "503" ]; then
+              echo "Service is ready! (HTTP $http_code)"
+              exit 0
+            fi
+            echo "Attempt $i: Service not ready yet (HTTP $http_code), waiting..."
+            sleep 2
+          done
+          echo "Service failed to become ready after 60 seconds"
+          docker compose logs mercury-service-api-v1
+          docker compose logs nginx
+          exit 1
+
       - name: Show logs for debugging
         if: failure()
         run: |
@@ -173,6 +191,24 @@ jobs:
           docker compose run mq-wait
           docker compose up mercury-service-api-v1 -d
           docker compose up nginx -d
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for mercury-service-api-v1 to be ready..."
+          for i in {1..30}; do
+            # Check if the service is responding (any HTTP response, not 502)
+            http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/ || echo "000")
+            if [ "$http_code" != "000" ] && [ "$http_code" != "502" ] && [ "$http_code" != "503" ]; then
+              echo "Service is ready! (HTTP $http_code)"
+              exit 0
+            fi
+            echo "Attempt $i: Service not ready yet (HTTP $http_code), waiting..."
+            sleep 2
+          done
+          echo "Service failed to become ready after 60 seconds"
+          docker compose logs mercury-service-api-v1
+          docker compose logs nginx
+          exit 1
 
       - name: Show logs for debugging
         if: failure()
