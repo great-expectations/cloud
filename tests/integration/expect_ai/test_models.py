@@ -58,16 +58,17 @@ def test_expectation_type_coverage() -> None:
 
 
 @pytest.mark.integration
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "expectation_type",
     ExpectationTypes,
 )
 @pytest.mark.parametrize("model_name", [OPENAI_MODEL])
-def test_individual_expectation_schemas(
+async def test_individual_expectation_schemas(
     expectation_type: type[OpenAIGXExpectation], model_name: str
 ) -> None:
     model = ChatOpenAI(model=model_name).with_structured_output(
         schema=expectation_type, method="json_schema", strict=True
     )
-    res = model.invoke("Recommend an expectation about a table of NYC Taxi Data.")
+    res = await model.ainvoke("Recommend an expectation about a table of NYC Taxi Data.")
     assert isinstance(res, expectation_type)
