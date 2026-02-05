@@ -5,8 +5,9 @@ import random
 import signal
 import string
 import uuid
+from collections.abc import Callable
 from time import sleep
-from typing import TYPE_CHECKING, Any, Callable, Literal
+from typing import TYPE_CHECKING, Any, Literal
 from unittest.mock import call
 
 import pytest

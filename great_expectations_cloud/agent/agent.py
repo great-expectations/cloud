@@ -11,12 +11,13 @@ import time
 import traceback
 import warnings
 from collections import defaultdict
+from collections.abc import Callable
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 from http import HTTPStatus
 from importlib.metadata import version as metadata_version
-from typing import TYPE_CHECKING, Any, Callable, Final, Literal
+from typing import TYPE_CHECKING, Any, Final, Literal
 from urllib.parse import urljoin, urlparse
 from uuid import UUID
 
@@ -81,8 +82,9 @@ from great_expectations_cloud.agent.models import (
 )
 
 if TYPE_CHECKING:
+    from typing import Self
+
     from great_expectations.data_context import CloudDataContext
-    from typing_extensions import Self
 
     from great_expectations_cloud.agent.actions.agent_action import ActionResult
 

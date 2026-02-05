@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import enum
+from enum import StrEnum
 from typing import NoReturn
 
 
@@ -27,7 +27,7 @@ class GXCoreError(Exception):
         return {k: str(v) for k, v in vars(self).items() if k not in ["message", "error_code"]}
 
 
-class ErrorCode(str, enum.Enum):
+class ErrorCode(StrEnum):
     """Error codes for GX Core errors."""
 
     GENERIC_UNHANDLED_ERROR = "generic-unhandled-error"
