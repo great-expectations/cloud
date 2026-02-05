@@ -202,6 +202,7 @@ markers = [
     "agentjobs",
     "unit: mark a test as a unit test i.e. no external dependencies.",
     "integration: test that relies on a running GX Cloud and mercury instance.",
+    "e2e: mark a test as an end-to-end test requiring external services.",
 ]
 log_level = "info"
 filterwarnings = [
