@@ -31,7 +31,6 @@ known-first-party = ["great_expectations_cloud", "tests"]
 ]
 "integration/expect_ai/**/test_*.py" = [
     "TID251",  # Allow unittest.mock in ported expect_ai tests
-    "PLC0415", # Allow imports not at top-level in tests
 ]
 
 [lint.flake8-tidy-imports.banned-api]
