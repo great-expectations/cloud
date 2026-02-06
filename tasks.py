@@ -297,7 +297,7 @@ def _version_bump(
     new_version = bump_version(
         pre_release=pre,
         latest_version=latest_version,
-        current_date=datetime.datetime.now(tz=datetime.timezone.utc).date().strftime("%Y%m%d"),
+        current_date=datetime.datetime.now(tz=datetime.UTC).date().strftime("%Y%m%d"),
     )
     print(f"\nnew version: \t{new_version}")
 

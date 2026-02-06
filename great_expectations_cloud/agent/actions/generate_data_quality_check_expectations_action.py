@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from collections.abc import Sequence
-from enum import Enum
+from enum import StrEnum
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import urljoin
@@ -63,7 +63,7 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
 
-class ExpectationConstraintFunction(str, Enum):
+class ExpectationConstraintFunction(StrEnum):
     """Expectation constraint functions."""
 
     FORECAST = "forecast"

@@ -4,9 +4,10 @@ import asyncio
 import logging
 import ssl
 from asyncio import AbstractEventLoop
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Callable, Final, Protocol
+from typing import TYPE_CHECKING, Final, Protocol
 
 import pika
 from pika.adapters.asyncio_connection import AsyncioConnection

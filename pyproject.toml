@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20260205.1.dev0"
+version = "20260206.0.dev0"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -33,6 +33,11 @@ orjson = "^3.9.7, !=3.9.10" # TODO: remove inequality once dep resolution issue 
 packaging = ">=21.3,<27.0"
 tenacity = ">=8.2.3,<10.0.0"
 sqlalchemy = ">=2.0"
+langgraph = "^1.0.3"
+langchain-openai = "^1.0.3"
+langchain-core = "^1.0.7"
+langchain = "^1.0.8"
+pydantic-settings = "^2.12.0"
 
 [tool.poetry.group.dev.dependencies]
 coverage = { extras = ["toml"], version = "^7.5.1" }
@@ -42,6 +47,7 @@ mypy = "1.19.1"
 pre-commit = ">=3.3.3,<5.0.0"
 pyfakefs = ">=5.4.1,<7.0.0"
 pytest = ">=7.4,<10.0"
+pytest-asyncio = "^0.21.0"
 pytest-cov = ">=5"
 pytest-icdiff = "*"
 pytest-mock = "*"
@@ -86,7 +92,7 @@ target-version = ["py39", "py310", "py311"]
 line-length = 100
 
 [tool.ruff]
-target-version = "py39"
+target-version = "py311"
 # TODO: change this back to black default of 88 if desired
 line-length = 100
 lint.select = [
@@ -191,10 +197,12 @@ max-complexity = 10
 
 [tool.pytest.ini_options]
 addopts = "--cov=great_expectations_cloud"
+asyncio_mode = "strict"
 markers = [
     "agentjobs",
     "unit: mark a test as a unit test i.e. no external dependencies.",
     "integration: test that relies on a running GX Cloud and mercury instance.",
+    "e2e: mark a test as an end-to-end test requiring external services.",
 ]
 log_level = "info"
 filterwarnings = [
@@ -235,6 +243,12 @@ filterwarnings = [
     # Marshmallow errors come from GX and we don't plan to update it there.
     "ignore::marshmallow.warnings.ChangedInMarshmallow4Warning",
     "ignore::marshmallow.warnings.RemovedInMarshmallow4Warning",
+    # langchain-openai's ChatOpenAI creates shared async httpx clients that aren't properly
+    # closed when tests finish. These warnings are from the garbage collector detecting
+    # unclosed sockets/transports. This is a known issue with the library's client lifecycle.
+    # See: https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings
+    "ignore:Exception ignored in.*socket.socket:pytest.PytestUnraisableExceptionWarning",
+    "ignore:Exception ignored in.*_SelectorTransport.__del__:pytest.PytestUnraisableExceptionWarning",
 ]
 
 [tool.coverage.report]

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import enum
+from enum import StrEnum
 from typing import Final
 
 
-class HeaderName(str, enum.Enum):
+class HeaderName(StrEnum):
     USER_AGENT = "User-Agent"
     AGENT_JOB_ID = "Agent-Job-Id"
 

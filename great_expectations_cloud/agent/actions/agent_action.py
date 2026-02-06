@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from abc import abstractmethod
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Generic, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Generic, Optional, TypeVar
 
 from pydantic.v1 import BaseModel
 
@@ -27,7 +27,7 @@ class ActionResult(BaseModel):
     )
 
 
-_EventT = TypeVar("_EventT", bound=Union[AgentBaseExtraForbid, AgentBaseExtraIgnore])
+_EventT = TypeVar("_EventT", bound=AgentBaseExtraForbid | AgentBaseExtraIgnore)
 
 
 class AgentAction(Generic[_EventT]):

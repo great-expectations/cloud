@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import dataclasses as dc
-import enum
 import json
 import logging
 import logging.config
 import logging.handlers
 import pathlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any, ClassVar, Final, Literal
 
 from typing_extensions import override
@@ -50,7 +50,7 @@ class LogSettings:
     log_cfg_file: pathlib.Path | None
 
 
-class LogLevel(str, enum.Enum):
+class LogLevel(StrEnum):
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -192,7 +192,7 @@ class JSONFormatter(logging.Formatter):
         log_full["event"] = record.msg
         log_full["level"] = record.levelname
         log_full["logger"] = record.name
-        log_full["timestamp"] = datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat()
+        log_full["timestamp"] = datetime.fromtimestamp(record.created, tz=UTC).isoformat()
 
         if record.exc_info:
             log_full["exc_info"] = str(record.exc_info)

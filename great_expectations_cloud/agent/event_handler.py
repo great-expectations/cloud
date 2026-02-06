@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, Final
 from uuid import UUID
@@ -93,13 +93,13 @@ class EventHandler:
         self, event: Event, id: str, base_url: str, auth_key: str, domain_context: DomainContext
     ) -> ActionResult:
         """Transform an Event into an ActionResult."""
-        start_time = datetime.now(tz=timezone.utc)
+        start_time = datetime.now(tz=UTC)
         action = self.get_event_action(
             event=event, base_url=base_url, auth_key=auth_key, domain_context=domain_context
         )
         LOGGER.info(f"Handling event: {event.type} -> {action.__class__.__name__}")
         action_result = action.run(event=event, id=id)
-        end_time = datetime.now(tz=timezone.utc)
+        end_time = datetime.now(tz=UTC)
         action_result.job_duration = end_time - start_time
         return action_result
 
