@@ -268,13 +268,16 @@ def connection_string() -> str:
 def create_session(mocker, queue, connection_string):
     """Patch for great_expectations.core.http.create_session"""
     create_session = mocker.patch("great_expectations_cloud.agent.agent.create_session")
-    # Use return_value.post to ensure the same mock is returned every time
-    # This allows us to inspect call_args in tests
-    create_session.return_value.post.json.return_value = {
+    mock_response = mocker.Mock()
+    mock_response.json.return_value = {
         "queue": queue,
         "connection_string": connection_string,
     }
-    create_session.return_value.post.ok = True
+    mock_response.ok = True
+    # Use return_value.post to ensure the same mock is returned every time
+    # This allows us to inspect call_args in tests
+    mock_post = mocker.Mock(return_value=mock_response)
+    create_session.return_value.post = mock_post
     # Support context manager usage (used in other tests)
     create_session.return_value.__enter__ = mocker.Mock(return_value=create_session.return_value)
     create_session.return_value.__exit__ = mocker.Mock(return_value=None)
@@ -306,6 +309,7 @@ def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config, requests_p
     ],
 )
 def test_gx_agent_sends_expect_ai_enabled_in_session_registration(
+    set_required_env_vars,
     monkeypatch,
     create_session,
     openai_api_key,
