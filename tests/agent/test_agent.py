@@ -268,11 +268,17 @@ def connection_string() -> str:
 def create_session(mocker, queue, connection_string):
     """Patch for great_expectations.core.http.create_session"""
     create_session = mocker.patch("great_expectations_cloud.agent.agent.create_session")
-    create_session().post().json.return_value = {
+    mock_response = mocker.Mock()
+    mock_response.json.return_value = {
         "queue": queue,
         "connection_string": connection_string,
     }
-    create_session().post().ok = True
+    mock_response.ok = True
+    # Use return_value.post to ensure the same mock is returned every time
+    # This allows us to inspect call_args in tests
+    mock_post = mocker.Mock(return_value=mock_response)
+    create_session.return_value.post = mock_post
+
     return create_session
 
 
@@ -291,6 +297,32 @@ def requests_post(mocker, queue, connection_string):
 def test_gx_agent_gets_env_vars_on_init(get_context, gx_agent_config, requests_post):
     agent = GXAgent()
     assert agent._config == gx_agent_config
+
+
+@pytest.mark.parametrize(
+    "openai_api_key,expected_expect_ai_enabled",
+    [
+        (None, False),
+        ("test-key", True),
+    ],
+)
+def test_gx_agent_sends_expect_ai_enabled_in_session_registration(
+    set_required_env_vars,
+    monkeypatch,
+    create_session,
+    openai_api_key,
+    expected_expect_ai_enabled,
+):
+    if openai_api_key is None:
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    else:
+        monkeypatch.setenv("OPENAI_API_KEY", openai_api_key)
+
+    GXAgent()
+
+    create_session.return_value.post.assert_called_once()
+    call_args = create_session.return_value.post.call_args
+    assert call_args.kwargs["json"]["expect_ai_enabled"] == expected_expect_ai_enabled
 
 
 @pytest.mark.parametrize("enable_progress_bars", [True, False])

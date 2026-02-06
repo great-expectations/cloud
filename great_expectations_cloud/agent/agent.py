@@ -145,6 +145,8 @@ class GXAgent:
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
     def __init__(self: Self):
+        # Disable LangSmith tracing on agent startup
+        os.environ["LANGCHAIN_TRACING_V2"] = "false"  # noqa: TID251
         self._config = self._create_config()
 
         agent_version: str = self.get_current_gx_agent_version()
@@ -665,7 +667,10 @@ class GXAgent:
         )
 
         session = create_session(access_token=env_vars.gx_cloud_access_token)
-        response = session.post(agent_sessions_url)
+        response = session.post(
+            agent_sessions_url,
+            json={"expect_ai_enabled": env_vars.expect_ai_enabled},
+        )
         session.close()
         if response.ok is not True:
             raise GXAgentError(  # noqa: TRY003 # TODO: use AuthenticationError

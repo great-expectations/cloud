@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 from great_expectations.data_context.cloud_constants import CLOUD_DEFAULT_BASE_URL
-from pydantic.v1 import AnyUrl, BaseSettings, ValidationError
+from pydantic.v1 import AnyUrl, BaseSettings, Field, ValidationError
 
 
 class GxAgentEnvVars(BaseSettings):
@@ -14,6 +14,12 @@ class GxAgentEnvVars(BaseSettings):
 
     amqp_host_override: Optional[str] = None  # noqa: UP045 # pipe not working with 3.9
     amqp_port_override: Optional[int] = None  # noqa: UP045 # pipe not working with 3.9
+
+    openai_api_key: str | None = Field(default=None)
+
+    @property
+    def expect_ai_enabled(self) -> bool:
+        return self.openai_api_key is not None
 
     def __init__(self, **overrides: str | AnyUrl) -> None:
         """
