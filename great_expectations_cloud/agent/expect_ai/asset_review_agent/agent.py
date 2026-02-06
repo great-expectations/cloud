@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from asyncio import gather
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 from uuid import uuid4
 
 from great_expectations import ExpectationSuite
@@ -62,7 +62,7 @@ logger.setLevel(logging.DEBUG)
 MAX_PLAN_DEPTH = 3
 
 
-ToolCallLike = ToolCall | dict[str, object]
+ToolCallLike: TypeAlias = ToolCall | dict[str, object]
 
 
 def _toolcall_triplet(tc: ToolCallLike) -> tuple[str, Mapping[str, object], str]:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -18,7 +19,7 @@ class ExpectationPruner:
     def __init__(self, max_expectations: int = 10) -> None:
         self._max_expectations = max_expectations
 
-    def prune_expectations(self, expectations: list[gxe.Expectation]) -> list[gxe.Expectation]:
+    def prune_expectations(self, expectations: Sequence[gxe.Expectation]) -> list[gxe.Expectation]:
         """Apply a few heuristics to cut down on the number of expectations.
 
         The idea here is we go through multiple rounds of filtering, resulting in a smaller list.
@@ -38,7 +39,7 @@ class ExpectationPruner:
 
     def _limit_per_column(
         self,
-        expectations: list[gxe.Expectation],
+        expectations: Sequence[gxe.Expectation],
         max_for_col: int = 1,
     ) -> list[gxe.Expectation]:
         expectations_for_col_so_far = defaultdict[str, int](int)
@@ -54,7 +55,7 @@ class ExpectationPruner:
 
     def _limit_per_type_and_column(
         self,
-        expectations: list[gxe.Expectation],
+        expectations: Sequence[gxe.Expectation],
     ) -> list[gxe.Expectation]:
         so_far = defaultdict[tuple[str, str], int](int)
         output: list[gxe.Expectation] = []
@@ -70,7 +71,7 @@ class ExpectationPruner:
 
     def prune_invalid_columns(
         self,
-        expectations: list[gxe.Expectation],
+        expectations: Sequence[gxe.Expectation],
         valid_columns: set[str],
     ) -> list[gxe.Expectation]:
         """Prune expectations that reference columns not in the provided set.

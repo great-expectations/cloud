@@ -14,6 +14,7 @@ from great_expectations.metrics.batch.batch_column_types import (
     ColumnType,
 )
 from great_expectations.metrics.metric_results import MetricResult
+from great_expectations.validator.metric_configuration import MetricConfigurationID
 
 from great_expectations_cloud.agent.actions.generate_expectations import (
     GenerateExpectationsAction,
@@ -83,17 +84,33 @@ def test_generate_expectations_success(
 
     # Mock batch has rows
     mock_batch_definition = mocker.MagicMock()
-    mock_context.data_sources.get.return_value.get_asset.return_value.get_batch_definition.return_value = mock_batch_definition
+    mock_data_source = mocker.MagicMock()
+    mock_asset = mocker.MagicMock()
+    mock_asset.get_batch_definition.return_value = mock_batch_definition
+    mock_data_source.get_asset.return_value = mock_asset
+    mock_context.data_sources.get = mocker.MagicMock(return_value=mock_data_source)
 
     # Mock row count metric (not zero)
-    mock_row_count_result = MetricResult(value=100)
+    mock_row_count_result = MetricResult(
+        id=MetricConfigurationID(
+            metric_name="table.row_count",
+            metric_domain_kwargs_id="",
+            metric_value_kwargs_id="",
+        ),
+        value=100,
+    )
 
     # Mock column types metric
     mock_column_types_result = BatchColumnTypesResult(
+        id=MetricConfigurationID(
+            metric_name="table.column_types",
+            metric_domain_kwargs_id="",
+            metric_value_kwargs_id="",
+        ),
         value=[
             ColumnType(name="col1", type="INTEGER"),
             ColumnType(name="col2", type="VARCHAR"),
-        ]
+        ],
     )
 
     # Mock AssetReviewAgent
@@ -190,9 +207,20 @@ def test_generate_expectations_empty_batch(
 
     # Mock batch has 0 rows
     mock_batch_definition = mocker.MagicMock()
-    mock_context.data_sources.get.return_value.get_asset.return_value.get_batch_definition.return_value = mock_batch_definition
+    mock_data_source = mocker.MagicMock()
+    mock_asset = mocker.MagicMock()
+    mock_asset.get_batch_definition.return_value = mock_batch_definition
+    mock_data_source.get_asset.return_value = mock_asset
+    mock_context.data_sources.get = mocker.MagicMock(return_value=mock_data_source)
 
-    mock_row_count_result = MetricResult(value=0)
+    mock_row_count_result = MetricResult(
+        id=MetricConfigurationID(
+            metric_name="table.row_count",
+            metric_domain_kwargs_id="",
+            metric_value_kwargs_id="",
+        ),
+        value=0,
+    )
     mock_metric_service = mocker.patch(
         "great_expectations_cloud.agent.actions.generate_expectations.MetricService"
     )
@@ -224,11 +252,27 @@ def test_generate_expectations_handles_list_expectations_error(
 
     # Mock batch has rows
     mock_batch_definition = mocker.MagicMock()
-    mock_context.data_sources.get.return_value.get_asset.return_value.get_batch_definition.return_value = mock_batch_definition
+    mock_data_source = mocker.MagicMock()
+    mock_asset = mocker.MagicMock()
+    mock_asset.get_batch_definition.return_value = mock_batch_definition
+    mock_data_source.get_asset.return_value = mock_asset
+    mock_context.data_sources.get = mocker.MagicMock(return_value=mock_data_source)
 
-    mock_row_count_result = MetricResult(value=100)
+    mock_row_count_result = MetricResult(
+        id=MetricConfigurationID(
+            metric_name="table.row_count",
+            metric_domain_kwargs_id="",
+            metric_value_kwargs_id="",
+        ),
+        value=100,
+    )
     mock_column_types_result = BatchColumnTypesResult(
-        value=[ColumnType(name="col1", type="INTEGER")]
+        id=MetricConfigurationID(
+            metric_name="table.column_types",
+            metric_domain_kwargs_id="",
+            metric_value_kwargs_id="",
+        ),
+        value=[ColumnType(name="col1", type="INTEGER")],
     )
 
     # Mock ExpectationService to raise error
@@ -287,11 +331,27 @@ def test_generate_expectations_with_legacy_event(
 
     # Mock all dependencies
     mock_batch_definition = mocker.MagicMock()
-    mock_context.data_sources.get.return_value.get_asset.return_value.get_batch_definition.return_value = mock_batch_definition
+    mock_data_source = mocker.MagicMock()
+    mock_asset = mocker.MagicMock()
+    mock_asset.get_batch_definition.return_value = mock_batch_definition
+    mock_data_source.get_asset.return_value = mock_asset
+    mock_context.data_sources.get = mocker.MagicMock(return_value=mock_data_source)
 
-    mock_row_count_result = MetricResult(value=100)
+    mock_row_count_result = MetricResult(
+        id=MetricConfigurationID(
+            metric_name="table.row_count",
+            metric_domain_kwargs_id="",
+            metric_value_kwargs_id="",
+        ),
+        value=100,
+    )
     mock_column_types_result = BatchColumnTypesResult(
-        value=[ColumnType(name="col1", type="INTEGER")]
+        id=MetricConfigurationID(
+            metric_name="table.column_types",
+            metric_domain_kwargs_id="",
+            metric_value_kwargs_id="",
+        ),
+        value=[ColumnType(name="col1", type="INTEGER")],
     )
 
     mock_suite = ExpectationSuite(name="test-suite", expectations=[])
@@ -342,16 +402,32 @@ def test_generate_expectations_prunes_invalid_columns(
     )
 
     mock_batch_definition = mocker.MagicMock()
-    mock_context.data_sources.get.return_value.get_asset.return_value.get_batch_definition.return_value = mock_batch_definition
+    mock_data_source = mocker.MagicMock()
+    mock_asset = mocker.MagicMock()
+    mock_asset.get_batch_definition.return_value = mock_batch_definition
+    mock_data_source.get_asset.return_value = mock_asset
+    mock_context.data_sources.get = mocker.MagicMock(return_value=mock_data_source)
 
-    mock_row_count_result = MetricResult(value=100)
+    mock_row_count_result = MetricResult(
+        id=MetricConfigurationID(
+            metric_name="table.row_count",
+            metric_domain_kwargs_id="",
+            metric_value_kwargs_id="",
+        ),
+        value=100,
+    )
 
     # Only col1 and col2 are valid
     mock_column_types_result = BatchColumnTypesResult(
+        id=MetricConfigurationID(
+            metric_name="table.column_types",
+            metric_domain_kwargs_id="",
+            metric_value_kwargs_id="",
+        ),
         value=[
             ColumnType(name="col1", type="INTEGER"),
             ColumnType(name="col2", type="VARCHAR"),
-        ]
+        ],
     )
 
     # Mock AssetReviewAgent to return expectations including invalid column

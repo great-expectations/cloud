@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urljoin
@@ -56,7 +57,7 @@ class ExpectationDraftConfigService:
         self,
         data_source_name: str,
         data_asset_name: str,
-        expectations: list[gxe.Expectation],
+        expectations: Sequence[gxe.Expectation],
         event_id: str,
     ) -> list[CreatedResource]:
         """Create expectation draft configs for the given expectations.
@@ -162,7 +163,7 @@ class ExpectationDraftConfigService:
 
     def _construct_expectation_obj(
         self,
-        expectations: list[gxe.Expectation],
+        expectations: Sequence[gxe.Expectation],
     ) -> list[dict[str, Any]]:
         """Construct expectation objects in the format expected by the API.
 

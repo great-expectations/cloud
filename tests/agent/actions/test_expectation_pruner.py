@@ -138,10 +138,13 @@ def test_prune_invalid_columns_with_column_list():
 
     # Create mock expectations with column_list
     exp_valid = ExpectColumnValuesToBeInSet(column="col1", value_set=["a"])
-    exp_valid.column_list = ["col1", "col2"]  # All valid
+    exp_valid.column_list = ["col1", "col2"]  # All valid  # type: ignore[attr-defined]
 
     exp_invalid = ExpectColumnValuesToBeInSet(column="col1", value_set=["a"])
-    exp_invalid.column_list = ["col1", "invalid_col"]  # Contains invalid
+    exp_invalid.column_list = [
+        "col1",
+        "invalid_col",
+    ]  # Contains invalid  # type: ignore[attr-defined]
 
     expectations = [exp_valid, exp_invalid]
 
@@ -180,7 +183,7 @@ def test_prune_expectations_empty_list():
     """Test pruning with empty expectations list."""
     # ARRANGE
     pruner = ExpectationPruner()
-    expectations = []
+    expectations: list[ExpectColumnValuesToBeInSet] = []
 
     # ACT
     result = pruner.prune_expectations(expectations)
@@ -193,7 +196,7 @@ def test_prune_invalid_columns_empty_valid_set():
     """Test pruning with empty valid columns set removes all column-level expectations."""
     # ARRANGE
     pruner = ExpectationPruner()
-    valid_columns = set()
+    valid_columns: set[str] = set()
     expectations = [
         ExpectColumnValuesToBeInSet(column="col1", value_set=["a"]),
         ExpectTableRowCountToBeBetween(min_value=1, max_value=100),

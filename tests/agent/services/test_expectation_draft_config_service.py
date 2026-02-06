@@ -21,7 +21,7 @@ pytestmark = pytest.mark.unit
 
 
 @responses.activate
-def test_create_expectation_draft_configs_success(mock_context: CloudDataContext):
+def test_create_expectation_draft_configs_success(mock_context: CloudDataContext, mocker):
     """Test successful creation of expectation draft configs."""
     # ARRANGE
     org_id = uuid.uuid4()
@@ -32,9 +32,11 @@ def test_create_expectation_draft_configs_success(mock_context: CloudDataContext
     event_id = "test-event-id"
 
     # Mock the data source and asset
-    mock_data_source = mock_context.data_sources.get.return_value
-    mock_asset = mock_data_source.get_asset.return_value
+    mock_data_source = mocker.MagicMock()
+    mock_asset = mocker.MagicMock()
     mock_asset.id = asset_id
+    mock_data_source.get_asset.return_value = mock_asset
+    mock_context.data_sources.get = mocker.MagicMock(return_value=mock_data_source)
 
     # Create test expectations
     expectation = ExpectColumnValuesToBeInSet(
@@ -79,7 +81,7 @@ def test_create_expectation_draft_configs_success(mock_context: CloudDataContext
 
 
 @responses.activate
-def test_create_expectation_draft_configs_multiple(mock_context: CloudDataContext):
+def test_create_expectation_draft_configs_multiple(mock_context: CloudDataContext, mocker):
     """Test creation of multiple expectation draft configs."""
     # ARRANGE
     org_id = uuid.uuid4()
@@ -88,9 +90,11 @@ def test_create_expectation_draft_configs_multiple(mock_context: CloudDataContex
     base_url = "https://test-base-url"
     auth_key = "test-auth-key"
 
-    mock_data_source = mock_context.data_sources.get.return_value
-    mock_asset = mock_data_source.get_asset.return_value
+    mock_data_source = mocker.MagicMock()
+    mock_asset = mocker.MagicMock()
     mock_asset.id = asset_id
+    mock_data_source.get_asset.return_value = mock_asset
+    mock_context.data_sources.get = mocker.MagicMock(return_value=mock_data_source)
 
     expectations = [
         ExpectColumnValuesToBeInSet(column="status", value_set=["active", "inactive"]),
@@ -136,7 +140,7 @@ def test_create_expectation_draft_configs_multiple(mock_context: CloudDataContex
 
 
 @responses.activate
-def test_create_expectation_draft_configs_api_failure(mock_context: CloudDataContext):
+def test_create_expectation_draft_configs_api_failure(mock_context: CloudDataContext, mocker):
     """Test that API failure raises ExpectationDraftConfigError."""
     # ARRANGE
     org_id = uuid.uuid4()
@@ -145,9 +149,11 @@ def test_create_expectation_draft_configs_api_failure(mock_context: CloudDataCon
     base_url = "https://test-base-url"
     auth_key = "test-auth-key"
 
-    mock_data_source = mock_context.data_sources.get.return_value
-    mock_asset = mock_data_source.get_asset.return_value
+    mock_data_source = mocker.MagicMock()
+    mock_asset = mocker.MagicMock()
     mock_asset.id = asset_id
+    mock_data_source.get_asset.return_value = mock_asset
+    mock_context.data_sources.get = mocker.MagicMock(return_value=mock_data_source)
 
     expectation = ExpectColumnValuesToBeInSet(column="status", value_set=["active"])
 
@@ -176,7 +182,7 @@ def test_create_expectation_draft_configs_api_failure(mock_context: CloudDataCon
 
 
 @responses.activate
-def test_create_single_expectation_draft_config(mock_context: CloudDataContext):
+def test_create_single_expectation_draft_config(mock_context: CloudDataContext, mocker):
     """Test creation of a single expectation draft config."""
     # ARRANGE
     org_id = uuid.uuid4()
@@ -185,9 +191,11 @@ def test_create_single_expectation_draft_config(mock_context: CloudDataContext):
     base_url = "https://test-base-url"
     auth_key = "test-auth-key"
 
-    mock_data_source = mock_context.data_sources.get.return_value
-    mock_asset = mock_data_source.get_asset.return_value
+    mock_data_source = mocker.MagicMock()
+    mock_asset = mocker.MagicMock()
     mock_asset.id = asset_id
+    mock_data_source.get_asset.return_value = mock_asset
+    mock_context.data_sources.get = mocker.MagicMock(return_value=mock_data_source)
 
     expectation = ExpectColumnValuesToBeInSet(column="status", value_set=["active"])
 
