@@ -278,9 +278,7 @@ def create_session(mocker, queue, connection_string):
     # This allows us to inspect call_args in tests
     mock_post = mocker.Mock(return_value=mock_response)
     create_session.return_value.post = mock_post
-    # Support context manager usage (used in other tests)
-    create_session.return_value.__enter__ = mocker.Mock(return_value=create_session.return_value)
-    create_session.return_value.__exit__ = mocker.Mock(return_value=None)
+
     return create_session
 
 
