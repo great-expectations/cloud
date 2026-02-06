@@ -149,6 +149,15 @@ class RunRdAgentEvent(EventBase):
     use_core_metrics: bool = False
 
 
+class GenerateExpectationsEvent(EventBase):
+    type: Literal["generate_expectations_action.received"] = "generate_expectations_action.received"
+    datasource_name: str
+    data_asset_name: str
+    batch_definition_name: str
+    batch_parameters: Optional[dict[str, Any]] = None  # noqa: UP045
+    use_core_metrics: bool = False
+
+
 class UnknownEvent(AgentBaseExtraForbid):
     type: Literal["unknown_event"] = "unknown_event"
 
@@ -246,6 +255,11 @@ def get_event_union() -> Any:
     """
     reload_event_union()
     return Event
+
+
+# Constants for created resource types and created_via values
+EXPECTATION_DRAFT_CONFIG = "ExpectationDraftConfig"
+CREATED_VIA_EXPECT_AI = "expect_ai"
 
 
 class CreatedResource(AgentBaseExtraForbid):
