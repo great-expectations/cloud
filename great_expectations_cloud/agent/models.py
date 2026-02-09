@@ -157,6 +157,15 @@ class GenerateExpectationsEvent(EventBase):
     batch_parameters: Optional[dict[str, Any]] = None  # noqa: UP045
     use_core_metrics: bool = False
 
+class GenerateSqlExpectationEvent(EventBase):
+    type: Literal["generate_sql_expectation_event"] = "generate_sql_expectation_event"
+    expectation_prompt_id: UUID | None = None
+    datasource_name: str | None = None
+    data_asset_name: str | None = None
+    batch_definition_name: str | None = None
+    batch_parameters: dict[str, Any] | None = None
+    prompt: str | None = None
+
 
 class UnknownEvent(AgentBaseExtraForbid):
     type: Literal["unknown_event"] = "unknown_event"
@@ -213,6 +222,7 @@ if TYPE_CHECKING:
         DraftDatasourceConfigEvent,
         ListAssetNamesEvent,
         GenerateDataQualityCheckExpectationsEvent,
+        GenerateSqlExpectationEvent,
         RunRdAgentEvent,
         UnknownEvent,
     ]

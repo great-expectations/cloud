@@ -19,7 +19,7 @@ from great_expectations_cloud.agent.actions.agent_action import (
 )
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.event_handler import register_event_action
-from great_expectations_cloud.agent.exceptions import GXAgentError, MercuryError
+from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.expect_ai.exceptions import (
     InvalidAssetTypeError,
     InvalidDataSourceTypeError,
@@ -113,7 +113,7 @@ class GenerateSqlExpectationAction(AgentAction[GenerateSqlExpectationEvent]):
             data source name, asset name and batch definition name.
 
         Raises:
-            MercuryError: If the API request returns a non-200 status code.
+            GXAgentError: If the API request returns a non-200 status code.
         """
         url = urljoin(
             base=self._base_url,
@@ -123,14 +123,9 @@ class GenerateSqlExpectationAction(AgentAction[GenerateSqlExpectationEvent]):
         with create_session(access_token=self._auth_key) as session:
             response = session.get(url=url)
             if response.status_code != HTTPStatus.OK:
-                LOGGER.error(
-                    f"Failed to retrieve prompt metadata for expectation_prompt_id "
-                    f"{expectation_prompt_id}. Status code: {response.status_code}"
-                )
-                raise MercuryError(
-                    message=f"Failed to retrieve prompt metadata for expectation_prompt_id {expectation_prompt_id}: {response.text}",
-                    status_code=response.status_code,
-                )
+                msg = f"Failed to retrieve prompt metadata for expectation_prompt_id {expectation_prompt_id}: {response.text} (status: {response.status_code})"
+                LOGGER.error(msg)
+                raise GXAgentError(msg)
 
             LOGGER.info(
                 f"Retrieved prompt metadata for expectation_prompt_id {expectation_prompt_id}"
@@ -193,10 +188,8 @@ class GenerateSqlExpectationAction(AgentAction[GenerateSqlExpectationEvent]):
             response = session.post(url=url, json=draft_config_payload, headers=headers)
 
         if response.status_code != HTTPStatus.CREATED:
-            raise MercuryError(
-                message=f"Failed to create expectation draft config: {response.text}",
-                status_code=response.status_code,
-            )
+            msg = f"Failed to create expectation draft config: {response.text} (status: {response.status_code})"
+            raise GXAgentError(msg)
 
         draft_config_id = UUID(response.json()["data"][0]["id"])
         LOGGER.info(f"Successfully created expectation draft config with id: {draft_config_id}")
