@@ -89,7 +89,6 @@ class GenerateSqlExpectationAction(AgentAction[GenerateSqlExpectationEvent]):
         return ActionResult(id=id, type=event.type, created_resources=[created_resource])
 
     def _get_prompt_metadata(self, expectation_prompt_id: UUID) -> PromptMetadataResponse:
-
         url = urljoin(
             base=self._base_url,
             url=f"/api/v1/organizations/{self._domain_context.organization_id!s}/workspaces/{self._domain_context.workspace_id!s}/expectations/prompt-metadata/{expectation_prompt_id}",
@@ -160,7 +159,6 @@ class GenerateSqlExpectationAction(AgentAction[GenerateSqlExpectationEvent]):
         return CreatedResource(resource_id=str(draft_config_id), type="ExpectationDraftConfig")
 
     def _has_openai_credentials(self) -> bool:
-        """Check if OpenAI API key is configured."""
         env_vars = GxAgentEnvVars()
         return env_vars.expect_ai_enabled
 
