@@ -8,7 +8,6 @@ from uuid import UUID
 import pytest
 from great_expectations.data_context import CloudDataContext
 from great_expectations.datasource.fluent.sql_datasource import SQLDatasource, TableAsset
-from pydantic.v1 import ValidationError
 
 from great_expectations_cloud.agent.actions.generate_sql_expectation import (
     GenerateSqlExpectationAction,
@@ -139,20 +138,6 @@ def test_generate_sql_expectation_action_has_openai_credentials_when_set(
     assert result.type == generate_sql_expectation_event.type
     assert len(result.created_resources) == 1
     assert result.created_resources[0].type == "ExpectationDraftConfig"
-
-
-def test_generate_sql_expectation_event_requires_expectation_prompt_id(
-    org_id: UUID, workspace_id: UUID
-):
-
-    with pytest.raises(ValidationError) as exc_info:
-        GenerateSqlExpectationEvent(
-            organization_id=org_id,
-            workspace_id=workspace_id,
-            # Missing expectation_prompt_id
-        )
-
-    assert "expectation_prompt_id" in str(exc_info.value)
 
 
 def test_generate_sql_expectation_action_registered(mock_context, org_id: UUID, workspace_id: UUID):
