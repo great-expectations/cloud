@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "great_expectations_cloud"
-version = "20260209.0.dev1"
+version = "20260209.0.dev2"
 description = "Great Expectations Cloud"
 authors = ["The Great Expectations Team <team@greatexpectations.io>"]
 repository = "https://github.com/great-expectations/cloud"
@@ -47,7 +47,7 @@ mypy = "1.19.1"
 pre-commit = ">=3.3.3,<5.0.0"
 pyfakefs = ">=5.4.1,<7.0.0"
 pytest = ">=7.4,<10.0"
-pytest-asyncio = "^0.21.0"
+pytest-asyncio = ">=0.21,<1.4"
 pytest-cov = ">=5"
 pytest-icdiff = "*"
 pytest-mock = "*"
