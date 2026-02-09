@@ -39,6 +39,14 @@ default_log_emitted = {"msg": "hello", "name": "root", "levelname": "DEBUG"}
 
 
 @pytest.fixture
+def fs_clean_logging(fs):
+    yield fs
+    logger = logging.getLogger()
+    while logger.hasHandlers():
+        logger.removeHandler(logger.handlers[0])
+
+
+@pytest.fixture
 def logfile_path():
     return Path(DEFAULT_LOG_DIR, DEFAULT_LOG_FILE)
 
@@ -179,7 +187,7 @@ def test_json_formatter_stack_info():
     assert is_subset(expected, actual)
 
 
-def test_logfile(fs, logfile_path):
+def test_logfile(fs_clean_logging, logfile_path):
     assert not Path.exists(logfile_path)
 
     configure_logger(LogSettings(LogLevel.DEBUG, False, False, {}, None))
@@ -190,7 +198,7 @@ def test_logfile(fs, logfile_path):
         assert id_in_log in f.read()
 
 
-def test_logfile_skip_log_file(fs, logfile_path):
+def test_logfile_skip_log_file(fs_clean_logging, logfile_path):
     assert not Path.exists(logfile_path)
     disable_log_file = True
     configure_logger(LogSettings(LogLevel.DEBUG, disable_log_file, False, {}, None))
@@ -206,7 +214,7 @@ def test_logger_json():
     assert JSONFormatter in formatter_types
 
 
-def test_load_logging_cfg(fs):
+def test_load_logging_cfg(fs_clean_logging):
     config_dict = {
         "version": 1,
         "disable_existing_loggers": False,
