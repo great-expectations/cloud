@@ -157,6 +157,7 @@ class GenerateExpectationsEvent(EventBase):
     batch_parameters: Optional[dict[str, Any]] = None  # noqa: UP045
     use_core_metrics: bool = False
 
+
 class GenerateSqlExpectationEvent(EventBase):
     type: Literal["generate_sql_expectation_event"] = "generate_sql_expectation_event"
     expectation_prompt_id: UUID
