@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 from great_expectations.datasource.fluent import SnowflakeDatasource, SQLDatasource
 from sqlalchemy import inspect
 
+from great_expectations_cloud.agent.config import GxAgentEnvVars
+
 if TYPE_CHECKING:
     from sqlalchemy.engine import Inspector
     from sqlalchemy.sql.compiler import IdentifierPreparer
@@ -33,3 +35,10 @@ def get_asset_names(datasource: SQLDatasource) -> list[str]:
         identifier_preparer.quote(asset_name) for asset_name in asset_names
     ]
     return quoted_asset_names
+
+
+def ensure_openai_credentials() -> None:
+    env_vars = GxAgentEnvVars()
+    if not env_vars.openai_api_key:
+        msg = "OpenAI credentials are not set. Please set the OPENAI_API_KEY environment variable to enable ExpectAI."
+        raise ValueError(msg)

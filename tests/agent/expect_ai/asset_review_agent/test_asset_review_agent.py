@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+from typing import Any
 from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
 from great_expectations import ExpectationSuite
-from great_expectations.core.batch_definition import BatchDefinition
 from great_expectations.expectations import (
     ExpectColumnValuesToBeUnique as GXExpectColumnValuesToBeUnique,
 )
@@ -14,12 +14,14 @@ from langgraph.graph.state import CompiledStateGraph, StateGraph
 
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.agent import (
     AssetReviewAgent,
+    AssetReviewAgentResult,
 )
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
     BatchParameters,
     GenerateExpectationsConfig,
     GenerateExpectationsInput,
     GenerateExpectationsOutput,
+    GenerateExpectationsOutputMetrics,
     GenerateExpectationsState,
 )
 from great_expectations_cloud.agent.expect_ai.expectations import ExpectColumnValuesToBeUnique
@@ -43,26 +45,18 @@ def noop_graph_getter() -> CompiledStateGraph[
         output_schema=GenerateExpectationsOutput,
     )
 
-    def mock_expectations_node(state: GenerateExpectationsInput) -> GenerateExpectationsState:
-        batch_definition = mock.MagicMock(spec=BatchDefinition)
-        return GenerateExpectationsState(
-            organization_id=state.organization_id,
-            workspace_id=state.workspace_id,
-            data_source_name=state.data_source_name,
-            data_asset_name=state.data_asset_name,
-            batch_definition_name=state.batch_definition_name,
-            batch_parameters=state.batch_parameters,
-            batch_definition=batch_definition,
-            messages=[],
-            potential_expectations=[],
-            expectations=[
+    def mock_expectations_node(state: GenerateExpectationsInput) -> dict[str, Any]:
+        # Return output matching GenerateExpectationsOutput schema
+        return {
+            "expectations": [
                 ExpectColumnValuesToBeUnique(
                     column="test_column",
                     description="test expectation",
                     mostly=1.0,
                 )
             ],
-        )
+            "metrics": GenerateExpectationsOutputMetrics(),
+        }
 
     builder.add_node("mock_expectations_node", mock_expectations_node)
     builder.add_edge(START, "mock_expectations_node")
@@ -103,6 +97,7 @@ async def test_asset_review_agent_interface(
         )
         result = await agent.arun(generate_expectations_input=generate_expectations_input)
 
-    assert isinstance(result, ExpectationSuite)
-    assert len(result.expectations) == 1
-    assert isinstance(result.expectations[0], GXExpectColumnValuesToBeUnique)
+    assert isinstance(result, AssetReviewAgentResult)
+    assert isinstance(result.expectation_suite, ExpectationSuite)
+    assert len(result.expectation_suite.expectations) == 1
+    assert isinstance(result.expectation_suite.expectations[0], GXExpectColumnValuesToBeUnique)
