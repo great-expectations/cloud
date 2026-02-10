@@ -185,3 +185,43 @@ def test_generate_sql_expectation_action_registered(
     )
 
     assert isinstance(action, GenerateSqlExpectationAction)
+
+
+@pytest.mark.unit
+def test_generate_sql_expectation_action_missing_openai_credentials(
+    base_url: str,
+    auth_key: str,
+    organization_id: UUID,
+    workspace_id: UUID,
+    expectation_prompt_id: UUID,
+    mock_context,
+    mocker: MockerFixture,
+):
+    mocker.patch(
+        "great_expectations_cloud.agent.actions.generate_sql_expectation.ensure_openai_credentials",
+        side_effect=ValueError(
+            "OpenAI credentials are not set. Please set the OPENAI_API_KEY environment variable to enable ExpectAI."
+        ),
+    )
+
+    generate_sql_event = GenerateSqlExpectationEvent(
+        organization_id=organization_id,
+        workspace_id=workspace_id,
+        expectation_prompt_id=expectation_prompt_id,
+    )
+
+    generate_sql_action = GenerateSqlExpectationAction(
+        context=mock_context,
+        base_url=base_url,
+        domain_context=DomainContext(
+            organization_id=organization_id,
+            workspace_id=workspace_id,
+        ),
+        auth_key=auth_key,
+    )
+
+    with pytest.raises(ValueError, match="OpenAI credentials are not set"):
+        generate_sql_action.run(
+            event=generate_sql_event,
+            id="test-id",
+        )

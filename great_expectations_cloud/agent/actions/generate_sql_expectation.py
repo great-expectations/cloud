@@ -15,6 +15,7 @@ from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
+from great_expectations_cloud.agent.actions.utils import ensure_openai_credentials
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.expect_ai.metric_service import MetricService
@@ -53,6 +54,8 @@ class PromptMetadataResponse(BaseModel):
 class GenerateSqlExpectationAction(AgentAction[GenerateSqlExpectationEvent]):
     @override
     def run(self, event: GenerateSqlExpectationEvent, id: str) -> ActionResult:
+        ensure_openai_credentials()
+
         prompt_metadata = self._get_prompt_metadata(event.expectation_prompt_id)
         metric_service = MetricService(context=self._context)
         query_runner = QueryRunner(context=self._context)
