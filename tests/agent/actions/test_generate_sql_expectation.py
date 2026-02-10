@@ -32,6 +32,16 @@ def expectation_prompt_id() -> UUID:
     return UUID("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
 
 
+@pytest.fixture
+def mock_openai_credentials(mocker: MockerFixture) -> None:
+    mock_env_vars = mocker.MagicMock()
+    mock_env_vars.openai_api_key = "test-api-key"
+    mocker.patch(
+        "great_expectations_cloud.agent.actions.utils.GxAgentEnvVars",
+        return_value=mock_env_vars,
+    )
+
+
 @pytest.mark.unit
 def test_generate_sql_expectation_action_success(
     base_url: str,
@@ -42,6 +52,7 @@ def test_generate_sql_expectation_action_success(
     mock_context,
     mocker: MockerFixture,
     mock_create_session: MockCreateSessionType,
+    mock_openai_credentials: None,
 ):
 
     expected_metadata = {
@@ -123,6 +134,7 @@ def test_generate_sql_expectation_action_api_failure(
     mock_context,
     mocker: MockerFixture,
     mock_create_session: MockCreateSessionType,
+    mock_openai_credentials: None,
 ):
 
     _session = mock_create_session(
