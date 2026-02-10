@@ -197,11 +197,13 @@ def test_generate_sql_expectation_action_missing_openai_credentials(
     mock_context,
     mocker: MockerFixture,
 ):
+    # Mock GxAgentEnvVars to return None for openai_api_key, which will cause
+    # ensure_openai_credentials() to raise ValueError
+    mock_env_vars = mocker.MagicMock()
+    mock_env_vars.openai_api_key = None
     mocker.patch(
-        "great_expectations_cloud.agent.actions.generate_sql_expectation.ensure_openai_credentials",
-        side_effect=ValueError(
-            "OpenAI credentials are not set. Please set the OPENAI_API_KEY environment variable to enable ExpectAI."
-        ),
+        "great_expectations_cloud.agent.actions.utils.GxAgentEnvVars",
+        return_value=mock_env_vars,
     )
 
     generate_sql_event = GenerateSqlExpectationEvent(
