@@ -83,6 +83,11 @@ class SubgraphInput(BaseModel):
 
 class GenerateExpectationsOutput(BaseModel):
     expectations: Annotated[list[OpenAIGXExpectation], add]
+    metrics: GenerateExpectationsOutputMetrics
+
+
+class GenerateExpectationsOutputMetrics(BaseModel):
+    column_names: set[str] = set[str]()
 
 
 class GenerateExpectationsState(GenerateExpectationsInput):
@@ -98,6 +103,9 @@ class GenerateExpectationsState(GenerateExpectationsInput):
     metric_batches_executed: int = 0
     total_turns: int = 0
     executed_tool_signatures: set[str] = Field(default_factory=set)
+    collected_metrics: GenerateExpectationsOutputMetrics = Field(
+        default_factory=GenerateExpectationsOutputMetrics
+    )
 
     @field_validator("batch_definition", mode="before")
     @classmethod
