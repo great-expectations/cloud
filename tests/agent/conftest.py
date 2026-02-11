@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
     MockCreateSessionType = Callable[
-        [str, Literal["get", "post"], HTTPStatus, dict[str, Any]], mock.MagicMock  # noqa: TID251
+        [str, Literal["get", "post"], HTTPStatus, dict[str, Any]], mock.MagicMock
     ]
 
 LOGGER = logging.getLogger(__name__)

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import uuid
 from typing import TYPE_CHECKING
 
@@ -25,10 +24,9 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def user_api_token_headers_org_admin_sc_org():
-    api_token = os.environ.get("GX_CLOUD_ACCESS_TOKEN")
+def user_api_token_headers_org_admin_sc_org(token_env_var: str):
     return {
-        "Authorization": f"Bearer {api_token}",
+        "Authorization": f"Bearer {token_env_var}",
         "Content-Type": "application/vnd.api+json",
     }
 
