@@ -24,4 +24,3 @@ lint.extend-ignore = [
 
 [lint.isort]
 known-first-party = ["great_expectations_cloud", "tests"]
-
