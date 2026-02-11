@@ -48,7 +48,7 @@ class DataSourceAssets:
     assets_by_name: dict[str, DataAsset[Any, Any]]
 
 
-def test_datasource_and_assets_connection(
+def check_datasource_and_assets_connection(
     ds_name: str,
     data_sources_assets: DataSourceAssets,
     log_extra: dict[str, Any],
@@ -89,7 +89,7 @@ def test_datasource_and_assets_connection(
         )
 
 
-def test_datasource_and_assets_connection_with_timeout(
+def check_datasource_and_assets_connection_with_timeout(
     ds_name: str,
     data_sources_assets: DataSourceAssets,
     log_extra: dict[str, Any],
@@ -113,7 +113,7 @@ def test_datasource_and_assets_connection_with_timeout(
     executor = ThreadPoolExecutor(max_workers=1)
     try:
         future = executor.submit(
-            test_datasource_and_assets_connection, ds_name, data_sources_assets, log_extra
+            check_datasource_and_assets_connection, ds_name, data_sources_assets, log_extra
         )
         try:
             future.result(timeout=timeout)
@@ -180,7 +180,7 @@ def run_checkpoint(
 
     # Test connections to all datasources and assets
     for ds_name, data_sources_assets in data_sources_assets_by_data_source_name.items():
-        test_datasource_and_assets_connection_with_timeout(ds_name, data_sources_assets, log_extra)
+        check_datasource_and_assets_connection_with_timeout(ds_name, data_sources_assets, log_extra)
 
     LOGGER.debug(
         "Running checkpoint",

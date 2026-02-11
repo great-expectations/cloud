@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock  # noqa: TID251
 
 import pytest
 from great_expectations.datasource.fluent import Datasource
@@ -13,8 +14,8 @@ from great_expectations.datasource.fluent.interfaces import (
 from great_expectations_cloud.agent.actions.run_checkpoint import (
     DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS,
     DataSourceAssets,
-    test_datasource_and_assets_connection,
-    test_datasource_and_assets_connection_with_timeout,
+    check_datasource_and_assets_connection,
+    check_datasource_and_assets_connection_with_timeout,
 )
 
 if TYPE_CHECKING:
@@ -24,22 +25,22 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.fixture
-def mock_datasource(mocker: MockerFixture) -> Any:
+def mock_datasource(mocker: MockerFixture) -> MagicMock:
     """Create a mock datasource."""
     datasource = mocker.Mock(spec=Datasource)
     datasource.name = "test-datasource"
     datasource.type = "sql"
     datasource.test_connection.return_value = None
-    return datasource
+    return datasource  # type: ignore[no-any-return]
 
 
 @pytest.fixture
-def mock_data_asset(mocker: MockerFixture) -> Any:
+def mock_data_asset(mocker: MockerFixture) -> MagicMock:
     """Create a mock data asset."""
     asset = mocker.Mock(spec=DataAsset)
     asset.name = "test-asset"
     asset.test_connection.return_value = None
-    return asset
+    return asset  # type: ignore[no-any-return]
 
 
 @pytest.fixture
@@ -52,18 +53,18 @@ def log_extra() -> dict[str, str]:
     }
 
 
-class TestTestDatasourceAndAssetsConnection:
-    """Tests for _test_datasource_and_assets_connection function."""
+class TestCheckDatasourceAndAssetsConnection:
+    """Tests for check_datasource_and_assets_connection function."""
 
     def test_successful_connection_single_asset(
-        self, mock_datasource: Any, mock_data_asset: Any, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test successful connection test with single asset."""
         data_sources_assets = DataSourceAssets(
             data_source=mock_datasource, assets_by_name={"test-asset": mock_data_asset}
         )
 
-        test_datasource_and_assets_connection(
+        check_datasource_and_assets_connection(
             ds_name="test-datasource", data_sources_assets=data_sources_assets, log_extra=log_extra
         )
 
@@ -71,8 +72,8 @@ class TestTestDatasourceAndAssetsConnection:
         mock_data_asset.test_connection.assert_called_once()
 
     def test_successful_connection_multiple_assets(
-        self, mock_datasource: Any, mocker: MockerFixture, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mocker: MockerFixture, log_extra: dict[str, str]
+    ) -> None:
         """Test successful connection test with multiple assets."""
         asset1 = mocker.Mock(spec=DataAsset)
         asset1.name = "asset-1"
@@ -86,7 +87,7 @@ class TestTestDatasourceAndAssetsConnection:
             assets_by_name={"asset-1": asset1, "asset-2": asset2, "asset-3": asset3},
         )
 
-        test_datasource_and_assets_connection(
+        check_datasource_and_assets_connection(
             ds_name="test-datasource", data_sources_assets=data_sources_assets, log_extra=log_extra
         )
 
@@ -95,19 +96,21 @@ class TestTestDatasourceAndAssetsConnection:
         asset2.test_connection.assert_called_once()
         asset3.test_connection.assert_called_once()
 
-    def test_successful_connection_no_assets(self, mock_datasource: Any, log_extra: dict[str, str]):
+    def test_successful_connection_no_assets(
+        self, mock_datasource: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test successful connection test with no assets."""
         data_sources_assets = DataSourceAssets(data_source=mock_datasource, assets_by_name={})
 
-        test_datasource_and_assets_connection(
+        check_datasource_and_assets_connection(
             ds_name="test-datasource", data_sources_assets=data_sources_assets, log_extra=log_extra
         )
 
         mock_datasource.test_connection.assert_called_once_with(test_assets=False)
 
     def test_datasource_connection_failure(
-        self, mock_datasource: Any, mock_data_asset: Any, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test datasource connection failure raises TestConnectionError."""
         mock_datasource.test_connection.side_effect = TestConnectionError(
             message="Connection failed"
@@ -117,7 +120,7 @@ class TestTestDatasourceAndAssetsConnection:
         )
 
         with pytest.raises(TestConnectionError, match="Connection failed"):
-            test_datasource_and_assets_connection(
+            check_datasource_and_assets_connection(
                 ds_name="test-datasource",
                 data_sources_assets=data_sources_assets,
                 log_extra=log_extra,
@@ -127,8 +130,8 @@ class TestTestDatasourceAndAssetsConnection:
         mock_data_asset.test_connection.assert_not_called()
 
     def test_asset_connection_failure(
-        self, mock_datasource: Any, mock_data_asset: Any, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test asset connection failure raises TestConnectionError."""
         mock_data_asset.test_connection.side_effect = TestConnectionError(
             message="Asset connection failed"
@@ -138,7 +141,7 @@ class TestTestDatasourceAndAssetsConnection:
         )
 
         with pytest.raises(TestConnectionError, match="Asset connection failed"):
-            test_datasource_and_assets_connection(
+            check_datasource_and_assets_connection(
                 ds_name="test-datasource",
                 data_sources_assets=data_sources_assets,
                 log_extra=log_extra,
@@ -148,8 +151,8 @@ class TestTestDatasourceAndAssetsConnection:
         mock_data_asset.test_connection.assert_called_once()
 
     def test_asset_connection_failure_multiple_assets(
-        self, mock_datasource: Any, mocker: MockerFixture, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mocker: MockerFixture, log_extra: dict[str, str]
+    ) -> None:
         """Test that when second asset fails, first asset was tested."""
         asset1 = mocker.Mock(spec=DataAsset)
         asset1.name = "asset-1"
@@ -164,7 +167,7 @@ class TestTestDatasourceAndAssetsConnection:
         )
 
         with pytest.raises(TestConnectionError, match="Asset 2 failed"):
-            test_datasource_and_assets_connection(
+            check_datasource_and_assets_connection(
                 ds_name="test-datasource",
                 data_sources_assets=data_sources_assets,
                 log_extra=log_extra,
@@ -175,18 +178,18 @@ class TestTestDatasourceAndAssetsConnection:
         asset2.test_connection.assert_called_once()
 
 
-class TestTestDatasourceAndAssetsConnectionWithTimeout:
-    """Tests for _test_datasource_and_assets_connection_with_timeout function."""
+class TestCheckDatasourceAndAssetsConnectionWithTimeout:
+    """Tests for check_datasource_and_assets_connection_with_timeout function."""
 
     def test_successful_connection_within_timeout(
-        self, mock_datasource: Any, mock_data_asset: Any, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test successful connection test that completes within timeout."""
         data_sources_assets = DataSourceAssets(
             data_source=mock_datasource, assets_by_name={"test-asset": mock_data_asset}
         )
 
-        test_datasource_and_assets_connection_with_timeout(
+        check_datasource_and_assets_connection_with_timeout(
             ds_name="test-datasource",
             data_sources_assets=data_sources_assets,
             log_extra=log_extra,
@@ -197,8 +200,8 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
         mock_data_asset.test_connection.assert_called_once()
 
     def test_connection_failure_propagated(
-        self, mock_datasource: Any, mock_data_asset: Any, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test that connection errors are propagated from worker thread."""
         mock_datasource.test_connection.side_effect = TestConnectionError(
             message="Connection failed"
@@ -208,7 +211,7 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
         )
 
         with pytest.raises(TestConnectionError, match="Connection failed"):
-            test_datasource_and_assets_connection_with_timeout(
+            check_datasource_and_assets_connection_with_timeout(
                 ds_name="test-datasource",
                 data_sources_assets=data_sources_assets,
                 log_extra=log_extra,
@@ -218,12 +221,12 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
         mock_datasource.test_connection.assert_called_once_with(test_assets=False)
 
     def test_timeout_raises_test_connection_error(
-        self, mock_datasource: Any, mock_data_asset: Any, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test that timeout raises TestConnectionError with appropriate message."""
 
         # Make test_connection sleep longer than the timeout
-        def slow_connection(**kwargs):
+        def slow_connection(**kwargs: object) -> None:
             time.sleep(3)
 
         mock_datasource.test_connection.side_effect = slow_connection
@@ -235,7 +238,7 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
             TestConnectionError,
             match="Datasource 'test-datasource' was unresponsive after 1 seconds",
         ):
-            test_datasource_and_assets_connection_with_timeout(
+            check_datasource_and_assets_connection_with_timeout(
                 ds_name="test-datasource",
                 data_sources_assets=data_sources_assets,
                 log_extra=log_extra,
@@ -245,11 +248,11 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
         mock_datasource.test_connection.assert_called_once_with(test_assets=False)
 
     def test_timeout_with_asset_connection(
-        self, mock_datasource: Any, mock_data_asset: Any, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test timeout when asset connection is slow."""
 
-        def slow_asset_connection():
+        def slow_asset_connection() -> None:
             time.sleep(3)
 
         mock_data_asset.test_connection.side_effect = slow_asset_connection
@@ -261,7 +264,7 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
             TestConnectionError,
             match="Datasource 'test-datasource' was unresponsive after 1 seconds",
         ):
-            test_datasource_and_assets_connection_with_timeout(
+            check_datasource_and_assets_connection_with_timeout(
                 ds_name="test-datasource",
                 data_sources_assets=data_sources_assets,
                 log_extra=log_extra,
@@ -271,15 +274,15 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
         mock_datasource.test_connection.assert_called_once_with(test_assets=False)
 
     def test_uses_default_timeout_constant(
-        self, mock_datasource: Any, mock_data_asset: Any, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test that default timeout uses DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS."""
         data_sources_assets = DataSourceAssets(
             data_source=mock_datasource, assets_by_name={"test-asset": mock_data_asset}
         )
 
         # Should not timeout with default value (600 seconds)
-        test_datasource_and_assets_connection_with_timeout(
+        check_datasource_and_assets_connection_with_timeout(
             ds_name="test-datasource", data_sources_assets=data_sources_assets, log_extra=log_extra
         )
 
@@ -287,15 +290,15 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
         mock_data_asset.test_connection.assert_called_once()
 
     def test_custom_timeout_value(
-        self, mock_datasource: Any, mock_data_asset: Any, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test that custom timeout value can be specified."""
         data_sources_assets = DataSourceAssets(
             data_source=mock_datasource, assets_by_name={"test-asset": mock_data_asset}
         )
 
         # Should complete successfully with custom timeout
-        test_datasource_and_assets_connection_with_timeout(
+        check_datasource_and_assets_connection_with_timeout(
             ds_name="test-datasource",
             data_sources_assets=data_sources_assets,
             log_extra=log_extra,
@@ -306,11 +309,11 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
         mock_data_asset.test_connection.assert_called_once()
 
     def test_timeout_message_includes_datasource_name(
-        self, mock_datasource: Any, mock_data_asset: Any, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test that timeout error message includes the datasource name."""
 
-        def slow_connection(**kwargs):
+        def slow_connection(**kwargs: object) -> None:
             time.sleep(3)
 
         mock_datasource.test_connection.side_effect = slow_connection
@@ -323,7 +326,7 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
         with pytest.raises(
             TestConnectionError, match="Datasource 'my-special-datasource' was unresponsive"
         ):
-            test_datasource_and_assets_connection_with_timeout(
+            check_datasource_and_assets_connection_with_timeout(
                 ds_name="my-special-datasource",
                 data_sources_assets=data_sources_assets,
                 log_extra=log_extra,
@@ -331,11 +334,11 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
             )
 
     def test_timeout_message_includes_timeout_value(
-        self, mock_datasource: Any, mock_data_asset: Any, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test that timeout error message includes the timeout value."""
 
-        def slow_connection(**kwargs):
+        def slow_connection(**kwargs: object) -> None:
             time.sleep(3)
 
         mock_datasource.test_connection.side_effect = slow_connection
@@ -344,18 +347,20 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
         )
 
         with pytest.raises(TestConnectionError, match="after 2 seconds"):
-            test_datasource_and_assets_connection_with_timeout(
+            check_datasource_and_assets_connection_with_timeout(
                 ds_name="test-datasource",
                 data_sources_assets=data_sources_assets,
                 log_extra=log_extra,
                 timeout=2,
             )
 
-    def test_no_assets_with_timeout(self, mock_datasource: Any, log_extra: dict[str, str]):
+    def test_no_assets_with_timeout(
+        self, mock_datasource: MagicMock, log_extra: dict[str, str]
+    ) -> None:
         """Test timeout behavior with no assets."""
         data_sources_assets = DataSourceAssets(data_source=mock_datasource, assets_by_name={})
 
-        test_datasource_and_assets_connection_with_timeout(
+        check_datasource_and_assets_connection_with_timeout(
             ds_name="test-datasource",
             data_sources_assets=data_sources_assets,
             log_extra=log_extra,
@@ -365,8 +370,8 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
         mock_datasource.test_connection.assert_called_once_with(test_assets=False)
 
     def test_multiple_assets_timeout(
-        self, mock_datasource: Any, mocker: MockerFixture, log_extra: dict[str, str]
-    ):
+        self, mock_datasource: MagicMock, mocker: MockerFixture, log_extra: dict[str, str]
+    ) -> None:
         """Test timeout with multiple assets."""
         asset1 = mocker.Mock(spec=DataAsset)
         asset1.name = "asset-1"
@@ -375,7 +380,7 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
         asset2 = mocker.Mock(spec=DataAsset)
         asset2.name = "asset-2"
 
-        def slow_connection():
+        def slow_connection() -> None:
             time.sleep(3)
 
         asset2.test_connection.side_effect = slow_connection
@@ -387,7 +392,7 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
         with pytest.raises(
             TestConnectionError, match="Datasource 'test-datasource' was unresponsive"
         ):
-            test_datasource_and_assets_connection_with_timeout(
+            check_datasource_and_assets_connection_with_timeout(
                 ds_name="test-datasource",
                 data_sources_assets=data_sources_assets,
                 log_extra=log_extra,
@@ -400,6 +405,6 @@ class TestTestDatasourceAndAssetsConnectionWithTimeout:
 class TestTimeoutConstant:
     """Test the timeout constant value."""
 
-    def test_timeout_constant_value(self):
+    def test_timeout_constant_value(self) -> None:
         """Test that DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS is set to 600."""
         assert DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS == 600
