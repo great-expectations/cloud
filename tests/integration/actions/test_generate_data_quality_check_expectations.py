@@ -16,7 +16,6 @@ from great_expectations_cloud.agent.models import (
     DomainContext,
     GenerateDataQualityCheckExpectationsEvent,
 )
-from tests.test_config import GxCloudTestConfig
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -25,15 +24,9 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def test_config() -> GxCloudTestConfig:
-    """Load test configuration from environment variables."""
-    return GxCloudTestConfig()
-
-
-@pytest.fixture
-def user_api_token_headers_org_admin_sc_org(test_config: GxCloudTestConfig):
+def user_api_token_headers_org_admin_sc_org(token_env_var: str):
     return {
-        "Authorization": f"Bearer {test_config.gx_cloud_access_token}",
+        "Authorization": f"Bearer {token_env_var}",
         "Content-Type": "application/vnd.api+json",
     }
 
