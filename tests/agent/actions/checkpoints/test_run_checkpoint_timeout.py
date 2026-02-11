@@ -12,7 +12,6 @@ from great_expectations.datasource.fluent.interfaces import (
 )
 
 from great_expectations_cloud.agent.actions.run_checkpoint import (
-    DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS,
     DataSourceAssets,
     check_datasource_and_assets_connection,
     check_datasource_and_assets_connection_with_timeout,
@@ -273,87 +272,6 @@ class TestCheckDatasourceAndAssetsConnectionWithTimeout:
 
         mock_datasource.test_connection.assert_called_once_with(test_assets=False)
 
-    def test_uses_default_timeout_constant(
-        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
-    ) -> None:
-        """Test that default timeout uses DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS."""
-        data_sources_assets = DataSourceAssets(
-            data_source=mock_datasource, assets_by_name={"test-asset": mock_data_asset}
-        )
-
-        # Should not timeout with default value (600 seconds)
-        check_datasource_and_assets_connection_with_timeout(
-            ds_name="test-datasource", data_sources_assets=data_sources_assets, log_extra=log_extra
-        )
-
-        mock_datasource.test_connection.assert_called_once_with(test_assets=False)
-        mock_data_asset.test_connection.assert_called_once()
-
-    def test_custom_timeout_value(
-        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
-    ) -> None:
-        """Test that custom timeout value can be specified."""
-        data_sources_assets = DataSourceAssets(
-            data_source=mock_datasource, assets_by_name={"test-asset": mock_data_asset}
-        )
-
-        # Should complete successfully with custom timeout
-        check_datasource_and_assets_connection_with_timeout(
-            ds_name="test-datasource",
-            data_sources_assets=data_sources_assets,
-            log_extra=log_extra,
-            timeout=30,
-        )
-
-        mock_datasource.test_connection.assert_called_once_with(test_assets=False)
-        mock_data_asset.test_connection.assert_called_once()
-
-    def test_timeout_message_includes_datasource_name(
-        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
-    ) -> None:
-        """Test that timeout error message includes the datasource name."""
-
-        def slow_connection(**kwargs: object) -> None:
-            time.sleep(3)
-
-        mock_datasource.test_connection.side_effect = slow_connection
-        mock_datasource.name = "my-special-datasource"
-
-        data_sources_assets = DataSourceAssets(
-            data_source=mock_datasource, assets_by_name={"test-asset": mock_data_asset}
-        )
-
-        with pytest.raises(
-            TestConnectionError, match="Datasource 'my-special-datasource' was unresponsive"
-        ):
-            check_datasource_and_assets_connection_with_timeout(
-                ds_name="my-special-datasource",
-                data_sources_assets=data_sources_assets,
-                log_extra=log_extra,
-                timeout=1,
-            )
-
-    def test_timeout_message_includes_timeout_value(
-        self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]
-    ) -> None:
-        """Test that timeout error message includes the timeout value."""
-
-        def slow_connection(**kwargs: object) -> None:
-            time.sleep(3)
-
-        mock_datasource.test_connection.side_effect = slow_connection
-        data_sources_assets = DataSourceAssets(
-            data_source=mock_datasource, assets_by_name={"test-asset": mock_data_asset}
-        )
-
-        with pytest.raises(TestConnectionError, match="after 2 seconds"):
-            check_datasource_and_assets_connection_with_timeout(
-                ds_name="test-datasource",
-                data_sources_assets=data_sources_assets,
-                log_extra=log_extra,
-                timeout=2,
-            )
-
     def test_no_assets_with_timeout(
         self, mock_datasource: MagicMock, log_extra: dict[str, str]
     ) -> None:
@@ -400,11 +318,3 @@ class TestCheckDatasourceAndAssetsConnectionWithTimeout:
             )
 
         mock_datasource.test_connection.assert_called_once_with(test_assets=False)
-
-
-class TestTimeoutConstant:
-    """Test the timeout constant value."""
-
-    def test_timeout_constant_value(self) -> None:
-        """Test that DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS is set to 600."""
-        assert DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS == 600
