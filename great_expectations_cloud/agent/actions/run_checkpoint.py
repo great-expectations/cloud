@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 import socket
+from concurrent.futures import TimeoutError as FuturesTimeoutError
+from concurrent.futures.thread import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
 
@@ -23,7 +25,10 @@ if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent.interfaces import DataAsset, Datasource
 
+from great_expectations.datasource.fluent.interfaces import TestConnectionError
+
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
+DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS: Final[int] = 600
 
 
 class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
@@ -41,6 +46,93 @@ class MissingCheckpointNameError(ValueError):
 class DataSourceAssets:
     data_source: Datasource[Any, Any]
     assets_by_name: dict[str, DataAsset[Any, Any]]
+
+
+def test_datasource_and_assets_connection(
+    ds_name: str,
+    data_sources_assets: DataSourceAssets,
+    log_extra: dict[str, Any],
+) -> None:
+    """
+    Test connection to a datasource and its assets.
+
+    This function is designed to be run in a worker thread with a timeout.
+
+    Args:
+        ds_name: Name of the datasource
+        data_sources_assets: DataSourceAssets containing datasource and assets
+        log_extra: Extra logging context
+
+    Raises:
+        TestConnectionError: If connection test fails
+    """
+    data_source = data_sources_assets.data_source
+    LOGGER.debug(
+        "Testing datasource connection",
+        extra={**log_extra, "datasource_name": ds_name},
+    )
+    data_source.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
+    LOGGER.debug(
+        "Datasource connection successful",
+        extra={**log_extra, "datasource_name": ds_name},
+    )
+
+    for asset_name, data_asset in data_sources_assets.assets_by_name.items():
+        LOGGER.debug(
+            "Testing data asset connection",
+            extra={**log_extra, "datasource_name": ds_name, "asset_name": asset_name},
+        )
+        data_asset.test_connection()  # raises `TestConnectionError` on failure
+        LOGGER.debug(
+            "Data asset connection successful",
+            extra={**log_extra, "datasource_name": ds_name, "asset_name": asset_name},
+        )
+
+
+def test_datasource_and_assets_connection_with_timeout(
+    ds_name: str,
+    data_sources_assets: DataSourceAssets,
+    log_extra: dict[str, Any],
+    timeout: int = DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS,
+) -> None:
+    """
+    Test connection to a datasource and its assets with a timeout.
+
+    Runs the connection test in a worker thread and enforces a timeout.
+    If the timeout is exceeded, raises TestConnectionError.
+
+    Args:
+        ds_name: Name of the datasource
+        data_sources_assets: DataSourceAssets containing datasource and assets
+        log_extra: Extra logging context
+        timeout: Timeout in seconds (default: DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS)
+
+    Raises:
+        TestConnectionError: If connection test fails or timeout is exceeded
+    """
+    executor = ThreadPoolExecutor(max_workers=1)
+    try:
+        future = executor.submit(
+            test_datasource_and_assets_connection, ds_name, data_sources_assets, log_extra
+        )
+        try:
+            future.result(timeout=timeout)
+        except FuturesTimeoutError:
+            LOGGER.warning(
+                f"Datasource connection test timed out after {timeout} seconds",
+                extra={**log_extra, "datasource_name": ds_name, "timeout_seconds": timeout},
+            )
+            raise TestConnectionError(
+                message=f"Datasource '{ds_name}' was unresponsive after {timeout} seconds"
+            ) from None
+    finally:
+        # shutdown(wait=False) is necessary here because the default shutdown(wait=True)
+        # would block until the worker thread completes. On timeout, the worker thread
+        # may still be blocked on an unresponsive datasource connection, and waiting for
+        # it would defeat the purpose of the timeout. Python threads cannot be forcibly
+        # interrupted, so the abandoned thread will continue running in the background
+        # until the blocking I/O call returns or the process exits.
+        executor.shutdown(wait=False)
 
 
 def run_checkpoint(
@@ -88,27 +180,7 @@ def run_checkpoint(
 
     # Test connections to all datasources and assets
     for ds_name, data_sources_assets in data_sources_assets_by_data_source_name.items():
-        data_source = data_sources_assets.data_source
-        LOGGER.debug(
-            "Testing datasource connection",
-            extra={**log_extra, "datasource_name": ds_name},
-        )
-        data_source.test_connection(test_assets=False)  # raises `TestConnectionError` on failure
-        LOGGER.debug(
-            "Datasource connection successful",
-            extra={**log_extra, "datasource_name": ds_name},
-        )
-
-        for asset_name, data_asset in data_sources_assets.assets_by_name.items():
-            LOGGER.debug(
-                "Testing data asset connection",
-                extra={**log_extra, "datasource_name": ds_name, "asset_name": asset_name},
-            )
-            data_asset.test_connection()  # raises `TestConnectionError` on failure
-            LOGGER.debug(
-                "Data asset connection successful",
-                extra={**log_extra, "datasource_name": ds_name, "asset_name": asset_name},
-            )
+        test_datasource_and_assets_connection_with_timeout(ds_name, data_sources_assets, log_extra)
 
     LOGGER.debug(
         "Running checkpoint",
