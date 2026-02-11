@@ -15,7 +15,9 @@ from typing_extensions import override
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.actions.utils import ensure_openai_credentials
 from great_expectations_cloud.agent.event_handler import register_event_action
-from great_expectations_cloud.agent.expect_ai.asset_review_agent.agent import AssetReviewAgent
+from great_expectations_cloud.agent.expect_ai.asset_review_agent.agent import (
+    AssetReviewAgent,
+)
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
     GenerateExpectationsInput,
 )
