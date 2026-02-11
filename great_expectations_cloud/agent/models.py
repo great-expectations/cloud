@@ -158,6 +158,11 @@ class GenerateExpectationsEvent(EventBase):
     use_core_metrics: bool = False
 
 
+class GenerateSqlExpectationEvent(EventBase):
+    type: Literal["generate_sql_expectation_event"] = "generate_sql_expectation_event"
+    expectation_prompt_id: UUID
+
+
 class UnknownEvent(AgentBaseExtraForbid):
     type: Literal["unknown_event"] = "unknown_event"
 
@@ -213,6 +218,7 @@ if TYPE_CHECKING:
         DraftDatasourceConfigEvent,
         ListAssetNamesEvent,
         GenerateDataQualityCheckExpectationsEvent,
+        GenerateSqlExpectationEvent,
         RunRdAgentEvent,
         UnknownEvent,
     ]
