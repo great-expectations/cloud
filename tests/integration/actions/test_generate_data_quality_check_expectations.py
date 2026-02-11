@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import uuid
 from typing import TYPE_CHECKING
 
@@ -17,6 +16,7 @@ from great_expectations_cloud.agent.models import (
     DomainContext,
     GenerateDataQualityCheckExpectationsEvent,
 )
+from tests.test_config import GxCloudTestConfig
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -25,10 +25,15 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def user_api_token_headers_org_admin_sc_org():
-    api_token = os.environ.get("GX_CLOUD_ACCESS_TOKEN")
+def test_config() -> GxCloudTestConfig:
+    """Load test configuration from environment variables."""
+    return GxCloudTestConfig()
+
+
+@pytest.fixture
+def user_api_token_headers_org_admin_sc_org(test_config: GxCloudTestConfig):
     return {
-        "Authorization": f"Bearer {api_token}",
+        "Authorization": f"Bearer {test_config.gx_cloud_access_token}",
         "Content-Type": "application/vnd.api+json",
     }
 
