@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from pydantic import ValidationError as PydanticV2ValidationError
 from pydantic.v1 import ValidationError as PydanticV1ValidationError
 
-from great_expectations_cloud.agent.dd_metrics import ExpectAIAnalytics, RejectionReason
+from great_expectations_cloud.agent.analytics import ExpectAIAnalytics, RejectionReason
 from great_expectations_cloud.agent.expect_ai.config import OPENAI_MODEL
 from great_expectations_cloud.agent.expect_ai.exceptions import (
     InvalidExpectationTypeError,

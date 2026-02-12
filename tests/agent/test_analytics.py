@@ -4,14 +4,14 @@ import unittest
 
 import pytest
 
-from great_expectations_cloud.agent.dd_metrics import ExpectAIAnalytics, RejectionReason
+from great_expectations_cloud.agent.analytics import ExpectAIAnalytics, RejectionReason
 
 
 @pytest.mark.unit
 class TestExpectAIAnalytics(unittest.TestCase):
     """Test the stubbed ExpectAIAnalytics implementation.
 
-    Since dd_metrics is stubbed out in the open-source agent,
+    Since analytics is stubbed out in the open-source agent,
     these tests simply verify the methods can be called without errors.
     """
 

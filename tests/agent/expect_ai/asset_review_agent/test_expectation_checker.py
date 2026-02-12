@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from great_expectations_cloud.agent.dd_metrics import ExpectAIAnalytics
+from great_expectations_cloud.agent.analytics import ExpectAIAnalytics
 from great_expectations_cloud.agent.expect_ai.expectations import (
     ExpectColumnValuesToBeUnique,
     ExpectCompoundColumnsToBeUnique,
