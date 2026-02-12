@@ -54,7 +54,7 @@ from great_expectations_cloud.agent.expect_ai.graphs.expectation_checker import 
 from great_expectations_cloud.agent.expect_ai.nodes.PlannerNode import PlannerNode
 
 if TYPE_CHECKING:
-    from great_expectations_cloud.agent.dd_metrics import ExpectAIMetrics
+    from great_expectations_cloud.agent.dd_metrics import ExpectAIAnalytics
     from great_expectations_cloud.agent.expect_ai.metric_service import MetricService
     from great_expectations_cloud.agent.expect_ai.tools.metrics import AgentToolsManager
     from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRunner
@@ -96,12 +96,12 @@ class AssetReviewAgent:
         tools_manager: AgentToolsManager,
         query_runner: QueryRunner,
         metric_service: MetricService,
-        dd_metrics: ExpectAIMetrics | None = None,
+        analytics: ExpectAIAnalytics | None = None,
     ):
         self._tools_manager = tools_manager
         self._query_runner = query_runner
         self._metric_service = metric_service
-        self._dd_metrics = dd_metrics
+        self._analytics = analytics
 
     async def arun(
         self,
@@ -167,7 +167,7 @@ class AssetReviewAgent:
     ]:
         self._expectation_checker_subgraph = ExpectationChecker(
             query_runner=self._query_runner,
-            metrics=self._dd_metrics,
+            analytics=self._analytics,
         ).graph()
 
         builder = StateGraph(

@@ -12,11 +12,11 @@ class RejectionReason(Enum):
     OTHER = "other"
 
 
-class ExpectAIMetrics:
-    """Base metrics class. No-op in the open-source agent.
+class ExpectAIAnalytics:
+    """Base analytics class. No-op in the open-source agent.
 
     Downstream consumers (e.g. gx-runner) should subclass this and
-    override methods to emit real metrics.
+    override methods to emit real analytics.
     """
 
     def emit_expectation_validated(self, expectation_type: str) -> None:
