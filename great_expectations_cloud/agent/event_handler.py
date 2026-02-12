@@ -82,6 +82,21 @@ class EventHandler:
         action_class = action_map.get(_get_event_name(event))
         if action_class is None:
             action_class = UnknownEventAction
+        return self._instantiate_action(
+            action_class=action_class,
+            base_url=base_url,
+            auth_key=auth_key,
+            domain_context=domain_context,
+        )
+
+    def _instantiate_action(
+        self,
+        action_class: type[AgentAction[Any]],
+        base_url: str,
+        auth_key: str,
+        domain_context: DomainContext,
+    ) -> AgentAction[Any]:
+        """Instantiate an action. Override in subclasses to customize construction."""
         return action_class(
             context=self._context,
             base_url=base_url,

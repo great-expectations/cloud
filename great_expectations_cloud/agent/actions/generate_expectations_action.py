@@ -67,7 +67,11 @@ class GenerateExpectationsAction(AgentAction[GenerateExpectationsEvent]):
         analytics: ExpectAIAnalytics | None = None,
     ):
         super().__init__(
-            context=context, base_url=base_url, domain_context=domain_context, auth_key=auth_key
+            context=context,
+            base_url=base_url,
+            domain_context=domain_context,
+            auth_key=auth_key,
+            analytics=analytics,
         )
         self._analytics = analytics or ExpectAIAnalytics()
 

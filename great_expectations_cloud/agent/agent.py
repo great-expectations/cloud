@@ -144,10 +144,16 @@ class GXAgent:
     _PYPI_GX_AGENT_PACKAGE_NAME = "great_expectations_cloud"
     _PYPI_GREAT_EXPECTATIONS_PACKAGE_NAME = "great_expectations"
 
-    def __init__(self: Self):
+    def __init__(
+        self: Self,
+        event_handler_factory: Callable[[CloudDataContext], EventHandler] | None = None,
+    ):
         # Disable LangSmith tracing on agent startup
         os.environ["LANGCHAIN_TRACING_V2"] = "false"  # noqa: TID251
         self._config = self._create_config()
+        self._event_handler_factory = event_handler_factory or (
+            lambda ctx: EventHandler(context=ctx)
+        )
 
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
@@ -473,7 +479,7 @@ class GXAgent:
 
         self._set_sentry_tags(event_context)
 
-        handler = EventHandler(context=data_context)
+        handler = self._event_handler_factory(data_context)
         # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
         result = handler.handle_event(
             event=event_context.event,
