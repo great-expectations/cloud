@@ -13,11 +13,7 @@ class RejectionReason(Enum):
 
 
 class ExpectAIAnalytics:
-    """Base analytics class. No-op in the open-source agent.
-
-    Downstream consumers (e.g. gx-runner) should subclass this and
-    override methods to emit real analytics.
-    """
+    """Base analytics class."""
 
     def emit_expectation_validated(self, expectation_type: str) -> None:
         pass  # No-op in public agent
