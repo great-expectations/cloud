@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from great_expectations_cloud.agent.dd_metrics import ExpectAIMetrics
 from great_expectations_cloud.agent.expect_ai.expectations import (
     ExpectColumnValuesToBeUnique,
     ExpectCompoundColumnsToBeUnique,
@@ -37,7 +38,7 @@ def config() -> RunnableConfig:
 async def test_expectation_checker_node_success(
     mock_query_runner: MagicMock, config: RunnableConfig
 ) -> None:
-    node = ExpectationCheckerNode(sql_tools_manager=mock_query_runner)
+    node = ExpectationCheckerNode(sql_tools_manager=mock_query_runner, metrics=ExpectAIMetrics())
     mock_query_runner.check_query_compiles.return_value = (True, None)
 
     expectation = UnexpectedRowsExpectation(
@@ -67,7 +68,7 @@ async def test_expectation_checker_node_success(
 async def test_expectation_checker_node_failure(
     mock_query_runner: MagicMock, config: RunnableConfig
 ) -> None:
-    node = ExpectationCheckerNode(sql_tools_manager=mock_query_runner)
+    node = ExpectationCheckerNode(sql_tools_manager=mock_query_runner, metrics=ExpectAIMetrics())
     mock_query_runner.check_query_compiles.return_value = (False, "Syntax error")
 
     expectation = UnexpectedRowsExpectation(
@@ -94,7 +95,7 @@ async def test_expectation_checker_non_sql_expectation(
     mock_query_runner: MagicMock, config: RunnableConfig
 ) -> None:
     """Test that non-UnexpectedRowsExpectation types pass through without checking"""
-    node = ExpectationCheckerNode(sql_tools_manager=mock_query_runner)
+    node = ExpectationCheckerNode(sql_tools_manager=mock_query_runner, metrics=ExpectAIMetrics())
 
     expectation = ExpectColumnValuesToBeUnique(column="test_column", description="test", mostly=1.0)
 
@@ -141,7 +142,7 @@ async def test_expectation_checker_catches_invalid_construction(
 async def test_expectation_checker_node_only_replaces_batch_keyword(
     mock_query_runner: MagicMock, config: RunnableConfig
 ) -> None:
-    node = ExpectationCheckerNode(sql_tools_manager=mock_query_runner)
+    node = ExpectationCheckerNode(sql_tools_manager=mock_query_runner, metrics=ExpectAIMetrics())
     mock_query_runner.check_query_compiles.return_value = (True, None)
 
     expectation = UnexpectedRowsExpectation(

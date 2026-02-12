@@ -13,10 +13,14 @@ class RejectionReason(Enum):
 
 
 class ExpectAIMetrics:
-    @staticmethod
-    def emit_expectation_validated(expectation_type: str) -> None:
+    """Base metrics class. No-op in the open-source agent.
+
+    Downstream consumers (e.g. gx-runner) should subclass this and
+    override methods to emit real metrics.
+    """
+
+    def emit_expectation_validated(self, expectation_type: str) -> None:
         pass  # No-op in public agent
 
-    @staticmethod
-    def emit_expectation_rejected(expectation_type: str, reason: RejectionReason) -> None:
+    def emit_expectation_rejected(self, expectation_type: str, reason: RejectionReason) -> None:
         pass  # No-op in public agent

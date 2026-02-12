@@ -17,32 +17,35 @@ class TestExpectAIMetrics(unittest.TestCase):
 
     def test_emit_expectation_validated(self):
         # Arrange
+        metrics = ExpectAIMetrics()
         expectation_type = "TestExpectationType"
 
         # Act - should not raise an exception
-        ExpectAIMetrics.emit_expectation_validated(expectation_type)
+        metrics.emit_expectation_validated(expectation_type)
 
         # Assert - method completes without error
         # No assertion needed since we're just testing it doesn't raise
 
     def test_emit_expectation_rejected(self):
         # Arrange
+        metrics = ExpectAIMetrics()
         expectation_type = "TestExpectationType"
         reason = RejectionReason.INVALID_SQL
 
         # Act - should not raise an exception
-        ExpectAIMetrics.emit_expectation_rejected(expectation_type, reason)
+        metrics.emit_expectation_rejected(expectation_type, reason)
 
         # Assert - method completes without error
         # No assertion needed since we're just testing it doesn't raise
 
     def test_all_rejection_reasons_callable(self):
         """Test that all rejection reasons can be used with emit_expectation_rejected."""
+        metrics = ExpectAIMetrics()
         expectation_type = "TestExpectationType"
 
         # Act - should not raise an exception for any rejection reason
         for reason in RejectionReason:
-            ExpectAIMetrics.emit_expectation_rejected(expectation_type, reason)
+            metrics.emit_expectation_rejected(expectation_type, reason)
 
         # Assert - method completes without error for all reasons
         # No assertion needed since we're just testing it doesn't raise

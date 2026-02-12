@@ -79,8 +79,10 @@ class ExpectationChecker:
     def __init__(
         self,
         query_runner: QueryRunner,
+        metrics: ExpectAIMetrics | None = None,
     ):
         self._query_runner = query_runner
+        self._metrics = metrics or ExpectAIMetrics()
 
     def graph(
         self,
@@ -94,7 +96,7 @@ class ExpectationChecker:
         )
         builder.add_node(
             "expectation_checker",
-            ExpectationCheckerNode(sql_tools_manager=self._query_runner),
+            ExpectationCheckerNode(sql_tools_manager=self._query_runner, metrics=self._metrics),
         )
         builder.add_node("query_rewriter", QueryRewriterNode(sql_tools_manager=self._query_runner))
 
@@ -112,8 +114,9 @@ class ExpectationChecker:
 
 
 class ExpectationCheckerNode:
-    def __init__(self, sql_tools_manager: QueryRunner):
+    def __init__(self, sql_tools_manager: QueryRunner, metrics: ExpectAIMetrics):
         self._sql_tools_manager = sql_tools_manager
+        self._metrics = metrics
 
     async def __call__(
         self, state: ExpectationCheckerState, config: RunnableConfig
@@ -125,7 +128,7 @@ class ExpectationCheckerNode:
             try:
                 state.expectation.get_gx_expectation()
             except (PydanticV1ValidationError, PydanticV2ValidationError) as e:
-                ExpectAIMetrics.emit_expectation_rejected(
+                self._metrics.emit_expectation_rejected(
                     expectation_type=expectation_type,
                     reason=RejectionReason.INVALID_PYDANTIC_CONSTRUCTION,
                 )
@@ -136,7 +139,7 @@ class ExpectationCheckerNode:
                     expectation=state.expectation,
                 )
             except Exception as e:
-                ExpectAIMetrics.emit_expectation_rejected(
+                self._metrics.emit_expectation_rejected(
                     expectation_type=expectation_type, reason=RejectionReason.INVALID_CONSTRUCTION
                 )
                 return ExpectationCheckerOutput(
@@ -147,7 +150,7 @@ class ExpectationCheckerNode:
                 )
 
         if state.attempts >= MAX_EXPECTATION_REWRITE_ATTEMPTS:
-            ExpectAIMetrics.emit_expectation_rejected(
+            self._metrics.emit_expectation_rejected(
                 expectation_type=expectation_type, reason=RejectionReason.INVALID_SQL
             )
             return ExpectationCheckerOutput(
@@ -158,7 +161,7 @@ class ExpectationCheckerNode:
             )
 
         if not isinstance(state.expectation, UnexpectedRowsExpectation):
-            ExpectAIMetrics.emit_expectation_validated(expectation_type=expectation_type)
+            self._metrics.emit_expectation_validated(expectation_type=expectation_type)
             return ExpectationCheckerOutput(
                 success=True,
                 error=None,
@@ -172,7 +175,7 @@ class ExpectationCheckerNode:
         )
 
         if success:
-            ExpectAIMetrics.emit_expectation_validated(expectation_type=expectation_type)
+            self._metrics.emit_expectation_validated(expectation_type=expectation_type)
 
         error_or_unset = self._error_for_output(state, error)
         return ExpectationCheckerOutput(
