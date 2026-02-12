@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Generic, Optional, TypeVar
 
 from pydantic.v1 import BaseModel
 
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.models import (
     AgentBaseExtraForbid,
     AgentBaseExtraIgnore,
@@ -32,12 +33,18 @@ _EventT = TypeVar("_EventT", bound=AgentBaseExtraForbid | AgentBaseExtraIgnore)
 
 class AgentAction(Generic[_EventT]):
     def __init__(
-        self, context: CloudDataContext, base_url: str, domain_context: DomainContext, auth_key: str
+        self,
+        context: CloudDataContext,
+        base_url: str,
+        domain_context: DomainContext,
+        auth_key: str,
+        analytics: AgentAnalytics | None = None,
     ):
         self._context = context
         self._base_url = base_url
         self._domain_context = domain_context
         self._auth_key = auth_key
+        self._analytics = analytics or AgentAnalytics()
 
     @abstractmethod
     def run(self, event: _EventT, id: str) -> ActionResult: ...

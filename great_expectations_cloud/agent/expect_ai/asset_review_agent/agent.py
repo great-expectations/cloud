@@ -54,7 +54,7 @@ from great_expectations_cloud.agent.expect_ai.graphs.expectation_checker import 
 from great_expectations_cloud.agent.expect_ai.nodes.PlannerNode import PlannerNode
 
 if TYPE_CHECKING:
-    from great_expectations_cloud.agent.analytics import ExpectAIAnalytics
+    from great_expectations_cloud.agent.analytics import AgentAnalytics
     from great_expectations_cloud.agent.expect_ai.metric_service import MetricService
     from great_expectations_cloud.agent.expect_ai.tools.metrics import AgentToolsManager
     from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRunner
@@ -96,7 +96,7 @@ class AssetReviewAgent:
         tools_manager: AgentToolsManager,
         query_runner: QueryRunner,
         metric_service: MetricService,
-        analytics: ExpectAIAnalytics | None = None,
+        analytics: AgentAnalytics | None = None,
     ):
         self._tools_manager = tools_manager
         self._query_runner = query_runner

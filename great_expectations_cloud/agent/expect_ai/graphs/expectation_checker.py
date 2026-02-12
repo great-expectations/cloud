@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from pydantic import ValidationError as PydanticV2ValidationError
 from pydantic.v1 import ValidationError as PydanticV1ValidationError
 
-from great_expectations_cloud.agent.analytics import ExpectAIAnalytics, RejectionReason
+from great_expectations_cloud.agent.analytics import AgentAnalytics, RejectionReason
 from great_expectations_cloud.agent.expect_ai.config import OPENAI_MODEL
 from great_expectations_cloud.agent.expect_ai.exceptions import (
     InvalidExpectationTypeError,
@@ -79,10 +79,10 @@ class ExpectationChecker:
     def __init__(
         self,
         query_runner: QueryRunner,
-        analytics: ExpectAIAnalytics | None = None,
+        analytics: AgentAnalytics | None = None,
     ):
         self._query_runner = query_runner
-        self._analytics = analytics or ExpectAIAnalytics()
+        self._analytics = analytics or AgentAnalytics()
 
     def graph(
         self,
@@ -114,7 +114,7 @@ class ExpectationChecker:
 
 
 class ExpectationCheckerNode:
-    def __init__(self, sql_tools_manager: QueryRunner, analytics: ExpectAIAnalytics):
+    def __init__(self, sql_tools_manager: QueryRunner, analytics: AgentAnalytics):
         self._sql_tools_manager = sql_tools_manager
         self._analytics = analytics
 

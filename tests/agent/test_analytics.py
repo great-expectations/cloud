@@ -4,12 +4,12 @@ import unittest
 
 import pytest
 
-from great_expectations_cloud.agent.analytics import ExpectAIAnalytics, RejectionReason
+from great_expectations_cloud.agent.analytics import AgentAnalytics, RejectionReason
 
 
 @pytest.mark.unit
-class TestExpectAIAnalytics(unittest.TestCase):
-    """Test the stubbed ExpectAIAnalytics implementation.
+class TestAgentAnalytics(unittest.TestCase):
+    """Test the stubbed AgentAnalytics implementation.
 
     Since analytics is stubbed out in the open-source agent,
     these tests simply verify the methods can be called without errors.
@@ -17,7 +17,7 @@ class TestExpectAIAnalytics(unittest.TestCase):
 
     def test_emit_expectation_validated(self):
         # Arrange
-        analytics = ExpectAIAnalytics()
+        analytics = AgentAnalytics()
         expectation_type = "TestExpectationType"
 
         # Act - should not raise an exception
@@ -28,7 +28,7 @@ class TestExpectAIAnalytics(unittest.TestCase):
 
     def test_emit_expectation_rejected(self):
         # Arrange
-        analytics = ExpectAIAnalytics()
+        analytics = AgentAnalytics()
         expectation_type = "TestExpectationType"
         reason = RejectionReason.INVALID_SQL
 
@@ -40,7 +40,7 @@ class TestExpectAIAnalytics(unittest.TestCase):
 
     def test_all_rejection_reasons_callable(self):
         """Test that all rejection reasons can be used with emit_expectation_rejected."""
-        analytics = ExpectAIAnalytics()
+        analytics = AgentAnalytics()
         expectation_type = "TestExpectationType"
 
         # Act - should not raise an exception for any rejection reason
