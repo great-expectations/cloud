@@ -12,7 +12,7 @@ class RejectionReason(Enum):
     OTHER = "other"
 
 
-class ExpectAIAnalytics:
+class AgentAnalytics:
     """Base analytics class."""
 
     def emit_expectation_validated(self, expectation_type: str) -> None:

@@ -14,7 +14,7 @@ from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.actions.utils import ensure_openai_credentials
-from great_expectations_cloud.agent.analytics import ExpectAIAnalytics
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.agent import (
     AssetReviewAgent,
@@ -64,7 +64,7 @@ class GenerateExpectationsAction(AgentAction[GenerateExpectationsEvent]):
         base_url: str,
         domain_context: DomainContext,
         auth_key: str,
-        analytics: ExpectAIAnalytics | None = None,
+        analytics: AgentAnalytics | None = None,
     ):
         super().__init__(
             context=context,
@@ -73,7 +73,7 @@ class GenerateExpectationsAction(AgentAction[GenerateExpectationsEvent]):
             auth_key=auth_key,
             analytics=analytics,
         )
-        self._analytics = analytics or ExpectAIAnalytics()
+        self._analytics = analytics or AgentAnalytics()
 
     @override
     def run(self, event: GenerateExpectationsEvent, id: str) -> ActionResult:
