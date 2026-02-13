@@ -12,11 +12,11 @@ class RejectionReason(Enum):
     OTHER = "other"
 
 
-class ExpectAIMetrics:
-    @staticmethod
-    def emit_expectation_validated(expectation_type: str) -> None:
+class ExpectAIAnalytics:
+    """Base analytics class."""
+
+    def emit_expectation_validated(self, expectation_type: str) -> None:
         pass  # No-op in public agent
 
-    @staticmethod
-    def emit_expectation_rejected(expectation_type: str, reason: RejectionReason) -> None:
+    def emit_expectation_rejected(self, expectation_type: str, reason: RejectionReason) -> None:
         pass  # No-op in public agent

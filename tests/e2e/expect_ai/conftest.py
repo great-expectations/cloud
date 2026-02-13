@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import uuid
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
@@ -9,64 +8,53 @@ import great_expectations as gx
 import pytest
 import sqlalchemy
 
+from tests.test_config import GxCloudTestConfig, SnowflakeTestConfig
+
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
 
 @pytest.fixture(scope="module")
-def get_org_id_from_env() -> str:
-    org_id = os.environ.get("GX_CLOUD_ORGANIZATION_ID")
-    assert org_id, "No GX_CLOUD_ORGANIZATION_ID env var"
-    return org_id
+def test_config() -> GxCloudTestConfig:
+    """Load test configuration from environment variables."""
+    return GxCloudTestConfig()
 
 
 @pytest.fixture(scope="module")
-def get_workspace_id_from_env() -> str:
-    workspace_id = os.environ.get("GX_CLOUD_WORKSPACE_ID")
-    assert workspace_id, "No GX_CLOUD_WORKSPACE_ID env var"
-    return workspace_id
+def get_org_id_from_env(test_config: GxCloudTestConfig) -> str:
+    return test_config.gx_cloud_organization_id
 
 
 @pytest.fixture(scope="module")
-def get_token_from_env() -> str:
-    gx_token = os.environ.get("GX_CLOUD_ACCESS_TOKEN")
-    assert gx_token, "No GX_CLOUD_ACCESS_TOKEN env var"
-    return gx_token
+def get_workspace_id_from_env(test_config: GxCloudTestConfig) -> str:
+    assert test_config.gx_cloud_workspace_id, "No GX_CLOUD_WORKSPACE_ID env var"
+    return test_config.gx_cloud_workspace_id
+
+
+@pytest.fixture(scope="module")
+def get_token_from_env(test_config: GxCloudTestConfig) -> str:
+    return test_config.gx_cloud_access_token
 
 
 @pytest.fixture(scope="module")
 def snowflake_config() -> dict[str, str]:
     """Combine all Snowflake configuration into a single dictionary."""
-    account = os.environ.get("SNOWFLAKE_ACCOUNT")
-    user = os.environ.get("SNOWFLAKE_USER")
-    password = os.environ.get("SNOWFLAKE_PW")
-    database = os.environ.get("SNOWFLAKE_DATABASE")
-    schema = os.environ.get("SNOWFLAKE_SCHEMA")
-    warehouse = os.environ.get("SNOWFLAKE_WAREHOUSE")
-    role = os.environ.get("SNOWFLAKE_ROLE")
-
-    assert account, "No SNOWFLAKE_ACCOUNT env var"
-    assert user, "No SNOWFLAKE_USER env var"
-    assert password, "No SNOWFLAKE_PW env var"
-    assert database, "No SNOWFLAKE_DATABASE env var"
-    assert schema, "No SNOWFLAKE_SCHEMA env var"
-    assert warehouse, "No SNOWFLAKE_WAREHOUSE env var"
-    assert role, "No SNOWFLAKE_ROLE env var"
+    config = SnowflakeTestConfig()
 
     return {
-        "account": account,
-        "user": user,
-        "password": password,
-        "database": database,
-        "schema": schema,
-        "warehouse": warehouse,
-        "role": role,
+        "account": config.snowflake_account,
+        "user": config.snowflake_user,
+        "password": config.snowflake_pw,
+        "database": config.snowflake_database,
+        "schema": config.snowflake_schema,
+        "warehouse": config.snowflake_warehouse,
+        "role": config.snowflake_role,
     }
 
 
 @pytest.fixture(scope="module")
-def get_cloud_base_url() -> str:
-    return os.getenv("GX_CLOUD_BASE_URL", "https://api.greatexpectations.io")
+def get_cloud_base_url(test_config: GxCloudTestConfig) -> str:
+    return test_config.gx_cloud_base_url or "https://api.greatexpectations.io"
 
 
 @pytest.fixture(scope="module")
