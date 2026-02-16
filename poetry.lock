@@ -673,14 +673,14 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "1.11.3"
+version = "1.12.3"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = "<3.14,>=3.10"
 groups = ["main"]
 files = [
-    {file = "great_expectations-1.11.3-py3-none-any.whl", hash = "sha256:2952375059504f8c0490cac00845ae652a46d4a780e87b3ca9cefa1cd45d7c7b"},
-    {file = "great_expectations-1.11.3.tar.gz", hash = "sha256:b0c64bd25686d7d9f4995a4734c68b6be0b2d7770a1d7a5728b80f1f099a2c18"},
+    {file = "great_expectations-1.12.3-py3-none-any.whl", hash = "sha256:ea6a3a2c994a5da758c987abe720cc6d0af31cda76a49336d1f8f9765d8f766f"},
+    {file = "great_expectations-1.12.3.tar.gz", hash = "sha256:720480aac3d597234b64506537c97e47f3cde8d64e13513189507c8a58075369"},
 ]
 
 [package.dependencies]
@@ -705,7 +705,7 @@ requests = ">=2.20"
 scipy = ">=1.6.0"
 snowflake-connector-python = {version = ">=3.5.0", optional = true, markers = "extra == \"snowflake\""}
 snowflake-sqlalchemy = {version = ">=1.2.3,<1.7.0 || >1.7.0", optional = true, markers = "extra == \"snowflake\""}
-sqlalchemy = {version = ">=1.4.0", optional = true, markers = "extra == \"trino\" or extra == \"databricks\" or extra == \"postgresql\" or extra == \"snowflake\" or extra == \"gx-redshift\" or extra == \"mssql\""}
+sqlalchemy = {version = ">=1.4.0", optional = true, markers = "extra == \"snowflake\" or extra == \"postgresql\" or extra == \"mssql\" or extra == \"databricks\" or extra == \"trino\" or extra == \"gx-redshift\""}
 tqdm = ">=4.59.0"
 trino = {version = ">=0.310.0,<0.316.0 || >0.316.0", optional = true, markers = "extra == \"trino\""}
 typing-extensions = ">=4.1.0"
@@ -4085,4 +4085,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11.4,<3.12"
-content-hash = "9144d682572802f0609369b0a453b81d7b73f54f4a1b651e2c71eb04b2d53a27"
+content-hash = "8d05a95ead915ee1a024fdd2bf3b07ad03f75b1f4655babbb07661f3c2ecfee2"
