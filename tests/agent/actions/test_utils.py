@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from great_expectations.datasource.fluent import SnowflakeDatasource, SQLDatasource
+import pytest
+from great_expectations.datasource.fluent import SQLDatasource
 
-from great_expectations_cloud.agent.actions.utils import get_asset_names
+from great_expectations_cloud.agent.actions.utils import SCHEMA_DATASOURCES, get_asset_names
 
 
 def test_get_asset_names_with_sql_datasource(mocker):
@@ -36,9 +37,10 @@ def test_get_asset_names_with_sql_datasource(mocker):
     )
 
 
-def test_get_asset_names_with_snowflake_datasource(mocker):
+@pytest.mark.parametrize("datasource_class", SCHEMA_DATASOURCES)
+def test_get_asset_names_with_schema_datasource(mocker, datasource_class):
     mock_sqlalchemy_inspect = mocker.patch("great_expectations_cloud.agent.actions.utils.inspect")
-    datasource = mocker.Mock(spec=SnowflakeDatasource)
+    datasource = mocker.Mock(spec=datasource_class)
     datasource.schema_ = "test_schema"
     engine = mocker.Mock()
     datasource.get_engine.return_value = engine
@@ -68,9 +70,10 @@ def test_get_asset_names_with_snowflake_datasource(mocker):
     )
 
 
-def test_get_asset_names_with_snowflake_datasource_no_schema(mocker):
+@pytest.mark.parametrize("datasource_class", SCHEMA_DATASOURCES)
+def test_get_asset_names_with_schema_datasource_no_schema(mocker, datasource_class):
     mock_sqlalchemy_inspect = mocker.patch("great_expectations_cloud.agent.actions.utils.inspect")
-    datasource = mocker.Mock(spec=SnowflakeDatasource)
+    datasource = mocker.Mock(spec=datasource_class)
     datasource.schema_ = None
     engine = mocker.Mock()
     datasource.get_engine.return_value = engine
