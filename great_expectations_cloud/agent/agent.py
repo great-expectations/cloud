@@ -149,8 +149,6 @@ class GXAgent:
         self: Self,
         agent_analytics: AgentAnalytics | None = None,
     ):
-        # Disable LangSmith tracing on agent startup
-        os.environ["LANGCHAIN_TRACING_V2"] = "false"  # noqa: TID251
         self._config = self._create_config()
         self._agent_analytics = agent_analytics or AgentAnalytics()
 
@@ -655,9 +653,10 @@ class GXAgent:
     @classmethod
     def _create_config(cls) -> GXAgentConfig:
         """Construct GXAgentConfig."""
+        # Disable LangSmith tracing on agent startup
+        os.environ["LANGCHAIN_TRACING_V2"] = "false"  # noqa: TID251
 
         # ensure we have all required env variables, and provide a useful error if not
-
         try:
             env_vars = GxAgentEnvVars()
         except pydantic_v1.ValidationError as validation_err:
