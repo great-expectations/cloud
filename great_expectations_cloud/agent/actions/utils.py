@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 from great_expectations.datasource.fluent import SnowflakeDatasource, SQLDatasource
 from great_expectations.datasource.fluent.sql_server_datasource import SQLServerDatasource
+from pydantic import Field
+from pydantic_settings import BaseSettings
 from sqlalchemy import inspect
-
-from great_expectations_cloud.agent.config import GxAgentEnvVars
 
 if TYPE_CHECKING:
     from sqlalchemy.engine import Inspector
@@ -40,8 +40,16 @@ def get_asset_names(datasource: SQLDatasource) -> list[str]:
     return quoted_asset_names
 
 
+class ExpectAICredentials(BaseSettings):
+    openai_api_key: str | None = Field(default=None)
+
+    @property
+    def expect_ai_enabled(self) -> bool:
+        return self.openai_api_key is not None
+
+
 def ensure_openai_credentials() -> None:
-    env_vars = GxAgentEnvVars()
-    if not env_vars.openai_api_key:
+    env_vars = ExpectAICredentials()
+    if not env_vars.expect_ai_enabled:
         msg = "OpenAI credentials are not set. Please set the OPENAI_API_KEY environment variable to enable ExpectAI."
         raise ValueError(msg)
