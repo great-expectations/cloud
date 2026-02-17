@@ -19,6 +19,7 @@ from great_expectations.experimental.metric_repository.metrics import (
 )
 
 from great_expectations_cloud.agent.actions import MetricListAction
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.models import (
     CreatedResource,
     DomainContext,
@@ -45,6 +46,7 @@ def test_run_metrics_list_computes_metric_run(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
@@ -82,6 +84,7 @@ def test_run_metrics_list_computes_metric_run_missing_batch_inspector(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
@@ -117,6 +120,7 @@ def test_run_metrics_list_creates_metric_run(mock_context, mocker: MockerFixture
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
@@ -151,6 +155,7 @@ def test_run_metrics_list_returns_action_result(mock_context, mocker: MockerFixt
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
     action._raise_on_any_metric_exception = mocker.Mock()  # type: ignore[method-assign]
     # mock so that we don't raise
@@ -193,6 +198,7 @@ def test_run_column_descriptive_metrics_raises_on_test_connection_to_data_asset_
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     with pytest.raises(TestConnectionError):
@@ -250,6 +256,7 @@ def test_run_metrics_list_creates_metric_run_then_raises_on_any_metric_exception
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     with pytest.raises(RuntimeError):

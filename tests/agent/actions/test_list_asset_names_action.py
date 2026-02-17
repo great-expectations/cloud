@@ -11,6 +11,7 @@ from great_expectations.exceptions import StoreBackendError
 
 from great_expectations_cloud.agent.actions import ListAssetNamesAction
 from great_expectations_cloud.agent.actions.utils import get_asset_names
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.models import DomainContext, ListAssetNamesEvent
 
 if TYPE_CHECKING:
@@ -66,6 +67,7 @@ def test_list_table_names_event_raises_for_non_sql_datasource(
         base_url="https://api.greatexpectations.io/",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
         auth_key="",
+        analytics=AgentAnalytics(),
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     mock_context.get_expectation_suite.side_effect = StoreBackendError("test-message")
@@ -88,6 +90,7 @@ def test_run_list_table_names_action_returns_action_result(
             organization_id=uuid.UUID(dummy_org_id), workspace_id=uuid.uuid4()
         ),
         auth_key="",
+        analytics=AgentAnalytics(),
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 

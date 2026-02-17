@@ -9,6 +9,7 @@ import pytest
 import responses
 
 from great_expectations_cloud.agent.actions import RunWindowCheckpointAction
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.models import DomainContext, RunWindowCheckpointEvent
 
@@ -61,6 +62,7 @@ def test_run_window_checkpoint(
         base_url="https://test-base-url",
         auth_key="",
         domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
+        analytics=AgentAnalytics(),
     )
 
     job_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
