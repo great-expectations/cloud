@@ -23,6 +23,7 @@ from great_expectations.core.http import create_session
 from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
     RunScheduledCheckpointAction,
 )
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 
 pytestmark = pytest.mark.integration
 
@@ -90,6 +91,7 @@ def test_running_checkpoint_action(
             organization_id=uuid.UUID(org_id_env_var), workspace_id=workspace_id_env_var
         ),
         auth_key=token_env_var,
+        analytics=AgentAnalytics(),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 

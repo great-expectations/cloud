@@ -33,6 +33,7 @@ from great_expectations_cloud.agent.actions.generate_data_quality_check_expectat
     PartialGenerateDataQualityCheckExpectationError,
     _strip_bracketed_error_code,
 )
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.models import (
     DomainContext,
     GenerateDataQualityCheckExpectationsEvent,
@@ -309,6 +310,7 @@ def test_generate_schema_change_expectations_action_success(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     # run the action
@@ -365,6 +367,7 @@ def test_anomaly_detection_expectation_not_created_if_asset_already_has_coverage
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     # run the action
@@ -417,6 +420,7 @@ def test_generate_completeness_expectation_not_added_when_coverage_already_exist
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     # Mock the methods that would be called
@@ -535,6 +539,7 @@ def test_succeeding_and_failing_assets_together(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     # run the action
@@ -595,6 +600,7 @@ def test_missing_table_columns_metric_raises_runtime_error(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     # Create the event
@@ -640,6 +646,7 @@ def test_generate_volume_change_forecast_expectations_action_success(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     # run the action
@@ -714,6 +721,7 @@ def test_generate_completeness_expectations_with_proportion_approach(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     # Mock the methods that would be called
@@ -798,6 +806,7 @@ def test_generate_completeness_forecast_expectations_action_success(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     # Mock the methods that would be called
@@ -895,6 +904,7 @@ def test_completeness_expectations_count_based_on_data(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     # Mock the methods that would be called
@@ -961,6 +971,7 @@ def test_generate_completeness_expectations_edge_cases(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     def mock_retrieve_asset(event, asset_name):
@@ -1075,6 +1086,7 @@ def test_test_connection_error_logs_at_warning_not_error(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     # Mock _retrieve_asset_from_asset_name to raise TestConnectionError
@@ -1155,6 +1167,7 @@ def test_non_test_connection_error_logs_at_error(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     # Mock _retrieve_asset_from_asset_name to raise a RuntimeError (not TestConnectionError)
@@ -1260,6 +1273,7 @@ def test_error_message_includes_asset_error_details(
         base_url="",
         auth_key="",
         domain_context=DomainContext(organization_id=uuid.uuid4(), workspace_id=uuid.uuid4()),
+        analytics=AgentAnalytics(),
     )
 
     # Mock _retrieve_asset_from_asset_name to raise TestConnectionError with bracketed code

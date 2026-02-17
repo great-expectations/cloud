@@ -7,6 +7,7 @@ import pytest
 
 from great_expectations_cloud.agent.actions import DraftDatasourceConfigAction
 from great_expectations_cloud.agent.actions.utils import get_asset_names
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.exceptions import GXCoreError
 from great_expectations_cloud.agent.models import DomainContext, DraftDatasourceConfigEvent
 
@@ -35,6 +36,7 @@ def test_running_draft_datasource_config_action(
             organization_id=UUID(org_id_env_var), workspace_id=UUID(workspace_id_env_var)
         ),
         auth_key=token_env_var,
+        analytics=AgentAnalytics(),
     )
 
     draft_datasource_id_for_connect_successfully = (
@@ -103,6 +105,7 @@ def test_running_draft_datasource_config_action_fails_for_unreachable_datasource
             organization_id=UUID(org_id_env_var), workspace_id=UUID(workspace_id_env_var)
         ),
         auth_key=token_env_var,
+        analytics=AgentAnalytics(),
     )
     datasource_id_for_connect_failure = (
         "e47a5059-a6bb-4de7-9286-6ea600a0c53a"  # local_mercury_db_bad_password

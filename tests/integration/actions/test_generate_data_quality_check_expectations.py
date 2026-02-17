@@ -12,6 +12,7 @@ from great_expectations.expectations.metadata_types import DataQualityIssues
 from great_expectations_cloud.agent.actions.generate_data_quality_check_expectations_action import (
     GenerateDataQualityCheckExpectationsAction,
 )
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.models import (
     DomainContext,
     GenerateDataQualityCheckExpectationsEvent,
@@ -116,6 +117,7 @@ def test_generate_data_quality_check_expectations_action_no_selected_data_qualit
             organization_id=uuid.UUID(org_id_env_var), workspace_id=workspace_id
         ),
         auth_key=token_env_var,
+        analytics=AgentAnalytics(),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -164,6 +166,7 @@ def test_generate_data_quality_check_expectations_action_schema_change_selected_
             organization_id=uuid.UUID(org_id_env_var), workspace_id=uuid.UUID(workspace_id_env_var)
         ),
         auth_key=token_env_var,
+        analytics=AgentAnalytics(),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -216,6 +219,7 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
             organization_id=uuid.UUID(org_id_env_var), workspace_id=uuid.UUID(workspace_id_env_var)
         ),
         auth_key=token_env_var,
+        analytics=AgentAnalytics(),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -287,6 +291,7 @@ def test_generate_data_quality_check_expectations_action_completeness_selected_d
             organization_id=uuid.UUID(org_id_env_var), workspace_id=uuid.UUID(workspace_id_env_var)
         ),
         auth_key=token_env_var,
+        analytics=AgentAnalytics(),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -371,6 +376,7 @@ def test_generate_data_quality_check_expectations_action_completeness_with_propo
             organization_id=uuid.UUID(org_id_env_var), workspace_id=uuid.UUID(workspace_id_env_var)
         ),
         auth_key=token_env_var,
+        analytics=AgentAnalytics(),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 
@@ -460,6 +466,7 @@ def test_generate_data_quality_check_expectations_action_multiple_selected_data_
             organization_id=uuid.UUID(org_id_env_var), workspace_id=uuid.UUID(workspace_id_env_var)
         ),
         auth_key=token_env_var,
+        analytics=AgentAnalytics(),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 

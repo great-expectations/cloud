@@ -23,6 +23,7 @@ from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointA
 from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
     RunScheduledCheckpointAction,
 )
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.models import (
     CreatedResource,
@@ -138,6 +139,7 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
         base_url=env_vars.gx_cloud_base_url,
         domain_context=DomainContext(organization_id=UUID(org_id), workspace_id=workspace_id),
         auth_key="",
+        analytics=AgentAnalytics(),
     )
     id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
     if mock_patch is not None:
@@ -211,6 +213,7 @@ def test_run_checkpoint_action_raises_on_test_connection_failure(
         base_url=env_vars.gx_cloud_base_url,
         domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
         auth_key="",
+        analytics=AgentAnalytics(),
     )
     # Test errs with and without this mock for the window checkpoint
     if event.type == "run_scheduled_checkpoint.received":

@@ -59,6 +59,8 @@ if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent import DataAsset
 
+    from great_expectations_cloud.agent.analytics import AgentAnalytics
+
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
@@ -111,11 +113,16 @@ class GenerateDataQualityCheckExpectationsAction(
         base_url: str,
         domain_context: DomainContext,
         auth_key: str,
+        analytics: AgentAnalytics,
         metric_repository: MetricRepository | None = None,
         batch_inspector: BatchInspector | None = None,
     ):
         super().__init__(
-            context=context, base_url=base_url, domain_context=domain_context, auth_key=auth_key
+            context=context,
+            base_url=base_url,
+            domain_context=domain_context,
+            auth_key=auth_key,
+            analytics=analytics,
         )
         self._metric_repository = metric_repository or MetricRepository(
             data_store=CloudDataStore(self._context)

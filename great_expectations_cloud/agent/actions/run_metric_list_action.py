@@ -28,6 +28,8 @@ if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
     from great_expectations.experimental.metric_repository.metrics import MetricRun
 
+    from great_expectations_cloud.agent.analytics import AgentAnalytics
+
 
 class MetricListAction(AgentAction[RunMetricsListEvent]):
     def __init__(  # noqa: PLR0913  # Refactor opportunity
@@ -36,11 +38,16 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
         base_url: str,
         domain_context: DomainContext,
         auth_key: str,
+        analytics: AgentAnalytics,
         metric_repository: MetricRepository | None = None,
         batch_inspector: BatchInspector | None = None,
     ):
         super().__init__(
-            context=context, base_url=base_url, domain_context=domain_context, auth_key=auth_key
+            context=context,
+            base_url=base_url,
+            domain_context=domain_context,
+            auth_key=auth_key,
+            analytics=analytics,
         )
         self._metric_repository = metric_repository or MetricRepository(
             data_store=CloudDataStore(self._context)

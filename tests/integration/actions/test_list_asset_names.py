@@ -6,6 +6,7 @@ from uuid import UUID
 import pytest
 
 from great_expectations_cloud.agent.actions import ListAssetNamesAction
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.models import DomainContext, ListAssetNamesEvent
 
 if TYPE_CHECKING:
@@ -31,6 +32,7 @@ def test_running_list_table_names_action(
             organization_id=UUID(org_id_env_var), workspace_id=UUID(workspace_id_env_var)
         ),
         auth_key=token_env_var,
+        analytics=AgentAnalytics(),
     )
 
     list_table_names_event = ListAssetNamesEvent(
@@ -97,6 +99,7 @@ def test_running_list_table_names_action_fails_for_unreachable_datasource(
             organization_id=UUID(org_id_env_var), workspace_id=UUID(workspace_id_env_var)
         ),
         auth_key=token_env_var,
+        analytics=AgentAnalytics(),
     )
     list_table_names_event = ListAssetNamesEvent(
         type="list_table_names_request.received",

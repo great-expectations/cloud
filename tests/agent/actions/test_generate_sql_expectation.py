@@ -10,6 +10,7 @@ from great_expectations.expectations import UnexpectedRowsExpectation
 from great_expectations_cloud.agent.actions.generate_sql_expectation import (
     GenerateSqlExpectationAction,
 )
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.event_handler import EventHandler
 from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
@@ -104,6 +105,7 @@ def test_generate_sql_expectation_action_success(
             workspace_id=workspace_id,
         ),
         auth_key=auth_key,
+        analytics=AgentAnalytics(),
     )
 
     result = generate_sql_action.run(
@@ -158,6 +160,7 @@ def test_generate_sql_expectation_action_api_failure(
             workspace_id=workspace_id,
         ),
         auth_key=auth_key,
+        analytics=AgentAnalytics(),
     )
 
     with pytest.raises(GXAgentError) as exc_info:
@@ -181,7 +184,7 @@ def test_generate_sql_expectation_action_api_failure(
 def test_generate_sql_expectation_action_registered(
     mock_context, organization_id: UUID, workspace_id: UUID
 ):
-    handler = EventHandler(context=mock_context)
+    handler = EventHandler(context=mock_context, agent_analytics=AgentAnalytics())
     event = GenerateSqlExpectationEvent(
         organization_id=organization_id,
         workspace_id=workspace_id,
@@ -232,6 +235,7 @@ def test_generate_sql_expectation_action_missing_openai_credentials(
             workspace_id=workspace_id,
         ),
         auth_key=auth_key,
+        analytics=AgentAnalytics(),
     )
 
     with pytest.raises(ValueError, match="OpenAI credentials are not set"):

@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
     from great_expectations_cloud.agent.actions.agent_action import ActionResult, AgentAction
+    from great_expectations_cloud.agent.analytics import AgentAnalytics
 
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
@@ -64,8 +65,9 @@ class EventHandler:
     Core business logic mapping events to actions.
     """
 
-    def __init__(self, context: CloudDataContext) -> None:
+    def __init__(self, context: CloudDataContext, agent_analytics: AgentAnalytics) -> None:
         self._context = context
+        self._agent_analytics = agent_analytics
 
     def get_event_action(
         self, event: Event, base_url: str, auth_key: str, domain_context: DomainContext
@@ -87,6 +89,7 @@ class EventHandler:
             base_url=base_url,
             domain_context=domain_context,
             auth_key=auth_key,
+            analytics=self._agent_analytics,
         )
 
     def handle_event(
