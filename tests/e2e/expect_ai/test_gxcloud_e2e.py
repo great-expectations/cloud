@@ -143,12 +143,12 @@ async def do_run_gx_e2e(
         metric_service=metric_service,
     )
 
-    suite = await agent.arun(
+    result = await agent.arun(
         generate_expectations_input=generate_expectations_input,
         temperature=0.0,
         seed=20241209,
     )
-    suite = ExpectationSuite(name=suite_name, expectations=suite.expectations)
+    suite = ExpectationSuite(name=suite_name, expectations=result.expectation_suite.expectations)
 
     print(suite)
 
@@ -184,14 +184,18 @@ async def do_run_gx_e2e(
 
     logger.info("Running validation definition")
     try:
-        result = checkpoint.run(batch_parameters=generate_expectations_input.batch_parameters)
+        checkpoint_result = checkpoint.run(
+            batch_parameters=generate_expectations_input.batch_parameters
+        )
     except StoreBackendError as e:
         # this can happen if we have too many results and so the store backend can't handle it
         # try running again a simpler result format
         logger.warning(f"StoreBackendError: {e}")
         logger.warning("Retrying with a simpler result format")
-        result = checkpoint.run(batch_parameters=generate_expectations_input.batch_parameters)
-    for run_result in result.run_results.values():
+        checkpoint_result = checkpoint.run(
+            batch_parameters=generate_expectations_input.batch_parameters
+        )
+    for run_result in checkpoint_result.run_results.values():
         logger.info(f"Results available at {run_result.result_url}")
     return suite_name
 

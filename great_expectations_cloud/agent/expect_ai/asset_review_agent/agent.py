@@ -21,6 +21,7 @@ from langgraph.constants import END, START
 from langgraph.graph.state import CompiledStateGraph, StateGraph
 from langgraph.types import Send
 from openai import APIConnectionError, APITimeoutError
+from pydantic import BaseModel, ConfigDict
 
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.prompts import (
     EXPECTATION_ASSISTANT_SYSTEM_MESSAGE,
@@ -37,6 +38,7 @@ from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
     GenerateExpectationsConfig,
     GenerateExpectationsInput,
     GenerateExpectationsOutput,
+    GenerateExpectationsOutputMetrics,
     GenerateExpectationsState,
 )
 from great_expectations_cloud.agent.expect_ai.config import OPENAI_MODEL
@@ -52,6 +54,7 @@ from great_expectations_cloud.agent.expect_ai.graphs.expectation_checker import 
 from great_expectations_cloud.agent.expect_ai.nodes.PlannerNode import PlannerNode
 
 if TYPE_CHECKING:
+    from great_expectations_cloud.agent.analytics import ExpectAIAnalytics
     from great_expectations_cloud.agent.expect_ai.metric_service import MetricService
     from great_expectations_cloud.agent.expect_ai.tools.metrics import AgentToolsManager
     from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRunner
@@ -81,16 +84,24 @@ def _sorted_items_repr(args: Mapping[str, object]) -> str:
         return "[]"
 
 
+class AssetReviewAgentResult(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    expectation_suite: ExpectationSuite
+    metrics: GenerateExpectationsOutputMetrics
+
+
 class AssetReviewAgent:
     def __init__(
         self,
         tools_manager: AgentToolsManager,
         query_runner: QueryRunner,
         metric_service: MetricService,
+        analytics: ExpectAIAnalytics | None = None,
     ):
         self._tools_manager = tools_manager
         self._query_runner = query_runner
         self._metric_service = metric_service
+        self._analytics = analytics
 
     async def arun(
         self,
@@ -98,7 +109,7 @@ class AssetReviewAgent:
         thread_id: str | None = None,
         temperature: float = 0.7,
         seed: int | None = None,
-    ) -> ExpectationSuite:
+    ) -> AssetReviewAgentResult:
         if thread_id is None:
             thread_id = str(uuid4())
 
@@ -120,7 +131,10 @@ class AssetReviewAgent:
             name=f"generate_expectations--{generate_expectations_input.data_asset_name}",
             expectations=[expectation.get_gx_expectation() for expectation in result.expectations],
         )
-        return suite
+        return AssetReviewAgentResult(
+            expectation_suite=suite,
+            metrics=result.metrics,
+        )
 
     def get_raw_graph_for_langgraph_studio(
         self,
@@ -153,6 +167,7 @@ class AssetReviewAgent:
     ]:
         self._expectation_checker_subgraph = ExpectationChecker(
             query_runner=self._query_runner,
+            analytics=self._analytics,
         ).graph()
 
         builder = StateGraph(
@@ -214,7 +229,9 @@ class AssetReviewAgent:
             if result.get("error") is None:
                 expectations.append(result["expectation"])
 
-        return GenerateExpectationsOutput(expectations=expectations)
+        return GenerateExpectationsOutput(
+            expectations=expectations, metrics=state.collected_metrics
+        )
 
 
 class ExpectationAssistantNode:

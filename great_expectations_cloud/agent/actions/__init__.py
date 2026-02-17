@@ -13,6 +13,12 @@ from great_expectations_cloud.agent.actions.draft_datasource_config_action impor
 from great_expectations_cloud.agent.actions.generate_data_quality_check_expectations_action import (
     GenerateDataQualityCheckExpectationsAction,
 )
+from great_expectations_cloud.agent.actions.generate_expectations_action import (
+    GenerateExpectationsAction,
+)
+from great_expectations_cloud.agent.actions.generate_sql_expectation import (
+    GenerateSqlExpectationAction,
+)
 from great_expectations_cloud.agent.actions.list_asset_names import ListAssetNamesAction
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
 from great_expectations_cloud.agent.actions.run_metric_list_action import MetricListAction

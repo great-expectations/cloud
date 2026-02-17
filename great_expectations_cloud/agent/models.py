@@ -149,6 +149,20 @@ class RunRdAgentEvent(EventBase):
     use_core_metrics: bool = False
 
 
+class GenerateExpectationsEvent(EventBase):
+    type: Literal["generate_expectations_action.received"] = "generate_expectations_action.received"
+    datasource_name: str
+    data_asset_name: str
+    batch_definition_name: str
+    batch_parameters: Optional[dict[str, Any]] = None  # noqa: UP045
+    use_core_metrics: bool = False
+
+
+class GenerateSqlExpectationEvent(EventBase):
+    type: Literal["generate_sql_expectation_event"] = "generate_sql_expectation_event"
+    expectation_prompt_id: UUID
+
+
 class UnknownEvent(AgentBaseExtraForbid):
     type: Literal["unknown_event"] = "unknown_event"
 
@@ -204,6 +218,7 @@ if TYPE_CHECKING:
         DraftDatasourceConfigEvent,
         ListAssetNamesEvent,
         GenerateDataQualityCheckExpectationsEvent,
+        GenerateSqlExpectationEvent,
         RunRdAgentEvent,
         UnknownEvent,
     ]

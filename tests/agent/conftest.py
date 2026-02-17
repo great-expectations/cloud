@@ -5,7 +5,9 @@ import time
 import uuid
 from collections import deque
 from collections.abc import Iterable
+from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypedDict
+from unittest import mock
 from uuid import UUID
 
 import pytest
@@ -31,9 +33,45 @@ from great_expectations_cloud.agent.message_service.subscriber import (
 from great_expectations_cloud.agent.models import Event, EventBase
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from pytest_mock import MockerFixture
 
+    MockCreateSessionType = Callable[
+        [str, Literal["get", "post"], HTTPStatus, dict[str, Any]], mock.MagicMock
+    ]
+
 LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def base_url() -> str:
+    return "https://api.greatexpectations.io"
+
+
+@pytest.fixture
+def auth_key() -> str:
+    return "test-auth-key"
+
+
+@pytest.fixture
+def organization_id() -> uuid.UUID:
+    return uuid.uuid4()
+
+
+@pytest.fixture
+def workspace_id() -> uuid.UUID:
+    return uuid.uuid4()
+
+
+@pytest.fixture(scope="module")
+def service_organization_id() -> UUID:
+    return UUID("12345678-1234-5678-9abc-123456789012")
+
+
+@pytest.fixture(scope="module")
+def service_workspace_id() -> UUID:
+    return UUID("87654321-4321-8765-dcba-210987654321")
 
 
 @pytest.fixture
@@ -56,6 +94,51 @@ def mock_gx_version_check(
 def mock_context(mocker: MockerFixture) -> CloudDataContext:
     """Returns a `MagicMock` of a `CloudDataContext` for testing purposes."""
     return mocker.MagicMock(autospec=CloudDataContext)  # type: ignore[no-any-return]  # this is fine for testing
+
+
+@pytest.fixture
+def mock_create_session(mocker: MockerFixture):
+    """
+    Factory fixture that creates a mock session for HTTP requests.
+
+    Returns a callable that accepts:
+    - module_path: The module path where create_session should be patched
+    - http_method: The HTTP method to mock (e.g., 'get', 'post')
+    - status_code: The HTTP status code to return
+    - response_data: The response data to return
+
+    Returns the mock session object for assertion purposes.
+    """
+
+    def _create_mock_session(
+        module_path: str,
+        http_method: str,
+        status_code: HTTPStatus,
+        response_data: dict[str, Any],
+    ):
+        # Patch create_session in the specified module
+        mock_session_factory = mocker.patch(f"{module_path}.create_session")
+
+        # Create a mock response
+        mock_response = mocker.Mock()
+        mock_response.status_code = status_code.value
+        mock_response.json.return_value = response_data
+        mock_response.ok = status_code.value < 400
+
+        # Create a mock for the HTTP method (e.g., post, get)
+        mock_method = mocker.Mock(return_value=mock_response)
+
+        # Create the session mock that will be returned by __enter__
+        mock_session = mocker.Mock()
+        setattr(mock_session, http_method, mock_method)
+
+        # Set up the context manager behavior
+        mock_session_factory.return_value.__enter__.return_value = mock_session
+        mock_session_factory.return_value.__exit__.return_value = None
+
+        return mock_session
+
+    return _create_mock_session
 
 
 class FakeMessagePayload(NamedTuple):
