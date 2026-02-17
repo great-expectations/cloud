@@ -627,14 +627,14 @@ python-dateutil = ">=2.7"
 
 [[package]]
 name = "great-expectations"
-version = "1.11.3"
+version = "1.12.3"
 description = "Always know what to expect from your data."
 optional = false
 python-versions = "<3.14,>=3.10"
 groups = ["main"]
 files = [
-    {file = "great_expectations-1.11.3-py3-none-any.whl", hash = "sha256:2952375059504f8c0490cac00845ae652a46d4a780e87b3ca9cefa1cd45d7c7b"},
-    {file = "great_expectations-1.11.3.tar.gz", hash = "sha256:b0c64bd25686d7d9f4995a4734c68b6be0b2d7770a1d7a5728b80f1f099a2c18"},
+    {file = "great_expectations-1.12.3-py3-none-any.whl", hash = "sha256:ea6a3a2c994a5da758c987abe720cc6d0af31cda76a49336d1f8f9765d8f766f"},
+    {file = "great_expectations-1.12.3.tar.gz", hash = "sha256:720480aac3d597234b64506537c97e47f3cde8d64e13513189507c8a58075369"},
 ]
 
 [package.dependencies]
@@ -659,7 +659,7 @@ requests = ">=2.20"
 scipy = ">=1.6.0"
 snowflake-connector-python = {version = ">=3.5.0", optional = true, markers = "extra == \"snowflake\""}
 snowflake-sqlalchemy = {version = ">=1.2.3,<1.7.0 || >1.7.0", optional = true, markers = "extra == \"snowflake\""}
-sqlalchemy = {version = ">=1.4.0", optional = true, markers = "extra == \"trino\" or extra == \"databricks\" or extra == \"postgresql\" or extra == \"snowflake\" or extra == \"gx-redshift\" or extra == \"mssql\""}
+sqlalchemy = {version = ">=1.4.0", optional = true, markers = "extra == \"snowflake\" or extra == \"postgresql\" or extra == \"mssql\" or extra == \"databricks\" or extra == \"trino\" or extra == \"gx-redshift\""}
 tqdm = ">=4.59.0"
 trino = {version = ">=0.310.0,<0.316.0 || >0.316.0", optional = true, markers = "extra == \"trino\""}
 typing-extensions = ">=4.1.0"
@@ -2089,7 +2089,6 @@ files = [
     {file = "psycopg2_binary-2.9.10-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:bb89f0a835bcfc1d42ccd5f41f04870c1b936d8507c6df12b7737febc40f0909"},
     {file = "psycopg2_binary-2.9.10-cp313-cp313-musllinux_1_2_ppc64le.whl", hash = "sha256:f0c2d907a1e102526dd2986df638343388b94c33860ff3bbe1384130828714b1"},
     {file = "psycopg2_binary-2.9.10-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:f8157bed2f51db683f31306aa497311b560f2265998122abe1dce6428bd86567"},
-    {file = "psycopg2_binary-2.9.10-cp313-cp313-win_amd64.whl", hash = "sha256:27422aa5f11fbcd9b18da48373eb67081243662f9b46e6fd07c3eb46e4535142"},
     {file = "psycopg2_binary-2.9.10-cp38-cp38-macosx_12_0_x86_64.whl", hash = "sha256:eb09aa7f9cecb45027683bb55aebaaf45a0df8bf6de68801a6afdc7947bb09d4"},
     {file = "psycopg2_binary-2.9.10-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b73d6d7f0ccdad7bc43e6d34273f70d587ef62f824d7261c4ae9b8b1b6af90e8"},
     {file = "psycopg2_binary-2.9.10-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ce5ab4bf46a211a8e924d307c1b1fcda82368586a19d0a24f8ae166f5c784864"},
@@ -4033,4 +4032,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11.4,<3.12"
-content-hash = "6937986690c1d286adf8ca7e363f96c0440c213a36a49d40abcb63e9fa5b3543"
+content-hash = "17af78fc39ce9425c399f13ba6a19b5cefbd7683e2ee3f42d8f6233ac16da141"
