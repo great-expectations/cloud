@@ -46,6 +46,7 @@ from tenacity import (
     wait_random_exponential,
 )
 
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.config import (
     GxAgentEnvVars,
     generate_config_validation_error_text,
@@ -146,14 +147,12 @@ class GXAgent:
 
     def __init__(
         self: Self,
-        event_handler_factory: Callable[[CloudDataContext], EventHandler] | None = None,
+        agent_analytics: AgentAnalytics | None = None,
     ):
         # Disable LangSmith tracing on agent startup
         os.environ["LANGCHAIN_TRACING_V2"] = "false"  # noqa: TID251
         self._config = self._create_config()
-        self._event_handler_factory = event_handler_factory or (
-            lambda ctx: EventHandler(context=ctx)
-        )
+        self._agent_analytics = agent_analytics or AgentAnalytics()
 
         agent_version: str = self.get_current_gx_agent_version()
         great_expectations_version: str = self._get_current_great_expectations_version()
@@ -479,7 +478,7 @@ class GXAgent:
 
         self._set_sentry_tags(event_context)
 
-        handler = self._event_handler_factory(data_context)
+        handler = EventHandler(context=data_context, agent_analytics=self._agent_analytics)
         # This method might raise an exception. Allow it and handle in _handle_event_as_thread_exit
         result = handler.handle_event(
             event=event_context.event,

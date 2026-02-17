@@ -19,6 +19,7 @@ from great_expectations_cloud.agent.actions.generate_expectations_action import 
     ExpectationPruner,
     GenerateExpectationsAction,
 )
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.agent import AssetReviewAgentResult
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
     GenerateExpectationsOutputMetrics,
@@ -214,6 +215,7 @@ def test_run_generate_expectations_action(
             workspace_id=workspace_id,
         ),
         auth_key=auth_key,
+        analytics=AgentAnalytics(),
     )
 
     # Mock the metric service to return a non-zero row count
@@ -296,6 +298,7 @@ def test_run_generate_expectations_action_post_fails(
             workspace_id=workspace_id,
         ),
         auth_key=auth_key,
+        analytics=AgentAnalytics(),
     )
 
     # Mock the metric service to return a non-zero row count
@@ -370,6 +373,7 @@ def test_run_generate_expectations_action_prunes_expectations(
             workspace_id=workspace_id,
         ),
         auth_key=auth_key,
+        analytics=AgentAnalytics(),
     )
 
     # Mock the metric service to return a non-zero row count
@@ -611,6 +615,7 @@ def test_create_expectation_draft_configs_uses_api_config(
             workspace_id=workspace_id,
         ),
         auth_key=auth_key,
+        analytics=AgentAnalytics(),
     )
 
     # Mock the ExpectationDraftConfigService
@@ -699,6 +704,7 @@ def test_run_generate_expectations_action_missing_openai_credentials(
             workspace_id=workspace_id,
         ),
         auth_key=auth_key,
+        analytics=AgentAnalytics(),
     )
 
     with pytest.raises(ValueError, match="OpenAI credentials are not set"):
@@ -761,6 +767,7 @@ def test_run_generate_expectations_action_empty_table_error(
             workspace_id=workspace_id,
         ),
         auth_key=auth_key,
+        analytics=AgentAnalytics(),
     )
 
     # Action & Assert

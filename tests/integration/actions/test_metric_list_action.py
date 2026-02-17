@@ -11,6 +11,7 @@ from great_expectations.datasource.fluent import PostgresDatasource
 from great_expectations.experimental.metric_repository.metrics import MetricTypes
 
 from great_expectations_cloud.agent.actions import MetricListAction
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.models import DomainContext, RunMetricsListEvent
 
 if TYPE_CHECKING:
@@ -140,6 +141,7 @@ def test_running_metric_list_action(
             organization_id=uuid.UUID(org_id_env_var), workspace_id=workspace_id
         ),
         auth_key=token_env_var,
+        analytics=AgentAnalytics(),
     )
     event_id = "096ce840-7aa8-45d1-9e64-2833948f4ae8"
 

@@ -13,6 +13,7 @@ from great_expectations_cloud.agent.actions.draft_datasource_config_action impor
     DraftDatasourceConfigAction,
 )
 from great_expectations_cloud.agent.actions.utils import get_asset_names
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.config import GxAgentEnvVars
 from great_expectations_cloud.agent.exceptions import ErrorCode, GXCoreError
 from great_expectations_cloud.agent.models import DomainContext, DraftDatasourceConfigEvent
@@ -68,6 +69,7 @@ def test_test_draft_datasource_config_success_non_sql_ds(
         base_url="https://test-base-url",
         auth_key="",
         domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
+        analytics=AgentAnalytics(),
     )
 
     _get_asset_names_spy = mocker.patch(
@@ -150,6 +152,7 @@ def test_test_draft_datasource_config_success_sql_ds(
         base_url="https://test-base-url",
         auth_key="",
         domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
+        analytics=AgentAnalytics(),
     )
 
     # add spies to the action methods
@@ -248,6 +251,7 @@ def test_test_draft_datasource_config_sql_ds_raises_on_patch_failure(
         base_url="https://test-base-url",
         auth_key="",
         domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
+        analytics=AgentAnalytics(),
     )
 
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
@@ -302,6 +306,7 @@ def test_test_draft_datasource_config_failure(
         base_url=base_url,
         auth_key="",
         domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
+        analytics=AgentAnalytics(),
     )
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(
@@ -340,6 +345,7 @@ def test_test_draft_datasource_config_raises_for_non_fds(mock_context, set_requi
         base_url=base_url,
         auth_key="",
         domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
+        analytics=AgentAnalytics(),
     )
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(
@@ -383,6 +389,7 @@ def test_draft_datasource_config_failure_raises_correct_gx_core_error(
         base_url=base_url,
         auth_key="",
         domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
+        analytics=AgentAnalytics(),
     )
     mock_check_draft_datasource_config = mocker.patch(
         f"{DraftDatasourceConfigAction.__module__}.{DraftDatasourceConfigAction.__name__}.check_draft_datasource_config"
@@ -417,6 +424,7 @@ def test_test_draft_datasource_config_raises_for_unknown_type(
         base_url=base_url,
         auth_key="",
         domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
+        analytics=AgentAnalytics(),
     )
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(
@@ -456,6 +464,7 @@ def test_test_draft_datasource_config_raises_for_cloud_backend_error(
         base_url=base_url,
         auth_key="",
         domain_context=DomainContext(organization_id=org_id, workspace_id=workspace_id),
+        analytics=AgentAnalytics(),
     )
     correlation_id = UUID("87657a8e-f65e-4e64-b21f-e83a54738b75")
     event = DraftDatasourceConfigEvent(

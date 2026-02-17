@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from typing import TYPE_CHECKING, Any
+from unittest.mock import ANY
 from uuid import UUID, uuid4
 
 import orjson
@@ -19,6 +20,7 @@ from great_expectations_cloud.agent.actions import (
     RunCheckpointAction,
 )
 from great_expectations_cloud.agent.agent_warnings import GXAgentUserWarning
+from great_expectations_cloud.agent.analytics import AgentAnalytics
 from great_expectations_cloud.agent.event_handler import (
     _EVENT_ACTION_MAP,
     EventAlreadyRegisteredError,
@@ -66,7 +68,7 @@ class TestEventHandler:
     def test_event_handler_unknown_event(self, mock_context):
         event = UnknownEvent()
         correlation_id = "74842258-803a-48ca-8921-eaf2802c14e2"
-        handler = EventHandler(context=mock_context)
+        handler = EventHandler(context=mock_context, agent_analytics=AgentAnalytics())
         with pytest.warns(GXAgentUserWarning):
             result = handler.handle_event(
                 event=event,
@@ -160,7 +162,7 @@ class TestEventHandler:
 
         mocker.patch.dict(_EVENT_ACTION_MAP, {"1": {event_name: action}}, clear=True)
         correlation_id = str(uuid4())
-        handler = EventHandler(context=mock_context)
+        handler = EventHandler(context=mock_context, agent_analytics=AgentAnalytics())
 
         fake_org_id = UUID("00000000-0000-0000-0000-000000000000")
         fake_workspace_id = uuid4()
@@ -171,7 +173,11 @@ class TestEventHandler:
         )
 
         action.assert_called_with(
-            context=mock_context, base_url="", domain_context=domain_context, auth_key=""
+            context=mock_context,
+            base_url="",
+            domain_context=domain_context,
+            auth_key="",
+            analytics=ANY,
         )
         action().run.assert_called_with(event=event, id=correlation_id)
 
@@ -233,7 +239,7 @@ class TestEventHandler:
 
         mocker.patch.dict(_EVENT_ACTION_MAP, {"1": {event_name: action}}, clear=True)
         correlation_id = str(uuid4())
-        handler = EventHandler(context=mock_context)
+        handler = EventHandler(context=mock_context, agent_analytics=AgentAnalytics())
 
         with pytest.raises(GXAgentError):
             handler.handle_event(
@@ -254,7 +260,7 @@ class TestEventHandler:
         )
         gx_major_version.return_value = "NOT_A_REAL_VERSION"
 
-        handler = EventHandler(context=mock_context)
+        handler = EventHandler(context=mock_context, agent_analytics=AgentAnalytics())
 
         test_org_id = uuid4()
         with pytest.raises(NoVersionImplementationError):
@@ -289,7 +295,7 @@ class TestEventHandlerRegistry:
         mocker.patch.dict(_EVENT_ACTION_MAP, {}, clear=True)
         test_org_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
         register_event_action("1", DummyEvent, DummyAction)
-        handler = EventHandler(context=mock_context)
+        handler = EventHandler(context=mock_context, agent_analytics=AgentAnalytics())
         assert isinstance(
             handler.get_event_action(
                 DummyEvent(organization_id=test_org_id),  # type: ignore[arg-type]  # Dummy event only used in testing, get_event_action is not used by external systems, so we can keep the type narrowed to known Events
