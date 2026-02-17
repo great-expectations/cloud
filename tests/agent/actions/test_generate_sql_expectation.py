@@ -37,8 +37,9 @@ def expectation_prompt_id() -> UUID:
 def mock_openai_credentials(mocker: MockerFixture) -> None:
     mock_env_vars = mocker.MagicMock()
     mock_env_vars.openai_api_key = "test-api-key"
+    mock_env_vars.expect_ai_enabled = True
     mocker.patch(
-        "great_expectations_cloud.agent.actions.utils.GxAgentEnvVars",
+        "great_expectations_cloud.agent.actions.utils.ExpectAICredentials",
         return_value=mock_env_vars,
     )
 
@@ -216,8 +217,9 @@ def test_generate_sql_expectation_action_missing_openai_credentials(
     # ensure_openai_credentials() to raise ValueError
     mock_env_vars = mocker.MagicMock()
     mock_env_vars.openai_api_key = None
+    mock_env_vars.expect_ai_enabled = False
     mocker.patch(
-        "great_expectations_cloud.agent.actions.utils.GxAgentEnvVars",
+        "great_expectations_cloud.agent.actions.utils.ExpectAICredentials",
         return_value=mock_env_vars,
     )
 
