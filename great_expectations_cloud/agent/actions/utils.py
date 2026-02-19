@@ -51,5 +51,5 @@ class ExpectAICredentials(BaseSettings):
 def ensure_openai_credentials() -> None:
     env_vars = ExpectAICredentials()
     if not env_vars.expect_ai_enabled:
-        msg = "OpenAI credentials are not set. Please set the OPENAI_API_KEY environment variable to enable ExpectAI."
+        msg = "OpenAI credentials are not set for one or more Agents. Please set the OPENAI_API_KEY environment variable in all Agent deployments to enable ExpectAI."
         raise ValueError(msg)
