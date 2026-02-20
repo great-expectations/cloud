@@ -78,6 +78,13 @@ The agent is an event-driven system that:
 - Actions are registered at module import time via `register_event_action()`
 - All actions imported in `actions/__init__.py` to ensure registration
 
+**ExpectAI (`great_expectations_cloud/agent/expect_ai/`):**
+- LangGraph-based multi-agent system for AI-generated expectations
+- `asset_review_agent/` — orchestrates the full pipeline: planning → metrics → summarizing → building
+- `graphs/expectation_checker.py` — validates generated expectations before persistence; includes dialect-aware gate rejecting unsupported expectation/dialect combos (e.g. regex on SQL Server)
+- `expectations.py` — Pydantic models wrapping GX expectation types the LLM can produce
+- `analytics.py` — `AgentAnalytics` stub with `RejectionReason` enum; emit methods are no-ops in the open-source agent
+
 **Models (`great_expectations_cloud/agent/models.py`):**
 - Pydantic v2 models for events and data structures
 - `EventBase` is base class for all events
