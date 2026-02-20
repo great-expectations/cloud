@@ -13,40 +13,39 @@ This is the GX Cloud Agent repository - a Python-based agent that processes even
 ## Development Commands
 
 **Setup:**
-- `invoke deps` - Install dependencies (Poetry-managed venv, runs `poetry sync --with dev`)
+- `poetry run invoke deps` - Install dependencies (runs `poetry sync --with dev`)
 - `pre-commit install` - Set up pre-commit hooks
 - Decrypt secrets: `assume dev && sops -d encrypted.env > .env`
 
-> **Venv:** Uses Poetry (not a local `.venv`). No manual activation needed — `invoke` tasks
-> and `poetry run` handle it automatically.
+> **Venv:** Uses Poetry (not a local `.venv`). Always prefix with `poetry run` — do not activate the venv manually.
 
 **Testing:**
 - `poetry run pytest` (with `--cov=great_expectations_cloud` by default)
 - Tests marked with `@pytest.mark.unit` or `@pytest.mark.integration`
 
 **Code Quality:**
-- `invoke lint` - Lint with ruff (add `--check` to not auto-fix)
-- `invoke fmt` - Format with ruff format (add `--check` to not auto-fix)
-- `invoke type-check` - Run mypy type checking
-- `ruff check . --fix` - Fix linting issues
-- `ruff format .` - Format code
+- `poetry run invoke lint` - Lint with ruff (add `--check` to not auto-fix)
+- `poetry run invoke fmt` - Format with ruff format (add `--check` to not auto-fix)
+- `poetry run invoke type-check` - Run mypy type checking
+- `poetry run ruff check . --fix` - Fix linting issues
+- `poetry run ruff format .` - Format code
 
 **Docker:**
-- `invoke docker` - Build the Docker image
-- `invoke docker --run` - Run the agent in Docker (requires .env file with credentials)
-- `invoke docker --check` - Lint Dockerfile with hadolint
+- `poetry run invoke docker` - Build the Docker image
+- `poetry run invoke docker --run` - Run the agent in Docker (requires .env file with credentials)
+- `poetry run invoke docker --check` - Lint Dockerfile with hadolint
 
 **Version Management:**
-- `invoke version` - Print current version
-- `invoke pre-release` - Bump pre-release version (YYYYMMDD.X.devY format)
-- `invoke release` - Bump release version (YYYYMMDD.X format)
+- `poetry run invoke version` - Print current version
+- `poetry run invoke pre-release` - Bump pre-release version (YYYYMMDD.X.devY format)
+- `poetry run invoke release` - Bump release version (YYYYMMDD.X format)
 
 **Local Development:**
-- `invoke start-supporting-services` - Start docker-compose services (DB, RabbitMQ, Mercury API)
-- `gx-agent` - Run agent locally (requires `GX_CLOUD_ACCESS_TOKEN` and `GX_CLOUD_ORGANIZATION_ID` env vars)
-- `gx-agent --log-level DEBUG` - Run with debug logging
+- `poetry run invoke start-supporting-services` - Start docker-compose services (DB, RabbitMQ, Mercury API)
+- `poetry run gx-agent` - Run agent locally (requires `GX_CLOUD_ACCESS_TOKEN` and `GX_CLOUD_ORGANIZATION_ID` env vars)
+- `poetry run gx-agent --log-level DEBUG` - Run with debug logging
 
-**All invoke tasks:** Run `invoke --list` to see available commands.
+**All invoke tasks:** Run `poetry run invoke --list` to see available commands.
 
 ## Architecture
 
@@ -105,12 +104,6 @@ The agent is an event-driven system that:
 5. Register action: `register_event_action("1", YourEvent, YourAction)` (for GX Core v1)
 6. Import action in `actions/__init__.py` to trigger registration
 
-### Event Registration System
-- Actions are registered for specific GX Core major versions
-- Format: `register_event_action(version, event_type, action_class)`
-- Version is extracted from `great_expectations.__version__` major version
-- This allows supporting multiple GX Core versions simultaneously
-
 ### Code Style
 - Strict mypy configuration (`strict = true`)
 - Use `from __future__ import annotations` for forward references
@@ -124,14 +117,7 @@ The agent is an event-driven system that:
 - **No attribution footers** in PR descriptions (no "Generated with Claude Code" lines)
 
 ### PR Descriptions
-Write in plain prose — no markdown headers, no structured sections like "## Summary" or "## Test Plan". Explain the **why** first (the problem or motivation), then briefly describe what changed. Use bullet points only when there are several distinct independent changes. Keep it concise. Examples of the house style:
-
-> reading GxAgentEnvVars within the context of an EventAction causes errors for downstream callers, which may not have those values set.
-
-> We'd like to guard against scenarios where testing a database connection doesn't fail outright, but also doesn't succeed in a timely manner. This change moves `DataSource.test_connection` and `Asset.test_connection` into a worker thread with a 10 minute hard timeout.
-
-> - Upgrade `great-expectations` from 1.11.3 to 1.12.3 to pick up the new `SQLServerDatasource` class
-> - Add `SQLServerDatasource` alongside `SnowflakeDatasource` in the `get_asset_names` schema check so `schema_` is passed to the inspector
+Write in plain prose — no markdown headers, no structured sections like "## Summary" or "## Test Plan". Explain the **why** first (the problem or motivation), then briefly describe what changed. Use bullet points only when there are several distinct independent changes.
 
 ## Project Structure
 
@@ -152,8 +138,3 @@ tests/
 └── integration/          # Integration tests (require cloud services)
 ```
 
-## Dependencies
-
-- Python: `>=3.11.4,<3.12`
-- Core: `great-expectations` v1.9.3 with SQL extras
-- Key libs: pydantic v2, pika (RabbitMQ), orjson, tenacity, sqlalchemy v2
