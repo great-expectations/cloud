@@ -206,6 +206,33 @@ async def test_expectation_checker_rejects_regex_for_mssql(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
+async def test_dialect_cache_avoids_repeated_get_dialect_calls(
+    mock_query_runner: MagicMock, config: RunnableConfig
+) -> None:
+    """get_dialect() should be called at most once per datasource per node instance."""
+    mock_query_runner.get_dialect.return_value = "snowflake"
+    node = ExpectationCheckerNode(sql_tools_manager=mock_query_runner, analytics=AgentAnalytics())
+
+    expectation = ExpectColumnValuesToMatchRegex(
+        column="email",
+        regex=r"^[^@]+@[^@]+$",
+        description="Validate email format",
+        mostly=1.0,
+    )
+
+    for _ in range(2):
+        state = ExpectationCheckerState(
+            expectation=expectation,
+            data_source_name="test_source",
+            data_asset_name="test_asset",
+        )
+        await node(state, config)
+
+    mock_query_runner.get_dialect.assert_called_once_with(data_source_name="test_source")
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_expectation_checker_allows_regex_for_non_mssql_dialect(
     mock_query_runner: MagicMock, config: RunnableConfig
 ) -> None:

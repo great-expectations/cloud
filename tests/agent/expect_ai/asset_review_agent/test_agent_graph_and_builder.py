@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 import pytest
 from great_expectations.core.batch_definition import BatchDefinition
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph.state import CompiledStateGraph
 
@@ -21,6 +21,9 @@ from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
     GenerateExpectationsState,
 )
 from great_expectations_cloud.agent.expect_ai.expectations import AddExpectationsResponse
+from great_expectations_cloud.agent.expect_ai.graphs.expectation_checker import (
+    get_dialect_constraint_message,
+)
 from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRunner
 
 
@@ -197,3 +200,78 @@ async def test_existing_expectations_are_added_to_context() -> None:
             additional_kwargs={},
             response_metadata={},
         )
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_expectation_builder_appends_dialect_constraints_for_mssql() -> None:
+    query_runner = create_autospec(QueryRunner, instance=True)
+    query_runner.get_dialect.return_value = "mssql"
+
+    node = ExpectationBuilderNode(
+        sql_tools_manager=query_runner,
+        templated_system_message="You are a SQL expert. Use {dialect}.",
+        task_human_message="Build expectations",
+    )
+
+    state = ExpectationBuilderState(
+        plan_component=DataQualityPlanComponent(title="Title", plan_details="Details"),
+        plan_development_messages=[],
+        data_source_name="my_ds",
+    )
+
+    with patch(
+        "great_expectations_cloud.agent.expect_ai.asset_review_agent.agent.ChatOpenAI"
+    ) as mock_chat_class:
+        mock_model = Mock()
+        mock_model.with_structured_output.return_value = mock_model
+        mock_model.with_retry.return_value = mock_model
+        mock_model.ainvoke = AsyncMock(
+            return_value=AddExpectationsResponse(rationale="", expectations=[])
+        )
+        mock_chat_class.return_value = mock_model
+
+        await node(state, RunnableConfig(configurable={}))
+
+    system_message = mock_model.ainvoke.call_args[0][0][0]
+    assert isinstance(system_message, SystemMessage)
+    expected_constraint = get_dialect_constraint_message("mssql")
+    assert expected_constraint in system_message.content
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_expectation_builder_no_constraint_for_snowflake() -> None:
+    query_runner = create_autospec(QueryRunner, instance=True)
+    query_runner.get_dialect.return_value = "snowflake"
+
+    node = ExpectationBuilderNode(
+        sql_tools_manager=query_runner,
+        templated_system_message="You are a SQL expert. Use {dialect}.",
+        task_human_message="Build expectations",
+    )
+
+    state = ExpectationBuilderState(
+        plan_component=DataQualityPlanComponent(title="Title", plan_details="Details"),
+        plan_development_messages=[],
+        data_source_name="my_ds",
+    )
+
+    with patch(
+        "great_expectations_cloud.agent.expect_ai.asset_review_agent.agent.ChatOpenAI"
+    ) as mock_chat_class:
+        mock_model = Mock()
+        mock_model.with_structured_output.return_value = mock_model
+        mock_model.with_retry.return_value = mock_model
+        mock_model.ainvoke = AsyncMock(
+            return_value=AddExpectationsResponse(rationale="", expectations=[])
+        )
+        mock_chat_class.return_value = mock_model
+
+        await node(state, RunnableConfig(configurable={}))
+
+    system_message = mock_model.ainvoke.call_args[0][0][0]
+    assert isinstance(system_message, SystemMessage)
+    # Snowflake has no unsupported expectations — no constraint should be appended
+    assert get_dialect_constraint_message("snowflake") == ""
+    assert "Do not generate" not in system_message.content
