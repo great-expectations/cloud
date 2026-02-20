@@ -51,5 +51,10 @@ class TestAgentAnalytics(unittest.TestCase):
         # No assertion needed since we're just testing it doesn't raise
 
 
+@pytest.mark.unit
+def test_rejection_reason_unsupported_dialect_exists() -> None:
+    assert RejectionReason.UNSUPPORTED_DIALECT.value == "unsupported_dialect"
+
+
 if __name__ == "__main__":
     unittest.main()
