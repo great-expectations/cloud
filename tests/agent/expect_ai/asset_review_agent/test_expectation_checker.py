@@ -5,9 +5,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from great_expectations_cloud.agent.analytics import AgentAnalytics
+from great_expectations_cloud.agent.analytics import AgentAnalytics, RejectionReason
 from great_expectations_cloud.agent.expect_ai.expectations import (
     ExpectColumnValuesToBeUnique,
+    ExpectColumnValuesToMatchRegex,
     ExpectCompoundColumnsToBeUnique,
     UnexpectedRowsExpectation,
 )
@@ -166,3 +167,71 @@ async def test_expectation_checker_node_only_replaces_batch_keyword(
         data_source_name="test_source",
         query_text="SELECT * FROM test_asset WHERE TO_CHAR(source_file_date, 'YYYY-MM') <> REGEXP_SUBSTR(source_file, '\\d{4}-\\d{2}')",
     )
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_expectation_checker_rejects_regex_for_mssql(
+    mock_query_runner: MagicMock, config: RunnableConfig
+) -> None:
+    """ExpectColumnValuesToMatchRegex must be rejected for mssql (no native regex support)."""
+    mock_analytics = MagicMock(spec=AgentAnalytics)
+    mock_query_runner.get_dialect.return_value = "mssql"
+    node = ExpectationCheckerNode(sql_tools_manager=mock_query_runner, analytics=mock_analytics)
+
+    expectation = ExpectColumnValuesToMatchRegex(
+        column="email",
+        regex=r"^[^@]+@[^@]+$",
+        description="Validate email format",
+        mostly=1.0,
+    )
+    state = ExpectationCheckerState(
+        expectation=expectation,
+        data_source_name="test_source",
+        data_asset_name="test_asset",
+    )
+
+    result = await node(state, config)
+
+    assert result.success is True
+    assert result.error is not None
+    assert "expect_column_values_to_match_regex" in result.error
+    assert "SQL Server" in result.error
+    mock_analytics.emit_expectation_rejected.assert_called_once_with(
+        expectation_type="expect_column_values_to_match_regex",
+        reason=RejectionReason.UNSUPPORTED_DIALECT,
+    )
+    mock_query_runner.check_query_compiles.assert_not_called()
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_expectation_checker_allows_regex_for_non_mssql_dialect(
+    mock_query_runner: MagicMock, config: RunnableConfig
+) -> None:
+    """ExpectColumnValuesToMatchRegex must pass through for dialects that support regex."""
+    mock_analytics = MagicMock(spec=AgentAnalytics)
+    mock_query_runner.get_dialect.return_value = "snowflake"
+    node = ExpectationCheckerNode(sql_tools_manager=mock_query_runner, analytics=mock_analytics)
+
+    expectation = ExpectColumnValuesToMatchRegex(
+        column="email",
+        regex=r"^[^@]+@[^@]+$",
+        description="Validate email format",
+        mostly=1.0,
+    )
+    state = ExpectationCheckerState(
+        expectation=expectation,
+        data_source_name="test_source",
+        data_asset_name="test_asset",
+    )
+
+    result = await node(state, config)
+
+    assert result.success is True
+    assert result.error is None
+    mock_analytics.emit_expectation_validated.assert_called_once_with(
+        expectation_type="expect_column_values_to_match_regex"
+    )
+    mock_analytics.emit_expectation_rejected.assert_not_called()
+    mock_query_runner.check_query_compiles.assert_not_called()

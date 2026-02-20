@@ -29,6 +29,12 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 MAX_EXPECTATION_REWRITE_ATTEMPTS: Final = 3
+UNSUPPORTED_EXPECTATIONS_BY_DIALECT: dict[str, set[str]] = {
+    "mssql": {"expect_column_values_to_match_regex"},
+}
+_DIALECT_DISPLAY_NAMES: dict[str, str] = {
+    "mssql": "SQL Server",
+}
 _UNSET = "__unset__"
 
 
@@ -159,6 +165,27 @@ class ExpectationCheckerNode:
                 attempts=state.attempts,
                 expectation=state.expectation,
             )
+
+        # Reject expectations unsupported by the target dialect.
+        # Only call get_dialect() when the expectation type could be unsupported
+        # to avoid unnecessary DB round-trips.
+        _potentially_unsupported = {
+            exp for exps in UNSUPPORTED_EXPECTATIONS_BY_DIALECT.values() for exp in exps
+        }
+        if expectation_type in _potentially_unsupported:
+            dialect = self._sql_tools_manager.get_dialect(data_source_name=state.data_source_name)
+            if expectation_type in UNSUPPORTED_EXPECTATIONS_BY_DIALECT.get(dialect, set()):
+                self._analytics.emit_expectation_rejected(
+                    expectation_type=expectation_type,
+                    reason=RejectionReason.UNSUPPORTED_DIALECT,
+                )
+                display_name = _DIALECT_DISPLAY_NAMES.get(dialect, dialect)
+                return ExpectationCheckerOutput(
+                    success=True,
+                    error=f"{expectation_type} is not supported for {display_name}",
+                    attempts=state.attempts,
+                    expectation=state.expectation,
+                )
 
         if not isinstance(state.expectation, UnexpectedRowsExpectation):
             self._analytics.emit_expectation_validated(expectation_type=expectation_type)
