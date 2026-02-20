@@ -167,4 +167,6 @@ logs/
 # VSCode
 .vscode
 .DS_Store
-CLAUDE.md
+
+# Git worktrees
+.worktrees/
