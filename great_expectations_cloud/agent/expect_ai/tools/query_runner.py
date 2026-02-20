@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import TextClause, text
+from sqlalchemy import text
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -66,15 +66,17 @@ class QueryRunner:
         :param query_text: The raw SQL query string to compile.
         :return: A tuple where the first element is a boolean indicating if the query compiles successfully, and the second element is an error message if compilation fails, otherwise None.
         """
-        statement: TextClause = text("EXPLAIN " + query_text)
         try:
-            _ = statement.compile(bind=engine)
             with engine.connect() as conn:
-                conn.execute(statement)
+                if engine.dialect.name == "mssql":
+                    conn.execute(text("SET PARSEONLY ON"))
+                    conn.execute(text(query_text))
+                    conn.execute(text("SET PARSEONLY OFF"))
+                else:
+                    conn.execute(text("EXPLAIN " + query_text))
         except Exception as e:
             return False, str(e)
-        else:
-            return True, None
+        return True, None
 
     def get_dialect(self, data_source_name: str) -> str:
         """
