@@ -113,4 +113,5 @@ async def test_expectation_checker_success_after_rewrite(
 
     # Verify the query was checked twice (original + rewrite)
     assert mock_query_runner.check_query_compiles.call_count == 2
-    assert mock_query_runner.get_dialect.call_count == 1
+    # ExpectationCheckerNode calls get_dialect() once (cached), QueryRewriterNode calls it once
+    assert mock_query_runner.get_dialect.call_count == 2
