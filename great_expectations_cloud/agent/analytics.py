@@ -9,6 +9,7 @@ class RejectionReason(Enum):
     INVALID_SQL = "invalid_sql"
     INVALID_PYDANTIC_CONSTRUCTION = "invalid_pydantic_construction"
     INVALID_CONSTRUCTION = "invalid_construction"
+    UNSUPPORTED_DIALECT = "unsupported_dialect"
     OTHER = "other"
 
 

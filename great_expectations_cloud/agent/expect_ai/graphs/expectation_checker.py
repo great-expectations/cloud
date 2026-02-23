@@ -29,6 +29,12 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 MAX_EXPECTATION_REWRITE_ATTEMPTS: Final = 3
+UNSUPPORTED_EXPECTATIONS_BY_DIALECT: dict[str, set[str]] = {
+    "mssql": {"expect_column_values_to_match_regex"},
+}
+_DIALECT_DISPLAY_NAMES: dict[str, str] = {
+    "mssql": "SQL Server",
+}
 _UNSET = "__unset__"
 
 
@@ -113,10 +119,34 @@ class ExpectationChecker:
         return "query_rewriter" if not state.success else END
 
 
+def get_dialect_constraint_message(dialect: str) -> str:
+    """Return a prompt constraint string for unsupported expectations in this dialect.
+
+    Returns empty string if no constraints apply.
+    """
+    unsupported = UNSUPPORTED_EXPECTATIONS_BY_DIALECT.get(dialect, set())
+    if not unsupported:
+        return ""
+    display_name = _DIALECT_DISPLAY_NAMES.get(dialect, dialect)
+    constraints = ", ".join(f"`{exp}`" for exp in sorted(unsupported))
+    return (
+        f"Do not generate these expectation types — "
+        f"they are not supported by {display_name}: {constraints}."
+    )
+
+
 class ExpectationCheckerNode:
     def __init__(self, sql_tools_manager: QueryRunner, analytics: AgentAnalytics):
         self._sql_tools_manager = sql_tools_manager
         self._analytics = analytics
+        self._dialect_cache: dict[str, str] = {}
+
+    def _get_cached_dialect(self, data_source_name: str) -> str:
+        if data_source_name not in self._dialect_cache:
+            self._dialect_cache[data_source_name] = self._sql_tools_manager.get_dialect(
+                data_source_name=data_source_name
+            )
+        return self._dialect_cache[data_source_name]
 
     async def __call__(
         self, state: ExpectationCheckerState, config: RunnableConfig
@@ -156,6 +186,23 @@ class ExpectationCheckerNode:
             return ExpectationCheckerOutput(
                 success=True,
                 error=f"Query failed to compile after {MAX_EXPECTATION_REWRITE_ATTEMPTS} attempts.",
+                attempts=state.attempts,
+                expectation=state.expectation,
+            )
+
+        # Reject expectations unsupported by the target dialect.
+        # success=True (not False) is intentional: True routes to END, False routes to
+        # query_rewriter. A dialect rejection is terminal — rewriting the SQL won't help.
+        dialect = self._get_cached_dialect(data_source_name=state.data_source_name)
+        if expectation_type in UNSUPPORTED_EXPECTATIONS_BY_DIALECT.get(dialect, set()):
+            self._analytics.emit_expectation_rejected(
+                expectation_type=expectation_type,
+                reason=RejectionReason.UNSUPPORTED_DIALECT,
+            )
+            display_name = _DIALECT_DISPLAY_NAMES.get(dialect, dialect)
+            return ExpectationCheckerOutput(
+                success=True,
+                error=f"{expectation_type} is not supported for {display_name}",
                 attempts=state.attempts,
                 expectation=state.expectation,
             )

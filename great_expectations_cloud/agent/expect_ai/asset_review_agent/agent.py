@@ -50,6 +50,7 @@ from great_expectations_cloud.agent.expect_ai.expectations import AddExpectation
 from great_expectations_cloud.agent.expect_ai.graphs.expectation_checker import (
     ExpectationChecker,
     ExpectationCheckerInput,
+    get_dialect_constraint_message,
 )
 from great_expectations_cloud.agent.expect_ai.nodes.PlannerNode import PlannerNode
 
@@ -412,14 +413,13 @@ class ExpectationBuilderNode:
             request_timeout=60,
         ).with_structured_output(schema=AddExpectationsResponse, method="json_schema", strict=True)
         task_msg = HumanMessage(content=self._task_human_message)
+        dialect = self._sql_tools_manager.get_dialect(data_source_name=state.data_source_name)
+        system_content = self._templated_system_message.format(dialect=dialect)
+        constraint = get_dialect_constraint_message(dialect)
+        if constraint:
+            system_content += f"\n\n{constraint}"
         messages = [
-            SystemMessage(
-                content=self._templated_system_message.format(
-                    dialect=self._sql_tools_manager.get_dialect(
-                        data_source_name=state.data_source_name
-                    )
-                )
-            ),
+            SystemMessage(content=system_content),
             HumanMessage(content=f"Issue: {plan_component.title}\n\n{plan_component.plan_details}"),
             task_msg,
         ]
