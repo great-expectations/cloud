@@ -121,7 +121,7 @@ def test_get_asset_names_with_schema_datasource_no_schema(
 class TestApplyDatasourceSchemaToAsset:
     @staticmethod
     def _mock_datasource(mocker: MockerFixture, spec: type, schema: str | None) -> Mock:
-        datasource = mocker.Mock(spec=spec)
+        datasource: Mock = mocker.Mock(spec=spec)
         datasource.schema_ = schema
         return datasource
 

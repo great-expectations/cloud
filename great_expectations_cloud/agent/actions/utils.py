@@ -10,6 +10,8 @@ from pydantic_settings import BaseSettings
 from sqlalchemy import inspect
 
 if TYPE_CHECKING:
+    from typing import Any
+
     from great_expectations.datasource.fluent.interfaces import DataAsset
     from sqlalchemy.engine import Inspector
     from sqlalchemy.sql.compiler import IdentifierPreparer
@@ -17,7 +19,9 @@ if TYPE_CHECKING:
 SCHEMA_DATASOURCES = (SnowflakeDatasource, SQLServerDatasource)
 
 
-def apply_datasource_schema_to_asset(datasource: SQLDatasource, data_asset: DataAsset) -> None:
+def apply_datasource_schema_to_asset(
+    datasource: SQLDatasource, data_asset: DataAsset[Any, Any]
+) -> None:
     """Propagate the datasource's schema_ to a TableAsset that lacks its own schema_name.
 
     For SCHEMA_DATASOURCES (Snowflake, SQL Server), the schema cannot be reliably
