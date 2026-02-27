@@ -11,6 +11,7 @@ from uuid import UUID
 
 import great_expectations.expectations as gx_expectations
 from great_expectations.core.http import create_session
+from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 from great_expectations.exceptions import (
     GXCloudError,
@@ -41,6 +42,7 @@ from great_expectations.experimental.metric_repository.metrics import (
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
+from great_expectations_cloud.agent.actions.utils import apply_datasource_schema_to_asset
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.exceptions import GXAgentError
 from great_expectations_cloud.agent.models import (
@@ -229,6 +231,8 @@ class GenerateDataQualityCheckExpectationsAction(
         try:
             datasource = self._context.data_sources.get(event.datasource_name)
             data_asset = datasource.get_asset(asset_name)
+            if isinstance(datasource, SQLDatasource):
+                apply_datasource_schema_to_asset(datasource, data_asset)
             data_asset.test_connection()  # raises `TestConnectionError` on failure
         except TestConnectionError:
             # Let TestConnectionError propagate directly - it's a user configuration error
