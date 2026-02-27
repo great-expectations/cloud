@@ -17,6 +17,8 @@ from great_expectations_cloud.agent.models import (
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
 
+    from great_expectations_cloud.agent.analytics import AgentAnalytics
+
 
 class ActionResult(BaseModel):
     id: str
@@ -32,12 +34,18 @@ _EventT = TypeVar("_EventT", bound=AgentBaseExtraForbid | AgentBaseExtraIgnore)
 
 class AgentAction(Generic[_EventT]):
     def __init__(
-        self, context: CloudDataContext, base_url: str, domain_context: DomainContext, auth_key: str
+        self,
+        context: CloudDataContext,
+        base_url: str,
+        domain_context: DomainContext,
+        auth_key: str,
+        analytics: AgentAnalytics,
     ):
         self._context = context
         self._base_url = base_url
         self._domain_context = domain_context
         self._auth_key = auth_key
+        self._analytics = analytics
 
     @abstractmethod
     def run(self, event: _EventT, id: str) -> ActionResult: ...

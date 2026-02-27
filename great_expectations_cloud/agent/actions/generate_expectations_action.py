@@ -14,7 +14,6 @@ from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
 from great_expectations_cloud.agent.actions.utils import ensure_openai_credentials
-from great_expectations_cloud.agent.analytics import ExpectAIAnalytics
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.expect_ai.asset_review_agent.agent import (
     AssetReviewAgent,
@@ -26,7 +25,6 @@ from great_expectations_cloud.agent.expect_ai.metric_service import MetricServic
 from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRunner
 from great_expectations_cloud.agent.models import (
     CreatedResource,
-    DomainContext,
     GenerateExpectationsEvent,
 )
 from great_expectations_cloud.agent.services.expectation_draft_config_service import (
@@ -40,7 +38,6 @@ from great_expectations_cloud.agent.services.expectation_service import (
 
 if TYPE_CHECKING:
     import great_expectations.expectations as gxe
-    from great_expectations.data_context import CloudDataContext
 
 
 MAX_PRUNED_EXPECTATIONS = 10
@@ -58,19 +55,6 @@ class ExpectAIAgentError(Exception):
 
 
 class GenerateExpectationsAction(AgentAction[GenerateExpectationsEvent]):
-    def __init__(
-        self,
-        context: CloudDataContext,
-        base_url: str,
-        domain_context: DomainContext,
-        auth_key: str,
-        analytics: ExpectAIAnalytics | None = None,
-    ):
-        super().__init__(
-            context=context, base_url=base_url, domain_context=domain_context, auth_key=auth_key
-        )
-        self._analytics = analytics or ExpectAIAnalytics()
-
     @override
     def run(self, event: GenerateExpectationsEvent, id: str) -> ActionResult:
         # Import here to avoid circular import
