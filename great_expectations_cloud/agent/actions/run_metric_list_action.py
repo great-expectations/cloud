@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.experimental.metric_repository.batch_inspector import (
     BatchInspector,
 )
@@ -17,6 +18,7 @@ from great_expectations.experimental.metric_repository.metric_repository import 
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions import ActionResult, AgentAction
+from great_expectations_cloud.agent.actions.utils import apply_datasource_schema_to_asset
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     CreatedResource,
@@ -60,6 +62,8 @@ class MetricListAction(AgentAction[RunMetricsListEvent]):
     def run(self, event: RunMetricsListEvent, id: str) -> ActionResult:
         datasource = self._context.data_sources.get(event.datasource_name)
         data_asset = datasource.get_asset(event.data_asset_name)
+        if isinstance(datasource, SQLDatasource):
+            apply_datasource_schema_to_asset(datasource, data_asset)
         data_asset.test_connection()  # raises `TestConnectionError` on failure
 
         batch_request = data_asset.build_batch_request()

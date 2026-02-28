@@ -3,16 +3,38 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from great_expectations.datasource.fluent import SnowflakeDatasource, SQLDatasource
+from great_expectations.datasource.fluent.sql_datasource import TableAsset
 from great_expectations.datasource.fluent.sql_server_datasource import SQLServerDatasource
 from pydantic import Field
 from pydantic_settings import BaseSettings
 from sqlalchemy import inspect
 
 if TYPE_CHECKING:
+    from typing import Any
+
+    from great_expectations.datasource.fluent.interfaces import DataAsset
     from sqlalchemy.engine import Inspector
     from sqlalchemy.sql.compiler import IdentifierPreparer
 
 SCHEMA_DATASOURCES = (SnowflakeDatasource, SQLServerDatasource)
+
+
+def apply_datasource_schema_to_asset(
+    datasource: SQLDatasource, data_asset: DataAsset[Any, Any]
+) -> None:
+    """Propagate the datasource's schema_ to a TableAsset that lacks its own schema_name.
+
+    For SCHEMA_DATASOURCES (Snowflake, SQL Server), the schema cannot be reliably
+    inferred from the connection string, so it must be explicitly set on the asset
+    for operations like test_connection() to generate fully-qualified table names.
+    """
+    if (
+        isinstance(datasource, SCHEMA_DATASOURCES)
+        and datasource.schema_
+        and isinstance(data_asset, TableAsset)
+        and not data_asset.schema_name
+    ):
+        data_asset.schema_name = datasource.schema_
 
 
 def get_asset_names(datasource: SQLDatasource) -> list[str]:

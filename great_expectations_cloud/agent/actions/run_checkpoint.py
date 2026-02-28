@@ -13,6 +13,7 @@ from great_expectations_cloud.agent.actions.agent_action import (
     ActionResult,
     AgentAction,
 )
+from great_expectations_cloud.agent.actions.utils import apply_datasource_schema_to_asset
 from great_expectations_cloud.agent.event_handler import register_event_action
 from great_expectations_cloud.agent.models import (
     CreatedResource,
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
     from great_expectations.datasource.fluent.interfaces import DataAsset, Datasource
 
+from great_expectations.datasource.fluent import SQLDatasource
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
@@ -82,6 +84,8 @@ def check_datasource_and_assets_connection(
             "Testing data asset connection",
             extra={**log_extra, "datasource_name": ds_name, "asset_name": asset_name},
         )
+        if isinstance(data_source, SQLDatasource):
+            apply_datasource_schema_to_asset(data_source, data_asset)
         data_asset.test_connection()  # raises `TestConnectionError` on failure
         LOGGER.debug(
             "Data asset connection successful",
