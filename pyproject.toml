@@ -249,6 +249,11 @@ filterwarnings = [
     # See: https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings
     "ignore:Exception ignored in.*socket.socket:pytest.PytestUnraisableExceptionWarning",
     "ignore:Exception ignored in.*_SelectorTransport.__del__:pytest.PytestUnraisableExceptionWarning",
+    # Pydantic serialization warnings from langchain-openai's with_structured_output storing
+    # parsed Pydantic models in AIMessage.additional_kwargs["parsed"]. This is expected behavior
+    # in langchain-openai 1.1.10+ and doesn't affect functionality.
+    # Related: https://github.com/langchain-ai/langgraph/issues/2538
+    "ignore:Pydantic serializer warnings:UserWarning",
 ]
 
 [tool.coverage.report]
