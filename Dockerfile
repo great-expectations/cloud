@@ -69,7 +69,7 @@ RUN apt-get remove -y \
 
 # Debug support (Tilt dev only — excluded from prod builds)
 ARG INSTALL_DEBUG_DEPS=false
-RUN if [ "$INSTALL_DEBUG_DEPS" = "true" ]; then pip install debugpy==1.8.11; fi
+RUN if [ "$INSTALL_DEBUG_DEPS" = "true" ]; then pip install --no-cache-dir debugpy==1.8.11; fi
 
 COPY run_debug.py ./
 
