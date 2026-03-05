@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from datetime import date, datetime
 from typing import Literal
 
 from great_expectations.expectations import (
@@ -64,6 +65,26 @@ from pydantic import BaseModel, Field
 from typing_extensions import override
 
 
+def _parse_comparable_value(value: float | str) -> float | date | datetime:
+    """Parse a value from the LLM into a type accepted by GX's Comparable fields.
+
+    OpenAI structured output only supports float and str, but GX expects
+    date/datetime objects for temporal columns. This converts ISO-format date
+    strings while passing numeric values through unchanged.
+    """
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        pass
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        pass
+    return value  # type: ignore[return-value]
+
+
 class OpenAIGXExpectation(ABC, BaseModel):
     expectation_type: str = Field(..., description="The type of the expectation")
     description: str = Field(
@@ -97,15 +118,15 @@ class ExpectColumnMinToBeBetween(OpenAIGXExpectation):
     column: str = Field(
         ..., description="The column name from the table to which the expectation is applied"
     )
-    min_value: float = Field(..., description="The minimum value of the min (inclusive)")
-    max_value: float = Field(..., description="The maximum value of the min (inclusive)")
+    min_value: float | str = Field(..., description="The minimum value of the min (inclusive)")
+    max_value: float | str = Field(..., description="The maximum value of the min (inclusive)")
 
     @override
     def get_gx_expectation(self) -> GXExpectColumnMinToBeBetween:
         return GXExpectColumnMinToBeBetween(
             column=self.column,
-            min_value=self.min_value,
-            max_value=self.max_value,
+            min_value=_parse_comparable_value(self.min_value),
+            max_value=_parse_comparable_value(self.max_value),
             description=self.description,
         )
 
@@ -115,15 +136,15 @@ class ExpectColumnMaxToBeBetween(OpenAIGXExpectation):
     column: str = Field(
         ..., description="The column name from the table to which the expectation is applied"
     )
-    min_value: float = Field(..., description="The minimum value of the max (inclusive)")
-    max_value: float = Field(..., description="The maximum value of the max (inclusive)")
+    min_value: float | str = Field(..., description="The minimum value of the max (inclusive)")
+    max_value: float | str = Field(..., description="The maximum value of the max (inclusive)")
 
     @override
     def get_gx_expectation(self) -> GXExpectColumnMaxToBeBetween:
         return GXExpectColumnMaxToBeBetween(
             column=self.column,
-            min_value=self.min_value,
-            max_value=self.max_value,
+            min_value=_parse_comparable_value(self.min_value),
+            max_value=_parse_comparable_value(self.max_value),
             description=self.description,
         )
 
@@ -135,15 +156,15 @@ class ExpectColumnMedianToBeBetween(OpenAIGXExpectation):
     column: str = Field(
         ..., description="The column name from the table to which the expectation is applied"
     )
-    min_value: float = Field(..., description="The minimum value of the median (inclusive)")
-    max_value: float = Field(..., description="The maximum value of the median (inclusive)")
+    min_value: float | str = Field(..., description="The minimum value of the median (inclusive)")
+    max_value: float | str = Field(..., description="The maximum value of the median (inclusive)")
 
     @override
     def get_gx_expectation(self) -> GXExpectColumnMedianToBeBetween:
         return GXExpectColumnMedianToBeBetween(
             column=self.column,
-            min_value=self.min_value,
-            max_value=self.max_value,
+            min_value=_parse_comparable_value(self.min_value),
+            max_value=_parse_comparable_value(self.max_value),
             description=self.description,
         )
 
@@ -155,15 +176,15 @@ class ExpectColumnMeanToBeBetween(OpenAIGXExpectation):
     column: str = Field(
         ..., description="The column name from the table to which the expectation is applied"
     )
-    min_value: float = Field(..., description="The minimum value of the mean (inclusive)")
-    max_value: float = Field(..., description="The maximum value of the mean (inclusive)")
+    min_value: float | str = Field(..., description="The minimum value of the mean (inclusive)")
+    max_value: float | str = Field(..., description="The maximum value of the mean (inclusive)")
 
     @override
     def get_gx_expectation(self) -> GXExpectColumnMeanToBeBetween:
         return GXExpectColumnMeanToBeBetween(
             column=self.column,
-            min_value=self.min_value,
-            max_value=self.max_value,
+            min_value=_parse_comparable_value(self.min_value),
+            max_value=_parse_comparable_value(self.max_value),
             description=self.description,
         )
 
@@ -175,10 +196,10 @@ class ExpectColumnStdevToBeBetween(OpenAIGXExpectation):
     column: str = Field(
         ..., description="The column name from the table to which the expectation is applied"
     )
-    min_value: float = Field(
+    min_value: float | str = Field(
         ..., description="The minimum value of the standard deviation (inclusive)"
     )
-    max_value: float = Field(
+    max_value: float | str = Field(
         ..., description="The maximum value of the standard deviation (inclusive)"
     )
 
@@ -186,8 +207,8 @@ class ExpectColumnStdevToBeBetween(OpenAIGXExpectation):
     def get_gx_expectation(self) -> GXExpectColumnStdevToBeBetween:
         return GXExpectColumnStdevToBeBetween(
             column=self.column,
-            min_value=self.min_value,
-            max_value=self.max_value,
+            min_value=_parse_comparable_value(self.min_value),
+            max_value=_parse_comparable_value(self.max_value),
             description=self.description,
             strict_min=False,
             strict_max=False,
@@ -201,8 +222,8 @@ class ExpectColumnValuesToBeBetween(OpenAIGXExpectation):
     column: str = Field(
         ..., description="The column name from the table to which the expectation is applied"
     )
-    min_value: float = Field(..., description="The minimum value of the values (inclusive)")
-    max_value: float = Field(..., description="The maximum value of the values (inclusive)")
+    min_value: float | str = Field(..., description="The minimum value of the values (inclusive)")
+    max_value: float | str = Field(..., description="The maximum value of the values (inclusive)")
     mostly: float = Field(
         ...,
         description="The ratio of values that must be between the min and max for the expectation to pass, a float between 0 and 1",
@@ -212,8 +233,8 @@ class ExpectColumnValuesToBeBetween(OpenAIGXExpectation):
     def get_gx_expectation(self) -> GXExpectColumnValuesToBeBetween:
         return GXExpectColumnValuesToBeBetween(
             column=self.column,
-            min_value=self.min_value,
-            max_value=self.max_value,
+            min_value=_parse_comparable_value(self.min_value),
+            max_value=_parse_comparable_value(self.max_value),
             mostly=self.mostly,
             description=self.description,
         )
