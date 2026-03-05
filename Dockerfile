@@ -67,6 +67,12 @@ RUN apt-get remove -y \
     curl \
     gnupg
 
+# Debug support (Tilt dev only — excluded from prod builds)
+ARG INSTALL_DEBUG_DEPS=false
+RUN if [ "$INSTALL_DEBUG_DEPS" = "true" ]; then pip install debugpy==1.8.11; fi
+
+COPY run_debug.py ./
+
 # Disable analytics in OSS
 ENV GX_ANALYTICS_ENABLED=false
 
@@ -76,4 +82,5 @@ ENV LANGCHAIN_TRACING_V2=false
 # Disable progress bars
 ENV ENABLE_PROGRESS_BARS=false
 
-ENTRYPOINT ["tini", "--", "poetry", "run", "gx-agent"]
+ENTRYPOINT ["tini", "--", "sh", "-c", \
+  "if [ \"$DEBUGPY_ENABLE\" = \"true\" ]; then python run_debug.py; else poetry run gx-agent; fi"]
