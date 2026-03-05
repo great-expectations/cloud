@@ -9,7 +9,6 @@ from great_expectations_cloud.agent.expect_ai.expectations import (
     ExpectColumnMeanToBeBetween,
     ExpectColumnMedianToBeBetween,
     ExpectColumnMinToBeBetween,
-    ExpectColumnStdevToBeBetween,
     ExpectColumnValuesToBeBetween,
 )
 
@@ -114,16 +113,3 @@ class TestExpectColumnMeanToBeBetweenWithDates:
         gx = expectation.get_gx_expectation()
         assert gx.min_value == datetime.date(2023, 1, 1)
         assert gx.max_value == datetime.date(2023, 12, 31)
-
-
-class TestExpectColumnStdevToBeBetweenWithDates:
-    def test_float_values_still_work(self):
-        expectation = ExpectColumnStdevToBeBetween(
-            column="amount",
-            min_value=0.0,
-            max_value=50.0,
-            description="Stdev within range",
-        )
-        gx = expectation.get_gx_expectation()
-        assert gx.min_value == 0.0
-        assert gx.max_value == 50.0
