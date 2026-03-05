@@ -302,8 +302,9 @@ def _update_gx_version(new_version: str, extras: list[str] | None = None) -> Non
     with open(PYPROJECT_TOML, "rb") as f_in:
         toml_doc = tomlkit.load(f_in)
     gx_dep = cast(
-        "dict[str, Any]", toml_doc["tool"]["poetry"]["dependencies"]["great-expectations"]
-    )  # type: ignore[index]
+        "dict[str, Any]",
+        toml_doc["tool"]["poetry"]["dependencies"]["great-expectations"],  # type: ignore[index]
+    )
     if extras is None:
         extras = list(cast("list[str]", gx_dep["extras"]))
     gx_dep["version"] = new_version
