@@ -197,10 +197,10 @@ class ExpectColumnStdevToBeBetween(OpenAIGXExpectation):
     column: str = Field(
         ..., description="The column name from the table to which the expectation is applied"
     )
-    min_value: float | str = Field(
+    min_value: float = Field(
         ..., description="The minimum value of the standard deviation (inclusive)"
     )
-    max_value: float | str = Field(
+    max_value: float = Field(
         ..., description="The maximum value of the standard deviation (inclusive)"
     )
 
@@ -208,8 +208,8 @@ class ExpectColumnStdevToBeBetween(OpenAIGXExpectation):
     def get_gx_expectation(self) -> GXExpectColumnStdevToBeBetween:
         return GXExpectColumnStdevToBeBetween(
             column=self.column,
-            min_value=_parse_comparable_value(self.min_value),
-            max_value=_parse_comparable_value(self.max_value),
+            min_value=self.min_value,
+            max_value=self.max_value,
             description=self.description,
             strict_min=False,
             strict_max=False,
