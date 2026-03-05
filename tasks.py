@@ -7,7 +7,7 @@ import os
 import pathlib
 from collections.abc import MutableMapping
 from pprint import pformat as pf
-from typing import TYPE_CHECKING, Any, Final, Literal
+from typing import TYPE_CHECKING, Any, Final, Literal, cast
 
 import invoke
 import requests
@@ -301,10 +301,9 @@ def _update_gx_version(new_version: str, extras: list[str] | None = None) -> Non
     """Update the great-expectations version (and optionally extras) in pyproject.toml."""
     with open(PYPROJECT_TOML, "rb") as f_in:
         toml_doc = tomlkit.load(f_in)
-    deps = toml_doc["tool"]["poetry"]["dependencies"]
-    gx_dep = deps["great-expectations"]
+    gx_dep = cast(dict[str, Any], toml_doc["tool"]["poetry"]["dependencies"]["great-expectations"])  # type: ignore[index]
     if extras is None:
-        extras = list(gx_dep["extras"])
+        extras = list(cast(list[str], gx_dep["extras"]))
     gx_dep["version"] = new_version
     gx_dep["extras"] = extras
     with open(PYPROJECT_TOML, "w") as f_out:
