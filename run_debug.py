@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Debug-enabled entrypoint for GX Agent. Starts debugpy then runs gx-agent."""
+
 import debugpy
 from pydantic.v1 import BaseSettings
 
