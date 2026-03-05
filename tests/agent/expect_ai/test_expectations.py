@@ -35,9 +35,9 @@ class TestParseComparableValue:
         result = _parse_comparable_value("2023-01-15T10:30:00+00:00")
         assert result == datetime.datetime(2023, 1, 15, 10, 30, 0, tzinfo=datetime.UTC)
 
-    def test_non_date_string_passes_through(self):
-        result = _parse_comparable_value("not-a-date")
-        assert result == "not-a-date"
+    def test_non_date_string_raises(self):
+        with pytest.raises(ValueError, match="Could not parse value"):
+            _parse_comparable_value("not-a-date")
 
 
 class TestExpectColumnValuesToBeBetweenWithDates:

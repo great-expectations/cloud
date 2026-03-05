@@ -82,7 +82,8 @@ def _parse_comparable_value(value: float | str) -> float | date | datetime:
         return datetime.fromisoformat(value)
     except ValueError:
         pass
-    return value  # type: ignore[return-value]
+    msg = "Could not parse value as a date, datetime, or numeric value"
+    raise ValueError(msg)
 
 
 class OpenAIGXExpectation(ABC, BaseModel):
