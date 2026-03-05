@@ -82,4 +82,5 @@ ENTRYPOINT ["tini", "--", "poetry", "run", "gx-agent"]
 FROM prod AS debug
 RUN pip install --no-cache-dir debugpy==1.8.11
 COPY run_debug.py ./
-ENTRYPOINT ["tini", "--", "python", "run_debug.py"]
+ENTRYPOINT ["tini", "--", "sh", "-c", \
+  "if [ \"$DEBUGPY_ENABLE\" = \"true\" ]; then python run_debug.py; else poetry run gx-agent; fi"]
