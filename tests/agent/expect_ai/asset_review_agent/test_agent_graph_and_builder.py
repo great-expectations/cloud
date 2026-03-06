@@ -201,38 +201,39 @@ async def test_existing_expectations_are_added_to_context() -> None:
         )
 
 
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_expectation_builder_node_includes_cte_restriction_for_mssql() -> None:
-    query_runner = create_autospec(QueryRunner, instance=True)
-    query_runner.get_dialect.return_value = "mssql"
-    query_runner.get_dialect_constraints.return_value = "CRITICAL: Do NOT use CTEs"
+class TestExpectationBuilderNodeDialectConstraints:
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_includes_cte_restriction_for_mssql(self) -> None:
+        query_runner = create_autospec(QueryRunner, instance=True)
+        query_runner.get_dialect.return_value = "mssql"
+        query_runner.get_dialect_constraints.return_value = "CRITICAL: Do NOT use CTEs"
 
-    node = ExpectationBuilderNode(
-        sql_tools_manager=query_runner,
-        templated_system_message="Use {dialect}.",
-        task_human_message="Build expectations",
-    )
-
-    state = ExpectationBuilderState(
-        plan_component=DataQualityPlanComponent(title="Title", plan_details="Details"),
-        plan_development_messages=[],
-        data_source_name="my_ds",
-    )
-
-    with patch(
-        "great_expectations_cloud.agent.expect_ai.asset_review_agent.agent.ChatOpenAI"
-    ) as mock_chat_class:
-        mock_model = Mock()
-        mock_model.with_structured_output.return_value = mock_model
-        mock_model.with_retry.return_value = mock_model
-        mock_model.ainvoke = AsyncMock(
-            return_value=AddExpectationsResponse(rationale="", expectations=[])
+        node = ExpectationBuilderNode(
+            sql_tools_manager=query_runner,
+            templated_system_message="Use {dialect}.",
+            task_human_message="Build expectations",
         )
-        mock_chat_class.return_value = mock_model
 
-        await node(state, RunnableConfig(configurable={}))
+        state = ExpectationBuilderState(
+            plan_component=DataQualityPlanComponent(title="Title", plan_details="Details"),
+            plan_development_messages=[],
+            data_source_name="my_ds",
+        )
 
-        system_content = mock_model.ainvoke.call_args[0][0][0].content
-        assert "mssql" in system_content
-        assert "CTE" in system_content
+        with patch(
+            "great_expectations_cloud.agent.expect_ai.asset_review_agent.agent.ChatOpenAI"
+        ) as mock_chat_class:
+            mock_model = Mock()
+            mock_model.with_structured_output.return_value = mock_model
+            mock_model.with_retry.return_value = mock_model
+            mock_model.ainvoke = AsyncMock(
+                return_value=AddExpectationsResponse(rationale="", expectations=[])
+            )
+            mock_chat_class.return_value = mock_model
+
+            await node(state, RunnableConfig(configurable={}))
+
+            system_content = mock_model.ainvoke.call_args[0][0][0].content
+            assert "mssql" in system_content
+            assert "CTE" in system_content
