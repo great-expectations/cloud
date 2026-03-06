@@ -21,6 +21,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          target: prod
           platforms: linux/amd64
           push: false
           load: true

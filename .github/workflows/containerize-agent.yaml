@@ -42,6 +42,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          target: prod
           platforms: linux/arm64
           push: false
           load: false
@@ -54,6 +55,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          target: prod
           platforms: linux/amd64
           push: false
           load: true
@@ -115,6 +117,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          target: prod
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
@@ -127,6 +130,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          target: prod
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
