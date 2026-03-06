@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.11-slim AS prod
 WORKDIR /app/
 
 # File Structure:
@@ -77,3 +77,10 @@ ENV LANGCHAIN_TRACING_V2=false
 ENV ENABLE_PROGRESS_BARS=false
 
 ENTRYPOINT ["tini", "--", "poetry", "run", "gx-agent"]
+
+# Debug stage — Tilt dev only, never deployed to prod
+FROM prod AS debug
+RUN pip install --no-cache-dir debugpy==1.8.11
+COPY run_debug.py ./
+ENTRYPOINT ["tini", "--", "sh", "-c", \
+  "if [ \"$DEBUGPY_ENABLE\" = \"true\" ]; then python run_debug.py; else poetry run gx-agent; fi"]
