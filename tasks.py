@@ -118,7 +118,7 @@ def docker(
     elif run:
         cmds = ["docker", "run", "--env-file .env", "--rm", "-t", tag]
     else:
-        cmds = ["docker", "build", "-f", DOCKERFILE_PATH, "-t", tag, "."]
+        cmds = ["docker", "build", "-f", DOCKERFILE_PATH, "--target", "prod", "-t", tag, "."]
 
     ctx.run(" ".join(cmds), echo=True, pty=pty)
 
