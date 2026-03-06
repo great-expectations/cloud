@@ -4,10 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from great_expectations_cloud.agent.expect_ai.tools.query_runner import (
-    QueryRunner,
-    mssql_cte_restriction,
-)
+from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRunner
 
 
 def _make_engine(dialect_name: str) -> tuple[MagicMock, MagicMock]:
@@ -91,14 +88,3 @@ def test_get_dialect_constraints_returns_empty_for_non_mssql() -> None:
     result = runner.get_dialect_constraints(data_source_name="test_ds")
 
     assert result == ""
-
-
-@pytest.mark.unit
-def test_mssql_cte_restriction_contains_key_guidance() -> None:
-    restriction = mssql_cte_restriction()
-
-    assert "CTE" in restriction
-    assert "WITH" in restriction
-    assert "subqueries" in restriction
-    assert "SQL Server" in restriction
-    assert "Fabric" in restriction

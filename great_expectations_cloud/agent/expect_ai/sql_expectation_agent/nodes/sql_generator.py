@@ -16,7 +16,6 @@ from great_expectations_cloud.agent.expect_ai.sql_expectation_agent.state import
     SqlExpectationState,
     SqlQueryResponse,
 )
-from great_expectations_cloud.agent.expect_ai.tools.query_runner import mssql_cte_restriction
 
 if TYPE_CHECKING:
     from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRunner
@@ -32,17 +31,22 @@ class SqlGeneratorNode:
         """Generate SQL query and description for UnexpectedRowsExpectation."""
         # Create the system message for SQL generation
         dialect = self._query_runner.get_dialect(data_source_name=state.data_source_name)
-        cte_constraint = f"\n\n{mssql_cte_restriction()}" if dialect == "mssql" else ""
-        system_message = SystemMessage(
-            content=f"You are a SQL coding assistant that generates SQL queries using {dialect} dialect. "
+        dialect_constraints = self._query_runner.get_dialect_constraints(
+            data_source_name=state.data_source_name
+        )
+        system_content = (
+            f"You are a SQL coding assistant that generates SQL queries using {dialect} dialect. "
             "Each SQL query should return the rows that are unexpected given the user prompt. "
             "Do not add a semicolon to the end of the query. "
             "Do not use the table name directly - instead, use `{batch}` as a placeholder.\n\n"
             "You are also an expert on interpreting SQL queries. Given a SQL query, "
             "you will generate a description of the query that is less than 75 characters long. "
             "The description should be phrased in such a way that if the query returns any rows the description is false. "
-            "The description should not include SQL syntax." + cte_constraint
+            "The description should not include SQL syntax."
         )
+        if dialect_constraints:
+            system_content += f"\n\n{dialect_constraints}"
+        system_message = SystemMessage(content=system_content)
 
         # Add example
         example_message = HumanMessage(

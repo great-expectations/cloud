@@ -100,16 +100,15 @@ class QueryRunner:
         :return: Constraint text to include in LLM prompts, or empty string if none apply.
         """
         dialect = self.get_dialect(data_source_name)
-        return mssql_cte_restriction() if dialect == "mssql" else ""
+        return _MSSQL_CTE_RESTRICTION if dialect == "mssql" else ""
 
 
-def mssql_cte_restriction() -> str:
-    return (
-        "CRITICAL: Do NOT use Common Table Expressions (CTEs / WITH clauses) in any SQL queries. "
-        "CTEs are not supported for SQL Server and Fabric in the execution engine. "
-        "Instead, use subqueries or CROSS JOIN with inline SELECT statements. "
-        "For example, instead of:\n"
-        "  WITH stats AS (SELECT AVG(col) AS m FROM {batch}) SELECT * FROM {batch} CROSS JOIN stats WHERE ...\n"
-        "Use:\n"
-        "  SELECT * FROM {batch} CROSS JOIN (SELECT AVG(col) AS m FROM {batch}) stats WHERE ..."
-    )
+_MSSQL_CTE_RESTRICTION = (
+    "CRITICAL: Do NOT use Common Table Expressions (CTEs / WITH clauses) in any SQL queries. "
+    "CTEs are not supported for SQL Server and Fabric in the execution engine. "
+    "Instead, use subqueries or CROSS JOIN with inline SELECT statements. "
+    "For example, instead of:\n"
+    "  WITH stats AS (SELECT AVG(col) AS m FROM {batch}) SELECT * FROM {batch} CROSS JOIN stats WHERE ...\n"
+    "Use:\n"
+    "  SELECT * FROM {batch} CROSS JOIN (SELECT AVG(col) AS m FROM {batch}) stats WHERE ..."
+)

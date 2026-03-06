@@ -42,6 +42,7 @@ class TestQueryRewriterNodeCall:
         """Create a mock query runner."""
         mock_runner = Mock(spec=QueryRunner)
         mock_runner.get_dialect.return_value = "postgresql"
+        mock_runner.get_dialect_constraints.return_value = ""
         return mock_runner
 
     @pytest.fixture
@@ -361,6 +362,7 @@ class TestQueryRewriterNodeCall:
         # Create mock query runner that returns MySQL dialect
         mock_query_runner = Mock(spec=QueryRunner)
         mock_query_runner.get_dialect.return_value = "mysql"
+        mock_query_runner.get_dialect_constraints.return_value = ""
         rewriter_node = QueryRewriterNode(query_runner=mock_query_runner)
 
         mock_response = QueryResponse(
@@ -393,6 +395,7 @@ class TestQueryRewriterNodeCall:
         """Test that mssql dialect includes CTE restriction in rewrite prompt."""
         mock_query_runner = Mock(spec=QueryRunner)
         mock_query_runner.get_dialect.return_value = "mssql"
+        mock_query_runner.get_dialect_constraints.return_value = "CRITICAL: Do NOT use CTEs"
         rewriter_node = QueryRewriterNode(query_runner=mock_query_runner)
 
         mock_response = QueryResponse(
@@ -412,7 +415,6 @@ class TestQueryRewriterNodeCall:
             call_args = mock_chain.ainvoke.call_args[0][0]
             human_content = call_args[1].content
             assert "CTE" in human_content
-            assert "subqueries" in human_content
 
     @pytest.mark.unit
     @pytest.mark.asyncio

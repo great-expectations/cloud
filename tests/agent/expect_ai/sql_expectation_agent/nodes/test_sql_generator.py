@@ -44,6 +44,7 @@ class TestSqlGeneratorNodeCall:
         """Create a mock query runner."""
         mock_runner = Mock(spec=QueryRunner)
         mock_runner.get_dialect.return_value = "postgresql"
+        mock_runner.get_dialect_constraints.return_value = ""
         return mock_runner
 
     @pytest.fixture
@@ -163,6 +164,7 @@ class TestSqlGeneratorNodeCall:
         """Test that mssql dialect includes CTE restriction in system message."""
         mock_query_runner = Mock(spec=QueryRunner)
         mock_query_runner.get_dialect.return_value = "mssql"
+        mock_query_runner.get_dialect_constraints.return_value = "CRITICAL: Do NOT use CTEs"
         generator_node = SqlGeneratorNode(query_runner=mock_query_runner)
 
         mock_response = SqlAndDescriptionResponse(
@@ -178,7 +180,6 @@ class TestSqlGeneratorNodeCall:
             messages_arg = mock_call_model.call_args[1]["messages"]
             system_content = messages_arg[0].content
             assert "CTE" in system_content
-            assert "subqueries" in system_content
 
     @pytest.mark.unit
     @pytest.mark.asyncio

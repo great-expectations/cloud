@@ -21,10 +21,7 @@ from great_expectations_cloud.agent.expect_ai.asset_review_agent.state import (
     GenerateExpectationsState,
 )
 from great_expectations_cloud.agent.expect_ai.expectations import AddExpectationsResponse
-from great_expectations_cloud.agent.expect_ai.tools.query_runner import (
-    QueryRunner,
-    mssql_cte_restriction,
-)
+from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRunner
 
 
 @pytest.mark.unit
@@ -93,7 +90,7 @@ async def test_expectation_builder_node_returns_no_expectations_when_model_retur
 
     node = ExpectationBuilderNode(
         sql_tools_manager=query_runner,
-        templated_system_message="You are a SQL expert. Use {dialect}.{dialect_specific_constraints}",
+        templated_system_message="You are a SQL expert. Use {dialect}.",
         task_human_message="Build expectations",
     )
 
@@ -169,7 +166,7 @@ async def test_existing_expectations_are_added_to_context() -> None:
 
     node = ExpectationBuilderNode(
         sql_tools_manager=query_runner,
-        templated_system_message="You are a SQL expert. Use {dialect}.{dialect_specific_constraints}",
+        templated_system_message="You are a SQL expert. Use {dialect}.",
         task_human_message="Build expectations",
     )
 
@@ -209,11 +206,11 @@ async def test_existing_expectations_are_added_to_context() -> None:
 async def test_expectation_builder_node_includes_cte_restriction_for_mssql() -> None:
     query_runner = create_autospec(QueryRunner, instance=True)
     query_runner.get_dialect.return_value = "mssql"
-    query_runner.get_dialect_constraints.return_value = mssql_cte_restriction()
+    query_runner.get_dialect_constraints.return_value = "CRITICAL: Do NOT use CTEs"
 
     node = ExpectationBuilderNode(
         sql_tools_manager=query_runner,
-        templated_system_message="Use {dialect}. {dialect_specific_constraints}",
+        templated_system_message="Use {dialect}.",
         task_human_message="Build expectations",
     )
 
@@ -237,6 +234,5 @@ async def test_expectation_builder_node_includes_cte_restriction_for_mssql() -> 
         await node(state, RunnableConfig(configurable={}))
 
         system_content = mock_model.ainvoke.call_args[0][0][0].content
-        assert "CTE" in system_content
-        assert "subqueries" in system_content
         assert "mssql" in system_content
+        assert "CTE" in system_content
