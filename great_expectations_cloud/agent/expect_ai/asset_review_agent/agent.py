@@ -412,14 +412,16 @@ class ExpectationBuilderNode:
             request_timeout=60,
         ).with_structured_output(schema=AddExpectationsResponse, method="json_schema", strict=True)
         task_msg = HumanMessage(content=self._task_human_message)
+        system_content = self._templated_system_message.format(
+            dialect=self._sql_tools_manager.get_dialect(data_source_name=state.data_source_name),
+        )
+        dialect_constraints = self._sql_tools_manager.get_dialect_constraints(
+            data_source_name=state.data_source_name
+        )
+        if dialect_constraints:
+            system_content += f"\n{dialect_constraints}"
         messages = [
-            SystemMessage(
-                content=self._templated_system_message.format(
-                    dialect=self._sql_tools_manager.get_dialect(
-                        data_source_name=state.data_source_name
-                    )
-                )
-            ),
+            SystemMessage(content=system_content),
             HumanMessage(content=f"Issue: {plan_component.title}\n\n{plan_component.plan_details}"),
             task_msg,
         ]

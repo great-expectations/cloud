@@ -42,6 +42,7 @@ class TestQueryRewriterNodeCall:
         """Create a mock query runner."""
         mock_runner = Mock(spec=QueryRunner)
         mock_runner.get_dialect.return_value = "postgresql"
+        mock_runner.get_dialect_constraints.return_value = ""
         return mock_runner
 
     @pytest.fixture
@@ -361,6 +362,7 @@ class TestQueryRewriterNodeCall:
         # Create mock query runner that returns MySQL dialect
         mock_query_runner = Mock(spec=QueryRunner)
         mock_query_runner.get_dialect.return_value = "mysql"
+        mock_query_runner.get_dialect_constraints.return_value = ""
         rewriter_node = QueryRewriterNode(query_runner=mock_query_runner)
 
         mock_response = QueryResponse(
@@ -382,3 +384,61 @@ class TestQueryRewriterNodeCall:
                 data_source_name="test_datasource"
             )
             assert isinstance(result, SqlQueryResponse)
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_call_includes_cte_restriction_for_mssql(
+        self,
+        sample_state_with_sql: SqlExpectationState,
+        mock_config: RunnableConfig,
+    ) -> None:
+        """Test that mssql dialect includes CTE restriction in rewrite prompt."""
+        mock_query_runner = Mock(spec=QueryRunner)
+        mock_query_runner.get_dialect.return_value = "mssql"
+        mock_query_runner.get_dialect_constraints.return_value = "CRITICAL: Do NOT use CTEs"
+        rewriter_node = QueryRewriterNode(query_runner=mock_query_runner)
+
+        mock_response = QueryResponse(
+            query="SELECT * FROM {batch} WHERE id > 100",
+            rationale="Rewrote without CTE",
+        )
+
+        with patch(
+            "great_expectations_cloud.agent.expect_ai.sql_expectation_agent.nodes.query_rewriter.ChatOpenAI"
+        ) as mock_chat_class:
+            mock_chain = AsyncMock()
+            mock_chain.ainvoke.return_value = mock_response
+            mock_chat_class.return_value.with_structured_output.return_value.with_retry.return_value = mock_chain
+
+            await rewriter_node(sample_state_with_sql, mock_config)
+
+            call_args = mock_chain.ainvoke.call_args[0][0]
+            human_content = call_args[1].content
+            assert "CTE" in human_content
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_call_excludes_cte_restriction_for_non_mssql(
+        self,
+        rewriter_node: QueryRewriterNode,
+        sample_state_with_sql: SqlExpectationState,
+        mock_config: RunnableConfig,
+    ) -> None:
+        """Test that non-mssql dialects do not include CTE restriction."""
+        mock_response = QueryResponse(
+            query="SELECT * FROM {batch} WHERE id > 100",
+            rationale="Fixed query",
+        )
+
+        with patch(
+            "great_expectations_cloud.agent.expect_ai.sql_expectation_agent.nodes.query_rewriter.ChatOpenAI"
+        ) as mock_chat_class:
+            mock_chain = AsyncMock()
+            mock_chain.ainvoke.return_value = mock_response
+            mock_chat_class.return_value.with_structured_output.return_value.with_retry.return_value = mock_chain
+
+            await rewriter_node(sample_state_with_sql, mock_config)
+
+            call_args = mock_chain.ainvoke.call_args[0][0]
+            human_content = call_args[1].content
+            assert "CTE" not in human_content
