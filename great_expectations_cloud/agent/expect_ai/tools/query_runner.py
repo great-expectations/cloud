@@ -106,9 +106,8 @@ class QueryRunner:
 _MSSQL_CTE_RESTRICTION = (
     "CRITICAL: Do NOT use Common Table Expressions (CTEs / WITH clauses) in any SQL queries. "
     "CTEs are not supported for SQL Server and Fabric in the execution engine. "
-    "Instead, use subqueries or CROSS JOIN with inline SELECT statements. "
-    "For example, instead of:\n"
-    "  WITH stats AS (SELECT AVG(col) AS m FROM {batch}) SELECT * FROM {batch} CROSS JOIN stats WHERE ...\n"
+    "Use subqueries instead. For example, instead of:\n"
+    "  WITH stats AS (SELECT AVG(col) AS m FROM {batch}) SELECT t.* FROM {batch} t CROSS JOIN stats WHERE ...\n"
     "Use:\n"
-    "  SELECT * FROM {batch} CROSS JOIN (SELECT AVG(col) AS m FROM {batch}) stats WHERE ..."
+    "  SELECT t.* FROM {batch} t CROSS JOIN (SELECT AVG(col) AS m FROM {batch}) AS stats WHERE ..."
 )
