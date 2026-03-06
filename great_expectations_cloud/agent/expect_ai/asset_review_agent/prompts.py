@@ -247,7 +247,8 @@ Always structure queries with {{batch}}:
 • Simple: SELECT * FROM {{batch}} WHERE condition
 • With CTE: WITH analysis AS (SELECT ... FROM {{batch}} ...) SELECT ... FROM {{batch}} ...
 • Joins: SELECT * FROM {{batch}} t1 JOIN {{batch}} t2 ON ...
-• NULL-safe: WHERE column IS NOT NULL AND condition"""
+• NULL-safe: WHERE column IS NOT NULL AND condition
+{dialect_specific_constraints}"""
 
 
 EXPECTATION_BUILDER_TASK_MESSAGE = r"""

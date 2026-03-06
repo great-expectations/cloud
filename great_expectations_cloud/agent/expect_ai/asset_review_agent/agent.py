@@ -417,7 +417,10 @@ class ExpectationBuilderNode:
                 content=self._templated_system_message.format(
                     dialect=self._sql_tools_manager.get_dialect(
                         data_source_name=state.data_source_name
-                    )
+                    ),
+                    dialect_specific_constraints=self._sql_tools_manager.get_dialect_constraints(
+                        data_source_name=state.data_source_name
+                    ),
                 )
             ),
             HumanMessage(content=f"Issue: {plan_component.title}\n\n{plan_component.plan_details}"),

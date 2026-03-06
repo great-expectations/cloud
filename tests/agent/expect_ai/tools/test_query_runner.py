@@ -4,7 +4,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRunner
+from great_expectations_cloud.agent.expect_ai.tools.query_runner import (
+    QueryRunner,
+    mssql_cte_restriction,
+)
 
 
 def _make_engine(dialect_name: str) -> tuple[MagicMock, MagicMock]:
@@ -56,3 +59,46 @@ def test_check_query_compiles_returns_error_on_mssql_syntax_error() -> None:
     assert success is False
     assert error is not None
     assert "Incorrect syntax" in error
+
+
+@pytest.mark.unit
+def test_get_dialect_constraints_returns_restriction_for_mssql() -> None:
+    mock_context = MagicMock()
+    mock_ds = MagicMock()
+    mock_engine = MagicMock()
+    mock_engine.dialect.name = "mssql"
+    mock_ds.get_execution_engine.return_value = mock_engine
+    mock_context.data_sources.get.return_value = mock_ds
+
+    runner = QueryRunner(context=mock_context)
+    result = runner.get_dialect_constraints(data_source_name="test_ds")
+
+    assert "CTE" in result
+    assert "SQL Server" in result
+    assert "subqueries" in result
+
+
+@pytest.mark.unit
+def test_get_dialect_constraints_returns_empty_for_non_mssql() -> None:
+    mock_context = MagicMock()
+    mock_ds = MagicMock()
+    mock_engine = MagicMock()
+    mock_engine.dialect.name = "postgresql"
+    mock_ds.get_execution_engine.return_value = mock_engine
+    mock_context.data_sources.get.return_value = mock_ds
+
+    runner = QueryRunner(context=mock_context)
+    result = runner.get_dialect_constraints(data_source_name="test_ds")
+
+    assert result == ""
+
+
+@pytest.mark.unit
+def test_mssql_cte_restriction_contains_key_guidance() -> None:
+    restriction = mssql_cte_restriction()
+
+    assert "CTE" in restriction
+    assert "WITH" in restriction
+    assert "subqueries" in restriction
+    assert "SQL Server" in restriction
+    assert "Fabric" in restriction

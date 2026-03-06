@@ -17,6 +17,7 @@ from great_expectations_cloud.agent.expect_ai.sql_expectation_agent.state import
     SqlExpectationState,
     SqlQueryResponse,
 )
+from great_expectations_cloud.agent.expect_ai.tools.query_runner import mssql_cte_restriction
 
 if TYPE_CHECKING:
     from great_expectations_cloud.agent.expect_ai.tools.query_runner import QueryRunner
@@ -53,6 +54,7 @@ class QueryRewriterNode:
         ).with_structured_output(schema=QueryResponse, method="json_schema", strict=True)
 
         dialect = self._query_runner.get_dialect(data_source_name=state.data_source_name)
+        cte_constraint = f"\n{mssql_cte_restriction()}" if dialect == "mssql" else ""
         system_prompt = (
             "You are an expert SQL developer proficient in debugging and fixing "
             + dialect
@@ -75,7 +77,7 @@ class QueryRewriterNode:
             - it must be logically equivalent to the original query
             - it must return exactly the fields as the original query
             - it must contain the token {{batch}}
-
+        {cte_constraint}
         """
         messages = [
             SystemMessage(content=system_prompt),
