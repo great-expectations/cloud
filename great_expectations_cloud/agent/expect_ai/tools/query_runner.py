@@ -107,7 +107,8 @@ _MSSQL_CTE_RESTRICTION = (
     "CRITICAL: Do NOT use Common Table Expressions (CTEs / WITH clauses) in any SQL queries. "
     "CTEs are not supported for SQL Server and Fabric in the execution engine. "
     "Use subqueries instead. For example, instead of:\n"
-    "  WITH stats AS (SELECT AVG(col) AS m FROM {batch}) SELECT t.* FROM {batch} t CROSS JOIN stats WHERE ...\n"
+    "  WITH dupes AS (SELECT col, COUNT(*) AS n FROM {batch} GROUP BY col HAVING COUNT(*) > 1) "
+    "SELECT * FROM dupes\n"
     "Use:\n"
-    "  SELECT t.* FROM {batch} t CROSS JOIN (SELECT AVG(col) AS m FROM {batch}) AS stats WHERE ..."
+    "  SELECT * FROM (SELECT col, COUNT(*) AS n FROM {batch} GROUP BY col HAVING COUNT(*) > 1) AS dupes"
 )
