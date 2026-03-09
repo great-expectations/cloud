@@ -44,6 +44,7 @@ class TestSqlGeneratorNodeCall:
         """Create a mock query runner."""
         mock_runner = Mock(spec=QueryRunner)
         mock_runner.get_dialect.return_value = "postgresql"
+        mock_runner.get_dialect_constraints.return_value = ""
         return mock_runner
 
     @pytest.fixture
@@ -146,11 +147,39 @@ class TestSqlGeneratorNodeCall:
             assert len(messages_arg) == 4  # system + example + state.messages + task
             assert isinstance(messages_arg[0], SystemMessage)
             assert "postgresql" in messages_arg[0].content
+            assert "CTE" not in messages_arg[0].content
             assert isinstance(messages_arg[1], HumanMessage)
             assert "Example:" in messages_arg[1].content
             assert messages_arg[2] == sample_state.messages[0]
             assert isinstance(messages_arg[3], HumanMessage)
             assert "conversation history" in messages_arg[3].content
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_call_includes_cte_restriction_for_mssql(
+        self,
+        sample_state: SqlExpectationState,
+        mock_config: RunnableConfig,
+    ) -> None:
+        """Test that mssql dialect includes CTE restriction in system message."""
+        mock_query_runner = Mock(spec=QueryRunner)
+        mock_query_runner.get_dialect.return_value = "mssql"
+        mock_query_runner.get_dialect_constraints.return_value = "CRITICAL: Do NOT use CTEs"
+        generator_node = SqlGeneratorNode(query_runner=mock_query_runner)
+
+        mock_response = SqlAndDescriptionResponse(
+            sql="SELECT * FROM {batch} WHERE col IS NULL",
+            description="Expect col to not be null",
+        )
+
+        with patch.object(
+            generator_node, "call_model", new_callable=AsyncMock, return_value=mock_response
+        ) as mock_call_model:
+            await generator_node(sample_state, mock_config)
+
+            messages_arg = mock_call_model.call_args[1]["messages"]
+            system_content = messages_arg[0].content
+            assert "CTE" in system_content
 
     @pytest.mark.unit
     @pytest.mark.asyncio

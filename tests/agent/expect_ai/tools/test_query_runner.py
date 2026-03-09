@@ -56,3 +56,29 @@ def test_check_query_compiles_returns_error_on_mssql_syntax_error() -> None:
     assert success is False
     assert error is not None
     assert "Incorrect syntax" in error
+
+
+class TestGetDialectConstraints:
+    @staticmethod
+    def _make_runner(dialect_name: str) -> QueryRunner:
+        mock_context = MagicMock()
+        mock_ds = MagicMock()
+        mock_engine = MagicMock()
+        mock_engine.dialect.name = dialect_name
+        mock_ds.get_execution_engine.return_value = mock_engine
+        mock_context.data_sources.get.return_value = mock_ds
+        return QueryRunner(context=mock_context)
+
+    @pytest.mark.unit
+    def test_returns_restriction_for_mssql(self) -> None:
+        result = self._make_runner("mssql").get_dialect_constraints(data_source_name="test_ds")
+
+        assert "CTE" in result
+        assert "SQL Server" in result
+        assert "subqueries" in result
+
+    @pytest.mark.unit
+    def test_returns_empty_for_non_mssql(self) -> None:
+        result = self._make_runner("postgresql").get_dialect_constraints(data_source_name="test_ds")
+
+        assert result == ""
