@@ -9,7 +9,7 @@ class _DebugSettings(BaseSettings):
     debugpy_wait_for_client: bool = False
 
 
-PORT = 6124
+PORT = 6103
 debugpy.listen(("0.0.0.0", PORT))  # noqa: S104
 print(f"Debugpy listening on port {PORT}.")
 
