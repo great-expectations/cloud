@@ -17,6 +17,7 @@ from great_expectations_cloud.agent.models import (
     DomainContext,
     GenerateDataQualityCheckExpectationsEvent,
 )
+from tests.test_config import PostgresTestConfig
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -33,7 +34,7 @@ def user_api_token_headers_org_admin_sc_org(token_env_var: str):
 
 
 @pytest.fixture
-def seed_and_cleanup_test_data(context: CloudDataContext):
+def seed_and_cleanup_test_data(context: CloudDataContext, postgres_config: PostgresTestConfig):
     # Seed data
     data_source_name = "local_mercury_db"
     data_source = context.data_sources.get(data_source_name)
@@ -58,7 +59,7 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
     )
 
     # Mark the validation as gx_managed
-    engine = sa.create_engine("postgresql://postgres:postgres@localhost:5432/mercury")
+    engine = sa.create_engine(postgres_config.postgres_connection_string)
     with engine.begin() as conn:
         query = f"UPDATE validations SET gx_managed=true WHERE id='{validation.id}'"
         conn.execute(sa.text(query))
