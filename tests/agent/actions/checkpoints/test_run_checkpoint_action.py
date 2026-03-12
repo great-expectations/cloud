@@ -18,7 +18,6 @@ from great_expectations.datasource.fluent.interfaces import (
     TestConnectionError,
 )
 
-from great_expectations_cloud.agent.actions import RunWindowCheckpointAction
 from great_expectations_cloud.agent.actions.run_checkpoint import RunCheckpointAction
 from great_expectations_cloud.agent.actions.run_scheduled_checkpoint import (
     RunScheduledCheckpointAction,
@@ -89,14 +88,16 @@ run_scheduled_checkpoint_action_class_and_event = (
     "great_expectations_cloud.agent.actions.run_scheduled_checkpoint.run_checkpoint",
 )
 run_window_checkpoint_action_class_and_event = (
-    RunWindowCheckpointAction,
+    RunCheckpointAction,
     RunWindowCheckpointEvent(
         type="run_window_checkpoint.received",
         datasource_names_to_asset_names={"Data Source 1": {"Data Asset A", "Data Asset B"}},
         checkpoint_id=UUID("5f3814d6-a2e2-40f9-ba75-87ddf485c3a8"),
+        checkpoint_name="Checkpoint Z",
         organization_id=UUID(fixture_id),
         workspace_id=uuid.uuid4(),
     ),
+    None,
 )
 
 
@@ -116,7 +117,7 @@ run_window_checkpoint_action_class_and_event = (
     [
         run_checkpoint_action_class_and_event,
         run_scheduled_checkpoint_action_class_and_event,
-        # run_window_checkpoint_action_class_and_event,
+        run_window_checkpoint_action_class_and_event,
     ],
 )
 @responses.activate
@@ -186,7 +187,7 @@ def test_run_checkpoint_action_with_and_without_splitter_options_returns_action_
     [
         run_checkpoint_action_class_and_event,
         run_scheduled_checkpoint_action_class_and_event,
-        # run_window_checkpoint_action_class_and_event,
+        run_window_checkpoint_action_class_and_event,
     ],
 )
 @responses.activate
@@ -215,7 +216,6 @@ def test_run_checkpoint_action_raises_on_test_connection_failure(
         auth_key="",
         analytics=AgentAnalytics(),
     )
-    # Test errs with and without this mock for the window checkpoint
     if event.type == "run_scheduled_checkpoint.received":
         responses.get(
             url=f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{org_id}/workspaces/{workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
