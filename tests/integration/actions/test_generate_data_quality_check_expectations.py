@@ -95,9 +95,7 @@ def seed_and_cleanup_test_data(context: CloudDataContext, postgres_config: Postg
             )
         with engine.begin() as conn:
             conn.execute(
-                sa.text(
-                    f"UPDATE expectation_suites SET gx_managed=true WHERE id='{suite.id}'"
-                )
+                sa.text(f"UPDATE expectation_suites SET gx_managed=true WHERE id='{suite.id}'")
             )
         flag_was_on = False
 
@@ -111,9 +109,7 @@ def seed_and_cleanup_test_data(context: CloudDataContext, postgres_config: Postg
             )
         with engine.begin() as conn:
             conn.execute(
-                sa.text(
-                    f"UPDATE expectation_suites SET gx_managed=false WHERE id='{suite.id}'"
-                )
+                sa.text(f"UPDATE expectation_suites SET gx_managed=false WHERE id='{suite.id}'")
             )
 
     context.validation_definitions.delete(name="local-mercury-db-checkpoints-table Validation")
