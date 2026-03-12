@@ -45,7 +45,7 @@ def run_window_checkpoint(
     auth_key: str,
     url: str,
 ) -> ActionResult:
-    with create_session(access_token=auth_key) as session:
+    with create_session(access_token=auth_key, timeout=600) as session:
         response = session.get(url=url)
 
     if not response.ok:
