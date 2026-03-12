@@ -89,6 +89,7 @@ async def test_expectation_builder_node_returns_no_expectations_when_model_retur
     # Arrange
     query_runner = create_autospec(QueryRunner, instance=True)
     query_runner.get_dialect.return_value = "postgresql"
+    query_runner.get_dialect_constraints.return_value = ""
 
     node = ExpectationBuilderNode(
         sql_tools_manager=query_runner,
@@ -164,6 +165,7 @@ async def test_existing_expectations_are_added_to_context() -> None:
     )
     query_runner = create_autospec(QueryRunner, instance=True)
     query_runner.get_dialect.return_value = "postgresql"
+    query_runner.get_dialect_constraints.return_value = ""
 
     node = ExpectationBuilderNode(
         sql_tools_manager=query_runner,
@@ -275,3 +277,41 @@ async def test_expectation_builder_no_constraint_for_snowflake() -> None:
     # Snowflake has no unsupported expectations — no constraint should be appended
     assert get_dialect_constraint_message("snowflake") == ""
     assert "Do not generate" not in system_message.content
+
+
+class TestExpectationBuilderNodeDialectConstraints:
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_includes_cte_restriction_for_mssql(self) -> None:
+        query_runner = create_autospec(QueryRunner, instance=True)
+        query_runner.get_dialect.return_value = "mssql"
+        query_runner.get_dialect_constraints.return_value = "CRITICAL: Do NOT use CTEs"
+
+        node = ExpectationBuilderNode(
+            sql_tools_manager=query_runner,
+            templated_system_message="Use {dialect}.",
+            task_human_message="Build expectations",
+        )
+
+        state = ExpectationBuilderState(
+            plan_component=DataQualityPlanComponent(title="Title", plan_details="Details"),
+            plan_development_messages=[],
+            data_source_name="my_ds",
+        )
+
+        with patch(
+            "great_expectations_cloud.agent.expect_ai.asset_review_agent.agent.ChatOpenAI"
+        ) as mock_chat_class:
+            mock_model = Mock()
+            mock_model.with_structured_output.return_value = mock_model
+            mock_model.with_retry.return_value = mock_model
+            mock_model.ainvoke = AsyncMock(
+                return_value=AddExpectationsResponse(rationale="", expectations=[])
+            )
+            mock_chat_class.return_value = mock_model
+
+            await node(state, RunnableConfig(configurable={}))
+
+            system_content = mock_model.ainvoke.call_args[0][0][0].content
+            assert "mssql" in system_content
+            assert "CTE" in system_content

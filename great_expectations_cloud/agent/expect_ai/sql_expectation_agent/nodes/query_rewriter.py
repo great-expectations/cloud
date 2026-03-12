@@ -53,6 +53,9 @@ class QueryRewriterNode:
         ).with_structured_output(schema=QueryResponse, method="json_schema", strict=True)
 
         dialect = self._query_runner.get_dialect(data_source_name=state.data_source_name)
+        dialect_constraints = self._query_runner.get_dialect_constraints(
+            data_source_name=state.data_source_name
+        )
         system_prompt = (
             "You are an expert SQL developer proficient in debugging and fixing "
             + dialect
@@ -75,7 +78,7 @@ class QueryRewriterNode:
             - it must be logically equivalent to the original query
             - it must return exactly the fields as the original query
             - it must contain the token {{batch}}
-
+        {dialect_constraints}
         """
         messages = [
             SystemMessage(content=system_prompt),

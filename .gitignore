@@ -165,7 +165,8 @@ logs/
 .idea/
 
 # VSCode
-.vscode
+.vscode/*
+!.vscode/launch.json
 .DS_Store
 
 # Git worktrees

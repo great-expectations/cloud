@@ -91,3 +91,24 @@ class QueryRunner:
         engine: SqlAlchemyExecutionEngine = ds.get_execution_engine()
         dialect: str = engine.dialect.name
         return dialect.lower()
+
+    def get_dialect_constraints(self, data_source_name: str) -> str:
+        """
+        Get dialect-specific SQL constraints for prompt engineering.
+
+        :param data_source_name: The name of the data source to retrieve.
+        :return: Constraint text to include in LLM prompts, or empty string if none apply.
+        """
+        dialect = self.get_dialect(data_source_name)
+        return _MSSQL_CTE_RESTRICTION if dialect == "mssql" else ""
+
+
+_MSSQL_CTE_RESTRICTION = (
+    "CRITICAL: Do NOT use Common Table Expressions (CTEs / WITH clauses) in any SQL queries. "
+    "CTEs are not supported for SQL Server and Fabric in the execution engine. "
+    "Use subqueries instead. For example, instead of:\n"
+    "  WITH dupes AS (SELECT col, COUNT(*) AS n FROM {batch} GROUP BY col HAVING COUNT(*) > 1) "
+    "SELECT * FROM dupes\n"
+    "Use:\n"
+    "  SELECT * FROM (SELECT col, COUNT(*) AS n FROM {batch} GROUP BY col HAVING COUNT(*) > 1) AS dupes"
+)

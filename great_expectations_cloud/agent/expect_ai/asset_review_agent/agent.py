@@ -418,6 +418,11 @@ class ExpectationBuilderNode:
         constraint = get_dialect_constraint_message(dialect)
         if constraint:
             system_content += f"\n\n{constraint}"
+        dialect_constraints = self._sql_tools_manager.get_dialect_constraints(
+            data_source_name=state.data_source_name
+        )
+        if dialect_constraints:
+            system_content += f"\n{dialect_constraints}"
         messages = [
             SystemMessage(content=system_content),
             HumanMessage(content=f"Issue: {plan_component.title}\n\n{plan_component.plan_details}"),

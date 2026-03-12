@@ -31,8 +31,11 @@ class SqlGeneratorNode:
         """Generate SQL query and description for UnexpectedRowsExpectation."""
         # Create the system message for SQL generation
         dialect = self._query_runner.get_dialect(data_source_name=state.data_source_name)
-        system_message = SystemMessage(
-            content=f"You are a SQL coding assistant that generates SQL queries using {dialect} dialect. "
+        dialect_constraints = self._query_runner.get_dialect_constraints(
+            data_source_name=state.data_source_name
+        )
+        system_content = (
+            f"You are a SQL coding assistant that generates SQL queries using {dialect} dialect. "
             "Each SQL query should return the rows that are unexpected given the user prompt. "
             "Do not add a semicolon to the end of the query. "
             "Do not use the table name directly - instead, use `{batch}` as a placeholder.\n\n"
@@ -41,6 +44,9 @@ class SqlGeneratorNode:
             "The description should be phrased in such a way that if the query returns any rows the description is false. "
             "The description should not include SQL syntax."
         )
+        if dialect_constraints:
+            system_content += f"\n\n{dialect_constraints}"
+        system_message = SystemMessage(content=system_content)
 
         # Add example
         example_message = HumanMessage(

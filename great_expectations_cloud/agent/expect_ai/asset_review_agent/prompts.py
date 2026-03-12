@@ -71,9 +71,11 @@ REQUIRED OUTPUT FORMAT
 METRIC SELECTION BY TYPE
 Always check BatchColumnTypes first if not already provided, then:
 
-For TIMESTAMP types:
+For TIMESTAMP/DATE types (TIMESTAMP, DATETIME, DATETIME2, DATE, SMALLDATETIME, DATETIMEOFFSET):
 → Use ColumnDescriptiveStats (returns unix timestamps)
+→ For between-type expectations, use ISO date strings (e.g. "2023-01-15") not numeric values
 ✓ Example: order_date (TIMESTAMP) → ColumnDescriptiveStats
+✓ Example: created_date (DATE) → ColumnDescriptiveStats
 ✗ Example: order_date (TEXT) → Cannot use DescriptiveStats
 
 For NUMERIC types (INTEGER/FLOAT/NUMERIC):
