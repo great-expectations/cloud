@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING
 from unittest.mock import ANY
 from uuid import UUID
 
 import pytest
-import responses
 
 from great_expectations_cloud.agent.actions import RunWindowCheckpointAction
 from great_expectations_cloud.agent.analytics import AgentAnalytics
@@ -38,19 +37,6 @@ def set_required_env_vars(monkeypatch, org_id, token) -> None:
         monkeypatch.setenv(name=key, value=val)
 
 
-def build_get_draft_config_payload(
-    config: dict[str, Any], id: UUID
-) -> dict[Literal["data"], dict[str, str | UUID | dict[str, Any]]]:
-    return {
-        "data": {
-            "type": "draft_config",
-            "id": str(id),
-            "config": config,
-        }
-    }
-
-
-@responses.activate
 def test_run_window_checkpoint(
     mock_context, mocker: MockerFixture, set_required_env_vars: None, org_id
 ):
@@ -73,21 +59,9 @@ def test_run_window_checkpoint(
         checkpoint_id=checkpoint_id,
         workspace_id=workspace_id,
     )
-    expected_url: str = (
-        f"{env_vars.gx_cloud_base_url}/api/v1/organizations/{env_vars.gx_cloud_organization_id}"
-        f"/workspaces/{event.workspace_id}/checkpoints/{checkpoint_id}/expectation-parameters"
-    )
-    # 'https://test-base-url/api/v1/organizations/81f4e105-e37d-4168-85a0-2526943f9956/checkpoints/120ba4c5-2004-4222-9d34-c59e6059a6f7/expectation-parameters'
-    expectation_parameters = {"param_name_min": 4.0, "param_name_max": 6.0}
-    responses.get(
-        url=expected_url,
-        json={"data": {"expectation_parameters": expectation_parameters}},
-    )
     mock_run_checkpoint = mocker.patch(
         "great_expectations_cloud.agent.actions.run_window_checkpoint.run_checkpoint",
     )
     _ = action.run(event=event, id=str(job_id))
 
-    mock_run_checkpoint.assert_called_with(
-        ANY, event, ANY, expectation_parameters=expectation_parameters
-    )
+    mock_run_checkpoint.assert_called_with(ANY, event, ANY)

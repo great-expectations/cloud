@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from urllib.parse import urljoin
 
-from great_expectations.core.http import create_session
-from great_expectations.exceptions import GXCloudError
 from typing_extensions import override
 
 from great_expectations_cloud.agent.actions.agent_action import (
@@ -22,17 +19,7 @@ if TYPE_CHECKING:
 class RunWindowCheckpointAction(AgentAction[RunWindowCheckpointEvent]):
     @override
     def run(self, event: RunWindowCheckpointEvent, id: str) -> ActionResult:
-        expectation_parameters_url = urljoin(
-            base=self._base_url,
-            url=f"/api/v1/organizations/{self._domain_context.organization_id}/workspaces/{self._domain_context.workspace_id}/checkpoints/{event.checkpoint_id}/expectation-parameters",
-        )
-        return run_window_checkpoint(
-            self._context,
-            event,
-            id,
-            auth_key=self._auth_key,
-            url=expectation_parameters_url,
-        )
+        return run_window_checkpoint(self._context, event, id)
 
 
 register_event_action("1", RunWindowCheckpointEvent, RunWindowCheckpointAction)
@@ -42,25 +29,5 @@ def run_window_checkpoint(
     context: CloudDataContext,
     event: RunWindowCheckpointEvent,
     id: str,
-    auth_key: str,
-    url: str,
 ) -> ActionResult:
-    with create_session(access_token=auth_key, timeout=600) as session:
-        response = session.get(url=url)
-
-    if not response.ok:
-        raise GXCloudError(
-            message=f"RunWindowCheckpointAction encountered an error while connecting to GX Cloud. "
-            f"Unable to retrieve expectation_parameters for Checkpoint with ID={event.checkpoint_id}.",
-            response=response,
-        )
-    data = response.json()
-    try:
-        expectation_parameters = data["data"]["expectation_parameters"]
-    except KeyError as e:
-        raise GXCloudError(
-            message="Malformed response received from GX Cloud",
-            response=response,
-        ) from e
-
-    return run_checkpoint(context, event, id, expectation_parameters=expectation_parameters)
+    return run_checkpoint(context, event, id)
