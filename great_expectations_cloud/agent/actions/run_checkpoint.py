@@ -229,3 +229,4 @@ def run_checkpoint(
 
 
 register_event_action("1", RunCheckpointEvent, RunCheckpointAction)
+register_event_action("1", RunWindowCheckpointEvent, RunCheckpointAction)
