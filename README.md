@@ -99,6 +99,26 @@ poetry update great_expectations
 
 **Note:** If `poetry update` does not find the latest version of `great_expectations`, you can manually update the version in `pyproject.toml`, and then update the lockfile using `poetry lock`.
 
+**Updating `great_expectations` to a specific version:**
+
+Use the `update-gx` invoke task to update `great_expectations` to a specific version while preserving the existing extras:
+
+```console
+poetry run inv update-gx --version 1.14.0
+```
+
+To also sync your local environment after updating:
+
+```console
+poetry run inv update-gx --version 1.14.0 --sync
+```
+
+To override the extras during the update:
+
+```console
+poetry run inv update-gx --version 1.14.0 --extras "snowflake,postgresql"
+```
+
 [To resolve and update all dependencies ...](https://python-poetry.org/docs/cli/#lock)
 
 ```console
