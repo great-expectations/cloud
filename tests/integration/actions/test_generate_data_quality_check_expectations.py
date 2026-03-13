@@ -17,6 +17,7 @@ from great_expectations_cloud.agent.models import (
     DomainContext,
     GenerateDataQualityCheckExpectationsEvent,
 )
+from tests.test_config import PostgresTestConfig
 
 if TYPE_CHECKING:
     from great_expectations.data_context import CloudDataContext
@@ -33,8 +34,7 @@ def user_api_token_headers_org_admin_sc_org(token_env_var: str):
 
 
 @pytest.fixture
-def seed_and_cleanup_test_data(context: CloudDataContext):
-    # Seed data
+def seed_and_cleanup_test_data(context: CloudDataContext, postgres_config: PostgresTestConfig):
     data_source_name = "local_mercury_db"
     data_source = context.data_sources.get(data_source_name)
     assert isinstance(data_source, PostgresDatasource)
@@ -43,49 +43,74 @@ def seed_and_cleanup_test_data(context: CloudDataContext):
         table_name="checkpoints", name="local-mercury-db-checkpoints-table"
     )
 
-    suite = context.suites.add(ExpectationSuite(name="local-mercury-db-checkpoints-table Suite"))
+    engine = sa.create_engine(postgres_config.postgres_connection_string)
+    asset_id = str(table_data_asset.id)
 
-    # Create validation
-    batch_definition = table_data_asset.add_batch_definition_whole_table(
-        name="local-mercury-db-checkpoints-table-batch-definition"
-    )
-    validation = context.validation_definitions.add(
-        ValidationDefinition(
-            name="local-mercury-db-checkpoints-table Validation",
-            suite=suite,
-            data=batch_definition,
+    # Check if mercury auto-created gx_managed resources (sujeEnabled flag)
+    with engine.begin() as conn:
+        gx_managed_row = conn.execute(
+            sa.text(
+                "SELECT id, expectation_suite_id FROM validations "
+                "WHERE asset_ref_id=:asset_id AND gx_managed=true "
+                "AND deleted IS NOT TRUE AND archived IS NOT TRUE"
+            ),
+            {"asset_id": asset_id},
+        ).fetchone()
+
+    if gx_managed_row:
+        # Flag is ON — mercury already created gx_managed validation + suite.
+        # Create a non-gx_managed suite for the test (the action needs one to exist).
+        suite = context.suites.add(
+            ExpectationSuite(name="local-mercury-db-checkpoints-table Suite")
         )
-    )
+        batch_definition = table_data_asset.add_batch_definition_whole_table(
+            name="local-mercury-db-checkpoints-table-batch-definition"
+        )
+        validation = context.validation_definitions.add(
+            ValidationDefinition(
+                name="local-mercury-db-checkpoints-table Validation",
+                suite=suite,
+                data=batch_definition,
+            )
+        )
+        flag_was_on = True
+    else:
+        # Flag is OFF (CI path) — create and mark as gx_managed like before
+        suite = context.suites.add(
+            ExpectationSuite(name="local-mercury-db-checkpoints-table Suite")
+        )
+        batch_definition = table_data_asset.add_batch_definition_whole_table(
+            name="local-mercury-db-checkpoints-table-batch-definition"
+        )
+        validation = context.validation_definitions.add(
+            ValidationDefinition(
+                name="local-mercury-db-checkpoints-table Validation",
+                suite=suite,
+                data=batch_definition,
+            )
+        )
+        with engine.begin() as conn:
+            conn.execute(
+                sa.text(f"UPDATE validations SET gx_managed=true WHERE id='{validation.id}'")
+            )
+        with engine.begin() as conn:
+            conn.execute(
+                sa.text(f"UPDATE expectation_suites SET gx_managed=true WHERE id='{suite.id}'")
+            )
+        flag_was_on = False
 
-    # Mark the validation as gx_managed
-    engine = sa.create_engine("postgresql://postgres:postgres@localhost:5432/mercury")
-    with engine.begin() as conn:
-        query = f"UPDATE validations SET gx_managed=true WHERE id='{validation.id}'"
-        conn.execute(sa.text(query))
-        conn.commit()
-
-    # Mark the suite as gx_managed
-    with engine.begin() as conn:
-        query = f"UPDATE expectation_suites SET gx_managed=true WHERE id='{suite.id}'"
-        conn.execute(sa.text(query))
-        conn.commit()
-
-    # Yield
     yield table_data_asset, suite
 
-    # clean up
-
-    # Mark the validation as not gx_managed
-    with engine.begin() as conn:
-        query = f"UPDATE validations SET gx_managed=false WHERE id='{validation.id}'"
-        conn.execute(sa.text(query))
-        conn.commit()
-
-    # Mark the suite as not gx_managed
-    with engine.begin() as conn:
-        query = f"UPDATE expectation_suites SET gx_managed=false WHERE id='{suite.id}'"
-        conn.execute(sa.text(query))
-        conn.commit()
+    # Teardown
+    if not flag_was_on:
+        with engine.begin() as conn:
+            conn.execute(
+                sa.text(f"UPDATE validations SET gx_managed=false WHERE id='{validation.id}'")
+            )
+        with engine.begin() as conn:
+            conn.execute(
+                sa.text(f"UPDATE expectation_suites SET gx_managed=false WHERE id='{suite.id}'")
+            )
 
     context.validation_definitions.delete(name="local-mercury-db-checkpoints-table Validation")
     context.suites.delete(name="local-mercury-db-checkpoints-table Suite")
