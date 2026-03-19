@@ -7,7 +7,7 @@ import great_expectations as gx
 import pytest
 from great_expectations.data_context import CloudDataContext
 
-from tests.test_config import GxCloudTestConfig
+from tests.test_config import GxCloudTestConfig, PostgresTestConfig
 
 LOGGER: Final = logging.getLogger("tests")
 
@@ -37,6 +37,12 @@ def workspace_id_env_var(test_config: GxCloudTestConfig) -> str:
 @pytest.fixture(scope="module")
 def token_env_var(test_config: GxCloudTestConfig) -> str:
     return test_config.gx_cloud_access_token
+
+
+@pytest.fixture(scope="module")
+def postgres_config() -> PostgresTestConfig:
+    """Load postgres test configuration from environment variables."""
+    return PostgresTestConfig()
 
 
 @pytest.fixture(scope="module")
