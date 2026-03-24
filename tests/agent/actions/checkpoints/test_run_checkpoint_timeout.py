@@ -12,6 +12,7 @@ from great_expectations.datasource.fluent.interfaces import (
 )
 
 from great_expectations_cloud.agent.actions.run_checkpoint import (
+    DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS,
     DataSourceAssets,
     check_datasource_and_assets_connection,
     check_datasource_and_assets_connection_with_timeout,
@@ -179,6 +180,10 @@ class TestCheckDatasourceAndAssetsConnection:
 
 class TestCheckDatasourceAndAssetsConnectionWithTimeout:
     """Tests for check_datasource_and_assets_connection_with_timeout function."""
+
+    def test_default_timeout_constant_value(self) -> None:
+        """Verify the default timeout constant is 30 seconds (not 600)."""
+        assert DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS == 30
 
     def test_successful_connection_within_timeout(
         self, mock_datasource: MagicMock, mock_data_asset: MagicMock, log_extra: dict[str, str]

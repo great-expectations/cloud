@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 from great_expectations.datasource.fluent.interfaces import TestConnectionError
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
-DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS: Final[int] = 600
+DATASOURCE_TEST_CONNECTION_TIMEOUT_SECONDS: Final[int] = 30
 
 
 class RunCheckpointAction(AgentAction[RunCheckpointEvent]):
