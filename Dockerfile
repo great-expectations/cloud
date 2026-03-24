@@ -65,7 +65,10 @@ RUN apt-get remove -y \
     cpp-14 \
     cpp \
     curl \
-    gnupg
+    gnupg \
+    libjs-underscore \
+    libjs-sphinxdoc \
+    libjs-jquery
 
 # Disable analytics in OSS
 ENV GX_ANALYTICS_ENABLED=false
