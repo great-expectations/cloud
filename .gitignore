@@ -165,6 +165,9 @@ logs/
 .idea/
 
 # VSCode
-.vscode
+.vscode/*
+!.vscode/launch.json
 .DS_Store
-CLAUDE.md
+
+# Git worktrees
+.worktrees/

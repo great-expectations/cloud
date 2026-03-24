@@ -83,7 +83,6 @@ def mock_response_success_no_pre_existing_anomaly_detection_coverage(
             id=TABLE_ASSET_ID,
             name="test-data-asset",
             table_name="test_table",
-            schema_name="test_schema",
         )
 
     def mock_metrics(self, data_asset: DataAsset[Any, Any]):
@@ -114,7 +113,6 @@ def mock_response_success_pre_existing_volume_anomaly_detection_coverage(
             id=TABLE_ASSET_ID,
             name="test-data-asset",
             table_name="test_table",
-            schema_name="test_schema",
         )
 
     def mock_metrics(self, data_asset: DataAsset[Any, Any]):
@@ -145,7 +143,6 @@ def mock_response_success_pre_existing_completeness_anomaly_detection_coverage(
             id=TABLE_ASSET_ID,
             name="test-data-asset",
             table_name="test_table",
-            schema_name="test_schema",
         )
 
     def mock_metrics(self, data_asset: DataAsset[Any, Any]):
@@ -193,13 +190,11 @@ def mock_multi_asset_success_and_failure(
                 id=failing_asset_id,
                 name=asset_name,
                 table_name="test_table",
-                schema_name="test_schema",
             )
         else:
             return TableAsset(
                 name=asset_name,
                 table_name="test_table",
-                schema_name="test_schema",
             )
 
     def mock_metrics(self, data_asset: DataAsset[Any, Any]):
@@ -429,7 +424,6 @@ def test_generate_completeness_expectation_not_added_when_coverage_already_exist
             id=TABLE_ASSET_ID,
             name="test-data-asset",
             table_name="test_table",
-            schema_name="test_schema",
         )
 
     def mock_get_metrics(data_asset):
@@ -730,7 +724,6 @@ def test_generate_completeness_expectations_with_proportion_approach(
             id=TABLE_ASSET_ID,
             name="test-data-asset",
             table_name="test_table",
-            schema_name="test_schema",
         )
 
     def mock_get_metrics(data_asset):
@@ -815,7 +808,6 @@ def test_generate_completeness_forecast_expectations_action_success(
             id=TABLE_ASSET_ID,
             name="test-data-asset",
             table_name="test_table",
-            schema_name="test_schema",
         )
 
     def mock_get_metrics(data_asset):
@@ -913,7 +905,6 @@ def test_completeness_expectations_count_based_on_data(
             id=TABLE_ASSET_ID,
             name="test-data-asset",
             table_name="test_table",
-            schema_name="test_schema",
         )
 
     def mock_get_metrics(data_asset):
@@ -979,7 +970,6 @@ def test_generate_completeness_expectations_edge_cases(
             id=TABLE_ASSET_ID,
             name="test-data-asset",
             table_name="test_table",
-            schema_name="test_schema",
         )
 
     def mock_get_coverage(data_asset_id):

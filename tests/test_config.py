@@ -28,6 +28,28 @@ class GxCloudTestConfig(BaseSettings):
         super().__init__(**overrides)
 
 
+class PostgresTestConfig(BaseSettings):
+    """Test configuration for Postgres database connection.
+
+    Reads from environment variable POSTGRES_CONNECTION_STRING with a fallback default.
+    """
+
+    postgres_connection_string: str = "postgresql://postgres:postgres@localhost:5432/mercury"
+
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+
+    def __init__(self, **overrides: str) -> None:
+        """
+        Custom __init__ to prevent type error when relying on environment variables.
+
+        TODO: once mypy fully supports annotating **kwargs with a Unpack[TypedDict], we should do that.
+        https://peps.python.org/pep-0692/
+        """
+        super().__init__(**overrides)
+
+
 class SnowflakeTestConfig(BaseSettings):
     """Test configuration for Snowflake credentials.
 
