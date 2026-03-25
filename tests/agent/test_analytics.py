@@ -38,6 +38,16 @@ class TestAgentAnalytics(unittest.TestCase):
         # Assert - method completes without error
         # No assertion needed since we're just testing it doesn't raise
 
+    def test_emit_unrecoverable_connection_error(self):
+        # Arrange
+        analytics = AgentAnalytics()
+
+        # Act - should not raise an exception
+        analytics.emit_unrecoverable_connection_error()
+
+        # Assert - method completes without error
+        # No assertion needed since we're just testing it doesn't raise
+
     def test_all_rejection_reasons_callable(self):
         """Test that all rejection reasons can be used with emit_expectation_rejected."""
         analytics = AgentAnalytics()
