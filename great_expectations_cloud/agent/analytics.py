@@ -21,3 +21,6 @@ class AgentAnalytics:
 
     def emit_expectation_rejected(self, expectation_type: str, reason: RejectionReason) -> None:
         pass  # No-op in public agent
+
+    def emit_unrecoverable_connection_error(self) -> None:
+        pass  # No-op in public agent
