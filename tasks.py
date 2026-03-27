@@ -7,7 +7,7 @@ import os
 import pathlib
 from collections.abc import MutableMapping
 from pprint import pformat as pf
-from typing import TYPE_CHECKING, Any, Final, Literal
+from typing import TYPE_CHECKING, Any, Final, Literal, cast
 
 import invoke
 import requests
@@ -144,6 +144,28 @@ def deps(ctx: Context) -> None:
     ctx.run(" ".join(cmds), echo=True, pty=True)
 
 
+@invoke.task(
+    name="update-gx",
+    help={
+        "version": "The great-expectations version to pin (e.g. '1.14.0')",
+        "extras": "Comma-separated extras override (default: reuse existing extras)",
+        "sync": "Also run 'poetry sync --with dev' after locking",
+    },
+)
+def update_gx(
+    ctx: Context,
+    version: str,
+    extras: str = "",
+    sync: bool = False,
+) -> None:
+    """Update the great-expectations version in pyproject.toml and re-lock."""
+    extras_list: list[str] | None = [e.strip() for e in extras.split(",") if e.strip()] or None
+    _update_gx_version(new_version=version, extras=extras_list)
+    ctx.run("poetry lock", echo=True, pty=True)
+    if sync:
+        ctx.run("poetry sync --with dev", echo=True, pty=True)
+
+
 def _get_local_version() -> Version:
     return Version(_get_pyproject_tool_dict("poetry")["version"])
 
@@ -272,6 +294,22 @@ def _update_version(version_: Version | str) -> None:
         toml_doc = tomlkit.load(f_in)
     with open(PYPROJECT_TOML, "w") as f_out:
         toml_doc["tool"]["poetry"]["version"] = str(version_)  # type: ignore[index] # always a str
+        tomlkit.dump(toml_doc, f_out)
+
+
+def _update_gx_version(new_version: str, extras: list[str] | None = None) -> None:
+    """Update the great-expectations version (and optionally extras) in pyproject.toml."""
+    with open(PYPROJECT_TOML, "rb") as f_in:
+        toml_doc = tomlkit.load(f_in)
+    gx_dep = cast(
+        "dict[str, Any]",
+        toml_doc["tool"]["poetry"]["dependencies"]["great-expectations"],  # type: ignore[index]
+    )
+    if extras is None:
+        extras = list(cast("list[str]", gx_dep["extras"]))
+    gx_dep["version"] = new_version
+    gx_dep["extras"] = extras
+    with open(PYPROJECT_TOML, "w") as f_out:
         tomlkit.dump(toml_doc, f_out)
 
 
